@@ -1,4 +1,4 @@
-# app.py — now with brand dashboard summary view
+# app.py — with enhanced sentiment + subtype support
 import streamlit as st
 from load_scraped_insights import load_scraped_posts, process_insights
 from signal_scorer import filter_relevant_insights
@@ -73,11 +73,11 @@ for idx, i in enumerate(filtered):
     reason = i.get("type_reason", "")
     brand = i.get("target_brand", "Unknown")
     sentiment = i.get("brand_sentiment", "Unknown")
+    subtag = i.get("type_subtag", "General")
+    sent_conf = i.get("sentiment_confidence", "N/A")
 
     st.markdown(f"### {insight_type} — {summary}")
-    subtag = i.get("type_subtag", "General")
-sent_conf = i.get("sentiment_confidence", "N/A")
-st.caption(f"Score: {score} | Type: {type_tag} > {subtag} ({confidence}%) | Effort: {effort} | Brand: {brand} | Sentiment: {sentiment} ({sent_conf}%)")
+    st.caption(f"Score: {score} | Type: {type_tag} > {subtag} ({confidence}%) | Effort: {effort} | Brand: {brand} | Sentiment: {sentiment} ({sent_conf}%)")
 
     if reason:
         st.markdown(f"💡 *Reason:* _{reason}_")
