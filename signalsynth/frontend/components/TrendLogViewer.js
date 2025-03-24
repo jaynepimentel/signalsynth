@@ -1,0 +1,1 @@
+// TrendLogViewer component
