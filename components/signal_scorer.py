@@ -1,6 +1,7 @@
 # signal_scorer.py — full version with classification, scoring, brand sentiment
 import re
 from brand_sentiment_classifier import classify_brand_sentiment
+from components.enhanced_classifier import enhance_insight
 
 KEY_PATTERNS = [
     "psa", "vault", "graded", "shipping", "fees", "tracking", "eBay", "goldin", "pop report", "autopay"
@@ -115,20 +116,15 @@ def filter_relevant_insights(insights, min_score=10):
     for i in insights:
         text = i.get("text", "")
         score = score_insight(text)
-        ideas = generate_ideas(text)
-        type_tag = classify_type(text)
-        brand = detect_target_brand(text)
-        sentiment = classify_brand_sentiment(text, brand)
-
         i["score"] = score
-        i["ideas"] = ideas
-        i["effort"] = classify_effort(ideas)
-        i["type_tag"] = type_tag["label"]
-        i["type_confidence"] = type_tag["confidence"]
-        i["type_reason"] = type_tag["reason"]
-        i["target_brand"] = brand
-        i["brand_sentiment"] = sentiment
 
-        if type_tag["label"] != "Marketplace Chatter" and score >= min_score:
+        # Enhance with smart AI classifier
+        i = enhance_insight(i)
+
+        i["ideas"] = generate_ideas(text)
+        i["effort"] = classify_effort(i["ideas"])
+
+        if i["type_tag"] != "Marketplace Chatter" and score >= min_score:
             filtered.append(i)
+
     return filtered

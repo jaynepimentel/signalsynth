@@ -75,7 +75,10 @@ for idx, i in enumerate(filtered):
     sentiment = i.get("brand_sentiment", "Unknown")
 
     st.markdown(f"### {insight_type} — {summary}")
-    st.caption(f"Score: {score} | Type: {type_tag} ({confidence}%) | Effort: {effort} | Brand: {brand} | Sentiment: {sentiment}")
+    subtag = i.get("type_subtag", "General")
+sent_conf = i.get("sentiment_confidence", "N/A")
+st.caption(f"Score: {score} | Type: {type_tag} > {subtag} ({confidence}%) | Effort: {effort} | Brand: {brand} | Sentiment: {sentiment} ({sent_conf}%)")
+
     if reason:
         st.markdown(f"💡 *Reason:* _{reason}_")
 
