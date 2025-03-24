@@ -1,6 +1,6 @@
 # signal_scorer.py — full version with classification, scoring, brand sentiment
 import re
-from brand_sentiment_classifier import classify_brand_sentiment
+from components.brand_sentiment_classifier import classify_brand_sentiment
 from components.enhanced_classifier import enhance_insight
 
 KEY_PATTERNS = [
