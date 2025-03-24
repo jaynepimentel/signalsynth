@@ -1,10 +1,14 @@
-# components/enhanced_classifier.py
-
 from transformers import pipeline
 import re
 
-# Load sentiment model
-sentiment_model = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
+def get_sentiment_model():
+    try:
+        return pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
+    except Exception as e:
+        print("⚠️ Could not load transformer model. Falling back to neutral sentiment.")
+        return lambda text: [{"label": "neutral", "score": 1.0}]
+
+sentiment_model = get_sentiment_model()
 
 SUBTYPE_RULES = {
     "Complaint": [

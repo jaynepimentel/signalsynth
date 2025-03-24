@@ -14,6 +14,10 @@ raw_posts = load_scraped_posts()
 processed = process_insights(raw_posts)
 scraped_insights = filter_relevant_insights(processed, min_score=10)
 
+if not scraped_insights:
+    st.warning("⚠️ No insights found to analyze. Try rerunning the scraper or lowering the score threshold.")
+    st.stop()
+
 # Brand dashboard
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
