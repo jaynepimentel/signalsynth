@@ -4,3 +4,4 @@ beautifulsoup4
 requests
 transformers==4.39.3
 torch==2.2.1
+sentence-transformers==2.6.1
