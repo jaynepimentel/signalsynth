@@ -1,8 +1,9 @@
-# app.py — with enhanced sentiment + subtype support
+# app.py — SignalSynth with AI-synthesized clusters
 import streamlit as st
 from load_scraped_insights import load_scraped_posts, process_insights
 from signal_scorer import filter_relevant_insights
 from brand_trend_dashboard import display_brand_dashboard
+from components.cluster_synthesizer import generate_synthesized_insights
 from collections import Counter
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
@@ -16,6 +17,21 @@ scraped_insights = filter_relevant_insights(processed, min_score=10)
 # Show brand-level trend summary
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
+
+# Show AI-synthesized thematic clusters
+with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
+    synth_cards = generate_synthesized_insights(scraped_insights)
+    for card in synth_cards:
+        st.markdown(f"### {card['title']}")
+        st.caption(f"**Brand:** {card['brand']}")
+        st.markdown(f"**Summary:** {card['summary']}")
+        st.markdown("**Top Quotes:**")
+        for q in card['quotes']:
+            st.markdown(q)
+        if card['top_ideas']:
+            st.markdown("**Suggested PM Actions:**")
+            for idea in card['top_ideas']:
+                st.markdown(f"- {idea}")
 
 # Trend keyword tracking
 topic_keywords = ["vault", "psa", "graded", "funko", "cancel", "authenticity", "shipping", "refund"]
