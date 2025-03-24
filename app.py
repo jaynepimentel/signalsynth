@@ -1,8 +1,8 @@
-# app.py — SignalSynth with AI-synthesized clusters
+# app.py — SignalSynth with AI-synthesized clusters and strategic UI
 import streamlit as st
 from utils.load_scraped_insights import load_scraped_posts, process_insights
-from signal_scorer import filter_relevant_insights
-from brand_trend_dashboard import display_brand_dashboard
+from components.signal_scorer import filter_relevant_insights
+from components.brand_trend_dashboard import display_brand_dashboard
 from components.cluster_synthesizer import generate_synthesized_insights
 from collections import Counter
 
@@ -14,11 +14,11 @@ raw_posts = load_scraped_posts()
 processed = process_insights(raw_posts)
 scraped_insights = filter_relevant_insights(processed, min_score=10)
 
-# Show brand-level trend summary
+# Brand dashboard
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
 
-# Show AI-synthesized thematic clusters
+# AI-synthesized themes
 with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
     synth_cards = generate_synthesized_insights(scraped_insights)
     for card in synth_cards:
@@ -32,8 +32,10 @@ with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
             st.markdown("**Suggested PM Actions:**")
             for idea in card['top_ideas']:
                 st.markdown(f"- {idea}")
+        if card.get("tags"):
+            st.markdown("**Tags:** " + ", ".join(card["tags"]))
 
-# Trend keyword tracking
+# Trend tracking
 topic_keywords = ["vault", "psa", "graded", "funko", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -70,7 +72,7 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# Show emerging trend summary
+# Show emerging trends
 if rising_trends:
     with st.expander("🔥 Emerging Trends Detected", expanded=True):
         for t in sorted(rising_trends):
