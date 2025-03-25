@@ -52,10 +52,10 @@ def generate_pm_ideas(text, brand="eBay"):
 
         return suggestions
 
-except Exception as e:
-    if "429" in str(e):
-        return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
-    elif "authentication" in str(e).lower():
-        return ["[⚠️ Missing or invalid OpenAI API key]"]
-    else:
-        return [f"[Error calling OpenAI: {e}]"]
+    except Exception as e:
+        if "429" in str(e):
+            return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
+        elif "authentication" in str(e).lower():
+            return ["[⚠️ Missing or invalid OpenAI API key]"]
+        else:
+            return [f"[Error calling OpenAI: {e}]"]
