@@ -1,4 +1,4 @@
-# scrape_signalsynth.py — now includes Twitter scraping via CLI
+# scrape_signalsynth.py — high-signal only, GPT-friendly scraping from Reddit, eBay, Twitter
 import requests
 from bs4 import BeautifulSoup
 from scrape_twitter_cli import scrape_twitter_cli
@@ -14,24 +14,28 @@ COMMUNITY_FORUMS = {
     "Collectibles-Art": "https://community.ebay.com/t5/Collectibles-Art/bd-p/29"
 }
 
-REDDIT_SUBREDDITS = ["tradingcards", "pokemonTCG", "MagicTCG", "baseballcards", "ebay"]
+REDDIT_SUBREDDITS = [
+    "tradingcards", "pokemonTCG", "baseballcards", "ebay"  # Removed MagicTCG
+]
+
 REDDIT_TERMS = [
     "ebay vault", "fanatics live", "fanatics authentication", "alt marketplace",
-    "whatnot shipping", "psa ebay", "grading", "authentication", "return", "delay", "scam"
+    "whatnot shipping", "psa grading", "authentication", "return", "delay", "refund", "scam", "fake"
 ]
 
 TWITTER_TERMS = [
-    "ebay psa", "fanatics vault", "alt marketplace", "whatnot delay", "psa grading", "ebay authentication"
+    "ebay psa", "fanatics vault", "alt marketplace", "whatnot delay",
+    "psa grading turnaround", "ebay authentication", "grading add-on", "psa integration"
 ]
 
-# 🔍 Filters out generic or irrelevant posts
+# 🔍 Stricter filter: minimum length + required strong signal keywords
 def is_relevant(text):
     keywords = [
         "ebay", "vault", "grading", "psa", "fanatics", "authentication", "return",
-        "whatnot", "alt marketplace", "delay", "refund", "cut", "fees", "fake"
+        "whatnot", "alt marketplace", "delay", "refund", "cut", "fees", "fake", "issue"
     ]
     text = text.lower()
-    return any(k in text for k in keywords) and len(text) > 30
+    return len(text) >= 40 and any(k in text for k in keywords)
 
 def scrape_ebay_forum(name, url):
     try:
@@ -66,23 +70,23 @@ def run_signal_scraper():
     all_posts = []
     twitter_posts = []
 
-    # ✅ Scrape eBay forums
+    print("🔍 Scraping eBay Community Forums...")
     for name, url in COMMUNITY_FORUMS.items():
         all_posts.extend(scrape_ebay_forum(name, url))
 
-    # ✅ Scrape Reddit
+    print("🔍 Scraping Reddit...")
     for subreddit in REDDIT_SUBREDDITS:
         for term in REDDIT_TERMS:
             all_posts.extend(scrape_reddit_search(term, subreddit))
 
-    # ✅ Scrape Twitter (via CLI)
+    print("🔍 Scraping Twitter via CLI...")
     for term in TWITTER_TERMS:
         tweets = scrape_twitter_cli(term)
         tweets = [t for t in tweets if is_relevant(t)]
         twitter_posts.extend(tweets)
         all_posts.extend(tweets)
 
-    # ✅ Save everything
+    # Save results
     with open(SAVE_PATH, "w", encoding="utf-8") as f:
         for post in all_posts:
             f.write(post + "\n")
@@ -91,7 +95,7 @@ def run_signal_scraper():
         for post in twitter_posts:
             f.write(post + "\n")
 
-    print(f"✅ Scraped {len(all_posts)} relevant posts → {SAVE_PATH}")
+    print(f"✅ Scraped {len(all_posts)} high-signal posts → {SAVE_PATH}")
     print(f"🐦 Twitter posts saved to {TWITTER_PATH}")
 
 if __name__ == "__main__":
