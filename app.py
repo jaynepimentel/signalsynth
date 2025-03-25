@@ -14,11 +14,14 @@ raw_posts = load_scraped_posts()
 processed = process_insights(raw_posts)
 scraped_insights = filter_relevant_insights(processed, min_score=3)
 
+# Add sidebar confirmation of data loaded
+st.sidebar.info(f"✅ {len(scraped_insights)} insights loaded")
+
 if not scraped_insights:
     st.warning("⚠️ No insights found to analyze. Try rerunning the scraper or lowering the score threshold.")
     st.stop()
 
-# Brand dashboard
+# Brand-level dashboard
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
 
@@ -51,7 +54,6 @@ rising_trends = [t for t, count in trend_counter.items() if count >= 5]
 
 # Sidebar filters
 st.sidebar.header("🔍 Filter Insights")
-team_filter = st.sidebar.selectbox("Scrum Team", ["All"] + sorted(set(i.get("team", "Unknown") for i in scraped_insights)))
 status_filter = st.sidebar.selectbox("Workflow Stage", ["All"] + sorted(set(i.get("status", "Unknown") for i in scraped_insights)))
 effort_filter = st.sidebar.selectbox("Effort Estimate", ["All"] + sorted(set(i.get("effort", "Unknown") for i in scraped_insights)))
 type_filter = st.sidebar.selectbox("Insight Type", ["All"] + sorted(set(i.get("type_tag", "Unknown") for i in scraped_insights)))
@@ -65,8 +67,7 @@ filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
     if (
-        (team_filter == "All" or i.get("team") == team_filter)
-        and (status_filter == "All" or i.get("status") == status_filter)
+        (status_filter == "All" or i.get("status") == status_filter)
         and (effort_filter == "All" or i.get("effort") == effort_filter)
         and (type_filter == "All" or i.get("type_tag") == type_filter)
         and (persona_filter == "All" or i.get("persona") == persona_filter)
@@ -76,7 +77,7 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# Show emerging trends
+# Emerging trend list
 if rising_trends:
     with st.expander("🔥 Emerging Trends Detected", expanded=True):
         for t in sorted(rising_trends):
@@ -84,7 +85,7 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Display insights
+# Show filtered insights
 for idx, i in enumerate(filtered):
     insight_type = i.get("type", "🧠 Insight")
     summary = i.get("summary", i.get("text", "")[:80])
@@ -106,7 +107,7 @@ for idx, i in enumerate(filtered):
 
     with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
         st.write(f"**Persona:** {i.get('persona', 'Unknown')}")
-        st.write(f"**Scrum Team:** {i.get('team', 'Triage')} | Source: {i.get('source', 'N/A')} | Last Updated: {i.get('last_updated', 'N/A')} | Score: {score}")
+        st.write(f"**Source:** {i.get('source', 'N/A')} | Last Updated: {i.get('last_updated', 'N/A')} | Score: {score}")
 
         st.markdown("**User Quotes:**")
         for quote in i.get("cluster", []):
