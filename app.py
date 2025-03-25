@@ -1,8 +1,8 @@
 # app.py — SignalSynth with capped clustering to avoid timeouts
 import streamlit as st
-from load_scraped_insights import load_scraped_posts, process_insights
-from signal_scorer import filter_relevant_insights
-from brand_trend_dashboard import display_brand_dashboard
+from utils.load_scraped_insights import load_scraped_posts, process_insights
+from components.signal_scorer import filter_relevant_insights
+from components.brand_trend_dashboard import display_brand_dashboard
 from components.cluster_synthesizer import generate_synthesized_insights
 from collections import Counter
 
