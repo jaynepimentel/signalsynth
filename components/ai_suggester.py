@@ -1,4 +1,4 @@
-# ai_suggester.py — now with caching for faster local reuse
+# ai_suggester.py — OpenAI v1.0+ safe with caching and quota handling
 import os
 import json
 import hashlib
@@ -17,6 +17,7 @@ conversion, or reduce friction. Use strong PM thinking.
 
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Load or initialize cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
@@ -29,7 +30,7 @@ def generate_pm_ideas(text, brand="eBay"):
         return suggestion_cache[key]
 
     if not os.getenv("OPENAI_API_KEY"):
-        return ["[No API key set. Using fallback ideas]"]
+        return ["[No API key set — using fallback suggestion]"]
 
     try:
         response = client.chat.completions.create(
@@ -50,5 +51,8 @@ def generate_pm_ideas(text, brand="eBay"):
             json.dump(suggestion_cache, f, indent=2)
 
         return suggestions
+
     except Exception as e:
+        if "429" in str(e):
+            return ["[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"]
         return [f"[Error calling OpenAI: {e}]"]
