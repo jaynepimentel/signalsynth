@@ -36,8 +36,7 @@ with st.expander("📊 Brand Summary Dashboard", expanded=False):
 
 # --- Synthesized insight themes (beta) ---
 with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
-    sampled = scraped_insights[:100]
-    synth_cards = generate_synthesized_insights(sampled)
+    synth_cards = generate_synthesized_insights(scraped_insights)
     for card in synth_cards:
         st.markdown(f"### {card['title']}")
         st.caption(f"**Brand:** {card['brand']}")

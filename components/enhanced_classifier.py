@@ -1,62 +1,71 @@
-from transformers import pipeline
+# enhanced_classifier.py — sentiment + brand + type subtag enhancer
 import re
+import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from scipy.special import softmax
+from components.brand_recognizer import recognize_brand
 
-def get_sentiment_model():
-    try:
-        return pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
-    except Exception as e:
-        print("⚠️ Could not load transformer model. Falling back to neutral sentiment.")
-        return lambda text: [{"label": "neutral", "score": 1.0}]
+# Load sentiment model once
+MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 
-sentiment_model = get_sentiment_model()
-
-SUBTYPE_RULES = {
-    "Complaint": [
-        ("shipping|delay|late|slow", "Shipping Delay"),
-        ("fees|cut|too expensive", "High Fees"),
-        ("authentication|auth issue", "Authentication"),
-        ("support|no response|customer service", "Customer Support")
-    ],
-    "Feature Request": [
-        ("add|introduce|wish|should|enable|nudge", "Feature Idea"),
-        ("grading options|add sgc|multi grading", "Grading Options"),
-        ("ux|listing|upload", "Listing UX"),
-        ("international|foreign buyers", "International Support")
-    ],
-    "Confusion": [
-        ("how do i|why does|can someone explain", "Process Confusion"),
-        ("grading flow|labeling", "Grading Flow"),
-        ("vault integration|psa", "Vault/PSA Integration")
-    ]
+# Subtags by keyword trigger
+SUBTAG_MAP = {
+    "delay": "Delays",
+    "scam": "Fraud Concern",
+    "slow": "Speed Issue",
+    "authentication": "Trust Issue",
+    "refund": "Refund Issue",
+    "tracking": "Tracking Confusion",
+    "fees": "Fee Frustration",
+    "grading": "Grading Complaint",
+    "shipping": "Shipping Concern",
+    "vault": "Vault Friction",
+    "fake": "Counterfeit Concern",
+    "pop report": "Comps/Valuation"
 }
 
 def classify_sentiment(text):
-    result = sentiment_model(text)[0]
-    label = result['label'].capitalize()
-    confidence = round(result['score'] * 100)
+    encoded_input = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+    with torch.no_grad():
+        output = model(**encoded_input)
+        scores = softmax(output.logits[0].numpy())
+        labels = ["Negative", "Neutral", "Positive"]
+        label = labels[scores.argmax()]
+        confidence = round(float(scores.max()) * 100, 2)
+    return label, confidence
 
-    if label == "Positive":
-        return ("Praise", confidence)
-    elif label == "Negative":
-        return ("Complaint", confidence)
-    return ("Neutral", confidence)
-
-def classify_subtype(text, main_type):
+def get_subtag(text):
     text = text.lower()
-    if main_type in SUBTYPE_RULES:
-        for pattern, subtype in SUBTYPE_RULES[main_type]:
-            if re.search(pattern, text):
-                return subtype
+    for key, subtag in SUBTAG_MAP.items():
+        if key in text:
+            return subtag
     return "General"
 
 def enhance_insight(insight):
     text = insight.get("text", "")
-    sentiment, confidence = classify_sentiment(text)
-    insight["brand_sentiment"] = sentiment
-    insight["sentiment_confidence"] = confidence
 
-    insight_type = insight.get("type_tag", "Discussion")
-    subtype = classify_subtype(text, insight_type)
-    insight["type_subtag"] = subtype
+    # Brand detection (NER + fuzzy match)
+    brand = recognize_brand(text)
+    insight["target_brand"] = brand
+
+    # Sentiment detection
+    sentiment, sent_conf = classify_sentiment(text)
+    insight["brand_sentiment"] = {
+        "Positive": "Praise",
+        "Negative": "Complaint",
+        "Neutral": "Neutral"
+    }.get(sentiment, "Neutral")
+    insight["sentiment_confidence"] = sent_conf
+
+    # Subtag
+    insight["type_subtag"] = get_subtag(text)
+
+    # Type tagging fallback (optional)
+    if "type_tag" not in insight:
+        insight["type_tag"] = "Discussion"
+        insight["type_confidence"] = 70
+        insight["type_reason"] = "No match — defaulted to Discussion"
 
     return insight
