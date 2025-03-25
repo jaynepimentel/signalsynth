@@ -1,57 +1,30 @@
-# app.py — SignalSynth with precomputed insight loading
-import streamlit as st
-import json
+# app.py — Streamlit-safe cache-only version (no live GPT)
 import os
-from utils.load_scraped_insights import load_scraped_posts, process_insights
-from components.signal_scorer import filter_relevant_insights
-from components.brand_trend_dashboard import display_brand_dashboard
-from components.cluster_synthesizer import generate_synthesized_insights
+import json
+import streamlit as st
+from brand_trend_dashboard import display_brand_dashboard
 from collections import Counter
+
+# Prevent model loading / GPT calls inside Streamlit
+os.environ["RUNNING_IN_STREAMLIT"] = "1"
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# --- Load insights ---
-with st.spinner("⚙️ Loading insights..."):
+# Load precomputed insights only
+if os.path.exists("precomputed_insights.json"):
+    with open("precomputed_insights.json", "r", encoding="utf-8") as f:
+        scraped_insights = json.load(f)
+    st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
+else:
+    st.error("❌ No precomputed insights found. Please run precompute_insights.py locally.")
+    st.stop()
 
-    scraped_insights = []
-
-    if os.path.exists("precomputed_insights.json"):
-        with open("precomputed_insights.json", "r", encoding="utf-8") as f:
-            scraped_insights = json.load(f)
-        st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
-    else:
-        raw = load_scraped_posts()
-        processed = process_insights(raw)
-        scraped_insights = filter_relevant_insights(processed, min_score=3)
-        st.warning("⚠️ Used dynamic processing (precomputed file not found)")
-
-    if not scraped_insights:
-        st.error("❌ No insights found to display. Try re-running the scrapers or preprocessing.")
-        st.stop()
-
-# --- Brand-level dashboard ---
+# Brand Summary Dashboard
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
 
-# --- Synthesized insight themes (beta) ---
-with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
-    synth_cards = generate_synthesized_insights(scraped_insights)
-    for card in synth_cards:
-        st.markdown(f"### {card['title']}")
-        st.caption(f"**Brand:** {card['brand']}")
-        st.markdown(f"**Summary:** {card['summary']}")
-        st.markdown("**Top Quotes:**")
-        for q in card['quotes']:
-            st.markdown(f"- _{q}_")
-        if card['top_ideas']:
-            st.markdown("**Suggested PM Actions:**")
-            for idea in card['top_ideas']:
-                st.markdown(f"- {idea}")
-        if card.get("tags"):
-            st.markdown("**Tags:** " + ", ".join(card["tags"]))
-
-# --- Trend keyword detection ---
+# Trending keyword detection
 topic_keywords = ["vault", "psa", "graded", "funko", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -61,8 +34,9 @@ for i in scraped_insights:
             trend_counter[word] += 1
 rising_trends = [t for t, count in trend_counter.items() if count >= 5]
 
-# --- Sidebar filters ---
+# Sidebar filters
 st.sidebar.header("🔍 Filter Insights")
+team_filter = st.sidebar.selectbox("Scrum Team", ["All"] + sorted(set(i.get("team", "Unknown") for i in scraped_insights)))
 status_filter = st.sidebar.selectbox("Workflow Stage", ["All"] + sorted(set(i.get("status", "Unknown") for i in scraped_insights)))
 effort_filter = st.sidebar.selectbox("Effort Estimate", ["All"] + sorted(set(i.get("effort", "Unknown") for i in scraped_insights)))
 type_filter = st.sidebar.selectbox("Insight Type", ["All"] + sorted(set(i.get("type_tag", "Unknown") for i in scraped_insights)))
@@ -71,12 +45,13 @@ brand_filter = st.sidebar.selectbox("Target Brand", ["All"] + sorted(set(i.get("
 sentiment_filter = st.sidebar.selectbox("Brand Sentiment", ["All"] + sorted(set(i.get("brand_sentiment", "Unknown") for i in scraped_insights)))
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# --- Apply filters ---
+# Filter insights
 filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
     if (
-        (status_filter == "All" or i.get("status") == status_filter)
+        (team_filter == "All" or i.get("team") == team_filter)
+        and (status_filter == "All" or i.get("status") == status_filter)
         and (effort_filter == "All" or i.get("effort") == effort_filter)
         and (type_filter == "All" or i.get("type_tag") == type_filter)
         and (persona_filter == "All" or i.get("persona") == persona_filter)
@@ -86,7 +61,7 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# --- Trend summary ---
+# Emerging keyword trends
 if rising_trends:
     with st.expander("🔥 Emerging Trends Detected", expanded=True):
         for t in sorted(rising_trends):
@@ -94,36 +69,31 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# --- Show filtered insights ---
+# Display filtered insights
 for idx, i in enumerate(filtered):
-    insight_type = i.get("type", "🧠 Insight")
-    summary = i.get("summary", i.get("text", "")[:80])
-    score = i.get("score", 0)
-    effort = i.get("effort", "Unknown")
-    type_tag = i.get("type_tag", "Unclear")
-    confidence = i.get("type_confidence", 0)
-    reason = i.get("type_reason", "")
-    brand = i.get("target_brand", "Unknown")
-    sentiment = i.get("brand_sentiment", "Unknown")
-    subtag = i.get("type_subtag", "General")
-    sent_conf = i.get("sentiment_confidence", "N/A")
+    summary = i.get("summary") or i.get("text", "")[:80]
+    st.markdown(f"### 🧠 Insight: {summary}")
 
-    st.markdown(f"### {insight_type} — {summary}")
-    st.caption(f"Score: {score} | Type: {type_tag} > {subtag} ({confidence}%) | Effort: {effort} | Brand: {brand} | Sentiment: {sentiment} ({sent_conf}%)")
+    st.caption(
+        f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
+        f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
+        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%)"
+    )
 
-    if reason:
-        st.markdown(f"💡 *Reason:* _{reason}_")
+    if i.get("type_reason"):
+        st.markdown(f"💡 *Reason:* _{i['type_reason']}_")
 
     with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
         st.write(f"**Persona:** {i.get('persona', 'Unknown')}")
-        st.write(f"**Source:** {i.get('source', 'N/A')} | Last Updated: {i.get('last_updated', 'N/A')} | Score: {score}")
+        st.write(f"**Scrum Team:** {i.get('team', 'Triage')} | Source: {i.get('source', 'N/A')} | "
+                 f"Last Updated: {i.get('last_updated', 'N/A')} | Score: {i.get('score', 0)}")
 
         st.markdown("**User Quotes:**")
         for quote in i.get("cluster", []):
             st.markdown(f"- _{quote}_")
 
         if i.get("ideas"):
-            st.markdown("**AI-Suggested Ideas:**")
+            st.markdown("**💡 PM Suggestions:**")
             for idx2, idea in enumerate(i["ideas"]):
                 st.markdown(f"- {idea}")
                 st.button(
@@ -133,7 +103,7 @@ for idx, i in enumerate(filtered):
                 )
 
         if st.button(f"Generate PRD for: {summary[:30]}...", key=f"prd_{idx}"):
-            st.success("✅ PRD Generated! (this would be sent to Airtable or JIRA in prod)")
+            st.success("✅ PRD Generated! (mock - would send to Airtable or JIRA)")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("Powered by your strategy + user signal ✨")
+st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
