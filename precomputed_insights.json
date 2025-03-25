@@ -90,7 +90,7 @@
     "severity_score": 90,
     "pm_priority_score": 72.52,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -108,7 +108,7 @@
     "severity_score": 90,
     "pm_priority_score": 72.63,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -126,7 +126,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -144,7 +144,7 @@
     "severity_score": 70,
     "pm_priority_score": 64.8,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -162,7 +162,7 @@
     "severity_score": 70,
     "pm_priority_score": 63.55,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -180,7 +180,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.52,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -198,7 +198,7 @@
     "severity_score": 90,
     "pm_priority_score": 68.43,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -216,7 +216,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.09,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -234,7 +234,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.49,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -252,7 +252,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.9,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -270,7 +270,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.04,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -288,7 +288,7 @@
     "severity_score": 30,
     "pm_priority_score": 47.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -306,7 +306,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.65,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -324,7 +324,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.62,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -342,7 +342,7 @@
     "severity_score": 90,
     "pm_priority_score": 68.02,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -360,7 +360,7 @@
     "severity_score": 50,
     "pm_priority_score": 49.51,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -378,7 +378,7 @@
     "severity_score": 90,
     "pm_priority_score": 67.76,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -396,7 +396,7 @@
     "severity_score": 90,
     "pm_priority_score": 66.02,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -414,7 +414,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.69,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -432,7 +432,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.62,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -450,7 +450,7 @@
     "severity_score": 30,
     "pm_priority_score": 48.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -468,7 +468,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.48,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -486,7 +486,7 @@
     "severity_score": 90,
     "pm_priority_score": 61.69,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -504,7 +504,7 @@
     "severity_score": 90,
     "pm_priority_score": 67.79,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -522,7 +522,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.04,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -540,7 +540,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.78,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -558,7 +558,7 @@
     "severity_score": 50,
     "pm_priority_score": 46.66,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -576,7 +576,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.23,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -594,7 +594,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.6,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -612,7 +612,7 @@
     "severity_score": 90,
     "pm_priority_score": 72.09,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -630,7 +630,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.15,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -648,7 +648,7 @@
     "severity_score": 90,
     "pm_priority_score": 71.5,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -666,7 +666,7 @@
     "severity_score": 90,
     "pm_priority_score": 72.51,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -684,7 +684,7 @@
     "severity_score": 70,
     "pm_priority_score": 64.2,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -702,7 +702,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.91,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -720,7 +720,7 @@
     "severity_score": 70,
     "pm_priority_score": 64.93,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -738,7 +738,7 @@
     "severity_score": 70,
     "pm_priority_score": 62.19,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -756,7 +756,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.58,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -774,7 +774,7 @@
     "severity_score": 70,
     "pm_priority_score": 60.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -792,7 +792,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.98,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -810,7 +810,7 @@
     "severity_score": 70,
     "pm_priority_score": 63.9,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -828,7 +828,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.14,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -846,7 +846,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.29,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -864,7 +864,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.9,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -882,7 +882,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.97,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -900,7 +900,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.96,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -918,7 +918,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.17,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -936,7 +936,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.89,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -954,7 +954,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -972,7 +972,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.77,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -990,7 +990,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.47,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1008,7 +1008,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.69,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1026,7 +1026,7 @@
     "severity_score": 70,
     "pm_priority_score": 59.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1044,7 +1044,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.0,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1062,7 +1062,7 @@
     "severity_score": 70,
     "pm_priority_score": 56.83,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1080,7 +1080,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.69,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1098,7 +1098,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.65,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1116,7 +1116,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.95,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1134,7 +1134,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1152,7 +1152,7 @@
     "severity_score": 70,
     "pm_priority_score": 56.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1170,7 +1170,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.73,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1188,7 +1188,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1206,7 +1206,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.76,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1224,7 +1224,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.26,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1242,7 +1242,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.51,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1260,7 +1260,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1278,7 +1278,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.45,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1296,7 +1296,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.68,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1314,7 +1314,7 @@
     "severity_score": 50,
     "pm_priority_score": 53.48,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1332,7 +1332,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.65,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1350,7 +1350,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.76,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1368,7 +1368,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.67,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1386,7 +1386,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.73,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1404,7 +1404,7 @@
     "severity_score": 50,
     "pm_priority_score": 53.63,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1422,7 +1422,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1440,7 +1440,7 @@
     "severity_score": 30,
     "pm_priority_score": 36.16,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1458,7 +1458,7 @@
     "severity_score": 30,
     "pm_priority_score": 36.64,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1476,7 +1476,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.98,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1494,7 +1494,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.77,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1512,7 +1512,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.27,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1530,7 +1530,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.25,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1548,7 +1548,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.4,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1566,7 +1566,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.23,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1584,7 +1584,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.15,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1602,7 +1602,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.82,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1620,7 +1620,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.78,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1638,7 +1638,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.35,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1656,7 +1656,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.51,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1674,7 +1674,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.79,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1692,7 +1692,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.09,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1710,7 +1710,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.47,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1728,7 +1728,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1746,7 +1746,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.49,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1764,7 +1764,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.69,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1782,7 +1782,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.59,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1800,7 +1800,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.15,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1818,7 +1818,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1836,7 +1836,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.26,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1854,7 +1854,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.4,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1872,7 +1872,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1890,7 +1890,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.86,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1908,7 +1908,7 @@
     "severity_score": 70,
     "pm_priority_score": 64.45,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1926,7 +1926,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1944,7 +1944,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1962,7 +1962,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.35,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1980,7 +1980,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.07,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -1998,7 +1998,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.59,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2016,7 +2016,7 @@
     "severity_score": 90,
     "pm_priority_score": 64.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2034,7 +2034,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.48,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2052,7 +2052,7 @@
     "severity_score": 30,
     "pm_priority_score": 47.1,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2070,7 +2070,7 @@
     "severity_score": 30,
     "pm_priority_score": 48.17,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2088,7 +2088,7 @@
     "severity_score": 30,
     "pm_priority_score": 47.17,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2106,7 +2106,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.7,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2124,7 +2124,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.23,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2142,7 +2142,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.03,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2160,7 +2160,7 @@
     "severity_score": 50,
     "pm_priority_score": 55.44,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2178,7 +2178,7 @@
     "severity_score": 90,
     "pm_priority_score": 64.99,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2196,7 +2196,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.06,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2214,7 +2214,7 @@
     "severity_score": 70,
     "pm_priority_score": 63.53,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2232,7 +2232,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.75,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2250,7 +2250,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.72,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2268,7 +2268,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.18,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2286,7 +2286,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.47,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2304,7 +2304,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.7,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2322,7 +2322,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2340,7 +2340,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2358,7 +2358,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.28,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2376,7 +2376,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.1,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2394,7 +2394,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2412,7 +2412,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.73,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2430,7 +2430,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.05,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2448,7 +2448,7 @@
     "severity_score": 70,
     "pm_priority_score": 64.77,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2466,7 +2466,7 @@
     "severity_score": 70,
     "pm_priority_score": 60.74,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2484,7 +2484,7 @@
     "severity_score": 70,
     "pm_priority_score": 60.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2502,7 +2502,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.73,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2520,7 +2520,7 @@
     "severity_score": 70,
     "pm_priority_score": 59.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2538,7 +2538,7 @@
     "severity_score": 70,
     "pm_priority_score": 63.12,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2556,7 +2556,7 @@
     "severity_score": 70,
     "pm_priority_score": 60.53,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2574,7 +2574,7 @@
     "severity_score": 70,
     "pm_priority_score": 59.83,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2592,7 +2592,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.87,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2610,7 +2610,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.68,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2628,7 +2628,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.64,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2646,7 +2646,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.41,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2664,7 +2664,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.3,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2682,7 +2682,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.14,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2700,7 +2700,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.05,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2718,7 +2718,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2736,7 +2736,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.84,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2754,7 +2754,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.49,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2772,7 +2772,7 @@
     "severity_score": 30,
     "pm_priority_score": 48.57,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2790,7 +2790,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.56,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2808,7 +2808,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.57,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2826,7 +2826,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.67,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2844,7 +2844,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.89,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2862,7 +2862,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.45,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2880,7 +2880,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.36,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2898,7 +2898,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.25,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2916,7 +2916,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.91,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2934,7 +2934,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.24,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2952,7 +2952,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.6,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2970,7 +2970,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.0,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -2988,7 +2988,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.35,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3006,7 +3006,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.59,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3024,7 +3024,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.39,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3042,7 +3042,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.03,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3060,7 +3060,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.6,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3078,7 +3078,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.0,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3096,7 +3096,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.56,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3114,7 +3114,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.66,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3132,7 +3132,7 @@
     "severity_score": 90,
     "pm_priority_score": 70.23,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3150,7 +3150,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.34,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3168,7 +3168,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.35,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3186,7 +3186,7 @@
     "severity_score": 70,
     "pm_priority_score": 56.01,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3204,7 +3204,7 @@
     "severity_score": 90,
     "pm_priority_score": 70.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3222,7 +3222,7 @@
     "severity_score": 90,
     "pm_priority_score": 64.43,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3240,7 +3240,7 @@
     "severity_score": 70,
     "pm_priority_score": 58.54,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3258,7 +3258,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3276,7 +3276,7 @@
     "severity_score": 70,
     "pm_priority_score": 56.75,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3294,7 +3294,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.9,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3312,7 +3312,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.02,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3330,7 +3330,7 @@
     "severity_score": 90,
     "pm_priority_score": 67.93,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3348,7 +3348,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.53,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3366,7 +3366,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.17,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3384,7 +3384,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.9,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3402,7 +3402,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.54,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3420,7 +3420,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.63,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3438,7 +3438,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.15,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3456,7 +3456,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.51,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3474,7 +3474,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3492,7 +3492,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.62,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3510,7 +3510,7 @@
     "severity_score": 50,
     "pm_priority_score": 50.16,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3528,7 +3528,7 @@
     "severity_score": 70,
     "pm_priority_score": 59.16,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3546,7 +3546,7 @@
     "severity_score": 70,
     "pm_priority_score": 60.09,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3564,7 +3564,7 @@
     "severity_score": 70,
     "pm_priority_score": 57.57,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3582,7 +3582,7 @@
     "severity_score": 70,
     "pm_priority_score": 53.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3600,7 +3600,7 @@
     "severity_score": 50,
     "pm_priority_score": 51.47,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3618,7 +3618,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.87,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3636,7 +3636,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.19,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3654,7 +3654,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.41,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3672,7 +3672,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.84,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3690,7 +3690,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.43,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3708,7 +3708,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.52,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3726,7 +3726,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.15,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3744,7 +3744,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.84,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3762,7 +3762,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.62,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3780,7 +3780,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.55,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3798,7 +3798,7 @@
     "severity_score": 50,
     "pm_priority_score": 52.81,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3816,7 +3816,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.14,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3834,7 +3834,7 @@
     "severity_score": 70,
     "pm_priority_score": 55.36,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3852,7 +3852,7 @@
     "severity_score": 70,
     "pm_priority_score": 54.53,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3870,7 +3870,7 @@
     "severity_score": 90,
     "pm_priority_score": 67.89,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3888,7 +3888,7 @@
     "severity_score": 90,
     "pm_priority_score": 72.25,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3906,7 +3906,7 @@
     "severity_score": 70,
     "pm_priority_score": 63.54,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3924,7 +3924,7 @@
     "severity_score": 70,
     "pm_priority_score": 61.96,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3942,7 +3942,7 @@
     "severity_score": 90,
     "pm_priority_score": 70.43,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3960,7 +3960,7 @@
     "severity_score": 90,
     "pm_priority_score": 68.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3978,7 +3978,7 @@
     "severity_score": 90,
     "pm_priority_score": 68.85,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -3996,7 +3996,7 @@
     "severity_score": 30,
     "pm_priority_score": 39.82,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4014,7 +4014,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.82,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4032,7 +4032,7 @@
     "severity_score": 90,
     "pm_priority_score": 66.56,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4050,7 +4050,7 @@
     "severity_score": 90,
     "pm_priority_score": 66.26,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4068,7 +4068,7 @@
     "severity_score": 90,
     "pm_priority_score": 71.29,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4086,7 +4086,7 @@
     "severity_score": 30,
     "pm_priority_score": 46.87,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4104,7 +4104,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.01,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4122,7 +4122,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.73,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4140,7 +4140,7 @@
     "severity_score": 90,
     "pm_priority_score": 69.04,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4158,7 +4158,7 @@
     "severity_score": 90,
     "pm_priority_score": 71.46,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4176,7 +4176,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.36,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4194,7 +4194,7 @@
     "severity_score": 90,
     "pm_priority_score": 66.16,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4212,7 +4212,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.76,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4230,7 +4230,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.55,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4248,7 +4248,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.61,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4266,7 +4266,7 @@
     "severity_score": 30,
     "pm_priority_score": 46.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4284,7 +4284,7 @@
     "severity_score": 30,
     "pm_priority_score": 46.57,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4302,7 +4302,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.29,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4320,7 +4320,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.2,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4338,7 +4338,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.85,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4356,7 +4356,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.07,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4374,7 +4374,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.94,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4392,7 +4392,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.81,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4410,7 +4410,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.87,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4428,7 +4428,7 @@
     "severity_score": 50,
     "pm_priority_score": 52.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4446,7 +4446,7 @@
     "severity_score": 30,
     "pm_priority_score": 46.54,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4464,7 +4464,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.83,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4482,7 +4482,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.0,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4500,7 +4500,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.62,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4518,7 +4518,7 @@
     "severity_score": 90,
     "pm_priority_score": 63.56,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4536,7 +4536,7 @@
     "severity_score": 30,
     "pm_priority_score": 37.93,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4554,7 +4554,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.58,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4572,7 +4572,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4590,7 +4590,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.42,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4608,7 +4608,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.85,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4626,7 +4626,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.58,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4644,7 +4644,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4662,7 +4662,7 @@
     "severity_score": 30,
     "pm_priority_score": 44.74,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4680,7 +4680,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.74,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4698,7 +4698,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.91,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4716,7 +4716,7 @@
     "severity_score": 30,
     "pm_priority_score": 41.21,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4734,7 +4734,7 @@
     "severity_score": 30,
     "pm_priority_score": 40.71,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4752,7 +4752,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.13,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4770,7 +4770,7 @@
     "severity_score": 30,
     "pm_priority_score": 38.12,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4788,7 +4788,7 @@
     "severity_score": 30,
     "pm_priority_score": 42.5,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4806,7 +4806,7 @@
     "severity_score": 30,
     "pm_priority_score": 43.91,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -4824,7 +4824,7 @@
     "severity_score": 30,
     "pm_priority_score": 45.19,
     "ideas": [
-      "[⚠️ OpenAI quota exceeded — run precompute_insights.py locally to refresh suggestions]"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   }
