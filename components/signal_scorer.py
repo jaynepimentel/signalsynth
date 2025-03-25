@@ -111,7 +111,7 @@ def classify_type(text):
         return {"label": "Unknown", "confidence": 60, "reason": "Too short to infer intent"}
     return {"label": "Discussion", "confidence": 75, "reason": "Default to discussion if no strong signals"}
 
-def filter_relevant_insights(insights, min_score=10):
+def filter_relevant_insights(insights, min_score=3):
     filtered = []
     for i in insights:
         text = i.get("text", "")
