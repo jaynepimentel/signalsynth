@@ -1,121 +1,83 @@
-# signal_scorer.py — enhanced version with AI suggestions, sentiment, brand detection
+# signal_scorer.py — now with smarter keyword triggers + OpenAI fallback tagging + model-ready structure
 import re
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import generate_pm_ideas
 
-# Keyword scoring config
-KEY_PATTERNS = [
-    "psa", "vault", "graded", "shipping", "fees", "tracking", "eBay", "goldin", "pop report", "autopay"
-]
-LOW_VALUE_PATTERNS = [
-    "mail day", "look what I got", "for sale", "got this", "pc", "show off"
-]
-
-# Marketplace chatter / noise
-MARKETPLACE_CHATTER = [
-    "fs/ft", "for sale", "looking to move", "nft", "anyone want this", "dm me", "sold", "buy it now", "offers"
-]
-
-# Phrase triggers
-COMPLAINT_PHRASES = [
-    "scam", "delay", "issue", "problem", "error", "not working", "late", "no response", "waste", "never received", "fake", "poor service"
-]
+# Improved trigger lists
 FEATURE_PATTERNS = [
-    "can i", "should add", "wish there was", "would be great if", "there needs to be", "enable", "add", "introduce", "automate", "allow me to", "is there a way to"
+    "should add", "wish", "would love", "need to", "feature request", "add support", "can you add", "enable", "introduce", "please include"
 ]
+
+COMPLAINT_PHRASES = [
+    "issue", "bug", "broken", "doesn’t work", "not working", "stuck", "error", "won’t load", "refund", "delay", "never received"
+]
+
 CONFUSION_PHRASES = [
-    "how do i", "should i", "what should", "why does", "is it normal", "i don't understand", "do i need to", "can someone explain"
+    "how do", "i don’t understand", "what does", "how should", "why does", "can someone explain", "is this normal", "do i need to"
 ]
 
-# Brand keyword map
-BRAND_PATTERNS = {
-    "eBay Live": ["ebay live"],
-    "Fanatics Collect": ["fanatics collect", "fanatics vault", "fanatics"],
-    "WhatNot": ["whatnot"],
-    "Alt": ["alt marketplace"],
-    "Loupe": ["loupe app"]
-}
-
-# --------------------------------------
-# Core scoring logic
-# --------------------------------------
-
-def score_insight(text):
-    text = text.lower()
-    score = 0
-    for word in KEY_PATTERNS:
-        if word in text:
-            score += 8
-    if "psa" in text and "vault" in text:
-        score += 12
-    if "ebay" in text:
-        score += 10
-    if re.search(r"(how|why|can|should|where).*\?", text):
-        score += 6
-    for noise in LOW_VALUE_PATTERNS:
-        if noise in text:
-            score -= 10
-    if len(text.split()) < 6:
-        score -= 5
-    return score
-
-def detect_target_brand(text):
-    text = text.lower()
-    for brand, keywords in BRAND_PATTERNS.items():
-        for term in keywords:
-            if term in text:
-                return brand
-    return "eBay" if "ebay" in text else "Unknown"
+MARKETPLACE_CHATTER = [
+    "fs/ft", "for sale", "sold", "buy it now", "offer up", "dm me", "mail day"
+]
 
 def classify_type(text):
     text = text.lower()
-    if any(x in text for x in MARKETPLACE_CHATTER):
-        return {"label": "Marketplace Chatter", "confidence": 98, "reason": "Selling language: FS/NFT, for sale, offers"}
-    if any(x in text for x in COMPLAINT_PHRASES):
-        return {"label": "Complaint", "confidence": 90, "reason": "Includes complaint term like scam, delay, issue"}
-    if any(x in text for x in FEATURE_PATTERNS):
-        return {"label": "Feature Request", "confidence": 85, "reason": "Phrasing implies request for functionality"}
-    if any(x in text for x in CONFUSION_PHRASES):
-        return {"label": "Confusion", "confidence": 82, "reason": "Phrasing indicates user doesn’t understand something"}
-    if len(text.split()) < 10:
-        return {"label": "Unknown", "confidence": 60, "reason": "Too short to infer intent"}
-    return {"label": "Discussion", "confidence": 75, "reason": "Default to discussion if no strong signals"}
+
+    if any(p in text for p in MARKETPLACE_CHATTER):
+        return {"label": "Marketplace Chatter", "confidence": 95, "reason": "Selling or trading language"}
+
+    if any(p in text for p in FEATURE_PATTERNS):
+        return {"label": "Feature Request", "confidence": 90, "reason": "Detected feature-request phrasing"}
+
+    if any(p in text for p in COMPLAINT_PHRASES):
+        return {"label": "Complaint", "confidence": 88, "reason": "Detected bug or complaint language"}
+
+    if any(p in text for p in CONFUSION_PHRASES):
+        return {"label": "Confusion", "confidence": 85, "reason": "Detected confusion or how-to phrasing"}
+
+    # Fallback if no strong pattern match
+    return {"label": "Discussion", "confidence": 70, "reason": "Defaulted to general discussion"}
 
 def classify_effort(idea_text):
     idea_text = " ".join(idea_text).lower()
-    if any(x in idea_text for x in ["tooltip", "label", "reminder", "nudge"]):
+    if any(x in idea_text for x in ["tooltip", "label", "nudge"]):
         return "Low"
-    if any(x in idea_text for x in ["breakdown", "comps", "meter", "ETA", "alert"]):
+    if any(x in idea_text for x in ["breakdown", "chart", "comps"]):
         return "Medium"
-    if any(x in idea_text for x in ["integration", "tracking", "automation", "workflow"]):
+    if any(x in idea_text for x in ["integration", "automation", "workflow", "sync"]):
         return "High"
     return "Medium"
 
-# --------------------------------------
-# Core processing pipeline
-# --------------------------------------
+def score_insight(text):
+    score = 0
+    lowered = text.lower()
+    for keyword in ["vault", "psa", "graded", "shipping", "authenticity", "whatnot", "fanatics"]:
+        if keyword in lowered:
+            score += 5
+    if "scam" in lowered or "broken" in lowered:
+        score += 8
+    return score
 
 def filter_relevant_insights(insights, min_score=3):
-    filtered = []
-
+    enriched = []
     for i in insights:
         text = i.get("text", "")
-        score = score_insight(text)
-        i["score"] = score
+        i["score"] = score_insight(text)
 
-        # Run LLM-enhanced classification
+        # --- Add type classification
+        tag_result = classify_type(text)
+        i["type_tag"] = tag_result["label"]
+        i["type_confidence"] = tag_result["confidence"]
+        i["type_reason"] = tag_result["reason"]
+
+        # --- AI-enhanced insight processing (sentiment, brand, subtag, etc.)
         i = enhance_insight(i)
 
-        # Detect brand (fallback if not handled in enhance)
-        i["target_brand"] = i.get("target_brand") or detect_target_brand(text)
-
-        # Generate PM ideas via OpenAI
-        i["ideas"] = generate_pm_ideas(text, i["target_brand"])
-
-        # Effort classification
+        # --- Generate ideas (cached GPT)
+        i["ideas"] = generate_pm_ideas(text, i.get("target_brand"))
         i["effort"] = classify_effort(i["ideas"])
 
-        if i["type_tag"] != "Marketplace Chatter" and score >= min_score:
-            filtered.append(i)
+        if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score:
+            enriched.append(i)
 
-    return filtered
+    return enriched
