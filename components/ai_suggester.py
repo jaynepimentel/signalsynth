@@ -1,10 +1,12 @@
-# components/ai_suggester.py
+# ai_suggester.py — now with caching for faster local reuse
 import os
+import json
+import hashlib
+from openai import OpenAI
 from dotenv import load_dotenv
-import openai
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 system_prompt = """
 You are a senior product manager at a major marketplace platform like eBay or Fanatics. 
@@ -13,21 +15,40 @@ product improvements or operational actions. Focus on things that would build tr
 conversion, or reduce friction. Use strong PM thinking.
 """
 
+CACHE_PATH = "gpt_suggestion_cache.json"
+
+if os.path.exists(CACHE_PATH):
+    with open(CACHE_PATH, "r", encoding="utf-8") as f:
+        suggestion_cache = json.load(f)
+else:
+    suggestion_cache = {}
+
 def generate_pm_ideas(text, brand="eBay"):
-    if not openai.api_key:
+    key = hashlib.md5(text.strip().encode()).hexdigest()
+    if key in suggestion_cache:
+        return suggestion_cache[key]
+
+    if not os.getenv("OPENAI_API_KEY"):
         return ["[No API key set. Using fallback ideas]"]
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4-turbo",
+        response = client.chat.completions.create(
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Feedback from user:\n{text}\n\nBrand mentioned: {brand}"}
             ],
-            temperature=0.4,
+            temperature=0.3,
             max_tokens=300
         )
         output = response.choices[0].message.content.strip().split("\n")
-        return [line.strip("- ").strip() for line in output if line.strip()]
+        suggestions = [line.strip("- ").strip() for line in output if line.strip()]
+        suggestion_cache[key] = suggestions
+
+        # Save to cache
+        with open(CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(suggestion_cache, f, indent=2)
+
+        return suggestions
     except Exception as e:
         return [f"[Error calling OpenAI: {e}]"]
