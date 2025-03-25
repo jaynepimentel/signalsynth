@@ -12,7 +12,7 @@ st.title("📡 SignalSynth: Collectibles Insight Engine")
 # Load and score insights
 raw_posts = load_scraped_posts()
 processed = process_insights(raw_posts)
-scraped_insights = filter_relevant_insights(processed, min_score=5)
+scraped_insights = filter_relevant_insights(processed, min_score=3)
 
 if not scraped_insights:
     st.warning("⚠️ No insights found to analyze. Try rerunning the scraper or lowering the score threshold.")

@@ -1,32 +1,25 @@
-# load_scraped_insights.py
+# utils/load_scraped_insights.py
+
 import os
 
-DATA_FILES = [
-    "scraped_reddit_posts.txt",
-    "scraped_community_posts.txt"
-]
-
 def load_scraped_posts():
-    combined_posts = []
-    for filename in DATA_FILES:
-        if os.path.exists(filename):
-            with open(filename, "r", encoding="utf-8") as f:
-                lines = [line.strip() for line in f if line.strip()]
-                combined_posts.extend(lines)
-    return combined_posts
+    path = "data/scraped_community_posts.txt"
+    if not os.path.exists(path):
+        return []
 
-def process_insights(raw_posts):
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
     insights = []
-    for text in raw_posts:
-        source = "Reddit" if "reddit.com" in text else "Community"
+    for line in lines:
         insights.append({
-            "source": source,
-            "text": text,
-            "persona": "Buyer" if "buy" in text.lower() else "Seller",
-            "cluster": [text],
-            "ideas": [],
-            "status": "Discovery",
-            "team": "Triage",
-            "last_updated": "2025-03-24"
+            "text": line,
+            "source": "reddit",
+            "type_tag": "Discussion",  # default until scored
         })
+
+    return insights
+
+def process_insights(insights):
+    # Placeholder in case you want to add cleaning logic later
     return insights
