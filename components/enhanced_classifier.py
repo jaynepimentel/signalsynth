@@ -1,4 +1,4 @@
-# enhanced_classifier.py — Cloud-safe: avoids model load in Streamlit Cloud
+# enhanced_classifier.py — upgraded with multi-subtag, regex, severity boost
 import os
 import re
 from components.brand_recognizer import recognize_brand
@@ -29,8 +29,16 @@ SUBTAG_MAP = {
     "shipping": "Shipping Concern",
     "vault": "Vault Friction",
     "fake": "Counterfeit Concern",
-    "pop report": "Comps/Valuation"
+    "pop report": "Comps/Valuation",
+    "turnaround": "Speed Issue",
+    "verification": "Trust Issue"
 }
+
+STRONG_COMBOS = [
+    ("vault", "delay", "Vault Friction"),
+    ("shipping", "fanatics", "Shipping Concern"),
+    ("grading", "psa", "Grading Complaint")
+]
 
 def classify_sentiment(text):
     if not tokenizer or not model:
@@ -45,21 +53,27 @@ def classify_sentiment(text):
         confidence = round(float(scores.max()) * 100, 2)
     return label, confidence
 
-def get_subtag(text):
-    text = text.lower()
-    for key, subtag in SUBTAG_MAP.items():
-        if key in text:
-            return subtag
-    return "General"
+def detect_subtags(text):
+    found = set()
+    for key, label in SUBTAG_MAP.items():
+        if re.search(rf"\\b{re.escape(key)}\\b", text):
+            found.add(label)
+    return list(found) if found else ["General"]
+
+def match_combos(text):
+    for a, b, label in STRONG_COMBOS:
+        if a in text and b in text:
+            return label
+    return None
 
 def enhance_insight(insight):
-    text = insight.get("text", "")
+    text = insight.get("text", "").lower()
 
     # Brand detection
     brand = recognize_brand(text)
     insight["target_brand"] = brand
 
-    # Sentiment
+    # Sentiment classification
     sentiment, sent_conf = classify_sentiment(text)
     insight["brand_sentiment"] = {
         "Positive": "Praise",
@@ -68,14 +82,24 @@ def enhance_insight(insight):
     }.get(sentiment, "Neutral")
     insight["sentiment_confidence"] = sent_conf
 
-    # Subtag
-    insight["type_subtag"] = get_subtag(text)
+    # Subtags (plural)
+    subtags = detect_subtags(text)
+    combo_override = match_combos(text)
+    if combo_override:
+        subtags.insert(0, combo_override)  # prioritize
 
-    # Severity + PM priority
-    insight["severity_score"] = estimate_severity(text)
+    insight["type_subtags"] = list(dict.fromkeys(subtags))  # deduped list
+    insight["type_subtag"] = subtags[0]  # legacy primary subtag
+
+    # Severity scoring
+    severity = estimate_severity(text)
+    insight["severity_score"] = severity
+    insight["frustration_flag"] = severity >= 85
+
+    # Priority scoring
     insight["pm_priority_score"] = calculate_pm_priority(insight)
 
-    # Default fallback
+    # Default fallback (if needed)
     if "type_tag" not in insight:
         insight["type_tag"] = "Discussion"
         insight["type_confidence"] = 70
