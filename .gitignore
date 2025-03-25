@@ -1,0 +1,39 @@
+# Local environment
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# API Keys & config
+.env
+
+# Streamlit & cache
+.streamlit/config.toml
+*.toml
+*.log
+.precomputed_cache/
+precomputed_insights.json
+
+# Scraper outputs
+scraped_*.txt
+*.csv
+
+# Dev scripts
+precompute_insights.py
+scrape_*.py
+run_scraper*.sh
+
+# Model files & large downloads
+*.bin
+*.pt
+*.onnx
+*.model
+*.cache/
+
+# Notebooks (if you don't want them in version control)
+*.ipynb
+
+# VS Code
+.vscode/

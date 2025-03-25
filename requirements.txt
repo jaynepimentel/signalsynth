@@ -2,6 +2,8 @@ streamlit
 pandas
 beautifulsoup4
 requests
+
+# NLP + Transformers
 transformers==4.39.3
 torch==2.2.1
 sentence-transformers==2.6.1
@@ -9,3 +11,8 @@ scikit-learn==1.4.2
 scipy==1.12.0
 numpy==1.26.4
 tqdm==4.66.2
+
+# NEW: AI Suggestions, Environment, Brand Matching
+openai
+python-dotenv
+fuzzywuzzy
