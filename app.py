@@ -27,7 +27,12 @@ with st.expander("📊 Brand Summary Dashboard", expanded=False):
 
 # AI-synthesized themes
 with st.expander("🧠 AI-Synthesized Themes (Beta)", expanded=True):
-    synth_cards = generate_synthesized_insights(scraped_insights)
+    # Limit to 200 insights for clustering performance
+    sampled_insights = scraped_insights[:200]
+
+    with st.spinner("🔄 Clustering insights... please wait ~10 seconds"):
+        synth_cards = generate_synthesized_insights(sampled_insights)
+
     for card in synth_cards:
         st.markdown(f"### {card['title']}")
         st.caption(f"**Brand:** {card['brand']}")
