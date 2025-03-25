@@ -2,7 +2,7 @@
 import os
 import json
 import streamlit as st
-from brand_trend_dashboard import display_brand_dashboard
+from components.brand_trend_dashboard import display_brand_dashboard
 from collections import Counter
 
 # Prevent model loading / GPT calls inside Streamlit
