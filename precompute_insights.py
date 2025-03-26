@@ -5,6 +5,10 @@ import time
 from utils.load_scraped_insights import load_scraped_posts, process_insights
 from components.signal_scorer import filter_relevant_insights
 from components.trend_logger import log_insights_over_time
+from dotenv import load_dotenv
+load_dotenv()
+print("🔑 OPENAI key loaded:", os.getenv("OPENAI_API_KEY")[:6] if os.getenv("OPENAI_API_KEY") else "❌ Missing")
+
 
 os.environ["RUNNING_IN_STREAMLIT"] = "0"
 

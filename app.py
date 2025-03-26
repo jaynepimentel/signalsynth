@@ -4,7 +4,7 @@ import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from components.brand_trend_dashboard import display_brand_dashboard
+from brand_trend_dashboard import display_brand_dashboard
 from collections import Counter
 from components.ai_suggester import generate_pm_ideas
 
