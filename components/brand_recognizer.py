@@ -1,6 +1,7 @@
-# brand_recognizer.py — brand detection with fuzzy + pattern matching
+# brand_recognizer.py — brand detection with semantic fallback
 import re
 from difflib import get_close_matches
+from sentence_transformers import SentenceTransformer, util
 
 BRAND_KEYWORDS = {
     "eBay": ["ebay", "ebay live", "ebay vault", "standard envelope"],
@@ -12,22 +13,23 @@ BRAND_KEYWORDS = {
 }
 
 ALL_TERMS = [term for values in BRAND_KEYWORDS.values() for term in values]
+model = SentenceTransformer("all-MiniLM-L6-v2")
+term_embeddings = model.encode(ALL_TERMS)
 
 def recognize_brand(text):
     text_lower = text.lower()
-
-    # Pattern match
     for brand, terms in BRAND_KEYWORDS.items():
         for term in terms:
             if term in text_lower:
                 return brand
 
-    # Fuzzy fallback
-    words = re.findall(r"\b\w+\b", text_lower)
-    close = get_close_matches(" ".join(words), ALL_TERMS, n=1, cutoff=0.8)
-    if close:
-        for brand, terms in BRAND_KEYWORDS.items():
-            if close[0] in terms:
-                return brand
+    # Semantic fallback
+    embedding = model.encode(text_lower)
+    scores = util.cos_sim(embedding, term_embeddings)[0]
+    best_match_idx = scores.argmax().item()
+    matched_term = ALL_TERMS[best_match_idx]
 
+    for brand, terms in BRAND_KEYWORDS.items():
+        if matched_term in terms:
+            return brand
     return "Unknown"

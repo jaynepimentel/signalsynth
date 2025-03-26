@@ -19,3 +19,8 @@ def display_insight_charts(insights):
         st.subheader("Insight Type Distribution")
         insight_types = [i.get("type_tag", "Unknown") for i in insights]
         st.bar_chart(pd.Series(insight_types).value_counts())
+
+        st.subheader("Topic Focus Breakdown")
+        all_topics = [t for i in insights for t in i.get("topic_focus", [])]
+        if all_topics:
+            st.bar_chart(pd.Series(all_topics).value_counts())
