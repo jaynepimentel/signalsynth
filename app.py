@@ -85,7 +85,7 @@ for idx, i in enumerate(filtered):
     st.caption(
         f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
         f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%)"
+        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
     )
 
     if i.get("type_reason"):
