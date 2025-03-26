@@ -600,10 +600,10 @@
     "brand_sentiment": "Complaint",
     "sentiment_confidence": 73.0,
     "type_subtags": [
-      "Trust Issue",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Trust Issue"
     ],
-    "type_subtag": "Trust Issue",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 45.37,
@@ -627,10 +627,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 88.35,
     "type_subtags": [
-      "Vault Friction",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Vault Friction"
     ],
-    "type_subtag": "Vault Friction",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 49.57,
@@ -655,11 +655,11 @@
     "brand_sentiment": "Complaint",
     "sentiment_confidence": 49.59,
     "type_subtags": [
-      "Refund Issue",
+      "Grading Complaint",
       "Trust Issue",
-      "Grading Complaint"
+      "Refund Issue"
     ],
-    "type_subtag": "Refund Issue",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 43.07,
@@ -683,10 +683,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 82.13,
     "type_subtags": [
-      "Trust Issue",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Trust Issue"
     ],
-    "type_subtag": "Trust Issue",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 47.67,
@@ -940,10 +940,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 81.07,
     "type_subtags": [
-      "Vault Friction",
-      "Shipping Concern"
+      "Shipping Concern",
+      "Vault Friction"
     ],
-    "type_subtag": "Vault Friction",
+    "type_subtag": "Shipping Concern",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 46.24,
@@ -1826,11 +1826,11 @@
     "brand_sentiment": "Complaint",
     "sentiment_confidence": 68.68,
     "type_subtags": [
-      "Refund Issue",
+      "Counterfeit Concern",
       "Trust Issue",
-      "Counterfeit Concern"
+      "Refund Issue"
     ],
-    "type_subtag": "Refund Issue",
+    "type_subtag": "Counterfeit Concern",
     "severity_score": 90,
     "frustration_flag": true,
     "pm_priority_score": 73.16,
@@ -2505,10 +2505,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 54.56,
     "type_subtags": [
-      "Fee Frustration",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Fee Frustration"
     ],
-    "type_subtag": "Fee Frustration",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 43.76,
@@ -2700,10 +2700,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 53.02,
     "type_subtags": [
-      "Fee Frustration",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Fee Frustration"
     ],
-    "type_subtag": "Fee Frustration",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 43.34,
@@ -4361,10 +4361,10 @@
     "brand_sentiment": "Complaint",
     "sentiment_confidence": 95.76,
     "type_subtags": [
-      "Vault Friction",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Vault Friction"
     ],
-    "type_subtag": "Vault Friction",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 51.57,
@@ -4389,10 +4389,10 @@
     "brand_sentiment": "Neutral",
     "sentiment_confidence": 87.46,
     "type_subtags": [
-      "Vault Friction",
-      "Grading Complaint"
+      "Grading Complaint",
+      "Vault Friction"
     ],
-    "type_subtag": "Vault Friction",
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
     "frustration_flag": false,
     "pm_priority_score": 48.22,
