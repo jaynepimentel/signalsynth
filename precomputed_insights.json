@@ -8,19 +8,16 @@
     "type_reason": "Detected feature-request phrasing",
     "target_brand": "Alt",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 62.74,
+    "sentiment_confidence": 68.76,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 59.55,
+    "frustration_flag": false,
+    "pm_priority_score": 60.75,
     "ideas": [
-      "Customer's Concern:",
-      "The user's feedback is not very explicit about a specific issue with the marketplace platform. However, it seems like they are suggesting a new feature or rule that they found beneficial in their group (\"pod\"). The user might be implying that the platform lacks certain features or rules that enhance the user experience for casual players.",
-      "Recommended Actions:",
-      "1. Engage with the User: The first step should be to engage with the user to understand the specific rule or feature they are referring to. This could be done through a direct message or a comment asking for more details.",
-      "2. User Research: Conduct user research to understand the needs and preferences of casual players. This could involve surveys, interviews, or focus groups. The goal is to identify features or rules that could improve the user experience for this segment.",
-      "3. Feature Development: Based on the feedback from the user and the insights from the user research, develop new features or rules that cater to the needs of casual players. This could involve changes to the platform's interface, the introduction of new game modes, or the modification of existing rules.",
-      "4. User Testing: Before rolling out the new features or rules to all users, conduct user testing with a small group of casual players. This will allow the platform to gather feedback and make any necessary adjustments.",
-      "5. Communication: Once the new features or rules are ready to be rolled out, communicate these changes to the users. This could involve an announcement on the platform, an email to users,"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -33,18 +30,16 @@
     "type_reason": "Detected feature-request phrasing",
     "target_brand": "Alt",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 47.82,
+    "sentiment_confidence": 51.56,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 56.56,
+    "frustration_flag": false,
+    "pm_priority_score": 57.31,
     "ideas": [
-      "User Concern:",
-      "The user seems to be a part of a casual player group or \"pod\" that has introduced a new rule which they find beneficial. However, the exact concern is not clear from the feedback provided. It could be that they are looking for a way to implement this rule on the platform or they might want to share this rule with a larger audience.",
-      "Product Improvement Recommendations:",
-      "1. Community Feature: If the platform doesn't already have it, we can introduce a community feature where users can create groups or \"pods\" based on their interests. This would allow them to share tips, rules, and experiences with each other. This could build trust and reduce friction as users can interact with others who have similar interests.",
-      "2. Rule Implementation: If the user's concern is about implementing the rule they have introduced in their pod, we can consider providing a feature where users can customize their game settings based on their preferences. This could improve conversion as it would enhance user experience.",
-      "3. Sharing Feature: If the user wants to share their rule with a larger audience, we can introduce a feature where users can share their tips or rules with the community. This could be in the form of a post or a blog. This would not only allow users to share their knowledge but also learn from others, thereby building trust and improving user engagement.",
-      "4. Feedback System: To better understand user concerns and needs, we can improve our feedback system to prompt more specific feedback. This could involve asking users"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -57,22 +52,16 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 70.49,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 68.47,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.1,
+    "frustration_flag": false,
+    "pm_priority_score": 40.69,
     "ideas": [
-      "Customer Concern:",
-      "The customer's concern appears to be about the authenticity of the cards they purchase online. They are worried about receiving counterfeit cards or not receiving the exact card they ordered.",
-      "Recommended Product Improvements/Operational Actions:",
-      "1. Authentication Verification: Implement a robust authentication process for sellers to verify the authenticity of their cards before listing them for sale. This could involve a combination of AI-based image recognition technology and human expertise.",
-      "2. Seller Rating System: Introduce a seller rating system based on the quality of their products, delivery time, and customer reviews. This will encourage sellers to maintain high standards and build trust among buyers.",
-      "3. Detailed Product Descriptions: Ensure that all product listings have detailed descriptions and high-quality images. This will help buyers make informed decisions and reduce the chances of receiving a product that doesn't match the description.",
-      "4. Secure Payment and Delivery: Implement secure payment methods and trackable delivery options to ensure that buyers receive their cards in the condition they expect.",
-      "5. Buyer Protection Policy: Develop a comprehensive buyer protection policy that covers issues like receiving counterfeit or incorrect cards. This will give buyers confidence to make purchases on the platform.",
-      "6. Education and Awareness: Regularly share tips and best practices with buyers on how to identify authentic cards. This could be done through blog posts, emails, or in-app notifications.",
-      "7. Customer Support: Strengthen the customer support team to handle any disputes or concerns promptly and effectively.",
-      "These improvements will help build trust, improve conversion"
+      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
     "effort": "Medium"
   },
@@ -85,10 +74,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 86.6,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 86.0,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 72.52,
+    "frustration_flag": true,
+    "pm_priority_score": 72.4,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -103,10 +96,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 87.16,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 89.24,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 72.63,
+    "frustration_flag": true,
+    "pm_priority_score": 73.05,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -121,10 +118,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 75.56,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 77.11,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.71,
+    "frustration_flag": false,
+    "pm_priority_score": 62.02,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -139,10 +140,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.02,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 83.02,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 64.8,
+    "frustration_flag": false,
+    "pm_priority_score": 63.2,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -157,10 +162,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.77,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 82.26,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 63.55,
+    "frustration_flag": false,
+    "pm_priority_score": 63.05,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -175,10 +184,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 89.62,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 90.14,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 69.52,
+    "frustration_flag": true,
+    "pm_priority_score": 69.63,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -193,10 +206,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 79.16,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 80.63,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 68.43,
+    "frustration_flag": true,
+    "pm_priority_score": 68.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -210,11 +227,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 50.46,
-    "type_subtag": "Trust Issue",
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 49.25,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.09,
+    "frustration_flag": false,
+    "pm_priority_score": 36.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -229,10 +250,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 57.45,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 56.53,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.49,
+    "frustration_flag": false,
+    "pm_priority_score": 38.31,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -247,10 +272,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.49,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 50.71,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.9,
+    "frustration_flag": false,
+    "pm_priority_score": 53.14,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -265,10 +294,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 70.2,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 67.12,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.04,
+    "frustration_flag": false,
+    "pm_priority_score": 56.42,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -283,10 +316,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.92,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 84.22,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 47.18,
+    "frustration_flag": false,
+    "pm_priority_score": 47.44,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -301,10 +338,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 83.27,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 80.08,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.65,
+    "frustration_flag": false,
+    "pm_priority_score": 43.02,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -319,10 +360,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 88.1,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 91.78,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.62,
+    "frustration_flag": false,
+    "pm_priority_score": 45.36,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -337,10 +382,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 77.12,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 76.51,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 68.02,
+    "frustration_flag": true,
+    "pm_priority_score": 67.9,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -355,10 +404,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 72.53,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 72.43,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 49.51,
+    "frustration_flag": false,
+    "pm_priority_score": 49.49,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -373,10 +426,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.78,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 81.31,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 67.76,
+    "frustration_flag": true,
+    "pm_priority_score": 67.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -390,11 +447,15 @@
     "type_confidence": 88,
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 54.12,
-    "type_subtag": "Delays",
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 49.27,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 66.02,
+    "frustration_flag": true,
+    "pm_priority_score": 65.05,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -409,10 +470,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 55.46,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 54.33,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.69,
+    "frustration_flag": false,
+    "pm_priority_score": 41.47,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -427,10 +492,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 58.09,
+    "sentiment_confidence": 61.35,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.62,
+    "frustration_flag": false,
+    "pm_priority_score": 55.27,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -445,10 +514,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 88.18,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 87.97,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 48.24,
+    "frustration_flag": false,
+    "pm_priority_score": 48.19,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -463,10 +536,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.42,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 82.16,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.48,
+    "frustration_flag": false,
+    "pm_priority_score": 43.43,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -480,11 +557,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 50.45,
-    "type_subtag": "Fraud Concern",
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 48.12,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 61.69,
+    "frustration_flag": true,
+    "pm_priority_score": 61.22,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -499,10 +580,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.95,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 81.43,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 67.79,
+    "frustration_flag": true,
+    "pm_priority_score": 67.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -517,10 +602,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 50.22,
+    "sentiment_confidence": 79.47,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.04,
+    "frustration_flag": false,
+    "pm_priority_score": 42.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -535,10 +624,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 78.88,
+    "sentiment_confidence": 77.61,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.78,
+    "frustration_flag": false,
+    "pm_priority_score": 42.52,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -553,10 +646,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 58.32,
+    "sentiment_confidence": 60.02,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 46.66,
+    "frustration_flag": false,
+    "pm_priority_score": 47.0,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -571,10 +668,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 61.13,
+    "sentiment_confidence": 59.16,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.23,
+    "frustration_flag": false,
+    "pm_priority_score": 54.83,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -589,10 +690,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 73.01,
+    "sentiment_confidence": 78.67,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.6,
+    "frustration_flag": false,
+    "pm_priority_score": 58.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -607,10 +712,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.44,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 81.64,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 72.09,
+    "frustration_flag": true,
+    "pm_priority_score": 70.93,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -625,10 +734,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 72.73,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 76.15,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 69.15,
+    "frustration_flag": true,
+    "pm_priority_score": 69.83,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -643,10 +756,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.52,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 84.72,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 71.5,
+    "frustration_flag": true,
+    "pm_priority_score": 71.54,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -661,10 +778,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 89.57,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 85.38,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 72.51,
+    "frustration_flag": true,
+    "pm_priority_score": 71.68,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -679,10 +800,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.99,
+    "sentiment_confidence": 83.81,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 64.2,
+    "frustration_flag": false,
+    "pm_priority_score": 63.36,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -697,10 +822,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 56.54,
+    "sentiment_confidence": 51.18,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.91,
+    "frustration_flag": false,
+    "pm_priority_score": 56.84,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -715,10 +844,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.67,
+    "sentiment_confidence": 88.92,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 64.93,
+    "frustration_flag": false,
+    "pm_priority_score": 64.38,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -733,10 +866,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 77.93,
+    "sentiment_confidence": 82.18,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 62.19,
+    "frustration_flag": false,
+    "pm_priority_score": 63.04,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -751,10 +888,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 74.92,
+    "sentiment_confidence": 62.41,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.58,
+    "frustration_flag": false,
+    "pm_priority_score": 59.08,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -769,10 +910,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 67.91,
+    "sentiment_confidence": 65.08,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 60.18,
+    "frustration_flag": false,
+    "pm_priority_score": 59.62,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -787,10 +932,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 61.89,
+    "sentiment_confidence": 59.14,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.98,
+    "frustration_flag": false,
+    "pm_priority_score": 58.43,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -805,10 +954,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 86.51,
+    "sentiment_confidence": 83.41,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 63.9,
+    "frustration_flag": false,
+    "pm_priority_score": 63.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -823,10 +976,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 60.69,
+    "sentiment_confidence": 65.01,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.14,
+    "frustration_flag": false,
+    "pm_priority_score": 40.0,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -841,10 +998,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 66.44,
+    "sentiment_confidence": 70.58,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.29,
+    "frustration_flag": false,
+    "pm_priority_score": 41.12,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -859,10 +1020,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 59.52,
+    "sentiment_confidence": 57.73,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.9,
+    "frustration_flag": false,
+    "pm_priority_score": 38.55,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -876,11 +1041,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 54.84,
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 44.85,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.97,
+    "frustration_flag": false,
+    "pm_priority_score": 35.97,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -895,10 +1064,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 59.79,
+    "sentiment_confidence": 59.54,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.96,
+    "frustration_flag": false,
+    "pm_priority_score": 38.91,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -913,10 +1086,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 50.83,
+    "sentiment_confidence": 51.38,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.17,
+    "frustration_flag": false,
+    "pm_priority_score": 37.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -931,10 +1108,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 59.43,
+    "sentiment_confidence": 66.87,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.89,
+    "frustration_flag": false,
+    "pm_priority_score": 56.37,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -949,10 +1130,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 60.63,
+    "sentiment_confidence": 65.88,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.13,
+    "frustration_flag": false,
+    "pm_priority_score": 40.18,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -967,10 +1152,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 78.83,
+    "sentiment_confidence": 77.04,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.77,
+    "frustration_flag": false,
+    "pm_priority_score": 42.41,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -985,10 +1174,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 62.34,
+    "sentiment_confidence": 56.53,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.47,
+    "frustration_flag": false,
+    "pm_priority_score": 39.31,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1003,10 +1196,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 58.45,
+    "sentiment_confidence": 66.94,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.69,
+    "frustration_flag": false,
+    "pm_priority_score": 40.39,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1021,10 +1218,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.69,
+    "sentiment_confidence": 83.0,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 59.94,
+    "frustration_flag": false,
+    "pm_priority_score": 59.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1039,10 +1240,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 60.02,
+    "sentiment_confidence": 55.3,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.0,
+    "frustration_flag": false,
+    "pm_priority_score": 54.06,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1057,10 +1262,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 69.13,
+    "sentiment_confidence": 58.0,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 56.83,
+    "frustration_flag": false,
+    "pm_priority_score": 54.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1074,11 +1283,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 53.44,
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 48.86,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.69,
+    "frustration_flag": false,
+    "pm_priority_score": 52.77,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1093,10 +1306,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 63.25,
+    "sentiment_confidence": 63.11,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.65,
+    "frustration_flag": false,
+    "pm_priority_score": 55.62,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1111,10 +1328,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 79.75,
+    "sentiment_confidence": 73.86,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.95,
+    "frustration_flag": false,
+    "pm_priority_score": 57.77,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1129,10 +1350,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 61.04,
+    "sentiment_confidence": 69.28,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.21,
+    "frustration_flag": false,
+    "pm_priority_score": 56.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1147,10 +1372,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 66.04,
+    "sentiment_confidence": 61.66,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 56.21,
+    "frustration_flag": false,
+    "pm_priority_score": 55.33,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1165,10 +1394,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 58.64,
+    "sentiment_confidence": 64.22,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.73,
+    "frustration_flag": false,
+    "pm_priority_score": 55.84,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1183,10 +1416,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 79.68,
+    "sentiment_confidence": 74.91,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.94,
+    "frustration_flag": false,
+    "pm_priority_score": 57.98,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1201,10 +1438,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 73.79,
+    "sentiment_confidence": 72.06,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.76,
+    "frustration_flag": false,
+    "pm_priority_score": 57.41,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1219,10 +1460,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.31,
+    "sentiment_confidence": 78.2,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.26,
+    "frustration_flag": false,
+    "pm_priority_score": 58.64,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1237,10 +1482,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 72.56,
+    "sentiment_confidence": 75.63,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.51,
+    "frustration_flag": false,
+    "pm_priority_score": 58.13,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1255,10 +1504,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 78.55,
+    "sentiment_confidence": 83.14,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.71,
+    "frustration_flag": false,
+    "pm_priority_score": 59.63,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1273,10 +1526,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 72.25,
+    "sentiment_confidence": 69.24,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.45,
+    "frustration_flag": false,
+    "pm_priority_score": 56.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1291,10 +1548,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 53.42,
+    "sentiment_confidence": 55.63,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.68,
+    "frustration_flag": false,
+    "pm_priority_score": 54.13,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1309,10 +1570,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 92.42,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 91.42,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 53.48,
+    "frustration_flag": false,
+    "pm_priority_score": 53.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1327,10 +1592,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 88.23,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 83.0,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.65,
+    "frustration_flag": false,
+    "pm_priority_score": 43.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1345,10 +1614,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 68.8,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 64.27,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.76,
+    "frustration_flag": false,
+    "pm_priority_score": 39.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1363,10 +1636,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 83.36,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 79.71,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.67,
+    "frustration_flag": false,
+    "pm_priority_score": 42.94,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1380,11 +1657,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 73.66,
-    "type_subtag": "Speed Issue",
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 50.88,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.73,
+    "frustration_flag": false,
+    "pm_priority_score": 37.18,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1399,10 +1680,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 93.17,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 92.43,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 53.63,
+    "frustration_flag": false,
+    "pm_priority_score": 53.49,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1417,10 +1702,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 86.2,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 83.59,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.24,
+    "frustration_flag": false,
+    "pm_priority_score": 43.72,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1434,11 +1723,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 45.78,
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 45.98,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 36.16,
+    "frustration_flag": false,
+    "pm_priority_score": 36.2,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1453,10 +1746,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 48.19,
+    "sentiment_confidence": 49.44,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 36.64,
+    "frustration_flag": false,
+    "pm_priority_score": 36.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1471,10 +1768,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 69.91,
+    "sentiment_confidence": 70.89,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.98,
+    "frustration_flag": false,
+    "pm_priority_score": 41.18,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1489,10 +1790,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 73.87,
+    "sentiment_confidence": 75.56,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.77,
+    "frustration_flag": false,
+    "pm_priority_score": 42.11,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1507,10 +1812,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.34,
+    "sentiment_confidence": 65.69,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.27,
+    "frustration_flag": false,
+    "pm_priority_score": 40.14,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1525,10 +1834,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.27,
+    "sentiment_confidence": 78.38,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.25,
+    "frustration_flag": false,
+    "pm_priority_score": 42.68,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1543,10 +1856,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 56.98,
+    "sentiment_confidence": 54.18,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.4,
+    "frustration_flag": false,
+    "pm_priority_score": 37.84,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1561,10 +1878,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 71.14,
+    "sentiment_confidence": 72.96,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.23,
+    "frustration_flag": false,
+    "pm_priority_score": 41.59,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1579,10 +1900,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 75.77,
+    "sentiment_confidence": 71.86,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.15,
+    "frustration_flag": false,
+    "pm_priority_score": 41.37,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1597,10 +1922,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 79.08,
+    "sentiment_confidence": 78.32,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.82,
+    "frustration_flag": false,
+    "pm_priority_score": 42.66,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1615,10 +1944,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 58.9,
+    "sentiment_confidence": 59.06,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.78,
+    "frustration_flag": false,
+    "pm_priority_score": 54.81,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1633,10 +1966,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.77,
+    "sentiment_confidence": 89.89,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.35,
+    "frustration_flag": false,
+    "pm_priority_score": 44.98,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1651,10 +1988,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 92.54,
+    "sentiment_confidence": 92.28,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.51,
+    "frustration_flag": false,
+    "pm_priority_score": 45.46,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1669,10 +2010,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 78.93,
+    "sentiment_confidence": 70.46,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.79,
+    "frustration_flag": false,
+    "pm_priority_score": 41.09,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1687,10 +2032,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 90.47,
+    "sentiment_confidence": 90.66,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.09,
+    "frustration_flag": false,
+    "pm_priority_score": 45.13,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1705,10 +2054,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 92.33,
+    "sentiment_confidence": 92.19,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.47,
+    "frustration_flag": false,
+    "pm_priority_score": 45.44,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1723,10 +2076,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 78.54,
+    "sentiment_confidence": 71.4,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.71,
+    "frustration_flag": false,
+    "pm_priority_score": 41.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1741,10 +2098,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 77.46,
+    "sentiment_confidence": 76.39,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.49,
+    "frustration_flag": false,
+    "pm_priority_score": 42.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1759,10 +2120,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 68.47,
+    "sentiment_confidence": 79.27,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.69,
+    "frustration_flag": false,
+    "pm_priority_score": 42.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1777,10 +2142,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.96,
+    "sentiment_confidence": 88.64,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.59,
+    "frustration_flag": false,
+    "pm_priority_score": 44.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1795,10 +2164,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 60.74,
+    "sentiment_confidence": 55.1,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.15,
+    "frustration_flag": false,
+    "pm_priority_score": 38.02,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1813,10 +2186,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 93.56,
+    "sentiment_confidence": 91.35,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.71,
+    "frustration_flag": false,
+    "pm_priority_score": 45.27,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1831,10 +2208,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.31,
+    "sentiment_confidence": 80.54,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.26,
+    "frustration_flag": false,
+    "pm_priority_score": 43.11,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1849,10 +2230,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.98,
+    "sentiment_confidence": 83.76,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.4,
+    "frustration_flag": false,
+    "pm_priority_score": 43.75,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1867,10 +2252,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 85.89,
+    "sentiment_confidence": 79.56,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.18,
+    "frustration_flag": false,
+    "pm_priority_score": 42.91,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1885,10 +2274,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 84.3,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 82.13,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.86,
+    "frustration_flag": false,
+    "pm_priority_score": 43.43,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1903,10 +2296,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.23,
+    "sentiment_confidence": 87.34,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 64.45,
+    "frustration_flag": false,
+    "pm_priority_score": 64.07,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1921,10 +2318,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 60.91,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 63.64,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.18,
+    "frustration_flag": false,
+    "pm_priority_score": 55.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1938,11 +2339,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 50.9,
-    "type_subtag": "Trust Issue",
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 48.95,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.18,
+    "frustration_flag": false,
+    "pm_priority_score": 52.79,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1957,10 +2362,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 73.76,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 73.91,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.35,
+    "frustration_flag": false,
+    "pm_priority_score": 61.38,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1975,10 +2384,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 55.33,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 57.44,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.07,
+    "frustration_flag": false,
+    "pm_priority_score": 38.49,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -1993,10 +2406,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 77.96,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 76.11,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.59,
+    "frustration_flag": false,
+    "pm_priority_score": 58.22,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2011,10 +2428,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 66.22,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 65.41,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 64.24,
+    "frustration_flag": true,
+    "pm_priority_score": 64.08,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2029,10 +2450,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 57.4,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 54.27,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.48,
+    "frustration_flag": false,
+    "pm_priority_score": 53.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2047,10 +2472,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.49,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 82.21,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 47.1,
+    "frustration_flag": false,
+    "pm_priority_score": 47.04,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2065,10 +2494,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.87,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 89.34,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 48.17,
+    "frustration_flag": false,
+    "pm_priority_score": 48.47,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2083,10 +2516,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.84,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 81.08,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 47.17,
+    "frustration_flag": false,
+    "pm_priority_score": 46.82,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2101,10 +2538,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 88.5,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 85.16,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.7,
+    "frustration_flag": false,
+    "pm_priority_score": 44.03,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2119,10 +2560,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 66.14,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 61.93,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.23,
+    "frustration_flag": false,
+    "pm_priority_score": 39.39,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2137,10 +2582,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 60.15,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 67.4,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.03,
+    "frustration_flag": false,
+    "pm_priority_score": 56.48,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2155,10 +2604,14 @@
     "type_reason": "Detected feature-request phrasing",
     "target_brand": "Unknown",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 82.2,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 82.65,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 55.44,
+    "frustration_flag": false,
+    "pm_priority_score": 55.53,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2173,10 +2626,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 51.97,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 52.1,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 64.99,
+    "frustration_flag": true,
+    "pm_priority_score": 65.02,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2191,10 +2648,15 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 67.28,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 69.52,
+    "type_subtags": [
+      "Vault Friction",
+      "General"
+    ],
+    "type_subtag": "Vault Friction",
     "severity_score": 90,
-    "pm_priority_score": 69.06,
+    "frustration_flag": true,
+    "pm_priority_score": 69.5,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2209,10 +2671,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.64,
+    "sentiment_confidence": 63.17,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 63.53,
+    "frustration_flag": false,
+    "pm_priority_score": 59.23,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2227,10 +2693,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 45.75,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 43.75,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.75,
+    "frustration_flag": false,
+    "pm_priority_score": 55.35,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2245,10 +2715,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 68.62,
+    "sentiment_confidence": 72.61,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.72,
+    "frustration_flag": false,
+    "pm_priority_score": 41.52,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2263,10 +2737,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 75.9,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 71.34,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.18,
+    "frustration_flag": false,
+    "pm_priority_score": 57.27,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2281,10 +2759,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 62.37,
+    "sentiment_confidence": 55.49,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.47,
+    "frustration_flag": false,
+    "pm_priority_score": 54.1,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2299,10 +2781,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 55.49,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 58.72,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.7,
+    "frustration_flag": false,
+    "pm_priority_score": 58.34,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2316,11 +2802,16 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 51.19,
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 51.54,
+    "type_subtags": [
+      "Grading Complaint",
+      "General"
+    ],
     "type_subtag": "Grading Complaint",
     "severity_score": 30,
-    "pm_priority_score": 38.24,
+    "frustration_flag": false,
+    "pm_priority_score": 38.31,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2335,10 +2826,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 58.56,
+    "sentiment_confidence": 57.17,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.71,
+    "frustration_flag": false,
+    "pm_priority_score": 38.43,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2353,10 +2848,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 61.38,
+    "sentiment_confidence": 57.03,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.28,
+    "frustration_flag": false,
+    "pm_priority_score": 38.41,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2370,11 +2869,15 @@
     "type_confidence": 90,
     "type_reason": "Detected feature-request phrasing",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 50.52,
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 49.39,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.1,
+    "frustration_flag": false,
+    "pm_priority_score": 56.88,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2389,10 +2892,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 74.7,
+    "sentiment_confidence": 74.28,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.94,
+    "frustration_flag": false,
+    "pm_priority_score": 57.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2407,10 +2914,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 60.63,
+    "sentiment_confidence": 60.9,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.73,
+    "frustration_flag": false,
+    "pm_priority_score": 58.78,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2425,10 +2936,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 52.24,
+    "sentiment_confidence": 56.31,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.05,
+    "frustration_flag": false,
+    "pm_priority_score": 57.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2443,10 +2958,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 90.83,
+    "sentiment_confidence": 90.72,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 64.77,
+    "frustration_flag": false,
+    "pm_priority_score": 64.74,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2461,10 +2980,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 70.71,
+    "sentiment_confidence": 70.45,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 60.74,
+    "frustration_flag": false,
+    "pm_priority_score": 60.69,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2479,10 +3002,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 68.03,
+    "sentiment_confidence": 68.65,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 60.21,
+    "frustration_flag": false,
+    "pm_priority_score": 60.33,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2497,10 +3024,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 55.67,
+    "sentiment_confidence": 58.38,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.73,
+    "frustration_flag": false,
+    "pm_priority_score": 58.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2515,10 +3046,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 63.19,
+    "sentiment_confidence": 61.11,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 59.24,
+    "frustration_flag": false,
+    "pm_priority_score": 58.82,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2533,10 +3068,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 82.59,
+    "sentiment_confidence": 78.44,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 63.12,
+    "frustration_flag": false,
+    "pm_priority_score": 62.29,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2551,10 +3090,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 69.63,
+    "sentiment_confidence": 82.3,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 60.53,
+    "frustration_flag": false,
+    "pm_priority_score": 63.06,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2569,10 +3112,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 66.13,
+    "sentiment_confidence": 69.88,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 59.83,
+    "frustration_flag": false,
+    "pm_priority_score": 60.58,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2586,11 +3133,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.35,
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 49.0,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.87,
+    "frustration_flag": false,
+    "pm_priority_score": 36.8,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2605,10 +3156,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 68.42,
+    "sentiment_confidence": 73.33,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.68,
+    "frustration_flag": false,
+    "pm_priority_score": 41.67,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2622,11 +3177,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 58.21,
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 51.25,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.64,
+    "frustration_flag": false,
+    "pm_priority_score": 37.25,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2641,10 +3200,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 92.05,
+    "sentiment_confidence": 91.45,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.41,
+    "frustration_flag": false,
+    "pm_priority_score": 45.29,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2659,10 +3222,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 61.48,
+    "sentiment_confidence": 64.29,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.3,
+    "frustration_flag": false,
+    "pm_priority_score": 39.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2677,10 +3244,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.72,
+    "sentiment_confidence": 82.12,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.14,
+    "frustration_flag": false,
+    "pm_priority_score": 43.42,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2695,10 +3266,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.24,
+    "sentiment_confidence": 87.51,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.05,
+    "frustration_flag": false,
+    "pm_priority_score": 44.5,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2713,10 +3288,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 55.65,
+    "sentiment_confidence": 55.62,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.13,
+    "frustration_flag": false,
+    "pm_priority_score": 54.12,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2731,10 +3310,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 54.2,
+    "sentiment_confidence": 59.81,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.84,
+    "frustration_flag": false,
+    "pm_priority_score": 54.96,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2749,10 +3332,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 57.46,
+    "sentiment_confidence": 61.8,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.49,
+    "frustration_flag": false,
+    "pm_priority_score": 55.36,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2767,10 +3354,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 89.85,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 87.93,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 48.57,
+    "frustration_flag": false,
+    "pm_priority_score": 48.19,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2785,10 +3376,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 69.82,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 63.92,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.56,
+    "frustration_flag": false,
+    "pm_priority_score": 44.38,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2803,10 +3398,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 72.84,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 78.42,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.57,
+    "frustration_flag": false,
+    "pm_priority_score": 42.68,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2821,10 +3420,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 73.33,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 67.39,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.67,
+    "frustration_flag": false,
+    "pm_priority_score": 40.48,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2839,10 +3442,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 64.43,
+    "sentiment_confidence": 58.25,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.89,
+    "frustration_flag": false,
+    "pm_priority_score": 38.65,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2857,10 +3464,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 72.26,
+    "sentiment_confidence": 70.01,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.45,
+    "frustration_flag": false,
+    "pm_priority_score": 41.0,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2875,10 +3486,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 56.8,
+    "sentiment_confidence": 68.38,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.36,
+    "frustration_flag": false,
+    "pm_priority_score": 56.68,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2893,10 +3508,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 91.25,
+    "sentiment_confidence": 91.77,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.25,
+    "frustration_flag": false,
+    "pm_priority_score": 45.35,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2911,10 +3530,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.56,
+    "sentiment_confidence": 89.88,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.91,
+    "frustration_flag": false,
+    "pm_priority_score": 44.98,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2929,10 +3552,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 86.19,
+    "sentiment_confidence": 86.75,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.24,
+    "frustration_flag": false,
+    "pm_priority_score": 44.35,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2947,10 +3574,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 87.98,
+    "sentiment_confidence": 88.22,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.6,
+    "frustration_flag": false,
+    "pm_priority_score": 44.64,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2965,10 +3596,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 90.02,
+    "sentiment_confidence": 90.59,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.0,
+    "frustration_flag": false,
+    "pm_priority_score": 45.12,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -2983,10 +3618,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 76.77,
+    "sentiment_confidence": 82.39,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.35,
+    "frustration_flag": false,
+    "pm_priority_score": 43.48,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3001,10 +3640,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.95,
+    "sentiment_confidence": 85.36,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.59,
+    "frustration_flag": false,
+    "pm_priority_score": 44.07,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3019,10 +3662,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.96,
+    "sentiment_confidence": 80.12,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.39,
+    "frustration_flag": false,
+    "pm_priority_score": 43.02,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3036,11 +3683,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 50.14,
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 80.24,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.03,
+    "frustration_flag": false,
+    "pm_priority_score": 43.05,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3055,10 +3706,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 67.98,
+    "sentiment_confidence": 69.25,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.6,
+    "frustration_flag": false,
+    "pm_priority_score": 40.85,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3073,10 +3728,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 85.0,
+    "sentiment_confidence": 83.64,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.0,
+    "frustration_flag": false,
+    "pm_priority_score": 43.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3091,10 +3750,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 77.79,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 78.02,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.56,
+    "frustration_flag": false,
+    "pm_priority_score": 42.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3109,10 +3772,14 @@
     "type_reason": "Detected confusion or how-to phrasing",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 78.32,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 78.01,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.66,
+    "frustration_flag": false,
+    "pm_priority_score": 61.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3127,10 +3794,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 75.17,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 72.37,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 70.23,
+    "frustration_flag": true,
+    "pm_priority_score": 69.67,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3145,10 +3816,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 56.7,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 59.4,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.34,
+    "frustration_flag": false,
+    "pm_priority_score": 54.88,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3163,10 +3838,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 56.76,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 53.0,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.35,
+    "frustration_flag": false,
+    "pm_priority_score": 54.6,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3180,11 +3859,15 @@
     "type_confidence": 85,
     "type_reason": "Detected confusion or how-to phrasing",
     "target_brand": "eBay",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 50.07,
-    "type_subtag": "Trust Issue",
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 51.4,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 56.01,
+    "frustration_flag": false,
+    "pm_priority_score": 56.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3199,10 +3882,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 77.65,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 77.48,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 70.13,
+    "frustration_flag": true,
+    "pm_priority_score": 70.1,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3217,10 +3904,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 49.14,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 55.62,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 64.43,
+    "frustration_flag": true,
+    "pm_priority_score": 65.72,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3235,10 +3926,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 59.71,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 62.04,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 58.54,
+    "frustration_flag": false,
+    "pm_priority_score": 59.01,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3253,10 +3948,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 61.07,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 63.98,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.21,
+    "frustration_flag": false,
+    "pm_priority_score": 39.8,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3271,10 +3970,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 68.73,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 71.62,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 56.75,
+    "frustration_flag": false,
+    "pm_priority_score": 57.32,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3289,10 +3992,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 79.51,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 80.01,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.9,
+    "frustration_flag": false,
+    "pm_priority_score": 43.0,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3307,10 +4014,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 75.08,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 68.1,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.02,
+    "frustration_flag": false,
+    "pm_priority_score": 40.62,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3325,10 +4036,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 63.65,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 69.58,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 67.93,
+    "frustration_flag": true,
+    "pm_priority_score": 69.12,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3343,10 +4058,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.65,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 71.27,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.53,
+    "frustration_flag": false,
+    "pm_priority_score": 41.25,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3361,10 +4080,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 70.87,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 72.85,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.17,
+    "frustration_flag": false,
+    "pm_priority_score": 57.57,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3379,10 +4102,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 74.49,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 73.22,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.9,
+    "frustration_flag": false,
+    "pm_priority_score": 57.64,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3397,10 +4124,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 74.72,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 79.05,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.54,
+    "frustration_flag": false,
+    "pm_priority_score": 62.41,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3415,10 +4146,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 72.14,
+    "sentiment_confidence": 72.51,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.63,
+    "frustration_flag": false,
+    "pm_priority_score": 61.7,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3432,11 +4167,15 @@
     "type_confidence": 88,
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 52.75,
-    "type_subtag": "Refund Issue",
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 68.54,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.15,
+    "frustration_flag": false,
+    "pm_priority_score": 60.31,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3451,10 +4190,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 77.53,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 78.78,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.51,
+    "frustration_flag": false,
+    "pm_priority_score": 42.76,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3469,10 +4212,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 70.67,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 73.11,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.13,
+    "frustration_flag": false,
+    "pm_priority_score": 41.62,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3487,10 +4234,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 60.08,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 73.17,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.62,
+    "frustration_flag": false,
+    "pm_priority_score": 45.23,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3505,10 +4256,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 75.82,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 76.71,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 50.16,
+    "frustration_flag": false,
+    "pm_priority_score": 50.34,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3523,10 +4278,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.8,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 81.87,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 59.16,
+    "frustration_flag": false,
+    "pm_priority_score": 59.37,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3541,10 +4300,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 85.45,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 84.4,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 60.09,
+    "frustration_flag": false,
+    "pm_priority_score": 59.88,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3559,10 +4322,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 72.84,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 74.48,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 57.57,
+    "frustration_flag": false,
+    "pm_priority_score": 57.9,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3576,11 +4343,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.7,
-    "type_subtag": "Shipping Concern",
+    "brand_sentiment": "Complaint",
+    "sentiment_confidence": 52.17,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 53.94,
+    "frustration_flag": false,
+    "pm_priority_score": 53.43,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3595,10 +4366,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 64.33,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 59.75,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 51.47,
+    "frustration_flag": false,
+    "pm_priority_score": 50.55,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3613,10 +4388,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.37,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 56.46,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 37.87,
+    "frustration_flag": false,
+    "pm_priority_score": 38.29,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3631,10 +4410,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 70.94,
-    "type_subtag": "Speed Issue",
+    "sentiment_confidence": 71.19,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.19,
+    "frustration_flag": false,
+    "pm_priority_score": 41.24,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3649,10 +4432,14 @@
     "type_reason": "Detected confusion or how-to phrasing",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 72.04,
-    "type_subtag": "Shipping Concern",
+    "sentiment_confidence": 78.63,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.41,
+    "frustration_flag": false,
+    "pm_priority_score": 45.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3667,10 +4454,15 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.2,
+    "sentiment_confidence": 86.92,
+    "type_subtags": [
+      "Shipping Concern",
+      "General"
+    ],
     "type_subtag": "Shipping Concern",
     "severity_score": 30,
-    "pm_priority_score": 44.84,
+    "frustration_flag": false,
+    "pm_priority_score": 45.38,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3685,10 +4477,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 82.13,
+    "sentiment_confidence": 81.31,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.43,
+    "frustration_flag": false,
+    "pm_priority_score": 43.26,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3703,10 +4499,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 67.62,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 68.35,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.52,
+    "frustration_flag": false,
+    "pm_priority_score": 40.67,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3721,10 +4521,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 70.77,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 68.46,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.15,
+    "frustration_flag": false,
+    "pm_priority_score": 40.69,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3739,28 +4543,14 @@
     "type_reason": "Detected confusion or how-to phrasing",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 49.21,
-    "type_subtag": "Fee Frustration",
-    "severity_score": 30,
-    "pm_priority_score": 39.84,
-    "ideas": [
-      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
+    "sentiment_confidence": 50.95,
+    "type_subtags": [
+      "General"
     ],
-    "effort": "Medium"
-  },
-  {
-    "text": "[Reddit - pokemonTCG] alt issue: Should I trade a Lugia alt art for a base set unlimited Charizard with minor silvering issues , or trade for base set 2 Charizard that looks pretty awesome... i do plan on getting them graded....a",
-    "source": "reddit",
-    "type_tag": "Complaint",
-    "score": 5,
-    "type_confidence": 88,
-    "type_reason": "Detected bug or complaint language",
-    "target_brand": "Alt",
-    "brand_sentiment": "Praise",
-    "sentiment_confidence": 75.1,
     "type_subtag": "General",
-    "severity_score": 70,
-    "pm_priority_score": 61.62,
+    "severity_score": 30,
+    "frustration_flag": false,
+    "pm_priority_score": 40.19,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3775,10 +4565,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Alt",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 71.77,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 71.97,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 69.55,
+    "frustration_flag": true,
+    "pm_priority_score": 69.59,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3793,10 +4587,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Alt",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.04,
+    "sentiment_confidence": 90.64,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 52.81,
+    "frustration_flag": false,
+    "pm_priority_score": 53.13,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3811,10 +4609,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 87.72,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 85.06,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 69.14,
+    "frustration_flag": true,
+    "pm_priority_score": 68.61,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3829,10 +4631,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 61.8,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 64.61,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 55.36,
+    "frustration_flag": false,
+    "pm_priority_score": 55.92,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3847,10 +4653,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 57.67,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 48.71,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 54.53,
+    "frustration_flag": false,
+    "pm_priority_score": 52.74,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3865,10 +4675,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 66.45,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 62.14,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 67.89,
+    "frustration_flag": true,
+    "pm_priority_score": 67.03,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3883,10 +4697,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 85.23,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 82.55,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 72.25,
+    "frustration_flag": true,
+    "pm_priority_score": 71.71,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3901,10 +4719,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.72,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 86.08,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 63.54,
+    "frustration_flag": false,
+    "pm_priority_score": 63.82,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3919,10 +4741,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.78,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 84.63,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 70,
-    "pm_priority_score": 61.96,
+    "frustration_flag": false,
+    "pm_priority_score": 63.53,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3937,10 +4763,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 76.16,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 80.0,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 70.43,
+    "frustration_flag": true,
+    "pm_priority_score": 71.2,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3955,10 +4785,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 86.69,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 84.28,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 68.94,
+    "frustration_flag": true,
+    "pm_priority_score": 68.46,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3973,10 +4807,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 86.27,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 85.27,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 68.85,
+    "frustration_flag": true,
+    "pm_priority_score": 68.65,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -3991,10 +4829,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 64.1,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 58.04,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 39.82,
+    "frustration_flag": false,
+    "pm_priority_score": 38.61,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4009,10 +4851,15 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 49.12,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 48.74,
+    "type_subtags": [
+      "Grading Complaint",
+      "General"
+    ],
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
-    "pm_priority_score": 37.82,
+    "frustration_flag": false,
+    "pm_priority_score": 37.75,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4027,10 +4874,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 77.78,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 75.06,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 66.56,
+    "frustration_flag": true,
+    "pm_priority_score": 66.01,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4045,10 +4896,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 76.32,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 72.46,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 66.26,
+    "frustration_flag": true,
+    "pm_priority_score": 65.49,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4063,10 +4918,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 80.46,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 74.99,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 71.29,
+    "frustration_flag": true,
+    "pm_priority_score": 70.2,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4081,10 +4940,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 81.34,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 85.71,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 46.87,
+    "frustration_flag": false,
+    "pm_priority_score": 47.74,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4099,10 +4962,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 62.04,
-    "type_subtag": "Trust Issue",
+    "sentiment_confidence": 73.46,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.01,
+    "frustration_flag": false,
+    "pm_priority_score": 45.29,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4116,11 +4983,15 @@
     "type_confidence": 88,
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 50.66,
-    "type_subtag": "Trust Issue",
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 56.44,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.73,
+    "frustration_flag": false,
+    "pm_priority_score": 41.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4135,10 +5006,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 87.22,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 83.51,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 69.04,
+    "frustration_flag": true,
+    "pm_priority_score": 68.3,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4153,10 +5028,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.28,
-    "type_subtag": "Delays",
+    "sentiment_confidence": 87.61,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 71.46,
+    "frustration_flag": true,
+    "pm_priority_score": 72.12,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4171,10 +5050,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 66.81,
+    "sentiment_confidence": 57.09,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.36,
+    "frustration_flag": false,
+    "pm_priority_score": 38.42,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4189,10 +5072,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.82,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 59.88,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 66.16,
+    "frustration_flag": true,
+    "pm_priority_score": 67.18,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4207,10 +5094,14 @@
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 55.79,
-    "type_subtag": "Refund Issue",
+    "sentiment_confidence": 57.72,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.76,
+    "frustration_flag": false,
+    "pm_priority_score": 42.14,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4224,11 +5115,15 @@
     "type_confidence": 88,
     "type_reason": "Detected bug or complaint language",
     "target_brand": "eBay",
-    "brand_sentiment": "Complaint",
-    "sentiment_confidence": 49.73,
-    "type_subtag": "Refund Issue",
+    "brand_sentiment": "Neutral",
+    "sentiment_confidence": 56.86,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.55,
+    "frustration_flag": false,
+    "pm_priority_score": 41.97,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4243,10 +5138,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 73.04,
+    "sentiment_confidence": 72.82,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.61,
+    "frustration_flag": false,
+    "pm_priority_score": 41.56,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4261,10 +5160,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 95.63,
+    "sentiment_confidence": 95.86,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 46.13,
+    "frustration_flag": false,
+    "pm_priority_score": 46.17,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4279,10 +5182,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 97.86,
+    "sentiment_confidence": 97.92,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 46.57,
+    "frustration_flag": false,
+    "pm_priority_score": 46.58,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4297,10 +5204,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 71.43,
+    "sentiment_confidence": 76.77,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.29,
+    "frustration_flag": false,
+    "pm_priority_score": 42.35,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4314,11 +5225,15 @@
     "type_confidence": 70,
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 56.0,
+    "brand_sentiment": "Praise",
+    "sentiment_confidence": 49.63,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 38.2,
+    "frustration_flag": false,
+    "pm_priority_score": 36.93,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4333,28 +5248,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 74.25,
-    "type_subtag": "General",
-    "severity_score": 30,
-    "pm_priority_score": 41.85,
-    "ideas": [
-      "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
+    "sentiment_confidence": 71.65,
+    "type_subtags": [
+      "General"
     ],
-    "effort": "Medium"
-  },
-  {
-    "text": "[Reddit - pokemonTCG] fanatics: Got back from Jakarta over the weekend and had a bit of a pokemon haul to bring back with me. What's your favourite product?",
-    "source": "reddit",
-    "type_tag": "Discussion",
-    "score": 5,
-    "type_confidence": 70,
-    "type_reason": "Defaulted to general discussion",
-    "target_brand": "Fanatics Collect",
-    "brand_sentiment": "Neutral",
-    "sentiment_confidence": 70.36,
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.07,
+    "frustration_flag": false,
+    "pm_priority_score": 41.33,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4369,10 +5270,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.68,
+    "sentiment_confidence": 87.79,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.94,
+    "frustration_flag": false,
+    "pm_priority_score": 44.56,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4387,10 +5292,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.03,
+    "sentiment_confidence": 91.57,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.81,
+    "frustration_flag": false,
+    "pm_priority_score": 45.31,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4405,10 +5314,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.35,
+    "sentiment_confidence": 84.43,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.87,
+    "frustration_flag": false,
+    "pm_priority_score": 43.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4423,10 +5336,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 86.07,
+    "sentiment_confidence": 88.66,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 50,
-    "pm_priority_score": 52.21,
+    "frustration_flag": false,
+    "pm_priority_score": 52.73,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4441,10 +5358,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 97.72,
+    "sentiment_confidence": 97.95,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 46.54,
+    "frustration_flag": false,
+    "pm_priority_score": 46.59,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4459,10 +5380,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 74.17,
+    "sentiment_confidence": 73.82,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.83,
+    "frustration_flag": false,
+    "pm_priority_score": 41.76,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4477,10 +5402,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 74.99,
+    "sentiment_confidence": 78.82,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.0,
+    "frustration_flag": false,
+    "pm_priority_score": 42.76,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4495,10 +5424,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 73.1,
+    "sentiment_confidence": 79.46,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.62,
+    "frustration_flag": false,
+    "pm_priority_score": 42.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4513,10 +5446,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Complaint",
-    "sentiment_confidence": 59.79,
-    "type_subtag": "Fraud Concern",
+    "sentiment_confidence": 63.23,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 90,
-    "pm_priority_score": 63.56,
+    "frustration_flag": true,
+    "pm_priority_score": 64.25,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4531,10 +5468,15 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 54.65,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 64.38,
+    "type_subtags": [
+      "Grading Complaint",
+      "General"
+    ],
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
-    "pm_priority_score": 37.93,
+    "frustration_flag": false,
+    "pm_priority_score": 39.88,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4549,10 +5491,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Alt",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.92,
+    "sentiment_confidence": 88.94,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.58,
+    "frustration_flag": false,
+    "pm_priority_score": 44.79,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4567,10 +5513,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 66.06,
+    "sentiment_confidence": 69.07,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.21,
+    "frustration_flag": false,
+    "pm_priority_score": 40.81,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4585,10 +5535,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 77.09,
+    "sentiment_confidence": 85.94,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.42,
+    "frustration_flag": false,
+    "pm_priority_score": 44.19,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4603,10 +5557,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 89.24,
+    "sentiment_confidence": 88.37,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.85,
+    "frustration_flag": false,
+    "pm_priority_score": 44.67,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4621,10 +5579,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 87.88,
+    "sentiment_confidence": 89.32,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.58,
+    "frustration_flag": false,
+    "pm_priority_score": 44.86,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4639,10 +5601,15 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 73.57,
+    "sentiment_confidence": 74.44,
+    "type_subtags": [
+      "Shipping Concern",
+      "General"
+    ],
     "type_subtag": "Shipping Concern",
     "severity_score": 30,
-    "pm_priority_score": 42.71,
+    "frustration_flag": false,
+    "pm_priority_score": 42.89,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4657,10 +5624,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 88.68,
+    "sentiment_confidence": 91.39,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 44.74,
+    "frustration_flag": false,
+    "pm_priority_score": 45.28,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4675,10 +5646,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 83.72,
+    "sentiment_confidence": 84.21,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.74,
+    "frustration_flag": false,
+    "pm_priority_score": 43.84,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4693,10 +5668,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.55,
+    "sentiment_confidence": 84.61,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.91,
+    "frustration_flag": false,
+    "pm_priority_score": 43.92,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4711,10 +5690,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 71.07,
+    "sentiment_confidence": 76.76,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 41.21,
+    "frustration_flag": false,
+    "pm_priority_score": 42.35,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4729,10 +5712,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Praise",
-    "sentiment_confidence": 68.53,
+    "sentiment_confidence": 64.0,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 40.71,
+    "frustration_flag": false,
+    "pm_priority_score": 39.8,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4747,10 +5734,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Fanatics Collect",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 90.66,
+    "sentiment_confidence": 89.48,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.13,
+    "frustration_flag": false,
+    "pm_priority_score": 44.9,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4765,10 +5756,15 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 50.59,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 51.83,
+    "type_subtags": [
+      "Grading Complaint",
+      "General"
+    ],
+    "type_subtag": "Grading Complaint",
     "severity_score": 30,
-    "pm_priority_score": 38.12,
+    "frustration_flag": false,
+    "pm_priority_score": 38.37,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4783,10 +5779,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Unknown",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 77.52,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 86.28,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 42.5,
+    "frustration_flag": false,
+    "pm_priority_score": 44.26,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4801,10 +5801,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "Alt",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 84.53,
-    "type_subtag": "Fee Frustration",
+    "sentiment_confidence": 85.26,
+    "type_subtags": [
+      "General"
+    ],
+    "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 43.91,
+    "frustration_flag": false,
+    "pm_priority_score": 44.05,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
@@ -4819,10 +5823,14 @@
     "type_reason": "Defaulted to general discussion",
     "target_brand": "eBay",
     "brand_sentiment": "Neutral",
-    "sentiment_confidence": 90.96,
+    "sentiment_confidence": 88.75,
+    "type_subtags": [
+      "General"
+    ],
     "type_subtag": "General",
     "severity_score": 30,
-    "pm_priority_score": 45.19,
+    "frustration_flag": false,
+    "pm_priority_score": 44.75,
     "ideas": [
       "[⚠️ OpenAI rate limit hit — retry later or reduce load]"
     ],
