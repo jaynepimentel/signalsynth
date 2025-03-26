@@ -1,7 +1,8 @@
-# utils/load_scraped_insights.py — with cleaning logic
+# load_scraped_insights.py — with dual-source support for Reddit + Twitter
 
 import os
 
+# Noise and signal keywords
 NOISE_PHRASES = [
     "mail day", "for sale", "look at this", "showing off", "pickup post",
     "got this", "check this out", "look what i found", "haul", "pc update"
@@ -23,24 +24,30 @@ def is_high_signal(text):
     return False
 
 def load_scraped_posts():
-    path = "data/scraped_community_posts.txt"
-    if not os.path.exists(path):
-        return []
-
-    with open(path, "r", encoding="utf-8") as f:
-        lines = [line.strip() for line in f if line.strip()]
+    files = [
+        "C:/Users/jayne/signalsynth/scraped_community_posts.txt",
+        "C:/Users/jayne/signalsynth/scraped_twitter_posts.txt"
+    ]
 
     insights = []
-    for line in lines:
-        if is_high_signal(line):
-            insights.append({
-                "text": line,
-                "source": "reddit",
-                "type_tag": "Discussion",  # default until scored
-            })
+    for path in files:
+        if not os.path.exists(path):
+            print(f"❌ File not found: {path}")
+            continue
+
+        with open(path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+
+        for line in lines:
+            if is_high_signal(line):
+                insights.append({
+                    "text": line,
+                    "source": "twitter" if "twitter" in path.lower() else "reddit",
+                    "type_tag": "Discussion",  # default until AI classifies
+                })
 
     return insights
 
 def process_insights(insights):
-    # Additional post-cleaning can go here later
+    # Placeholder for future data cleaning logic
     return insights
