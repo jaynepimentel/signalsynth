@@ -6,7 +6,6 @@ from components.brand_trend_dashboard import display_brand_dashboard
 from collections import Counter
 
 # Prevent model loading / GPT calls inside Streamlit
-os.environ["RUNNING_IN_STREAMLIT"] = "1"
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
