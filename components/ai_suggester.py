@@ -65,8 +65,8 @@ def generate_pm_ideas(text, brand="eBay"):
 def write_docx(content, filename, title="Product Document"):
     doc = Document()
     doc.add_heading(title, level=1)
-    doc.add_paragraph(content)
-
+    for line in content.split("\n"):
+        doc.add_paragraph(line.strip())
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -90,7 +90,6 @@ def generate_prd_docx(insight_text, brand, filename):
     - Testable Hypothesis
     - Jobs to Be Done (JTBD) statement
     """
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -103,7 +102,6 @@ def generate_prd_docx(insight_text, brand, filename):
         )
         prd_content = response.choices[0].message.content.strip()
         return write_docx(prd_content, filename, "Product Requirements Document (PRD)")
-
     except Exception as e:
         fallback = f"PRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
         return write_docx(fallback, filename, "Product Requirements Document (PRD)")
@@ -125,7 +123,6 @@ def generate_brd_docx(insight_text, brand, filename):
     - Constraints or Assumptions
     - Timeline Considerations
     """
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -138,7 +135,6 @@ def generate_brd_docx(insight_text, brand, filename):
         )
         brd_content = response.choices[0].message.content.strip()
         return write_docx(brd_content, filename, "Business Requirements Document (BRD)")
-
     except Exception as e:
         fallback = f"BRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
         return write_docx(fallback, filename, "Business Requirements Document (BRD)")
