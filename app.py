@@ -1,5 +1,3 @@
-# app.py — SignalSynth Streamlit Dashboard
-
 import os
 import json
 import streamlit as st
@@ -10,16 +8,21 @@ from collections import Counter
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
-from components.ai_suggester import generate_pm_ideas
+from components.ai_suggester import (
+    generate_pm_ideas,
+    generate_prd_docx,
+    generate_brd_docx,
+    generate_jira_bug_ticket
+)
 
-# Load environment and OpenAI key
+# Load OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# Load enriched insights
+# Load insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -28,7 +31,7 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py` first.")
     st.stop()
 
-# Sidebar settings
+# Sidebar
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=True and OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -45,14 +48,14 @@ brand_filter = st.sidebar.selectbox("Target Brand", ["All"] + sorted(set(i.get("
 sentiment_filter = st.sidebar.selectbox("Brand Sentiment", ["All"] + sorted(set(i.get("brand_sentiment", "Unknown") for i in scraped_insights)))
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# Brand-level dashboard and charts
+# Dashboards
 st.subheader("📊 Brand Summary Dashboard")
 display_brand_dashboard(scraped_insights)
 
 st.subheader("📈 Insight Charts")
 display_insight_charts(scraped_insights)
 
-# Trending topic detection
+# Trending detection
 topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -69,7 +72,7 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Filter results
+# Filter insights
 filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
@@ -85,7 +88,7 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# Show filtered insights
+# Show insights
 for idx, i in enumerate(filtered):
     summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
@@ -108,11 +111,14 @@ for idx, i in enumerate(filtered):
         for quote in i.get("cluster", []):
             st.markdown(f"- _{quote}_")
 
-        # GPT-powered suggestions
+        insight_text = i["text"]
+        brand = i.get("target_brand", "eBay")
+        safe_summary = "".join(c for c in summary if c.isalnum() or c in (" ", "_", "-")).rstrip()
+
         if use_gpt and OPENAI_KEY_PRESENT:
             with st.spinner("💡 Generating PM Suggestions..."):
                 try:
-                    i["ideas"] = generate_pm_ideas(i["text"], i.get("target_brand"), i.get("brand_sentiment"))
+                    i["ideas"] = generate_pm_ideas(insight_text, brand, i.get("brand_sentiment"))
                 except Exception as e:
                     i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
 
@@ -120,14 +126,20 @@ for idx, i in enumerate(filtered):
             st.markdown("**💡 PM Suggestions:**")
             for idx2, idea in enumerate(i["ideas"]):
                 st.markdown(f"- {idea}")
-                st.button(
-                    label=f"Create JIRA Ticket: {idea[:30]}...",
-                    key=f"jira_{idx}_{idx2}",
-                    help="(Simulated) This would create a JIRA epic with linked context."
-                )
 
-        if st.button(f"Generate PRD for: {summary[:30]}...", key=f"prd_{idx}"):
-            st.success("✅ PRD Generated! (mock - would send to Airtable or JIRA)")
+        if st.button(f"📄 Generate PRD", key=f"gen_prd_{idx}"):
+            file_path = generate_prd_docx(insight_text, brand, f"PRD - {safe_summary}")
+            with open(file_path, "rb") as f:
+                st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+        if st.button(f"📄 Generate BRD", key=f"gen_brd_{idx}"):
+            file_path = generate_brd_docx(insight_text, brand, f"BRD - {safe_summary}")
+            with open(file_path, "rb") as f:
+                st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+        if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
+            bug = generate_jira_bug_ticket(insight_text, brand)
+            st.code(bug, language="markdown")
 
 # Footer
 st.sidebar.markdown("---")
