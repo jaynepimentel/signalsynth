@@ -115,10 +115,10 @@ for idx, i in enumerate(filtered):
         brand = i.get("target_brand", "eBay")
         safe_summary = "".join(c for c in summary if c.isalnum() or c in (" ", "_", "-")).rstrip()
 
-        if use_gpt and OPENAI_KEY_PRESENT:
-            with st.spinner("💡 Generating PM Suggestions..."):
+        if use_gpt and st.button(f"💡 Generate PM Suggestions", key=f"gen_pm_{idx}"):
+            with st.spinner("Thinking like a product manager..."):
                 try:
-                    i["ideas"] = generate_pm_ideas(insight_text, brand, i.get("brand_sentiment"))
+                    i["ideas"] = generate_pm_ideas(insight_text, brand)
                 except Exception as e:
                     i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
 
