@@ -1,11 +1,15 @@
-# app.py — Streamlit with optional GPT-4 PM Suggestions
+# app.py — Streamlit dashboard for SignalSynth
 
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from components.brand_trend_dashboard import display_brand_dashboard
 from collections import Counter
+
+# 🧠 Import from /components
+from components.brand_trend_dashboard import display_brand_dashboard
+from components.insight_visualizer import display_insight_charts
+from components.insight_explorer import display_insight_explorer
 from components.ai_suggester import generate_pm_ideas
 
 load_dotenv()
@@ -23,7 +27,7 @@ else:
     st.error("❌ No precomputed insights found. Please run precompute_insights.py locally.")
     st.stop()
 
-# Sidebar toggle
+# Sidebar: GPT toggle
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=True and OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -40,12 +44,15 @@ brand_filter = st.sidebar.selectbox("Target Brand", ["All"] + sorted(set(i.get("
 sentiment_filter = st.sidebar.selectbox("Brand Sentiment", ["All"] + sorted(set(i.get("brand_sentiment", "Unknown") for i in scraped_insights)))
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# Brand Dashboard
+# Summary dashboards
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(scraped_insights)
 
-# Detect keyword-based rising trends
-topic_keywords = ["vault", "psa", "graded", "funko", "cancel", "authenticity", "shipping", "refund"]
+with st.expander("📈 Insight Charts", expanded=False):
+    display_insight_charts(scraped_insights)
+
+# Trending keywords
+topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
     text = i.get("text", "").lower()
@@ -61,7 +68,7 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Filter insights
+# Display insight explorer with filters
 filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
@@ -77,7 +84,7 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# Show insights
+# Show filtered insights
 for idx, i in enumerate(filtered):
     summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
@@ -100,11 +107,10 @@ for idx, i in enumerate(filtered):
         for quote in i.get("cluster", []):
             st.markdown(f"- _{quote}_")
 
-        # GPT-powered PM Suggestions
         if use_gpt and OPENAI_KEY_PRESENT:
             with st.spinner("💡 Generating PM Suggestions..."):
                 try:
-                    i["ideas"] = generate_pm_ideas(i["text"], i.get("target_brand"))
+                    i["ideas"] = generate_pm_ideas(i["text"], i.get("target_brand"), i.get("brand_sentiment"))
                 except Exception as e:
                     i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
 
