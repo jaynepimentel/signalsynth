@@ -127,19 +127,17 @@ for idx, i in enumerate(filtered):
             for idx2, idea in enumerate(i["ideas"]):
                 st.markdown(f"- {idea}")
 
-        if st.button(f"📄 Generate PRD", key=f"gen_prd_{idx}"):
-            file_path = generate_prd_docx(insight_text, brand, f"PRD - {safe_summary}")
-            with open(file_path, "rb") as f:
-                st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-
-        if st.button(f"📄 Generate BRD", key=f"gen_brd_{idx}"):
-            file_path = generate_brd_docx(insight_text, brand, f"BRD - {safe_summary}")
-            with open(file_path, "rb") as f:
-                st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-
-        if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
-            bug = generate_jira_bug_ticket(insight_text, brand)
-            st.code(bug, language="markdown")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            prd_buffer, prd_filename = generate_prd_docx(insight_text, brand, f"PRD - {safe_summary}")
+            st.download_button("📄 Download PRD", prd_buffer, file_name=prd_filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_prd_{idx}")
+        with col2:
+            brd_buffer, brd_filename = generate_brd_docx(insight_text, brand, f"BRD - {safe_summary}")
+            st.download_button("📄 Download BRD", brd_buffer, file_name=brd_filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_brd_{idx}")
+        with col3:
+            if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
+                bug = generate_jira_bug_ticket(insight_text, brand)
+                st.code(bug, language="markdown")
 
 # Footer
 st.sidebar.markdown("---")
