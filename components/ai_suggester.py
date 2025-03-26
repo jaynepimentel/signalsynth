@@ -142,3 +142,25 @@ def generate_brd_docx(insight_text, brand, filename):
     except Exception as e:
         fallback = f"BRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
         return write_docx(fallback, filename, "Business Requirements Document (BRD)")
+
+def generate_jira_bug_ticket(insight_text, brand):
+    prompt = f"""
+    You are creating a JIRA bug ticket summary based on the following customer complaint or issue:
+    ---
+    {insight_text}
+    ---
+    This user mentioned the brand: {brand}. Return a markdown-style issue title and description.
+    """
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a technical product manager creating JIRA tickets."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=300
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"### Bug Ticket Error\nCould not generate JIRA ticket due to error: {str(e)}"
