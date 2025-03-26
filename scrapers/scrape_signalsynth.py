@@ -1,4 +1,5 @@
-# scrape_signalsynth.py — high-signal only, GPT-friendly scraping from Reddit, eBay, Twitter
+# scrape_signalsynth.py — generous signal scraper for eBay + competitors
+
 import requests
 from bs4 import BeautifulSoup
 from scrape_twitter_cli import scrape_twitter_cli
@@ -6,6 +7,7 @@ from scrape_twitter_cli import scrape_twitter_cli
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 }
+
 SAVE_PATH = "scraped_community_posts.txt"
 TWITTER_PATH = "scraped_twitter_posts.txt"
 
@@ -14,42 +16,54 @@ COMMUNITY_FORUMS = {
     "Collectibles-Art": "https://community.ebay.com/t5/Collectibles-Art/bd-p/29"
 }
 
-REDDIT_SUBREDDITS = [
-    "tradingcards", "pokemonTCG", "baseballcards", "ebay"  # Removed MagicTCG
-]
+REDDIT_SUBREDDITS = ["ebay", "tradingcards", "baseballcards", "pokemonTCG"]
 
 REDDIT_TERMS = [
-    "ebay vault", "fanatics live", "fanatics authentication", "alt marketplace",
-    "whatnot shipping", "psa grading", "authentication", "return", "delay", "refund", "scam", "fake"
+    "ebay", "psa", "grading", "vault", "authentication", "authenticity guarantee",
+    "fanatics", "whatnot", "alt", "goldin"
 ]
 
 TWITTER_TERMS = [
-    "ebay psa", "fanatics vault", "alt marketplace", "whatnot delay",
-    "psa grading turnaround", "ebay authentication", "grading add-on", "psa integration"
+    "ebay psa", "authenticity guarantee", "grading from ebay", "vault authentication",
+    "psa submission", "grading delay", "return psa", "authentication ebay", "vault issues"
 ]
 
-# 🔍 Stricter filter: minimum length + required strong signal keywords
+
 def is_relevant(text):
-    keywords = [
-        "ebay", "vault", "grading", "psa", "fanatics", "authentication", "return",
-        "whatnot", "alt marketplace", "delay", "refund", "cut", "fees", "fake", "issue"
-    ]
     text = text.lower()
-    return len(text) >= 40 and any(k in text for k in keywords)
+
+    # Minimum text length to avoid junk
+    if len(text) < 20:
+        return False
+
+    # Exclude obvious junk or listing posts
+    noise_phrases = [
+        "mail day", "just got this", "nfs", "not for sale", "bump", "buy/sell/trade", "price check"
+    ]
+    if any(phrase in text for phrase in noise_phrases):
+        return False
+
+    # If it mentions eBay, PSA, grading, or competitors — let it through
+    keywords = [
+        "ebay", "psa", "vault", "authenticity", "authentication", "grading", "fanatics", "whatnot", "alt", "goldin"
+    ]
+    return any(k in text for k in keywords)
+
 
 def scrape_ebay_forum(name, url):
     try:
         res = requests.get(url, headers=HEADERS)
-        soup = BeautifulSoup(res.text, 'html.parser')
+        soup = BeautifulSoup(res.text, "html.parser")
         posts = []
         for thread in soup.select(".lia-link-navigation"):
             title = thread.get_text(strip=True)
             if title and is_relevant(title):
-                posts.append(f"[eBay - {name}] {title}")
+                posts.append(f"[eBay Forum - {name}] {title}")
         return posts
     except Exception as e:
-        print(f"❌ eBay forum error: {name} | {e}")
+        print(f"❌ Forum scrape error ({name}): {e}")
         return []
+
 
 def scrape_reddit_search(term, subreddit):
     url = f"https://old.reddit.com/r/{subreddit}/search?q={term.replace(' ', '+')}&restrict_sr=1&sort=new"
@@ -63,8 +77,9 @@ def scrape_reddit_search(term, subreddit):
                 posts.append(f"[Reddit - {subreddit}] {term}: {text}")
         return posts
     except Exception as e:
-        print(f"❌ Reddit search error for '{term}' in r/{subreddit} | {e}")
+        print(f"❌ Reddit scrape error ({subreddit}/{term}): {e}")
         return []
+
 
 def run_signal_scraper():
     all_posts = []
@@ -79,7 +94,7 @@ def run_signal_scraper():
         for term in REDDIT_TERMS:
             all_posts.extend(scrape_reddit_search(term, subreddit))
 
-    print("🔍 Scraping Twitter via CLI...")
+    print("🐦 Scraping Twitter via CLI...")
     for term in TWITTER_TERMS:
         tweets = scrape_twitter_cli(term)
         tweets = [t for t in tweets if is_relevant(t)]
@@ -95,8 +110,9 @@ def run_signal_scraper():
         for post in twitter_posts:
             f.write(post + "\n")
 
-    print(f"✅ Scraped {len(all_posts)} high-signal posts → {SAVE_PATH}")
-    print(f"🐦 Twitter posts saved to {TWITTER_PATH}")
+    print(f"\n✅ Saved {len(all_posts)} total high-signal posts.")
+    print(f"🐦 Twitter-only: {len(twitter_posts)} posts saved to {TWITTER_PATH}")
+
 
 if __name__ == "__main__":
     run_signal_scraper()
