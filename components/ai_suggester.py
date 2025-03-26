@@ -62,7 +62,7 @@ def generate_pm_ideas(text, brand="eBay"):
         else:
             return [f"[Error calling OpenAI: {e}]"]
 
-def write_docx(content, filename, title="Product Requirements Document"):
+def write_docx(content, filename, title="Product Document"):
     doc = Document()
     doc.add_heading(title, level=1)
     doc.add_paragraph(content)
@@ -107,3 +107,38 @@ def generate_prd_docx(insight_text, brand, filename):
     except Exception as e:
         fallback = f"PRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
         return write_docx(fallback, filename, "Product Requirements Document (PRD)")
+
+def generate_brd_docx(insight_text, brand, filename):
+    prompt = f"""
+    You are writing a Business Requirements Document (BRD) based on the following customer insight:
+    ---
+    {insight_text}
+    ---
+    The insight comes from a user mentioning the brand: {brand}.
+    Please include:
+    - Executive Summary
+    - Business Objectives
+    - Customer Problem
+    - Proposed Initiatives
+    - Stakeholders
+    - ROI or Business Impact
+    - Constraints or Assumptions
+    - Timeline Considerations
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a business product lead crafting strategic BRDs."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        brd_content = response.choices[0].message.content.strip()
+        return write_docx(brd_content, filename, "Business Requirements Document (BRD)")
+
+    except Exception as e:
+        fallback = f"BRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
+        return write_docx(fallback, filename, "Business Requirements Document (BRD)")
