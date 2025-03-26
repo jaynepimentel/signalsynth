@@ -1,170 +1,109 @@
+# ai_suggester.py — OpenAI v1.0+ safe with caching and quota handling
 import os
-import hashlib
 import json
-from dotenv import load_dotenv
+import hashlib
+from io import BytesIO
 from openai import OpenAI
+from dotenv import load_dotenv
+from docx import Document
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+system_prompt = """
+You are a senior product manager at a major marketplace platform like eBay or Fanatics. 
+Based on user feedback, identify the customer's concern and recommend specific, strategic 
+product improvements or operational actions. Focus on things that would build trust, improve
+conversion, or reduce friction. Use strong PM thinking.
+"""
+
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Load or initialize cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
 else:
     suggestion_cache = {}
 
-def generate_pm_ideas(text, brand="eBay", sentiment="Neutral"):
-    key = hashlib.md5(f"{text}_{brand}_{sentiment}".encode()).hexdigest()
+def generate_pm_ideas(text, brand="eBay"):
+    key = hashlib.md5(text.strip().encode()).hexdigest()
     if key in suggestion_cache:
         return suggestion_cache[key]
 
-    system_prompt = """
-You are a senior product manager at eBay or a major marketplace. Analyze the user's feedback and generate strategic PM ideas to address it.
-"""
+    if not os.getenv("OPENAI_API_KEY"):
+        return ["[No API key set — using fallback suggestion]"]
 
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Customer feedback:\n{text}\n\nBrand: {brand}"}
+                {"role": "user", "content": f"Feedback from user:\n{text}\n\nBrand mentioned: {brand}"}
             ],
             temperature=0.3,
             max_tokens=300
         )
-        raw = response.choices[0].message.content.strip().split("\n")
-        ideas = [line.strip("-• ").strip() for line in raw if line.strip()]
-        suggestion_cache[key] = ideas
+        output = response.choices[0].message.content.strip().split("\n")
+        suggestions = [line.strip("- ").strip() for line in output if line.strip()]
+        suggestion_cache[key] = suggestions
 
+        # Save to cache
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(suggestion_cache, f, indent=2)
-        return ideas
+
+        return suggestions
 
     except Exception as e:
-        return [f"[⚠️ GPT error: {str(e)}]"]
+        if "429" in str(e):
+            return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
+        elif "authentication" in str(e).lower():
+            return ["[⚠️ Missing or invalid OpenAI API key]"]
+        else:
+            return [f"[Error calling OpenAI: {e}]"]
 
-def generate_prd(text, brand="eBay"):
+def write_docx(content, filename, title="Product Requirements Document"):
+    doc = Document()
+    doc.add_heading(title, level=1)
+    doc.add_paragraph(content)
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer, f"{filename}.docx"
+
+def generate_prd_docx(insight_text, brand, filename):
     prompt = f"""
-You are a senior product manager. Write a Product Requirements Document (PRD) for the following customer insight. Use this format:
+    You are writing a Product Requirements Document (PRD) based on the following insight:
+    ---
+    {insight_text}
+    ---
+    The insight comes from a user mentioning the brand: {brand}.
+    Please include:
+    - Overview
+    - Customer Pain Point
+    - Strategic Context
+    - Personas Impacted
+    - Proposed Solutions
+    - Data or Success Metrics
+    - Risks / Dependencies
+    - Testable Hypothesis
+    - Jobs to Be Done (JTBD) statement
+    """
 
-Overview:
-Customer Pain Point:
-Strategic Context:
-Personas Affected:
-Proposed Solution:
-User Journey:
-Effort Estimate:
-Success Metrics:
-Risks:
-Next Steps:
-
-Customer insight:
-{text}
-Brand mentioned: {brand}
-"""
-    return call_gpt(prompt)
-
-def generate_brd(text, brand="eBay"):
-    prompt = f"""
-You are a business strategy leader. Write a Business Requirements Document (BRD) based on this customer insight. Include:
-
-Executive Summary:
-Business Opportunity:
-Customer Problem:
-Market Context:
-Proposed Solution:
-Revenue or Cost Impact:
-Key Stakeholders:
-Open Questions:
-
-Customer insight:
-{text}
-Brand mentioned: {brand}
-"""
-    return call_gpt(prompt)
-
-def generate_jira_bug_ticket(text, brand="eBay"):
-    prompt = f"""
-You are a technical support lead. Write a JIRA bug report using this customer complaint. Include:
-
-Title:
-Summary:
-Steps to Reproduce:
-Expected Result:
-Actual Result:
-Severity:
-Related Brand: {brand}
-
-Customer complaint:
-{text}
-"""
-    return call_gpt(prompt)
-
-def call_gpt(prompt):
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are an experienced product manager."},
+                {"role": "system", "content": "You are a product strategist generating detailed product documentation."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=700
+            max_tokens=1000
         )
-        return response.choices[0].message.content.strip()
+        prd_content = response.choices[0].message.content.strip()
+        return write_docx(prd_content, filename, "Product Requirements Document (PRD)")
+
     except Exception as e:
-        return f"[❌ GPT error: {str(e)}]"
-from docx import Document
-
-def generate_prd_docx(text, brand, filename):
-    prompt = f"""
-
-You are a senior product manager. Write a Product Requirements Document (PRD) for the following customer insight. Use this format:
-
-Overview:
-Customer Problem:
-Strategic Context:
-Personas Affected:
-Proposed Solution:
-User Journey:
-Effort Estimate:
-Success Metrics:
-Risks:
-Next Steps:
-
-Insight:
-{text}
-Brand mentioned: {brand}
-"""
-    content = call_gpt(prompt)
-    return write_docx(content, filename, "Product Requirements Document (PRD)")
-
-def generate_brd_docx(text, brand, filename):
-    prompt = f"""
-You are a business strategist. Write a Business Requirements Document (BRD) for the following customer insight. Use this format:
-
-Executive Summary:
-Business Opportunity:
-Customer Problem:
-Market Context:
-Proposed Solution:
-Revenue or Cost Impact:
-Key Stakeholders:
-Open Questions:
-
-Insight:
-{text}
-Brand mentioned: {brand}
-"""
-    content = call_gpt(prompt)
-    return write_docx(content, filename, "Business Requirements Document (BRD)")
-
-def write_docx(content, filename, title):
-    doc = Document()
-    doc.add_heading(title, level=1)
-    for line in content.split("\\n"):
-        doc.add_paragraph(line)
-    file_path = f"/mnt/data/{filename}.docx"
-    doc.save(file_path)
-    return file_path
+        fallback = f"PRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
+        return write_docx(fallback, filename, "Product Requirements Document (PRD)")
