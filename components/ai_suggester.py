@@ -1,13 +1,23 @@
-# ai_suggester.py — OpenAI v1.0+ safe with caching and quota handling
+# ai_suggester.py — OpenAI-safe with Streamlit compatibility and improved error handling
+
 import os
 import json
 import hashlib
-from openai import OpenAI
 from dotenv import load_dotenv
 
+# Load env vars (safe in Streamlit too)
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Try importing OpenAI client
+try:
+    from openai import OpenAI
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+except Exception as e:
+    client = None
+    OPENAI_API_KEY = None
+
+# System prompt for product strategy insight generation
 system_prompt = """
 You are a senior product manager at a major marketplace platform like eBay or Fanatics. 
 Based on user feedback, identify the customer's concern and recommend specific, strategic 
@@ -17,20 +27,27 @@ conversion, or reduce friction. Use strong PM thinking.
 
 CACHE_PATH = "gpt_suggestion_cache.json"
 
-# Load or initialize cache
-if os.path.exists(CACHE_PATH):
-    with open(CACHE_PATH, "r", encoding="utf-8") as f:
-        suggestion_cache = json.load(f)
-else:
-    suggestion_cache = {}
+# Load existing cache
+try:
+    if os.path.exists(CACHE_PATH):
+        with open(CACHE_PATH, "r", encoding="utf-8") as f:
+            suggestion_cache = json.load(f)
+    else:
+        suggestion_cache = {}
+except Exception:
+    suggestion_cache = {}  # fallback to empty if cache is corrupt
+
 
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(text.strip().encode()).hexdigest()
+
+    # Serve from cache
     if key in suggestion_cache:
         return suggestion_cache[key]
 
-    if not os.getenv("OPENAI_API_KEY"):
-        return ["[No API key set — using fallback suggestion]"]
+    # No key set
+    if not OPENAI_API_KEY or not client:
+        return ["[⚠️ No OpenAI API key set — using fallback suggestion]"]
 
     try:
         response = client.chat.completions.create(
@@ -42,20 +59,27 @@ def generate_pm_ideas(text, brand="eBay"):
             temperature=0.3,
             max_tokens=300
         )
-        output = response.choices[0].message.content.strip().split("\n")
-        suggestions = [line.strip("- ").strip() for line in output if line.strip()]
+
+        raw_output = response.choices[0].message.content.strip()
+        lines = raw_output.split("\n")
+        suggestions = [line.strip("-• ").strip() for line in lines if line.strip()]
         suggestion_cache[key] = suggestions
 
-        # Save to cache
-        with open(CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(suggestion_cache, f, indent=2)
+        # Write to cache safely
+        try:
+            with open(CACHE_PATH, "w", encoding="utf-8") as f:
+                json.dump(suggestion_cache, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            suggestions.append(f"[⚠️ Could not save to cache: {e}]")
 
         return suggestions
 
     except Exception as e:
-        if "429" in str(e):
+        # Friendly error messaging
+        msg = str(e).lower()
+        if "429" in msg or "rate limit" in msg:
             return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
-        elif "authentication" in str(e).lower():
-            return ["[⚠️ Missing or invalid OpenAI API key]"]
+        elif "authentication" in msg or "key" in msg:
+            return ["[⚠️ Invalid or missing OpenAI API key]"]
         else:
-            return [f"[Error calling OpenAI: {e}]"]
+            return [f"[❌ GPT error: {str(e)}]"]
