@@ -115,3 +115,56 @@ def call_gpt(prompt):
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"[❌ GPT error: {str(e)}]"
+from docx import Document
+
+def generate_prd_docx(text, brand, filename):
+    prompt = f"""
+
+You are a senior product manager. Write a Product Requirements Document (PRD) for the following customer insight. Use this format:
+
+Overview:
+Customer Problem:
+Strategic Context:
+Personas Affected:
+Proposed Solution:
+User Journey:
+Effort Estimate:
+Success Metrics:
+Risks:
+Next Steps:
+
+Insight:
+{text}
+Brand mentioned: {brand}
+"""
+    content = call_gpt(prompt)
+    return write_docx(content, filename, "Product Requirements Document (PRD)")
+
+def generate_brd_docx(text, brand, filename):
+    prompt = f"""
+You are a business strategist. Write a Business Requirements Document (BRD) for the following customer insight. Use this format:
+
+Executive Summary:
+Business Opportunity:
+Customer Problem:
+Market Context:
+Proposed Solution:
+Revenue or Cost Impact:
+Key Stakeholders:
+Open Questions:
+
+Insight:
+{text}
+Brand mentioned: {brand}
+"""
+    content = call_gpt(prompt)
+    return write_docx(content, filename, "Business Requirements Document (BRD)")
+
+def write_docx(content, filename, title):
+    doc = Document()
+    doc.add_heading(title, level=1)
+    for line in content.split("\\n"):
+        doc.add_paragraph(line)
+    file_path = f"/mnt/data/{filename}.docx"
+    doc.save(file_path)
+    return file_path
