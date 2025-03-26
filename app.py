@@ -1,4 +1,4 @@
-# app.py — Streamlit dashboard for SignalSynth
+# app.py — SignalSynth Streamlit Dashboard
 
 import os
 import json
@@ -6,32 +6,33 @@ import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
 
-# 🧠 Import from /components
+# Component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
 from components.ai_suggester import generate_pm_ideas
 
+# Load environment and OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# Load precomputed insights
+# Load enriched insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
     st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
 else:
-    st.error("❌ No precomputed insights found. Please run precompute_insights.py locally.")
+    st.error("❌ No precomputed insights found. Please run `precompute_insights.py` first.")
     st.stop()
 
-# Sidebar: GPT toggle
+# Sidebar settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=True and OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
-    st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT suggestions will not work.")
+    st.sidebar.warning("⚠️ No OpenAI API key found — GPT suggestions will be skipped.")
 
 # Sidebar filters
 st.sidebar.header("🔍 Filter Insights")
@@ -44,14 +45,14 @@ brand_filter = st.sidebar.selectbox("Target Brand", ["All"] + sorted(set(i.get("
 sentiment_filter = st.sidebar.selectbox("Brand Sentiment", ["All"] + sorted(set(i.get("brand_sentiment", "Unknown") for i in scraped_insights)))
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# Summary dashboards
-with st.expander("📊 Brand Summary Dashboard", expanded=False):
-    display_brand_dashboard(scraped_insights)
+# Brand-level dashboard and charts
+st.subheader("📊 Brand Summary Dashboard")
+display_brand_dashboard(scraped_insights)
 
-with st.expander("📈 Insight Charts", expanded=False):
-    display_insight_charts(scraped_insights)
+st.subheader("📈 Insight Charts")
+display_insight_charts(scraped_insights)
 
-# Trending keywords
+# Trending topic detection
 topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -68,19 +69,19 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Display insight explorer with filters
+# Filter results
 filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
     if (
-        (team_filter == "All" or i.get("team") == team_filter)
-        and (status_filter == "All" or i.get("status") == status_filter)
-        and (effort_filter == "All" or i.get("effort") == effort_filter)
-        and (type_filter == "All" or i.get("type_tag") == type_filter)
-        and (persona_filter == "All" or i.get("persona") == persona_filter)
-        and (brand_filter == "All" or i.get("target_brand") == brand_filter)
-        and (sentiment_filter == "All" or i.get("brand_sentiment") == sentiment_filter)
-        and (not show_trends_only or any(word in text for word in rising_trends))
+        (team_filter == "All" or i.get("team") == team_filter) and
+        (status_filter == "All" or i.get("status") == status_filter) and
+        (effort_filter == "All" or i.get("effort") == effort_filter) and
+        (type_filter == "All" or i.get("type_tag") == type_filter) and
+        (persona_filter == "All" or i.get("persona") == persona_filter) and
+        (brand_filter == "All" or i.get("target_brand") == brand_filter) and
+        (sentiment_filter == "All" or i.get("brand_sentiment") == sentiment_filter) and
+        (not show_trends_only or any(word in text for word in rising_trends))
     ):
         filtered.append(i)
 
@@ -107,6 +108,7 @@ for idx, i in enumerate(filtered):
         for quote in i.get("cluster", []):
             st.markdown(f"- _{quote}_")
 
+        # GPT-powered suggestions
         if use_gpt and OPENAI_KEY_PRESENT:
             with st.spinner("💡 Generating PM Suggestions..."):
                 try:
@@ -127,5 +129,6 @@ for idx, i in enumerate(filtered):
         if st.button(f"Generate PRD for: {summary[:30]}...", key=f"prd_{idx}"):
             st.success("✅ PRD Generated! (mock - would send to Airtable or JIRA)")
 
+# Footer
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
