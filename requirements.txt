@@ -16,3 +16,4 @@ tqdm==4.66.2
 openai
 python-dotenv
 fuzzywuzzy
+python-docx
