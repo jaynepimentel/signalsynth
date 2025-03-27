@@ -3,9 +3,11 @@
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
     generate_pm_ideas,
-    classify_insight_type,
     classify_persona,
-    classify_effort
+    classify_effort,
+    classify_insight_type,
+    classify_insight_type_gpt,
+    rate_clarity
 )
 from sentence_transformers import SentenceTransformer, util
 import openai
@@ -95,8 +97,13 @@ def enrich_single_insight(i, min_score=3):
     i["heuristic_score"] = heuristic_score
     i["score"] = combined_score(semantic_score, heuristic_score)
 
-    # Type
-    i["type_tag"], i["type_confidence"], i["type_reason"] = classify_insight_type(text)
+    # Type (heuristic + GPT fallback)
+    type_tag, confidence, reason = classify_insight_type(text)
+    if confidence < 75:
+        type_tag, confidence, reason = classify_insight_type_gpt(text)
+    i["type_tag"] = type_tag
+    i["type_confidence"] = confidence
+    i["type_reason"] = reason
 
     # Brand, sentiment, subtag, severity
     i = enhance_insight(i)
@@ -126,9 +133,10 @@ def enrich_single_insight(i, min_score=3):
     else:
         i["discovery_confidence"] = "Low"
 
-    # New additions:
+    # New additions
     i["title"] = generate_insight_title(text)
     i["journey_stage"] = classify_journey_stage(text)
+    i["clarity"] = rate_clarity(text)
 
     if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score:
         return i
