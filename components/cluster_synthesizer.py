@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — smart clustering + GPT-based labels and summaries
+# cluster_synthesizer.py — GPT labeling with fallback handling
 
 import os
 from collections import defaultdict
@@ -49,8 +49,16 @@ def gpt_label_and_summary(cluster):
         )
         content = response.choices[0].message.content.strip()
         lines = content.split("\n")
-        label = lines[0].replace("Label:", "").strip()
-        summary = lines[1].replace("Summary:", "").strip() if len(lines) > 1 else cluster[0]["text"][:80] + "..."
+
+        label = "General"
+        summary = cluster[0]["text"][:80] + "..."
+
+        for line in lines:
+            if "Label:" in line:
+                label = line.replace("Label:", "").strip()
+            elif "Summary:" in line:
+                summary = line.replace("Summary:", "").strip()
+
         return label, summary
     except Exception as e:
         return "General", f"(GPT summary failed: {e})"
