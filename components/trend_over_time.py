@@ -1,4 +1,4 @@
-# trend_over_time.py — renders trend lines by brand, sentiment, subtag
+# trend_over_time.py — time-series dashboard with AI-ready trend signal overlays
 import streamlit as st
 import pandas as pd
 import json
@@ -21,21 +21,30 @@ def display_trend_dashboard():
 
     df = pd.DataFrame(data)
     df["_logged_at"] = pd.to_datetime(df["_logged_at"])
+    df.sort_values(by="_logged_at", inplace=True)
 
-    # --- Volume over time ---
+    daily = df.groupby(pd.Grouper(key="_logged_at", freq="D"))
+
     st.subheader("Total Insight Volume Over Time")
-    st.line_chart(df.groupby(pd.Grouper(key="_logged_at", freq="D")).size())
+    st.line_chart(daily.size())
 
-    # --- Brand-specific trends ---
     st.subheader("Top Brands Over Time")
     brand_counts = df.groupby([pd.Grouper(key="_logged_at", freq="D"), "target_brand"]).size().unstack(fill_value=0)
-    st.line_chart(brand_counts)
+    top_brands = brand_counts.sum().sort_values(ascending=False).head(6).index.tolist()
+    st.line_chart(brand_counts[top_brands])
 
-    # --- Subtag spikes ---
-    st.subheader("Subtag Mentions Over Time")
+    st.subheader("Top Subtags Over Time")
     subtag_counts = df.groupby([pd.Grouper(key="_logged_at", freq="D"), "type_subtag"]).size().unstack(fill_value=0)
-    st.line_chart(subtag_counts)
+    top_tags = subtag_counts.sum().sort_values(ascending=False).head(6).index.tolist()
+    st.line_chart(subtag_counts[top_tags])
 
-    # --- PM Priority trend ---
     st.subheader("Avg PM Priority Over Time")
-    st.line_chart(df.groupby(pd.Grouper(key="_logged_at", freq="D"))["pm_priority_score"].mean())
+    st.line_chart(daily["pm_priority_score"].mean())
+
+    if "_trend_keywords" in df.columns:
+        st.subheader("Keyword-Based Trend Signals")
+        keyword_series = df.explode("_trend_keywords")
+        if not keyword_series.empty:
+            signal_counts = keyword_series.groupby([pd.Grouper(key="_logged_at", freq="D"), "_trend_keywords"]).size().unstack(fill_value=0)
+            top_keywords = signal_counts.sum().sort_values(ascending=False).head(6).index.tolist()
+            st.line_chart(signal_counts[top_keywords])
