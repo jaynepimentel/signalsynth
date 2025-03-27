@@ -157,3 +157,33 @@ def write_doc(title, content, base_filename):
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
     return file_path
+    
+def generate_cluster_prd_docx(cluster, base_filename):
+    cluster_texts = "\n\n".join(i.get("text", "") for i in cluster[:10])
+    brand = cluster[0].get("target_brand", "eBay")
+
+    prompt = f"""
+You are a senior product manager at eBay. Write a high-level Product Requirements Document (PRD) based on a recurring customer theme.
+
+Base this PRD on the following grouped user feedback:
+
+{cluster_texts}
+
+Include:
+- Overview
+- Customer Problem
+- Strategic Context
+- Personas Affected
+- Proposed Solution
+- UX/Workflow Touchpoints
+- User Journey
+- Data or Success Metrics
+- Risks & Mitigations
+- Suggested Experiment
+- Testable Hypothesis
+- Jira Ticket Name and Slack Channel
+
+Brand: {brand}
+"""
+    content = generate_gpt_doc_content(prompt)
+    return write_doc("Cluster-Based PRD", content, base_filename)
