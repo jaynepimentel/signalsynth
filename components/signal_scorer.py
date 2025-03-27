@@ -8,6 +8,7 @@ from components.ai_suggester import (
     classify_effort
 )
 from sentence_transformers import SentenceTransformer, util
+import openai
 
 # Load semantic similarity model
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -59,6 +60,29 @@ def tag_topic_focus(text):
         tags.append("Graded Refund Issue")
     return tags
 
+def generate_insight_title(text):
+    prompt = f"Summarize this user feedback into a short, 8–12 word title:\n{text}"
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=12
+    )
+    return response.choices[0].text.strip()
+
+def classify_journey_stage(text):
+    stages = {
+        "Discovery": ["looking for", "trying to find", "searching"],
+        "Purchase": ["buy", "purchase", "checkout"],
+        "Post-Purchase": ["received", "delivered", "after purchase"],
+        "Returns/Grading": ["return", "refund", "grading"],
+        "Resell": ["resell", "sell again", "secondary market"]
+    }
+    text_lower = text.lower()
+    for stage, keywords in stages.items():
+        if any(keyword in text_lower for keyword in keywords):
+            return stage
+    return "Unknown"
+
 def enrich_single_insight(i, min_score=3):
     text = i.get("text", "")
     if not text or len(text.strip()) < 10:
@@ -102,7 +126,10 @@ def enrich_single_insight(i, min_score=3):
     else:
         i["discovery_confidence"] = "Low"
 
-    # Final filter
+    # New additions:
+    i["title"] = generate_insight_title(text)
+    i["journey_stage"] = classify_journey_stage(text)
+
     if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score:
         return i
     return None
