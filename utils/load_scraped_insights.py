@@ -1,8 +1,7 @@
-# load_scraped_insights.py — with dual-source support for Reddit + Twitter
-
+# load_scraped_insights.py — dual-source parsing + AI-ready preprocessing for insights
 import os
+from components.enhanced_classifier import enhance_insight
 
-# Noise and signal keywords
 NOISE_PHRASES = [
     "mail day", "for sale", "look at this", "showing off", "pickup post",
     "got this", "check this out", "look what i found", "haul", "pc update"
@@ -11,6 +10,11 @@ NOISE_PHRASES = [
 REQUIRED_KEYWORDS = [
     "ebay", "grading", "vault", "shipping", "return", "refund",
     "authentication", "delay", "scam", "psa", "whatnot", "fanatics", "alt marketplace"
+]
+
+SOURCE_PATHS = [
+    "scraped_community_posts.txt",
+    "scraped_twitter_posts.txt"
 ]
 
 def is_high_signal(text):
@@ -24,30 +28,23 @@ def is_high_signal(text):
     return False
 
 def load_scraped_posts():
-    files = [
-        "C:/Users/jayne/signalsynth/scraped_community_posts.txt",
-        "C:/Users/jayne/signalsynth/scraped_twitter_posts.txt"
-    ]
-
     insights = []
-    for path in files:
-        if not os.path.exists(path):
-            print(f"❌ File not found: {path}")
+    for file_path in SOURCE_PATHS:
+        if not os.path.exists(file_path):
+            print(f"❌ Missing: {file_path}")
             continue
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f if line.strip()]
 
         for line in lines:
             if is_high_signal(line):
                 insights.append({
                     "text": line,
-                    "source": "twitter" if "twitter" in path.lower() else "reddit",
-                    "type_tag": "Discussion",  # default until AI classifies
+                    "source": "twitter" if "twitter" in file_path.lower() else "reddit",
+                    "type_tag": "Discussion"
                 })
-
     return insights
 
-def process_insights(insights):
-    # Placeholder for future data cleaning logic
-    return insights
+def process_insights(raw):
+    return [enhance_insight(i) for i in raw if isinstance(i, dict) and i.get("text")]
