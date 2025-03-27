@@ -4,6 +4,7 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
+from slugify import slugify
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -83,9 +84,9 @@ Brand: {brand}
     doc.add_heading("Product Requirements Document (PRD)", level=1)
     for line in content.split("\n"):
         doc.add_paragraph(line)
-    file_path = f"/mnt/data/{filename}.docx"
-    doc.save(file_path)
-    return file_path
+    safe_path = f"/mnt/data/{slugify(filename)[:64]}.docx"
+    doc.save(safe_path)
+    return safe_path
 
 def generate_brd_docx(text, brand, filename):
     prompt = f"""Write a Business Requirements Document (BRD) for the following customer insight. Include sections:
@@ -108,9 +109,9 @@ Brand: {brand}
     doc.add_heading("Business Requirements Document (BRD)", level=1)
     for line in content.split("\n"):
         doc.add_paragraph(line)
-    file_path = f"/mnt/data/{filename}.docx"
-    doc.save(file_path)
-    return file_path
+    safe_path = f"/mnt/data/{slugify(filename)[:64]}.docx"
+    doc.save(safe_path)
+    return safe_path
 
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"""You are a technical support lead. Write a JIRA bug report using this customer complaint. Include:
