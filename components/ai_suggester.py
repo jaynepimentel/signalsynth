@@ -1,4 +1,4 @@
-# ai_suggester.py — Upgraded PRD generator with strategic depth and formatting
+# ai_suggester.py — Upgraded PRD + BRD generators with strategic formatting and detail
 import os
 import hashlib
 import json
@@ -62,7 +62,7 @@ def generate_gpt_doc_content(prompt):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a product leader writing robust, GTM-ready Product Requirements Documents (PRDs). Use executive-level structure, real-world complexity, and clear formatting."},
+                {"role": "system", "content": "You are a product leader writing robust, GTM-ready Product or Business Requirements Documents. Use structured enterprise formats, detailed stakeholder-driven requirements, and clearly scoped deliverables."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
@@ -116,20 +116,26 @@ Brand: {brand}
 
 def generate_brd_docx(text, brand, base_filename):
     prompt = f"""
-Write a Business Requirements Document (BRD) for the following customer insight. Use a strategic product lens.
+Write a detailed, strategic Business Requirements Document (BRD) for the following customer insight.
+Use an executive-ready, implementation-aligned structure. Include:
 
 - Executive Summary
-- Business Opportunity
-- Customer Problem
-- Strategic Context
-- Personas
+- Business Context and Objectives
+- Customer Problem (with insight context)
+- Market and Competitive Context
 - Proposed Solution
-- Revenue & Cost Impact
-- Dependencies
-- Legal/Privacy Considerations
-- Key Stakeholders
-- Risks
-- Next Steps
+- Business Opportunity and Strategic Fit
+- Scope (in/out)
+- Stakeholders and Owners
+- Requirements (functional + non-functional)
+- Success Metrics
+- Key Dependencies
+- Risks and Mitigations
+- Regulatory/Legal Considerations
+- Data & Privacy Needs
+- Communication Plan
+- Open Questions
+- Appendix or Reference Links
 
 Insight:
 {text}
