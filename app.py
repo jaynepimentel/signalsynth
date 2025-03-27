@@ -142,28 +142,33 @@ for idx, i in enumerate(paged_insights, start=start_idx):
             for idea in i["ideas"]:
                 st.markdown(f"- {idea}")
 
-        # Download logic
         filename = slugify(summary)[:64]
         col_a, col_b, col_c = st.columns(3)
 
         with col_a:
             if st.button(f"📄 Generate PRD", key=f"btn_prd_{idx}"):
-                file_path = generate_prd_docx(insight_text, brand, filename)
-                if os.path.exists(file_path):
-                    with open(file_path, "rb") as f:
-                        st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_prd_{idx}")
+                with st.spinner("Creating PRD document..."):
+                    file_path = generate_prd_docx(insight_text, brand, filename)
+                    st.success("✅ PRD is ready!")
+                    if os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_prd_{idx}")
 
         with col_b:
             if st.button(f"📄 Generate BRD", key=f"btn_brd_{idx}"):
-                file_path = generate_brd_docx(insight_text, brand, filename.replace("prd", "brd"))
-                if os.path.exists(file_path):
-                    with open(file_path, "rb") as f:
-                        st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_brd_{idx}")
+                with st.spinner("Creating BRD document..."):
+                    file_path = generate_brd_docx(insight_text, brand, filename.replace("prd", "brd"))
+                    st.success("✅ BRD is ready!")
+                    if os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_brd_{idx}")
 
         with col_c:
             if st.button(f"🐞 Generate JIRA", key=f"btn_jira_{idx}"):
-                jira = generate_jira_bug_ticket(insight_text, brand)
-                st.download_button("⬇️ Download JIRA", jira, file_name=f"JIRA-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
+                with st.spinner("Creating JIRA ticket..."):
+                    jira = generate_jira_bug_ticket(insight_text, brand)
+                    st.success("✅ JIRA ticket is ready!")
+                    st.download_button("⬇️ Download JIRA", jira, file_name=f"JIRA-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
