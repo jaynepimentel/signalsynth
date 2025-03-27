@@ -1,235 +1,135 @@
-# ai_suggester.py — GPT-powered document generation for insights and clusters
+# ai_suggester.py — GPT-powered suggestions, type classification, and clarity scoring
 
 import os
 import json
 import hashlib
-import tempfile
-from dotenv import load_dotenv
 from openai import OpenAI
-from docx import Document
-from slugify import slugify
+from dotenv import load_dotenv
 
 load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_KEY:
-    raise ValueError("Missing OPENAI_API_KEY in environment variables")
-
-client = OpenAI(api_key=OPENAI_KEY)
+# GPT suggestion cache
 CACHE_PATH = "gpt_suggestion_cache.json"
-
-# Load or initialize cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
 else:
     suggestion_cache = {}
 
-SYSTEM_PM_PROMPT = (
-    "You are a senior product manager at a marketplace like eBay. "
-    "Generate strategic, high-impact PM ideas based on user feedback. "
-    "Focus on product or operational improvements that drive trust, reduce friction, or increase conversion."
-)
+def save_cache():
+    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(suggestion_cache, f, indent=2)
 
-def generate_pm_ideas(text, brand="eBay"):
-    key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
+# ---- PM IDEAS ----
+def generate_pm_ideas(text, brand="eBay", sentiment="Neutral"):
+    key = hashlib.md5((text + brand + sentiment).encode()).hexdigest()
     if key in suggestion_cache:
         return suggestion_cache[key]
 
+    if not os.getenv("OPENAI_API_KEY"):
+        return ["[⚠️ No API key set — skipping GPT suggestion generation]"]
+
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": SYSTEM_PM_PROMPT},
-                {"role": "user", "content": f"User feedback:\n{text}\n\nBrand: {brand}"}
+                {"role": "system", "content": "You're a senior product manager. Based on this user feedback, identify the customer concern and provide specific, high-impact product suggestions."},
+                {"role": "user", "content": f"Feedback: {text}\n\nBrand: {brand}\nSentiment: {sentiment}"}
             ],
             temperature=0.3,
-            max_tokens=400
+            max_tokens=300
         )
-        raw = response.choices[0].message.content.strip().split("\n")
-        ideas = [line.strip("-• ").strip() for line in raw if line.strip()]
-        suggestion_cache[key] = ideas
-
-        with open(CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(suggestion_cache, f, indent=2)
-
-        return ideas
+        suggestions = [
+            line.strip("- ").strip()
+            for line in response.choices[0].message.content.strip().split("\n")
+            if line.strip()
+        ]
+        suggestion_cache[key] = suggestions
+        save_cache()
+        return suggestions
 
     except Exception as e:
-        if "429" in str(e):
-            return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
-        elif "authentication" in str(e).lower():
-            return ["[⚠️ Missing or invalid OpenAI API key]"]
         return [f"[⚠️ GPT error: {str(e)}]"]
 
-def generate_gpt_doc_content(prompt, role="You are a senior PM writing a PRD or BRD. Be specific, strategic, and structured. Consider risks, tradeoffs, stakeholder impact, and implementation nuance. Do not generate fake data. Use strategic framing over fluff."):
+# ---- INSIGHT TYPE (HEURISTIC) ----
+def classify_insight_type(text):
+    t = text.lower()
+    if any(p in t for p in ["issue", "bug", "broken", "not working", "problem"]):
+        return "Complaint", 90, "Detected complaint phrasing"
+    if any(p in t for p in ["should add", "wish", "feature request", "need to add"]):
+        return "Feature Request", 88, "Detected feature request phrasing"
+    if any(p in t for p in ["how do", "i don’t understand", "what is", "can someone explain"]):
+        return "Confusion", 85, "Detected confusion/how-to phrasing"
+    return "Discussion", 70, "Defaulted to general discussion"
+
+# ---- INSIGHT TYPE (GPT FALLBACK) ----
+def classify_insight_type_gpt(text):
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": role},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": "You are a product classification assistant. Classify the user feedback as one of the following types:\n- Complaint\n- Feature Request\n- Confusion\n- Discussion\n\nRespond in this exact format:\nType: [type]\nConfidence: [0–100]\nReason: [brief reason]"},
+                {"role": "user", "content": text.strip()}
             ],
-            temperature=0.3,
-            max_tokens=1800
+            temperature=0,
+            max_tokens=100
         )
-        return response.choices[0].message.content.strip()
+        result = response.choices[0].message.content.strip()
+
+        type_tag = "Discussion"
+        confidence = 70
+        reason = "Defaulted"
+
+        for line in result.splitlines():
+            if line.lower().startswith("type:"):
+                type_tag = line.split(":", 1)[1].strip()
+            if line.lower().startswith("confidence:"):
+                confidence = int(line.split(":", 1)[1].strip())
+            if line.lower().startswith("reason:"):
+                reason = line.split(":", 1)[1].strip()
+
+        return type_tag, confidence, reason
     except Exception as e:
-        return f"⚠️ GPT Error: {str(e)}"
+        return "Discussion", 70, f"GPT fallback failed: {e}"
 
-def safe_file_path(base_name):
-    filename = slugify(base_name)[:64] + ".docx"
-    return os.path.join(tempfile.gettempdir(), filename)
+# ---- PERSONA CLASSIFIER ----
+def classify_persona(text):
+    t = text.lower()
+    if any(x in t for x in ["sell", "seller", "my buyer", "listing"]):
+        return "Seller"
+    if any(x in t for x in ["buy", "bought", "purchased", "my order"]):
+        return "Buyer"
+    if any(x in t for x in ["grading", "slab", "submission", "vault"]):
+        return "Collector"
+    return "Unknown"
 
-def write_doc(title, content, base_filename):
-    doc = Document()
-    doc.add_heading(title, level=1)
-    for line in content.split("\n"):
-        doc.add_paragraph(line)
-    file_path = safe_file_path(base_filename)
-    doc.save(file_path)
-    return file_path
+# ---- EFFORT ESTIMATOR ----
+def classify_effort(ideas):
+    joined = " ".join(ideas).lower()
+    if any(x in joined for x in ["tooltip", "label", "copy change", "nudge"]):
+        return "Low"
+    if any(x in joined for x in ["chart", "breakdown", "comps", "filters"]):
+        return "Medium"
+    if any(x in joined for x in ["integration", "workflow", "automation", "sync", "refactor"]):
+        return "High"
+    return "Medium"
 
-def generate_prd_docx(text, brand, base_filename):
-    prompt = f"""
-You are a senior product manager at eBay. Write a deeply strategic and clearly structured Product Requirements Document (PRD) based on the user feedback below. Focus on platform-level risk, operational nuance, and strategic tradeoffs.
-
-Include:
-- Overview
-- Customer Problem
-- Strategic Context
-- Personas Impacted
-- Proposed Solution
-- UX or Workflow Touchpoints
-- User Journey
-- Success Metrics
-- Strategic Tradeoffs
-- Risks & Mitigations
-- Suggested Experiment
-- Testable Hypothesis
-- Next Steps
-- Jira Ticket Name and Slack Channel
-
-Feedback:
-{text}
-
-Brand: {brand}
-"""
-    content = generate_gpt_doc_content(prompt)
-    return write_doc("Product Requirements Document (PRD)", content, base_filename)
-
-def generate_brd_docx(text, brand, base_filename):
-    prompt = f"""
-You are a senior product manager at eBay. Write a strategic, cross-functional Business Requirements Document (BRD) based on this customer feedback.
-
-Include:
-- Executive Summary
-- Business Opportunity
-- Customer Problem
-- Market Context
-- Proposed Solution
-- Revenue or Cost Impact
-- Key Stakeholders
-- Open Questions
-- Recommended Next Step
-
-Feedback:
-{text}
-
-Brand: {brand}
-"""
-    content = generate_gpt_doc_content(prompt)
-    return write_doc("Business Requirements Document (BRD)", content, base_filename)
-
-def generate_jira_bug_ticket(text, brand="eBay"):
-    prompt = f"""
-You are a senior QA lead writing a JIRA bug ticket based on this customer complaint.
-
-Include:
-- Title
-- Summary
-- Steps to Reproduce
-- Expected Result
-- Actual Result
-- Severity
-- Brand
-
-Complaint:
-{text}
-
-Brand: {brand}
-"""
-    return generate_gpt_doc_content(prompt, role="You are a senior QA lead writing a JIRA bug.")
-
-def generate_prfaq_docx(text, brand, base_filename):
-    prompt = f"""
-You are a senior product manager at eBay. Write a launch-style PRFAQ (Press Release + FAQ) document based on this customer feedback.
-
-Include:
-- Product/Feature Name
-- Press Release Summary
-- Launch Narrative
-- Customer Impact Statement
-- 5–7 FAQs (launch eligibility, rollout, trust concerns, seller impact)
-
-Feedback:
-{text}
-
-Brand: {brand}
-"""
-    content = generate_gpt_doc_content(prompt)
-    return write_doc("Insight PRFAQ", content, base_filename + "-prfaq")
-
-def generate_cluster_prd_docx(cluster, base_filename):
-    cluster_texts = "\n\n".join(i.get("text", "") for i in cluster[:10])
-    brand = cluster[0].get("target_brand", "eBay")
-
-    prompt = f"""
-You are a senior product manager at eBay. Write a strategic Product Requirements Document (PRD) based on a recurring customer issue cluster.
-
-Summarize and structure a clear PRD from the following related customer quotes:
-
-{cluster_texts}
-
-Include:
-- Overview
-- Customer Problem
-- Strategic Context
-- Personas Affected
-- Proposed Solution
-- UX/Workflow Touchpoints
-- User Journey
-- Data or Success Metrics
-- Strategic Tradeoffs
-- Risks & Mitigations
-- Suggested Experiment
-- Testable Hypothesis
-- Jira Ticket Name and Slack Channel
-
-Brand: {brand}
-"""
-    content = generate_gpt_doc_content(prompt)
-    return write_doc("Cluster-Based PRD", content, base_filename)
-
-def generate_cluster_prfaq_docx(cluster, base_filename):
-    cluster_texts = "\n\n".join(i.get("text", "") for i in cluster[:10])
-    brand = cluster[0].get("target_brand", "eBay")
-
-    prompt = f"""
-You are a senior product manager at eBay writing a launch-style PRFAQ (Press Release + FAQ) to support a rollout of a new feature or policy change based on user pain.
-
-Use the following grouped user feedback to shape the narrative:
-
-{cluster_texts}
-
-Write a strategic, compelling PRFAQ that includes:
-- Product/Feature Name
-- Press Release Summary (hero benefit, customer quote, competitive context)
-- Launch Narrative (why now, what changed, what insights drove it)
-- Customer Impact Statement (buyers, sellers, support teams)
-- 5–7 strategic FAQs (launch scope, eligibility, timing, trust questions, seller safeguards)
-
-Brand: {brand}
-"""
-    content = generate_gpt_doc_content(prompt)
-    return write_doc("Cluster-Based PRFAQ", content, base_filename + "-prfaq")
+# ---- CLARITY RATING ----
+def rate_clarity(text):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Rate how clear and actionable this user insight is. Return either:\n- Clarity: Clear\n- Clarity: Needs Clarification"},
+                {"role": "user", "content": text.strip()}
+            ],
+            temperature=0,
+            max_tokens=20
+        )
+        content = response.choices[0].message.content.strip().lower()
+        if "needs clarification" in content:
+            return "Needs Clarification"
+        return "Clear"
+    except:
+        return "Clear"
