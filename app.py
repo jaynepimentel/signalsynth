@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with UX-optimized Cluster + Explorer Mode + Document Generation
+# app.py — SignalSynth UI with dropdown document generation for insights
 
 import os
 import json
@@ -6,6 +6,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
+import tempfile
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
@@ -15,16 +16,15 @@ from components.ai_suggester import (
     generate_pm_ideas,
     generate_prd_docx,
     generate_brd_docx,
+    generate_prfaq_docx,
     generate_jira_bug_ticket
 )
 
-# Setup
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# Load insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -33,7 +33,6 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
-# Sidebar filters
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -55,14 +54,12 @@ filters = {
 }
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# Dashboards
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
 st.subheader("📈 Insight Trends")
 display_insight_charts(scraped_insights)
 
-# Detect rising keyword trends
 topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -79,21 +76,18 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Filter logic
 filtered = [
     i for i in scraped_insights
     if all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
     and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
 ]
 
-# Main Display Modes
 st.subheader("🧭 Insight Explorer Mode")
 display_insight_explorer(filtered)
 
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
-# Paginated Individual Insights
 st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
@@ -113,7 +107,6 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Render individual insights
 for idx, i in enumerate(paged_insights, start=start_idx):
     summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
@@ -143,29 +136,28 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                 st.markdown(f"- {idea}")
 
         filename = slugify(summary)[:64]
-        col_a, col_b, col_c = st.columns(3)
-
-        with col_a:
-            if st.button(f"📄 Generate PRD", key=f"btn_prd_{idx}"):
-                with st.spinner("Creating PRD..."):
+        doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"doc_type_{idx}")
+        if st.button(f"Generate {doc_type}", key=f"generate_doc_{idx}"):
+            with st.spinner(f"Generating {doc_type}..."):
+                if doc_type == "PRD":
                     file_path = generate_prd_docx(text, brand, filename)
-                    if os.path.exists(file_path):
-                        with open(file_path, "rb") as f:
-                            st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_prd_{idx}")
-
-        with col_b:
-            if st.button(f"📄 Generate BRD", key=f"btn_brd_{idx}"):
-                with st.spinner("Creating BRD..."):
+                elif doc_type == "BRD":
                     file_path = generate_brd_docx(text, brand, filename + "-brd")
-                    if os.path.exists(file_path):
-                        with open(file_path, "rb") as f:
-                            st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_brd_{idx}")
-
-        with col_c:
-            if st.button(f"🐞 Generate JIRA", key=f"btn_jira_{idx}"):
-                with st.spinner("Creating JIRA ticket..."):
-                    jira = generate_jira_bug_ticket(text, brand)
-                    st.download_button("⬇️ Download JIRA", jira, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
+                elif doc_type == "PRFAQ":
+                    file_path = generate_prfaq_docx(text, brand, filename + "-prfaq")
+                elif doc_type == "JIRA":
+                    file_content = generate_jira_bug_ticket(text, brand)
+                    st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
+                    file_path = None
+                if file_path and os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        st.download_button(
+                            f"⬇️ Download {doc_type}",
+                            f,
+                            file_name=os.path.basename(file_path),
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key=f"dl_doc_{idx}"
+                        )
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
