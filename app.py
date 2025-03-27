@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with extended filters and link-out support
+# app.py — SignalSynth with GPT caching and performance optimizations
 
 import os
 import json
@@ -33,6 +33,10 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
+# Local GPT suggestion cache
+if "cached_ideas" not in st.session_state:
+    st.session_state.cached_ideas = {}
+
 # Sidebar Settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
@@ -57,12 +61,11 @@ filters = {
 }
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# New: Time range filter
 st.sidebar.markdown("**Date Range Filter**")
 start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
 end_date = st.sidebar.date_input("End Date", value=datetime.today())
 
-# Summary dashboards
+# Dashboards
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
@@ -85,7 +88,7 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Filter insights based on all criteria
+# Filter logic
 filtered = []
 for i in scraped_insights:
     insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
@@ -95,17 +98,17 @@ for i in scraped_insights:
         ts = datetime(2024, 1, 1)
 
     if (
-        all(filters[k] == "All" or i.get(k) == filters[k] for k in filters) and
-        (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends)) and
-        (start_date <= ts.date() <= end_date)
+        all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
+        and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
+        and (start_date <= ts.date() <= end_date)
     ):
         filtered.append(i)
 
-# --- Explorer ---
+# Explorer View
 st.subheader("🧭 Insight Explorer Mode")
 display_insight_explorer(filtered)
 
-# --- Individual View ---
+# Pagination
 st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
@@ -125,7 +128,6 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Badge styling
 BADGE_COLORS = {
     "Complaint": "#FF6B6B",
     "Confusion": "#FFD166",
@@ -170,20 +172,21 @@ for idx, i in enumerate(paged_insights, start=start_idx):
         st.markdown("**User Quote:**")
         st.markdown(f"> {text}")
 
-        # Optional link-out
         if i.get("url"):
             st.markdown(f"[🔗 View Original Post]({i['url']})")
 
-        if use_gpt and OPENAI_KEY_PRESENT:
+        cache_key = f"{slugify(text)}_{brand}"
+        if use_gpt and OPENAI_KEY_PRESENT and cache_key not in st.session_state.cached_ideas:
             with st.spinner("💡 Generating PM Suggestions..."):
                 try:
-                    i["ideas"] = generate_pm_ideas(text, brand)
+                    st.session_state.cached_ideas[cache_key] = generate_pm_ideas(text, brand)
                 except Exception as e:
-                    i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
+                    st.session_state.cached_ideas[cache_key] = [f"[❌ GPT error: {str(e)}]"]
 
-        if i.get("ideas"):
+        ideas = st.session_state.cached_ideas.get(cache_key, i.get("ideas", []))
+        if ideas:
             st.markdown("**💡 PM Suggestions:**")
-            for idea in i["ideas"]:
+            for idea in ideas:
                 st.markdown(f"- {idea}")
 
         if i.get("clarity") == "Needs Clarification":
@@ -214,7 +217,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             key=f"dl_doc_{idx}")
 
-# --- Clustered Mode — now at bottom ---
+# Clustered View
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
