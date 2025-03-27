@@ -59,7 +59,11 @@ def generate_gpt_doc_content(prompt):
     except Exception as e:
         return f"⚠️ GPT Error: {str(e)}"
 
-def generate_prd_docx(text, brand, filename):
+def safe_file_path(base_name):
+    filename = slugify(base_name)[:64] + ".docx"
+    return os.path.join("/mnt/data", filename)
+
+def generate_prd_docx(text, brand, base_filename):
     prompt = f"""Write a detailed Product Requirements Document (PRD) for the following user insight. Use sections like:
 
 Overview
@@ -82,11 +86,11 @@ Brand: {brand}
     doc.add_heading("Product Requirements Document (PRD)", level=1)
     for line in content.split("\n"):
         doc.add_paragraph(line)
-    safe_path = f"/mnt/data/{slugify(filename)[:64]}.docx"
-    doc.save(safe_path)
-    return safe_path
+    file_path = safe_file_path(base_filename)
+    doc.save(file_path)
+    return file_path
 
-def generate_brd_docx(text, brand, filename):
+def generate_brd_docx(text, brand, base_filename):
     prompt = f"""Write a Business Requirements Document (BRD) for the following customer insight. Include sections:
 
 Executive Summary
@@ -107,9 +111,9 @@ Brand: {brand}
     doc.add_heading("Business Requirements Document (BRD)", level=1)
     for line in content.split("\n"):
         doc.add_paragraph(line)
-    safe_path = f"/mnt/data/{slugify(filename)[:64]}.docx"
-    doc.save(safe_path)
-    return safe_path
+    file_path = safe_file_path(base_filename)
+    doc.save(file_path)
+    return file_path
 
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"""You are a technical support lead. Write a JIRA bug report using this customer complaint. Include:
