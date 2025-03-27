@@ -1,4 +1,4 @@
-# insight_explorer.py — Explorer Mode with document generation dropdown per card
+# insight_explorer.py — Explorer Mode with styled card layout and doc dropdown
 
 import streamlit as st
 from slugify import slugify
@@ -57,34 +57,42 @@ def display_insight_explorer(insights):
     results = sorted(results, key=lambda x: x.get(sort_field, ""), reverse=True if sort_field == "score" else False)
 
     for idx, i in enumerate(results[:100]):
-        summary = i.get("summary", i.get("text", "")[:80])
-        st.markdown(f"### 🧠 {summary}")
-        st.caption(
-            f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} | "
-            f"Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%)"
-        )
+        with st.container():
+            summary = i.get("summary", i.get("text", "")[:80])
+            text = i.get("text", "")
+            brand = i.get("target_brand", "eBay")
+            filename = slugify(summary)[:64]
 
-        st.markdown("**Feedback:**")
-        st.markdown(f"> {i.get('text')}")
+            st.markdown(f"### 🧠 {summary}")
+            cols = st.columns([2, 2, 2, 2])
+            cols[0].markdown(f"**Score:** {i.get('score', 0)}")
+            cols[1].markdown(f"**Type:** {i.get('type_tag')} > {i.get('type_subtag', '')}")
+            cols[2].markdown(f"**Sentiment:** {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%)")
+            cols[3].markdown(f"**Brand:** {brand}")
 
-        filename = slugify(i.get("summary") or i.get("text", "")[:80])[:64]
-        brand = i.get("target_brand", "eBay")
-        text = i.get("text", "")
+            st.markdown("**Feedback:**")
+            st.markdown(f"> {text}")
 
-        doc_type = st.selectbox("Generate document", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"explorer_doc_type_{idx}")
-        if st.button(f"Generate {doc_type}", key=f"explorer_generate_{idx}"):
-            with st.spinner(f"Generating {doc_type}..."):
-                if doc_type == "PRD":
-                    file_path = generate_prd_docx(text, brand, filename)
-                elif doc_type == "BRD":
-                    file_path = generate_brd_docx(text, brand, filename)
-                elif doc_type == "PRFAQ":
-                    file_path = generate_prfaq_docx(text, brand, filename)
-                elif doc_type == "JIRA":
-                    file_content = generate_jira_bug_ticket(text, brand)
-                    st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_exp_{idx}")
-                    file_path = None
+            doc_type = st.selectbox("Generate document", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"explorer_doc_type_{idx}")
+            if st.button(f"Generate {doc_type}", key=f"explorer_generate_{idx}"):
+                with st.spinner(f"Generating {doc_type}..."):
+                    if doc_type == "PRD":
+                        file_path = generate_prd_docx(text, brand, filename)
+                    elif doc_type == "BRD":
+                        file_path = generate_brd_docx(text, brand, filename)
+                    elif doc_type == "PRFAQ":
+                        file_path = generate_prfaq_docx(text, brand, filename)
+                    elif doc_type == "JIRA":
+                        file_content = generate_jira_bug_ticket(text, brand)
+                        st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_exp_{idx}")
+                        file_path = None
 
-                if file_path and os.path.exists(file_path):
-                    with open(file_path, "rb") as f:
-                        st.download_button(f"⬇️ Download {doc_type}", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_doc_exp_{idx}")
+                    if file_path and os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            st.download_button(
+                                f"⬇️ Download {doc_type}",
+                                f,
+                                file_name=os.path.basename(file_path),
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_doc_exp_{idx}"
+                            )
