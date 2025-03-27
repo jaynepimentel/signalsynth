@@ -1,11 +1,10 @@
-# cluster_synthesizer.py — GPT-labeled, cached, and serialization-safe clustering
+# cluster_synthesizer.py — GPT-tuned summarization + metadata-rich cluster cards
 
 import os
 from collections import defaultdict
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 from sklearn.cluster import DBSCAN
 import numpy as np
-import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -15,14 +14,10 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-
-def cluster_insights(insights, min_cluster_size=2, eps=0.4):
-    enriched_texts = [
-        f"{i['text']} {i.get('type_subtag', '')} {i.get('target_brand', '')} {' '.join(i.get('ideas', []))}"
-        for i in insights
-    ]
-    embeddings = model.encode(enriched_texts, convert_to_tensor=True)
-    clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
+def cluster_insights(insights, min_cluster_size=3):
+    texts = [i.get("text", "") for i in insights]
+    embeddings = model.encode(texts, convert_to_tensor=True)
+    clustering = DBSCAN(eps=0.4, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
     labels = clustering.labels_
 
     clustered = defaultdict(list)
@@ -30,59 +25,49 @@ def cluster_insights(insights, min_cluster_size=2, eps=0.4):
         if label != -1:
             clustered[label].append(insight)
 
-    print(f"✅ Clustered {len(insights)} insights into {len(clustered)} groups")
     return list(clustered.values())
 
-
-def gpt_label_and_summary(cluster):
-    if not cluster or not client:
-        return "General", "(Cluster empty or GPT client missing)"
+def summarize_cluster_with_gpt(cluster):
+    if not client:
+        return cluster[0]["text"][:80] + "..."
 
     combined = "\n".join(i["text"] for i in cluster[:5])
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a strategic product analyst. Based on the grouped customer feedback below, provide:\n1. A clear 1-3 word thematic label (e.g. Returns, Feedback, Authentication).\n2. A 1-sentence cluster summary."},
+                {"role": "system", "content": "Summarize the key theme of this group of user posts in one sentence."},
                 {"role": "user", "content": combined}
             ],
             temperature=0.3,
             max_tokens=100
         )
-        content = response.choices[0].message.content.strip()
-        lines = content.split("\n")
-
-        label, summary = "General", "(No summary)"
-        for line in lines:
-            if "Label:" in line:
-                label = line.replace("Label:", "").strip()
-            elif "Summary:" in line:
-                summary = line.replace("Summary:", "").strip()
-
-        return label, summary
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        print(f"❌ GPT cluster summary error: {e}")
-        return "General", f"(GPT summary failed: {e})"
-
+        return f"(GPT summary failed: {e})"
 
 def synthesize_cluster(cluster):
-    label, summary = gpt_label_and_summary(cluster)
+    summary = summarize_cluster_with_gpt(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
-    quotes = [f"- _{i['text'][:200]}_" for i in cluster[:3]]
+    type_tag = cluster[0].get("type_tag", "Insight")
+    subtype = cluster[0].get("type_subtag", "General")
 
+    quotes = [f"- _{i.get('text', '')[:200]}_" for i in cluster[:3]]
+
+    # Aggregate top PM ideas
     idea_counter = defaultdict(int)
     for i in cluster:
         for idea in i.get("ideas", []):
             idea_counter[idea] += 1
     top_ideas = sorted(idea_counter.items(), key=lambda x: -x[1])[:3]
 
+    # Scores
     scores = [i.get("score", 0) for i in cluster]
-    min_score = round(min(scores), 2)
-    max_score = round(max(scores), 2)
+    min_score = min(scores)
+    max_score = max(scores)
 
     return {
-        "title": f"{label}: {summary} ({len(cluster)} mentions)",
-        "theme": label,
+        "title": f"{type_tag}: {subtype} issue ({len(cluster)} mentions)",
         "brand": brand,
         "summary": summary,
         "quotes": quotes,
@@ -90,19 +75,6 @@ def synthesize_cluster(cluster):
         "score_range": f"{min_score}–{max_score}"
     }
 
-
-def serialize_safe(obj):
-    return {k: v for k, v in obj.items() if isinstance(v, (str, int, float, list, dict, bool, type(None)))}
-
-@st.cache_data(show_spinner=False)
-def cached_cluster_cards(insights_serialized):
-    from copy import deepcopy
-    insights_copy = deepcopy(insights_serialized)
-    clusters = cluster_insights(insights_copy)
-    return [synthesize_cluster(c) for c in clusters]
-
-
 def generate_synthesized_insights(insights):
-    insights_serialized = [serialize_safe(i) for i in insights]
-    print(f"⚡ Caching {len(insights_serialized)} insights for cluster view")
-    return cached_cluster_cards(insights_serialized)
+    clusters = cluster_insights(insights)
+    return [synthesize_cluster(c) for c in clusters]
