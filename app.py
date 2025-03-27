@@ -1,9 +1,9 @@
-# app.py — Clean action buttons, auto-download PRD/BRD/JIRA, horizontal layout
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
+from slugify import slugify
 import tempfile
 
 # Component imports
@@ -55,7 +55,7 @@ display_brand_dashboard(scraped_insights)
 st.subheader("📈 Insight Charts")
 display_insight_charts(scraped_insights)
 
-# Trends
+# Trending detection
 topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -142,21 +142,28 @@ for idx, i in enumerate(paged_insights, start=start_idx):
             for idea in i["ideas"]:
                 st.markdown(f"- {idea}")
 
-        # Auto-downloadable buttons
-        filename = f"PRD - {summary}"
-        prd_path = generate_prd_docx(insight_text, brand, filename)
-        brd_path = generate_brd_docx(insight_text, brand, filename.replace("PRD", "BRD"))
-        jira = generate_jira_bug_ticket(insight_text, brand)
-
+        # Download logic
+        filename = slugify(summary)[:64]
         col_a, col_b, col_c = st.columns(3)
+
         with col_a:
-            with open(prd_path, "rb") as f:
-                st.download_button("📄 Generate PRD", f, file_name=os.path.basename(prd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_prd_{idx}")
+            if st.button(f"📄 Generate PRD", key=f"btn_prd_{idx}"):
+                file_path = generate_prd_docx(insight_text, brand, filename)
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_prd_{idx}")
+
         with col_b:
-            with open(brd_path, "rb") as f:
-                st.download_button("📄 Generate BRD", f, file_name=os.path.basename(brd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_brd_{idx}")
+            if st.button(f"📄 Generate BRD", key=f"btn_brd_{idx}"):
+                file_path = generate_brd_docx(insight_text, brand, filename.replace("prd", "brd"))
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_brd_{idx}")
+
         with col_c:
-            st.download_button("🐞 Generate JIRA Bug Ticket", jira, file_name=f"JIRA - {summary}.md", mime="text/markdown", key=f"download_jira_{idx}")
+            if st.button(f"🐞 Generate JIRA", key=f"btn_jira_{idx}"):
+                jira = generate_jira_bug_ticket(insight_text, brand)
+                st.download_button("⬇️ Download JIRA", jira, file_name=f"JIRA-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
