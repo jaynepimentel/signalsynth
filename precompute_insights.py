@@ -6,7 +6,7 @@ import time
 import argparse
 from dotenv import load_dotenv
 from utils.load_scraped_insights import load_scraped_posts, process_insights
-from components.signal_scorer import filter_relevant_insights
+from components.signal_scorer import filter_relevant_insights, generate_insight_title, classify_journey_stage
 from components.trend_logger import log_insights_over_time
 
 # Setup
@@ -30,6 +30,12 @@ def show_diagnostics(insights):
     print(f"- Total insights: {len(insights)}")
     print(f"- Brands mentioned: {', '.join(brands)}")
     print(f"- Types tagged: {', '.join(types)}")
+
+def enrich_titles_and_journey(insights):
+    for i in insights:
+        i["title"] = generate_insight_title(i["text"])
+        i["journey_stage"] = classify_journey_stage(i["text"])
+    return insights
 
 def main(limit=None, dry_run=False):
     print("🧠 Mode: PRECOMPUTE (GPT calls ENABLED)")
@@ -58,6 +64,10 @@ def main(limit=None, dry_run=False):
         print("⚠️ No enriched insights passed the filter. Exiting early.")
         return
 
+    # Step 4: Generate titles + journey stages
+    log_step("Generating titles and journey stages")
+    enriched = enrich_titles_and_journey(enriched)
+
     # Diagnostics
     show_diagnostics(enriched)
 
@@ -65,11 +75,11 @@ def main(limit=None, dry_run=False):
         print("🧪 Dry run — skipping file write.")
         return
 
-    # Step 4: Save JSON
+    # Step 5: Save JSON
     log_step(f"Saving enriched insights to {PRECOMPUTED_PATH}")
     save_json(enriched, PRECOMPUTED_PATH)
 
-    # Step 5: Append to trend timeline
+    # Step 6: Append to trend timeline
     log_step(f"Appending to {TREND_LOG_PATH}")
     log_insights_over_time(enriched)
 
