@@ -116,13 +116,13 @@ for i in scraped_insights:
     keywords = i.get("_trend_keywords", [])
     insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
     try:
-        ts = datetime.strptime(insight_date[:10], "%Y-%m-%d")
+        ts = datetime.strptime(insight_date[:10], "%Y-%m-%d").date()
     except:
         ts = datetime(2024, 1, 1)
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
         and (not show_trends_only or subtag in trend_terms or any(k in trend_terms for k in keywords))
-        and (start_date <= ts.date() <= end_date)
+        and (start_date <= ts <= end_date)
     ):
         filtered.append(i)
 
