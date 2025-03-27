@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with dropdown document generation for insights
+# app.py — SignalSynth UI with cluster cards on top and individual insights below
 
 import os
 import json
@@ -82,11 +82,11 @@ filtered = [
     and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
 ]
 
-st.subheader("🧭 Insight Explorer Mode")
-display_insight_explorer(filtered)
-
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
+
+st.subheader("🧭 Insight Explorer Mode")
+display_insight_explorer(filtered)
 
 st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
