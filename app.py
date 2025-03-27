@@ -3,6 +3,8 @@ import json
 import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
+
+# Component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
@@ -13,32 +15,29 @@ from components.ai_suggester import (
     generate_jira_bug_ticket
 )
 
-# Load environment and OpenAI key
+# Load OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-@st.cache_data
-def load_insights():
-    with open("precomputed_insights.json", "r", encoding="utf-8") as f:
-        return json.load(f)
-
 # Load insights
-try:
-    scraped_insights = load_insights()
+if os.path.exists("precomputed_insights.json"):
+    with open("precomputed_insights.json", "r", encoding="utf-8") as f:
+        scraped_insights = json.load(f)
     st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
-except Exception:
+else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py` first.")
     st.stop()
 
-# Sidebar filters
+# Sidebar
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=True and OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ No OpenAI API key found — GPT suggestions will be skipped.")
 
+# Sidebar filters
 st.sidebar.header("🔍 Filter Insights")
 team_filter = st.sidebar.selectbox("Scrum Team", ["All"] + sorted(set(i.get("team", "Unknown") for i in scraped_insights)))
 status_filter = st.sidebar.selectbox("Workflow Stage", ["All"] + sorted(set(i.get("status", "Unknown") for i in scraped_insights)))
@@ -67,13 +66,11 @@ for i in scraped_insights:
 rising_trends = [t for t, count in trend_counter.items() if count >= 5]
 
 if rising_trends:
-    with st.expander("🔥 Emerging Trends Detected", expanded=False):
+    with st.expander("🔥 Emerging Trends Detected", expanded=True):
         for t in sorted(rising_trends):
             st.markdown(f"- **{t.title()}** ({trend_counter[t]} mentions)")
-
-# Progressive pagination
-if "visible_count" not in st.session_state:
-    st.session_state.visible_count = 20
+else:
+    st.info("No trends above threshold this cycle.")
 
 # Filter insights
 filtered = []
@@ -91,18 +88,45 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# Limit shown insights
-visible = filtered[:st.session_state.visible_count]
+# Pagination setup
+INSIGHTS_PER_PAGE = 10
+total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
+
+if "page" not in st.session_state:
+    st.session_state.page = 1
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col1:
+    if st.button("⬅️ Previous") and st.session_state.page > 1:
+        st.session_state.page -= 1
+with col2:
+    st.markdown(f"**Page {st.session_state.page} of {total_pages}**", unsafe_allow_html=True)
+with col3:
+    if st.button("Next ➡️") and st.session_state.page < total_pages:
+        st.session_state.page += 1
+
+start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
+end_idx = start_idx + INSIGHTS_PER_PAGE
+paged_insights = filtered[start_idx:end_idx]
 
 # Show insights
-for idx, i in enumerate(visible):
+for idx, i in enumerate(paged_insights, start=start_idx):
     summary = i.get("summary") or i.get("text", "")[:80]
-    with st.expander(f"🧠 Insight: {summary}", expanded=False):
-        st.caption(
-            f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
-            f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-            f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
-        )
+    st.markdown(f"### 🧠 Insight: {summary}")
+
+    st.caption(
+        f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
+        f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
+        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
+    )
+
+    if i.get("type_reason"):
+        st.markdown(f"💡 *Reason:* _{i['type_reason']}_")
+
+    with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
+        st.write(f"**Persona:** {i.get('persona', 'Unknown')}")
+        st.write(f"**Scrum Team:** {i.get('team', 'Triage')} | Source: {i.get('source', 'N/A')} | "
+                 f"Last Updated: {i.get('last_updated', 'N/A')} | Score: {i.get('score', 0)}")
 
         st.markdown("**User Quotes:**")
         for quote in i.get("cluster", []):
@@ -112,35 +136,32 @@ for idx, i in enumerate(visible):
         brand = i.get("target_brand", "eBay")
         safe_summary = "".join(c for c in summary if c.isalnum() or c in (" ", "_", "-")).rstrip()
 
-        with st.expander("💡 Generate Docs", expanded=False):
-            if use_gpt and st.button(f"💬 PM Suggestions", key=f"gen_pm_{idx}"):
-                with st.spinner("Thinking like a product manager..."):
-                    try:
-                        i["ideas"] = generate_pm_ideas(insight_text, brand)
-                    except Exception as e:
-                        i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
+        if use_gpt and OPENAI_KEY_PRESENT:
+            with st.spinner("💡 Generating PM Suggestions..."):
+                try:
+                    i["ideas"] = generate_pm_ideas(insight_text, brand, i.get("brand_sentiment"))
+                except Exception as e:
+                    i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
 
-            if i.get("ideas"):
-                st.markdown("**💡 PM Suggestions:**")
-                for idx2, idea in enumerate(i["ideas"]):
-                    st.markdown(f"- {idea}")
+        if i.get("ideas"):
+            st.markdown("**💡 PM Suggestions:**")
+            for idx2, idea in enumerate(i["ideas"]):
+                st.markdown(f"- {idea}")
 
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                prd_buffer, prd_filename = generate_prd_docx(insight_text, brand, f"PRD - {safe_summary}")
-                st.download_button("📄 Download PRD", prd_buffer, file_name=prd_filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_prd_{idx}")
-            with col2:
-                brd_buffer, brd_filename = generate_brd_docx(insight_text, brand, f"BRD - {safe_summary}")
-                st.download_button("📄 Download BRD", brd_buffer, file_name=brd_filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_brd_{idx}")
-            with col3:
-                if st.button(f"🐞 JIRA Ticket", key=f"gen_jira_{idx}"):
-                    bug = generate_jira_bug_ticket(insight_text, brand)
-                    st.code(bug, language="markdown")
+        if st.button(f"📄 Generate PRD", key=f"gen_prd_{idx}"):
+            file_path = generate_prd_docx(insight_text, brand, f"PRD - {safe_summary}")
+            with open(file_path, "rb") as f:
+                st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
-# Load more
-if st.session_state.visible_count < len(filtered):
-    if st.button("🔄 Load more insights"):
-        st.session_state.visible_count += 20
+        if st.button(f"📄 Generate BRD", key=f"gen_brd_{idx}"):
+            file_path = generate_brd_docx(insight_text, brand, f"BRD - {safe_summary}")
+            with open(file_path, "rb") as f:
+                st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
+        if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
+            bug = generate_jira_bug_ticket(insight_text, brand)
+            st.code(bug, language="markdown")
+
+# Footer
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
