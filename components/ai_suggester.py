@@ -11,16 +11,26 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Load or create cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
 else:
     suggestion_cache = {}
 
+def is_streamlit_mode():
+    return os.getenv("RUNNING_IN_STREAMLIT") == "1"
+
 def generate_pm_ideas(text, brand="eBay"):
+    """
+    Generate strategic product ideas based on customer feedback — only outside Streamlit.
+    """
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
     if key in suggestion_cache:
         return suggestion_cache[key]
+
+    if is_streamlit_mode():
+        return ["[⚠️ GPT disabled in Streamlit mode — use precompute_insights.py]"]
 
     system_prompt = "You are a senior product manager at eBay or a major marketplace. Analyze the user's feedback and generate strategic PM ideas to address it."
 
@@ -39,11 +49,14 @@ def generate_pm_ideas(text, brand="eBay"):
 
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(suggestion_cache, f, indent=2)
+
         return ideas
     except Exception as e:
         return [f"[⚠️ GPT error: {str(e)}]"]
 
 def generate_gpt_doc_content(prompt):
+    if is_streamlit_mode():
+        return "[⚠️ GPT document generation is disabled in Streamlit mode]"
     try:
         response = client.chat.completions.create(
             model="gpt-4",
