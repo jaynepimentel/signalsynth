@@ -23,38 +23,44 @@ def display_clustered_insight_cards(insights):
         cluster = clusters[idx]
         with st.container():
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
-            st.markdown(f"**Summary:** {card['summary']}")
-            st.markdown(f"**Mentions:** {len(cluster)} | Score Range: {card.get('score_range', '?')}")
+            st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
+            st.markdown(f"**Mentions:** {card['insight_count']} | Score Range: {card.get('score_range', '?')}")
+            st.markdown(f"**Personas:** {', '.join(card.get('personas', []))}")
+            st.markdown(f"**Effort Levels:** {', '.join(card.get('effort_levels', []))}")
 
-            st.markdown("**Example Quotes:**")
-            for quote in card["quotes"]:
-                st.markdown(quote)
+            if card.get("quotes"):
+                st.markdown("**📣 Example Quotes:**")
+                for quote in card["quotes"]:
+                    st.markdown(quote)
 
-            if card["top_ideas"]:
+            if card.get("top_ideas"):
                 st.markdown("**💡 Top Suggestions:**")
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
 
             filename = slugify(card['title'])[:64]
-            doc_type = st.selectbox("Generate document for this cluster:", ["PRD", "PRFAQ"], key=f"cluster_doc_type_{idx}")
+            col1, col2 = st.columns(2)
 
-            if st.button(f"Generate {doc_type}", key=f"generate_cluster_doc_{idx}"):
-                with st.spinner(f"Generating {doc_type}..."):
-                    if doc_type == "PRD":
-                        file_path = generate_cluster_prd_docx(cluster, filename)
-                    elif doc_type == "PRFAQ":
-                        file_path = generate_cluster_prfaq_docx(cluster, filename)
-                    else:
-                        file_path = None
+            with col1:
+                prd_path = generate_cluster_prd_docx(cluster, filename)
+                if prd_path and os.path.exists(prd_path):
+                    with open(prd_path, "rb") as f:
+                        st.download_button(
+                            "📄 Download PRD",
+                            f,
+                            file_name=os.path.basename(prd_path),
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key=f"cluster_prd_{idx}"
+                        )
 
-                    if file_path and os.path.exists(file_path):
-                        with open(file_path, "rb") as f:
-                            st.download_button(
-                                f"⬇️ Download {doc_type}",
-                                f,
-                                file_name=os.path.basename(file_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_cluster_doc_{idx}"
-                            )
-                    else:
-                        st.error("❌ Document file was not created.")
+            with col2:
+                prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
+                if prfaq_path and os.path.exists(prfaq_path):
+                    with open(prfaq_path, "rb") as f:
+                        st.download_button(
+                            "📄 Download PRFAQ",
+                            f,
+                            file_name=os.path.basename(prfaq_path),
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key=f"cluster_prfaq_{idx}"
+                        )
