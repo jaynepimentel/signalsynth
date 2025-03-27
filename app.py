@@ -164,4 +164,4 @@ for idx, i in enumerate(paged_insights, start=start_idx):
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨"
+st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
