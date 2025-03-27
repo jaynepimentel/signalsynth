@@ -72,6 +72,10 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
+# Progressive pagination
+if "visible_count" not in st.session_state:
+    st.session_state.visible_count = 20
+
 # Filter insights
 filtered = []
 for i in scraped_insights:
@@ -88,8 +92,11 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
+# Limit shown insights
+visible = filtered[:st.session_state.visible_count]
+
 # Show insights
-for idx, i in enumerate(filtered):
+for idx, i in enumerate(visible):
     summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
 
@@ -138,6 +145,11 @@ for idx, i in enumerate(filtered):
             if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
                 bug = generate_jira_bug_ticket(insight_text, brand)
                 st.code(bug, language="markdown")
+
+# Load more button
+if st.session_state.visible_count < len(filtered):
+    if st.button("🔄 Load more insights"):
+        st.session_state.visible_count += 20
 
 # Footer
 st.sidebar.markdown("---")
