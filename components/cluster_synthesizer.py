@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — GPT labeling with fallback handling
+# cluster_synthesizer.py — robust clustering with GPT error handling + logging
 
 import os
 from collections import defaultdict
@@ -15,7 +15,7 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def cluster_insights(insights, min_cluster_size=2, eps=0.3):
+def cluster_insights(insights, min_cluster_size=2, eps=0.4):
     enriched_texts = [
         f"{i['text']} {i.get('type_subtag', '')} {i.get('target_brand', '')} {' '.join(i.get('ideas', []))}"
         for i in insights
@@ -29,12 +29,13 @@ def cluster_insights(insights, min_cluster_size=2, eps=0.3):
         if label != -1:
             clustered[label].append(insight)
 
+    print(f"✅ Clustered {len(insights)} insights into {len(clustered)} groups")
     return list(clustered.values())
 
 
 def gpt_label_and_summary(cluster):
-    if not client:
-        return "General", cluster[0]["text"][:80] + "..."
+    if not cluster or not client:
+        return "General", "(Cluster empty or GPT client missing)"
 
     combined = "\n".join(i["text"] for i in cluster[:5])
     try:
@@ -50,9 +51,7 @@ def gpt_label_and_summary(cluster):
         content = response.choices[0].message.content.strip()
         lines = content.split("\n")
 
-        label = "General"
-        summary = cluster[0]["text"][:80] + "..."
-
+        label, summary = "General", "(No summary)"
         for line in lines:
             if "Label:" in line:
                 label = line.replace("Label:", "").strip()
@@ -61,6 +60,7 @@ def gpt_label_and_summary(cluster):
 
         return label, summary
     except Exception as e:
+        print(f"❌ GPT cluster summary error: {e}")
         return "General", f"(GPT summary failed: {e})"
 
 
