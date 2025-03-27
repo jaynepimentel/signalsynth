@@ -21,9 +21,7 @@ def generate_pm_ideas(text, brand="eBay"):
     if key in suggestion_cache:
         return suggestion_cache[key]
 
-    system_prompt = """
-You are a senior product manager at eBay or a major marketplace. Analyze the user's feedback and generate strategic PM ideas to address it.
-"""
+    system_prompt = "You are a senior product manager at eBay or a major marketplace. Analyze the user's feedback and generate strategic PM ideas to address it."
 
     try:
         response = client.chat.completions.create(
@@ -41,7 +39,6 @@ You are a senior product manager at eBay or a major marketplace. Analyze the use
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(suggestion_cache, f, indent=2)
         return ideas
-
     except Exception as e:
         return [f"[⚠️ GPT error: {str(e)}]"]
 
@@ -50,7 +47,7 @@ def generate_gpt_doc_content(prompt):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a senior product strategist writing clean, structured product documents."},
+                {"role": "system", "content": "You are a senior product strategist writing structured PRDs or BRDs."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3
@@ -61,10 +58,12 @@ def generate_gpt_doc_content(prompt):
 
 def safe_file_path(base_name):
     filename = slugify(base_name)[:64] + ".docx"
-    return os.path.join("/mnt/data", filename)
+    full_path = os.path.join("/mnt/data", filename)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    return full_path
 
 def generate_prd_docx(text, brand, base_filename):
-    prompt = f"""Write a detailed Product Requirements Document (PRD) for the following user insight. Use sections like:
+    prompt = f"""Write a detailed Product Requirements Document (PRD) for the following user insight:
 
 Overview
 Customer Problem
@@ -91,7 +90,7 @@ Brand: {brand}
     return file_path
 
 def generate_brd_docx(text, brand, base_filename):
-    prompt = f"""Write a Business Requirements Document (BRD) for the following customer insight. Include sections:
+    prompt = f"""Write a Business Requirements Document (BRD) for the following user insight:
 
 Executive Summary
 Business Opportunity
@@ -116,7 +115,7 @@ Brand: {brand}
     return file_path
 
 def generate_jira_bug_ticket(text, brand="eBay"):
-    prompt = f"""You are a technical support lead. Write a JIRA bug report using this customer complaint. Include:
+    prompt = f"""You are a technical support lead. Write a JIRA bug report using this customer complaint:
 
 Title:
 Summary:
