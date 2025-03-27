@@ -1,4 +1,4 @@
-# app.py — SignalSynth with emerging insights, GPT, and improved UX
+# app.py — SignalSynth with GPT, trends, filters, clustering, and bug fix
 
 import os
 import json
@@ -28,7 +28,7 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# Load precomputed insights
+# Load data
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -40,29 +40,29 @@ else:
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
 
-# Sidebar settings
+# Sidebar: settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
-# 📆 Date Filter Shortcuts
+# Sidebar: time filters
 st.sidebar.header("🗓️ Time Filter")
 time_filter = st.sidebar.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"])
 if time_filter == "Last 7 Days":
-    start_date = datetime.today() - timedelta(days=7)
-    end_date = datetime.today()
+    start_date = datetime.today().date() - timedelta(days=7)
+    end_date = datetime.today().date()
 elif time_filter == "Last 30 Days":
-    start_date = datetime.today() - timedelta(days=30)
-    end_date = datetime.today()
+    start_date = datetime.today().date() - timedelta(days=30)
+    end_date = datetime.today().date()
 elif time_filter == "Custom Range":
-    start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
-    end_date = st.sidebar.date_input("End Date", value=datetime.today())
+    start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1)).__class__ == datetime and st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1)).date() or st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
+    end_date = st.sidebar.date_input("End Date", value=datetime.today()).__class__ == datetime and st.sidebar.date_input("End Date", value=datetime.today()).date() or st.sidebar.date_input("End Date", value=datetime.today())
 else:
-    start_date = datetime(2020, 1, 1)
-    end_date = datetime.today()
+    start_date = datetime(2020, 1, 1).date()
+    end_date = datetime.today().date()
 
-# 🔍 Insight filters
+# Sidebar: filters
 st.sidebar.header("Filter by Metadata")
 filter_fields = {
     # "Scrum Team": "team",  # hidden
@@ -108,7 +108,7 @@ if keyword_spikes:
         trend_terms.add(word.lower())
         st.markdown(f"- `{word}` ↑ {ratio}x")
 
-# Match insights to trends + filters
+# Filter insights
 filtered = []
 for i in scraped_insights:
     text = i.get("text", "").lower()
@@ -118,7 +118,7 @@ for i in scraped_insights:
     try:
         ts = datetime.strptime(insight_date[:10], "%Y-%m-%d").date()
     except:
-        ts = datetime(2024, 1, 1)
+        ts = datetime(2024, 1, 1).date()
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
         and (not show_trends_only or subtag in trend_terms or any(k in trend_terms for k in keywords))
@@ -126,10 +126,10 @@ for i in scraped_insights:
     ):
         filtered.append(i)
 
-# 🧠 Show insights related to trends
+# Insight list
 st.subheader(f"📌 Insights Related to Filters ({len(filtered)} shown)")
 
-# 📍 Pagination
+# Pagination
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
@@ -147,7 +147,7 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# 🎨 Badges
+# Badge colors
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
@@ -159,7 +159,7 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-# 💬 Render insight cards
+# Render insights
 for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
     tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
@@ -214,7 +214,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                         st.download_button(
                             f"⬇️ Download {doc_type}", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_doc_{idx}")
 
-# 🧱 Clustered Insight Mode
+# Clustering
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
