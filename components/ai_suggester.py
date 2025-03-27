@@ -1,6 +1,7 @@
 import os
 import hashlib
 import json
+import tempfile
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -58,9 +59,7 @@ def generate_gpt_doc_content(prompt):
 
 def safe_file_path(base_name):
     filename = slugify(base_name)[:64] + ".docx"
-    full_path = os.path.join("/mnt/data", filename)
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
-    return full_path
+    return os.path.join(tempfile.gettempdir(), filename)
 
 def generate_prd_docx(text, brand, base_filename):
     prompt = f"""Write a detailed Product Requirements Document (PRD) for the following user insight:
@@ -90,7 +89,7 @@ Brand: {brand}
     return file_path
 
 def generate_brd_docx(text, brand, base_filename):
-    prompt = f"""Write a Business Requirements Document (BRD) for the following user insight:
+    prompt = f"""Write a Business Requirements Document (BRD) for the following customer insight:
 
 Executive Summary
 Business Opportunity
