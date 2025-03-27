@@ -1,5 +1,3 @@
-# cluster_view.py — Clustered Insight Mode with PRD + PRFAQ generation
-
 import streamlit as st
 import os
 from slugify import slugify
