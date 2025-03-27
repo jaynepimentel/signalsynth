@@ -1,37 +1,20 @@
-# cluster_synthesizer.py — with caching for cluster results
+# cluster_synthesizer.py — smart clustering with GPT summaries and Streamlit caching
 
 import os
-import json
-import hashlib
 from collections import defaultdict
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 import numpy as np
+import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
-import streamlit as st
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
-CACHE_FILE = "cluster_cache.json"
 
-def generate_cache_key(insights):
-    ids = [i.get("text", "").strip()[:80] for i in insights]
-    joined = "|".join(sorted(ids))
-    return hashlib.md5(joined.encode()).hexdigest()
-
-def load_cluster_cache():
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_cluster_cache(cache):
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(cache, f, indent=2)
 
 def cluster_insights(insights, min_cluster_size=2, eps=0.4):
     enriched_texts = [
@@ -49,6 +32,7 @@ def cluster_insights(insights, min_cluster_size=2, eps=0.4):
 
     print(f"✅ Clustered {len(insights)} insights into {len(clustered)} groups")
     return list(clustered.values())
+
 
 def gpt_label_and_summary(cluster):
     if not cluster or not client:
@@ -80,6 +64,7 @@ def gpt_label_and_summary(cluster):
         print(f"❌ GPT cluster summary error: {e}")
         return "General", f"(GPT summary failed: {e})"
 
+
 def synthesize_cluster(cluster):
     label, summary = gpt_label_and_summary(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
@@ -105,15 +90,15 @@ def synthesize_cluster(cluster):
         "score_range": f"{min_score}–{max_score}"
     }
 
-def generate_synthesized_insights(insights):
-    cache = load_cluster_cache()
-    key = generate_cache_key(insights)
-    if key in cache:
-        print("⚡ Using cached cluster results")
-        return cache[key]
 
-    clusters = cluster_insights(insights)
-    cards = [synthesize_cluster(c) for c in clusters]
-    cache[key] = cards
-    save_cluster_cache(cache)
-    return cards
+@st.cache_data(show_spinner=False)
+def cached_cluster_cards(insights_serialized):
+    from copy import deepcopy
+    insights_copy = deepcopy(insights_serialized)
+    clusters = cluster_insights(insights_copy)
+    return [synthesize_cluster(c) for c in clusters]
+
+
+def generate_synthesized_insights(insights):
+    insights_serialized = [{k: v for k, v in i.items()} for i in insights]
+    return cached_cluster_cards(insights_serialized)
