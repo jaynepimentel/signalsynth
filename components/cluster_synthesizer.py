@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — GPT-tuned summarization + metadata-rich cluster cards
+# cluster_synthesizer.py — smarter clustering + clean summaries
 
 import os
 from collections import defaultdict
@@ -14,10 +14,13 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def cluster_insights(insights, min_cluster_size=3):
-    texts = [i.get("text", "") for i in insights]
-    embeddings = model.encode(texts, convert_to_tensor=True)
-    clustering = DBSCAN(eps=0.4, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
+def cluster_insights(insights, min_cluster_size=2, eps=0.3):
+    enriched_texts = [
+        f"{i['text']} {i.get('type_subtag', '')} {i.get('target_brand', '')} {' '.join(i.get('ideas', []))}"
+        for i in insights
+    ]
+    embeddings = model.encode(enriched_texts, convert_to_tensor=True)
+    clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
     labels = clustering.labels_
 
     clustered = defaultdict(list)
@@ -36,7 +39,7 @@ def summarize_cluster_with_gpt(cluster):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Summarize the key theme of this group of user posts in one sentence."},
+                {"role": "system", "content": "Summarize the precise shared issue across these user posts in one sentence."},
                 {"role": "user", "content": combined}
             ],
             temperature=0.3,
@@ -49,25 +52,21 @@ def summarize_cluster_with_gpt(cluster):
 def synthesize_cluster(cluster):
     summary = summarize_cluster_with_gpt(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
-    type_tag = cluster[0].get("type_tag", "Insight")
-    subtype = cluster[0].get("type_subtag", "General")
 
-    quotes = [f"- _{i.get('text', '')[:200]}_" for i in cluster[:3]]
+    quotes = [f"- _{i['text'][:200]}_" for i in cluster[:3]]
 
-    # Aggregate top PM ideas
     idea_counter = defaultdict(int)
     for i in cluster:
         for idea in i.get("ideas", []):
             idea_counter[idea] += 1
     top_ideas = sorted(idea_counter.items(), key=lambda x: -x[1])[:3]
 
-    # Scores
     scores = [i.get("score", 0) for i in cluster]
-    min_score = min(scores)
-    max_score = max(scores)
+    min_score = round(min(scores), 2)
+    max_score = round(max(scores), 2)
 
     return {
-        "title": f"{type_tag}: {subtype} issue ({len(cluster)} mentions)",
+        "title": f"{summary} ({len(cluster)} mentions)",
         "brand": brand,
         "summary": summary,
         "quotes": quotes,
