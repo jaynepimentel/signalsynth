@@ -62,6 +62,12 @@ def get_emerging_signals(path="trend_log.jsonl"):
 
     spikes = detect_spiking_subtags(df)
     flips = detect_sentiment_flips(df)
-    keyword_spikes = detect_keyword_spikes(df)
+
+    keyword_spikes = {}
+    if "_trend_keywords" in df.columns:
+        try:
+            keyword_spikes = detect_keyword_spikes(df)
+        except Exception as e:
+            print(f"⚠️ Keyword spike detection failed: {e}")
 
     return spikes, flips, keyword_spikes
