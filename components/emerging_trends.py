@@ -1,7 +1,8 @@
-# emerging_trends.py — detects emerging issues based on spikes and sentiment shifts
+# emerging_trends.py — spike and sentiment shift detection with keyword-level AI hooks
 import pandas as pd
 import json
 from datetime import datetime
+from collections import defaultdict
 
 def load_trend_data(path="trend_log.jsonl"):
     rows = []
@@ -23,6 +24,20 @@ def detect_spiking_subtags(df, window_days=7, threshold=2.0):
 
     return spikes.round(2).to_dict()
 
+def detect_keyword_spikes(df, keyword_field="_trend_keywords", window_days=7, threshold=2.0):
+    df["_logged_at"] = pd.to_datetime(df["_logged_at"])
+    df = df.explode(keyword_field)
+    df = df.dropna(subset=[keyword_field])
+
+    recent = df[df["_logged_at"] >= pd.Timestamp.now() - pd.Timedelta(days=window_days)]
+    prior = df[df["_logged_at"] < pd.Timestamp.now() - pd.Timedelta(days=window_days)]
+
+    recent_counts = recent[keyword_field].value_counts()
+    prior_counts = prior[keyword_field].value_counts().add(1)
+
+    ratio = (recent_counts / prior_counts).sort_values(ascending=False)
+    return ratio[ratio > threshold].round(2).to_dict()
+
 def detect_sentiment_flips(df):
     df["_logged_at"] = pd.to_datetime(df["_logged_at"])
     df["day"] = df["_logged_at"].dt.date
@@ -35,7 +50,7 @@ def detect_sentiment_flips(df):
         if "Praise" in brand_data.columns and "Complaint" in brand_data.columns:
             praise_trend = brand_data["Praise"].rolling(3).mean()
             complaint_trend = brand_data["Complaint"].rolling(3).mean()
-            if praise_trend.iloc[-1] < complaint_trend.iloc[-1]:
+            if len(praise_trend) > 3 and praise_trend.iloc[-1] < complaint_trend.iloc[-1]:
                 sentiment_flips[brand] = "Complaint > Praise trend reversal"
 
     return sentiment_flips
@@ -43,9 +58,10 @@ def detect_sentiment_flips(df):
 def get_emerging_signals(path="trend_log.jsonl"):
     df = load_trend_data(path)
     if df.empty:
-        return {}, {}
+        return {}, {}, {}
 
     spikes = detect_spiking_subtags(df)
     flips = detect_sentiment_flips(df)
+    keyword_spikes = detect_keyword_spikes(df)
 
-    return spikes, flips
+    return spikes, flips, keyword_spikes
