@@ -1,8 +1,8 @@
-# cluster_synthesizer.py — GPT-tuned summarization + metadata-rich cluster cards
+# cluster_synthesizer.py — GPT summarization + cleaned top idea extraction
 
 import os
 from collections import defaultdict
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 import numpy as np
 from dotenv import load_dotenv
@@ -54,17 +54,18 @@ def synthesize_cluster(cluster):
 
     quotes = [f"- _{i.get('text', '')[:200]}_" for i in cluster[:3]]
 
-    # Aggregate top PM ideas
+    # Clean PM ideas
     idea_counter = defaultdict(int)
     for i in cluster:
         for idea in i.get("ideas", []):
-            idea_counter[idea] += 1
+            if idea and len(idea.strip()) > 10 and not idea.lower().startswith("customer"):
+                idea_counter[idea.strip()] += 1
+
     top_ideas = sorted(idea_counter.items(), key=lambda x: -x[1])[:3]
 
-    # Scores
     scores = [i.get("score", 0) for i in cluster]
-    min_score = min(scores)
-    max_score = max(scores)
+    min_score = round(min(scores), 2)
+    max_score = round(max(scores), 2)
 
     return {
         "title": f"{type_tag}: {subtype} issue ({len(cluster)} mentions)",
