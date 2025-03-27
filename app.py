@@ -1,4 +1,4 @@
-# app.py — Streamlit-safe cache-only version with pagination and GPT toggles
+# app.py — Clean action buttons, auto-download PRD/BRD/JIRA, horizontal layout
 import os
 import json
 import streamlit as st
@@ -91,7 +91,6 @@ for i in scraped_insights:
 # Pagination
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
-
 if "page" not in st.session_state:
     st.session_state.page = 1
 
@@ -100,7 +99,7 @@ with col1:
     if st.button("⬅️ Previous"):
         st.session_state.page = max(1, st.session_state.page - 1)
 with col2:
-    st.markdown(f"**Page {st.session_state.page} of {total_pages}**", unsafe_allow_html=True)
+    st.markdown(f"**Page {st.session_state.page} of {total_pages}**")
 with col3:
     if st.button("Next ➡️"):
         st.session_state.page = min(total_pages, st.session_state.page + 1)
@@ -140,29 +139,24 @@ for idx, i in enumerate(paged_insights, start=start_idx):
 
         if i.get("ideas"):
             st.markdown("**💡 PM Suggestions:**")
-            for idx2, idea in enumerate(i["ideas"]):
+            for idea in i["ideas"]:
                 st.markdown(f"- {idea}")
 
+        # Auto-downloadable buttons
         filename = f"PRD - {summary}"
-        try:
-            if st.button(f"📄 Generate PRD", key=f"gen_prd_{idx}"):
-                file_path = generate_prd_docx(insight_text, brand, filename)
-                with open(file_path, "rb") as f:
-                    st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        except Exception as e:
-            st.error(f"❌ Error generating PRD: {str(e)}")
+        prd_path = generate_prd_docx(insight_text, brand, filename)
+        brd_path = generate_brd_docx(insight_text, brand, filename.replace("PRD", "BRD"))
+        jira = generate_jira_bug_ticket(insight_text, brand)
 
-        try:
-            if st.button(f"📄 Generate BRD", key=f"gen_brd_{idx}"):
-                file_path = generate_brd_docx(insight_text, brand, filename.replace("PRD", "BRD"))
-                with open(file_path, "rb") as f:
-                    st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        except Exception as e:
-            st.error(f"❌ Error generating BRD: {str(e)}")
-
-        if st.button(f"🐞 Generate JIRA Bug Ticket", key=f"gen_jira_{idx}"):
-            bug = generate_jira_bug_ticket(insight_text, brand)
-            st.code(bug, language="markdown")
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            with open(prd_path, "rb") as f:
+                st.download_button("📄 Generate PRD", f, file_name=os.path.basename(prd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_prd_{idx}")
+        with col_b:
+            with open(brd_path, "rb") as f:
+                st.download_button("📄 Generate BRD", f, file_name=os.path.basename(brd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"download_brd_{idx}")
+        with col_c:
+            st.download_button("🐞 Generate JIRA Bug Ticket", jira, file_name=f"JIRA - {summary}.md", mime="text/markdown", key=f"download_jira_{idx}")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
