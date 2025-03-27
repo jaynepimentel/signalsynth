@@ -11,8 +11,14 @@ def summarize_brand_insights(insights):
 
     df = pd.DataFrame(rows, columns=["Brand", "Sentiment"])
     summary = df.value_counts().unstack(fill_value=0).reset_index()
-    summary["Total"] = summary.sum(axis=1)
-    summary["Complaint %"] = round((summary.get("Complaint", 0) / summary["Total"]) * 100, 1)
+
+    # Only sum numeric sentiment columns (exclude "Brand")
+    sentiment_cols = [col for col in summary.columns if col not in ["Brand"]]
+    summary["Total"] = summary[sentiment_cols].sum(axis=1)
+
+    # Avoid divide-by-zero issues
+    summary["Complaint %"] = round((summary.get("Complaint", 0) / summary["Total"].replace(0, 1)) * 100, 1)
+
     return summary
 
 def display_brand_dashboard(insights):
