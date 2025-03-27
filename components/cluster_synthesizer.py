@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — GPT summarization + cleaned top idea extraction + problem statement
+# cluster_synthesizer.py — Thematic clustering for program-level insight synthesis
 
 import os
 from collections import defaultdict
@@ -17,7 +17,7 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 def cluster_insights(insights, min_cluster_size=3):
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
-    clustering = DBSCAN(eps=0.4, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
+    clustering = DBSCAN(eps=0.38, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
     labels = clustering.labels_
 
     clustered = defaultdict(list)
@@ -36,10 +36,10 @@ def summarize_cluster_with_gpt(cluster):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Summarize the key theme of this group of user posts in one sentence."},
+                {"role": "system", "content": "You are summarizing product feedback clusters. Title the overarching theme of this cluster in 1 sentence."},
                 {"role": "user", "content": combined}
             ],
-            temperature=0.3,
+            temperature=0.2,
             max_tokens=100
         )
         return response.choices[0].message.content.strip()
@@ -55,11 +55,11 @@ def generate_cluster_problem_statement(cluster):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a product manager. Identify the shared user problem from this cluster."},
+                {"role": "system", "content": "You are a product manager. Write a single problem statement summarizing the shared user pain in this cluster. Be concise and useful for an epic-level PRD."},
                 {"role": "user", "content": text_blob}
             ],
             temperature=0.2,
-            max_tokens=120
+            max_tokens=150
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -67,36 +67,40 @@ def generate_cluster_problem_statement(cluster):
 
 def synthesize_cluster(cluster):
     summary = summarize_cluster_with_gpt(cluster)
+    problem = generate_cluster_problem_statement(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
     type_tag = cluster[0].get("type_tag", "Insight")
     subtype = cluster[0].get("type_subtag", "General")
 
     quotes = [f"- _{i.get('text', '')[:200]}_" for i in cluster[:3]]
 
-    # Clean PM ideas
     idea_counter = defaultdict(int)
     for i in cluster:
         for idea in i.get("ideas", []):
             if idea and len(idea.strip()) > 10 and not idea.lower().startswith("customer"):
                 idea_counter[idea.strip()] += 1
-
     top_ideas = sorted(idea_counter.items(), key=lambda x: -x[1])[:3]
 
     scores = [i.get("score", 0) for i in cluster]
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
-    # Shared problem statement from GPT
-    problem = generate_cluster_problem_statement(cluster)
+    personas = list({i.get("persona", "Unknown") for i in cluster})
+    effort_levels = list({i.get("effort", "Unknown") for i in cluster})
 
     return {
-        "title": f"{type_tag}: {subtype} issue ({len(cluster)} mentions)",
-        "brand": brand,
-        "summary": summary,
+        "title": summary,
         "problem_statement": problem,
+        "brand": brand,
+        "type": type_tag,
+        "subtype": subtype,
+        "personas": personas,
+        "effort_levels": effort_levels,
+        "summary": summary,
         "quotes": quotes,
         "top_ideas": [i[0] for i in top_ideas],
-        "score_range": f"{min_score}–{max_score}"
+        "score_range": f"{min_score}–{max_score}",
+        "insight_count": len(cluster)
     }
 
 def generate_synthesized_insights(insights):
