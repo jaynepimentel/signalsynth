@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — smarter clustering + clean summaries
+# cluster_synthesizer.py — smart clustering + GPT-based labels and summaries
 
 import os
 from collections import defaultdict
@@ -13,6 +13,7 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
 
 def cluster_insights(insights, min_cluster_size=2, eps=0.3):
     enriched_texts = [
@@ -30,29 +31,34 @@ def cluster_insights(insights, min_cluster_size=2, eps=0.3):
 
     return list(clustered.values())
 
-def summarize_cluster_with_gpt(cluster):
+
+def gpt_label_and_summary(cluster):
     if not client:
-        return cluster[0]["text"][:80] + "..."
+        return "General", cluster[0]["text"][:80] + "..."
 
     combined = "\n".join(i["text"] for i in cluster[:5])
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Summarize the precise shared issue across these user posts in one sentence."},
+                {"role": "system", "content": "You are a strategic product analyst. Based on the grouped customer feedback below, provide:\n1. A clear 1-3 word thematic label (e.g. Returns, Feedback, Authentication).\n2. A 1-sentence cluster summary."},
                 {"role": "user", "content": combined}
             ],
             temperature=0.3,
             max_tokens=100
         )
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content.strip()
+        lines = content.split("\n")
+        label = lines[0].replace("Label:", "").strip()
+        summary = lines[1].replace("Summary:", "").strip() if len(lines) > 1 else cluster[0]["text"][:80] + "..."
+        return label, summary
     except Exception as e:
-        return f"(GPT summary failed: {e})"
+        return "General", f"(GPT summary failed: {e})"
+
 
 def synthesize_cluster(cluster):
-    summary = summarize_cluster_with_gpt(cluster)
+    label, summary = gpt_label_and_summary(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
-
     quotes = [f"- _{i['text'][:200]}_" for i in cluster[:3]]
 
     idea_counter = defaultdict(int)
@@ -66,13 +72,15 @@ def synthesize_cluster(cluster):
     max_score = round(max(scores), 2)
 
     return {
-        "title": f"{summary} ({len(cluster)} mentions)",
+        "title": f"{label}: {summary} ({len(cluster)} mentions)",
+        "theme": label,
         "brand": brand,
         "summary": summary,
         "quotes": quotes,
         "top_ideas": [i[0] for i in top_ideas],
         "score_range": f"{min_score}–{max_score}"
     }
+
 
 def generate_synthesized_insights(insights):
     clusters = cluster_insights(insights)
