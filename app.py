@@ -1,11 +1,12 @@
-# Merged app.py — full SignalSynth dashboard with GPT, trends, explorer, clustering, downloads
+# app.py — SignalSynth with emerging insights, GPT, and improved UX
+
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
 from collections import defaultdict
 from slugify import slugify
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 
 from components.brand_trend_dashboard import display_brand_dashboard
@@ -21,11 +22,13 @@ from components.ai_suggester import (
 )
 from components.emerging_trends import get_emerging_signals
 
+# Setup
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
+# Load precomputed insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -37,15 +40,33 @@ else:
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
 
+# Sidebar settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
-st.sidebar.header("🔍 Filter Insights")
+# 📆 Date Filter Shortcuts
+st.sidebar.header("🗓️ Time Filter")
+time_filter = st.sidebar.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"])
+if time_filter == "Last 7 Days":
+    start_date = datetime.today() - timedelta(days=7)
+    end_date = datetime.today()
+elif time_filter == "Last 30 Days":
+    start_date = datetime.today() - timedelta(days=30)
+    end_date = datetime.today()
+elif time_filter == "Custom Range":
+    start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
+    end_date = st.sidebar.date_input("End Date", value=datetime.today())
+else:
+    start_date = datetime(2020, 1, 1)
+    end_date = datetime.today()
+
+# 🔍 Insight filters
+st.sidebar.header("Filter by Metadata")
 filter_fields = {
-    "Scrum Team": "team",
-    "Workflow Stage": "status",
+    # "Scrum Team": "team",  # hidden
+    # "Workflow Stage": "status",  # hidden
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
     "Persona": "persona",
@@ -60,23 +81,22 @@ filters = {
 }
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-st.sidebar.markdown("**Date Range Filter**")
-start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
-end_date = st.sidebar.date_input("End Date", value=datetime.today())
-
-# Brand Summary + Visualizer
+# Brand Summary + Charts
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
 st.subheader("📈 Insight Charts")
 display_insight_charts(scraped_insights)
 
-# 🔥 Detect Emerging Trends
+# 🔥 Emerging Trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 spikes, flips, keyword_spikes = get_emerging_signals()
+
+trend_terms = set()
 if spikes:
     st.markdown("**📈 Spiking Subtags**")
     for tag, ratio in spikes.items():
+        trend_terms.add(tag.lower())
         st.markdown(f"- **{tag}** spiked ×{ratio}")
 if flips:
     st.markdown("**📉 Sentiment Flips**")
@@ -85,11 +105,15 @@ if flips:
 if keyword_spikes:
     st.markdown("**📊 Keyword Spikes**")
     for word, ratio in keyword_spikes.items():
+        trend_terms.add(word.lower())
         st.markdown(f"- `{word}` ↑ {ratio}x")
 
-# Filtered insights
+# Match insights to trends + filters
 filtered = []
 for i in scraped_insights:
+    text = i.get("text", "").lower()
+    subtag = i.get("type_subtag", "").lower()
+    keywords = i.get("_trend_keywords", [])
     insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
     try:
         ts = datetime.strptime(insight_date[:10], "%Y-%m-%d")
@@ -97,18 +121,17 @@ for i in scraped_insights:
         ts = datetime(2024, 1, 1)
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-        and (not show_trends_only or any(w in i.get("text", "").lower() for w in spikes.keys()))
+        and (not show_trends_only or subtag in trend_terms or any(k in trend_terms for k in keywords))
         and (start_date <= ts.date() <= end_date)
     ):
         filtered.append(i)
 
-# 🧭 Insight Explorer
-results = display_insight_explorer(filtered) or filtered
+# 🧠 Show insights related to trends
+st.subheader(f"📌 Insights Related to Filters ({len(filtered)} shown)")
 
-# 📌 Individual Insights
-st.subheader("📌 Individual Insights")
+# 📍 Pagination
 INSIGHTS_PER_PAGE = 10
-total_pages = max(1, (len(results) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
+total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
     st.session_state.page = 1
 col1, col2, col3 = st.columns([1, 2, 1])
@@ -122,28 +145,21 @@ with col3:
         st.session_state.page = min(total_pages, st.session_state.page + 1)
 
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
-paged_insights = results[start_idx:start_idx + INSIGHTS_PER_PAGE]
+paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
+# 🎨 Badges
 BADGE_COLORS = {
-    "Complaint": "#FF6B6B",
-    "Confusion": "#FFD166",
-    "Feature Request": "#06D6A0",
-    "Discussion": "#118AB2",
-    "Praise": "#8AC926",
-    "Neutral": "#A9A9A9",
-    "Low": "#B5E48C",
-    "Medium": "#F9C74F",
-    "High": "#F94144",
-    "Clear": "#4CAF50",
-    "Needs Clarification": "#FF9800",
-    "Live Shopping": "#BC6FF1",
-    "Search": "#118AB2"
+    "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
+    "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
+    "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
+    "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
+    "Live Shopping": "#BC6FF1", "Search": "#118AB2"
 }
-
 def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
+# 💬 Render insight cards
 for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
     tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
