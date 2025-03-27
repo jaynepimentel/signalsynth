@@ -1,8 +1,14 @@
+# cluster_view.py — Cluster UI with UX enhancements and full doc generation support
+
 import streamlit as st
 import os
 from slugify import slugify
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
-from components.ai_suggester import generate_cluster_prd_docx, generate_cluster_prfaq_docx
+from components.ai_suggester import (
+    generate_cluster_prd_docx,
+    generate_cluster_prfaq_docx,
+    generate_cluster_brd_docx
+)
 
 def display_clustered_insight_cards(insights):
     if not insights:
@@ -39,7 +45,7 @@ def display_clustered_insight_cards(insights):
                     st.markdown(f"- {idea}")
 
             filename = slugify(card['title'])[:64]
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
                 prd_path = generate_cluster_prd_docx(cluster, filename)
@@ -63,4 +69,16 @@ def display_clustered_insight_cards(insights):
                             file_name=os.path.basename(prfaq_path),
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             key=f"cluster_prfaq_{idx}"
+                        )
+
+            with col3:
+                brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
+                if brd_path and os.path.exists(brd_path):
+                    with open(brd_path, "rb") as f:
+                        st.download_button(
+                            "📄 Download BRD",
+                            f,
+                            file_name=os.path.basename(brd_path),
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key=f"cluster_brd_{idx}"
                         )
