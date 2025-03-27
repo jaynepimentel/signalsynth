@@ -1,9 +1,9 @@
-# Full app.py content with all enhancements (GPT caching, dynamic trends, insight filtering, downloads)
+# Merged app.py — full SignalSynth dashboard with GPT, trends, explorer, clustering, downloads
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from collections import Counter, defaultdict
+from collections import defaultdict
 from slugify import slugify
 from datetime import datetime
 import pandas as pd
@@ -19,6 +19,7 @@ from components.ai_suggester import (
     generate_prfaq_docx,
     generate_jira_bug_ticket
 )
+from components.emerging_trends import get_emerging_signals
 
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
@@ -63,46 +64,28 @@ st.sidebar.markdown("**Date Range Filter**")
 start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
 end_date = st.sidebar.date_input("End Date", value=datetime.today())
 
-# Summary Dashboards
+# Brand Summary + Visualizer
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
-# Trend Analysis
-st.subheader("📈 Strategic Trend Signals")
-trend_view = st.radio("View Mode", ["Trending Subtags by Volume", "High-Priority Topics"], horizontal=True)
-
-trend_data = defaultdict(lambda: {"mentions": 0, "complaints": 0, "praise": 0, "priority_scores": []})
-for insight in scraped_insights:
-    subtag = insight.get("type_subtag", "General")
-    sentiment = insight.get("brand_sentiment", "Neutral")
-    priority = insight.get("pm_priority_score", 0)
-    trend_data[subtag]["mentions"] += 1
-    if sentiment == "Complaint":
-        trend_data[subtag]["complaints"] += 1
-    elif sentiment == "Praise":
-        trend_data[subtag]["praise"] += 1
-    trend_data[subtag]["priority_scores"].append(priority)
-
-trend_df = pd.DataFrame([
-    {
-        "Subtag": subtag,
-        "Mentions": data["mentions"],
-        "Complaints": data["complaints"],
-        "Praise": data["praise"],
-        "Avg PM Priority": round(sum(data["priority_scores"]) / len(data["priority_scores"]), 2)
-    }
-    for subtag, data in trend_data.items()
-    if data["mentions"] >= 3
-])
-if trend_view == "High-Priority Topics":
-    trend_df = trend_df.sort_values(by=["Avg PM Priority", "Mentions"], ascending=False)
-else:
-    trend_df = trend_df.sort_values(by=["Mentions"], ascending=False)
-
-st.dataframe(trend_df, use_container_width=True)
-
 st.subheader("📈 Insight Charts")
 display_insight_charts(scraped_insights)
+
+# 🔥 Detect Emerging Trends
+st.subheader("🔥 Emerging Trends & Sentiment Shifts")
+spikes, flips, keyword_spikes = get_emerging_signals()
+if spikes:
+    st.markdown("**📈 Spiking Subtags**")
+    for tag, ratio in spikes.items():
+        st.markdown(f"- **{tag}** spiked ×{ratio}")
+if flips:
+    st.markdown("**📉 Sentiment Flips**")
+    for brand, msg in flips.items():
+        st.markdown(f"- **{brand}** → {msg}")
+if keyword_spikes:
+    st.markdown("**📊 Keyword Spikes**")
+    for word, ratio in keyword_spikes.items():
+        st.markdown(f"- `{word}` ↑ {ratio}x")
 
 # Filtered insights
 filtered = []
@@ -114,17 +97,18 @@ for i in scraped_insights:
         ts = datetime(2024, 1, 1)
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-        and (not show_trends_only or any(w in i.get("text", "").lower() for w in trend_df["Subtag"].str.lower()))
+        and (not show_trends_only or any(w in i.get("text", "").lower() for w in spikes.keys()))
         and (start_date <= ts.date() <= end_date)
     ):
         filtered.append(i)
 
-st.subheader("🧭 Insight Explorer Mode")
-display_insight_explorer(filtered)
+# 🧭 Insight Explorer
+results = display_insight_explorer(filtered) or filtered
 
+# 📌 Individual Insights
 st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
-total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
+total_pages = max(1, (len(results) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
     st.session_state.page = 1
 col1, col2, col3 = st.columns([1, 2, 1])
@@ -138,7 +122,7 @@ with col3:
         st.session_state.page = min(total_pages, st.session_state.page + 1)
 
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
-paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
+paged_insights = results[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
 BADGE_COLORS = {
     "Complaint": "#FF6B6B",
@@ -214,6 +198,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                         st.download_button(
                             f"⬇️ Download {doc_type}", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_doc_{idx}")
 
+# 🧱 Clustered Insight Mode
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
