@@ -23,11 +23,10 @@ if os.path.exists(CACHE_PATH):
 else:
     suggestion_cache = {}
 
-# System prompt reused across GPT calls
 SYSTEM_PM_PROMPT = (
-    "You are a senior product manager at a major marketplace like eBay. "
-    "Generate strategic, high-quality PM ideas based on user feedback. "
-    "Be clear, specific, and impactful."
+    "You are a senior product manager at a marketplace like eBay. "
+    "Generate strategic, high-impact PM ideas based on user feedback. "
+    "Focus on product or operational improvements that drive trust, reduce friction, or increase conversion."
 )
 
 def generate_pm_ideas(text, brand="eBay"):
@@ -43,7 +42,7 @@ def generate_pm_ideas(text, brand="eBay"):
                 {"role": "user", "content": f"User feedback:\n{text}\n\nBrand: {brand}"}
             ],
             temperature=0.3,
-            max_tokens=300
+            max_tokens=400
         )
         raw = response.choices[0].message.content.strip().split("\n")
         ideas = [line.strip("-• ").strip() for line in raw if line.strip()]
@@ -70,7 +69,7 @@ def generate_gpt_doc_content(prompt, role="You are a senior PM writing a PRD or 
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=1200
+            max_tokens=1500
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -81,18 +80,22 @@ def safe_file_path(base_name):
     return os.path.join(tempfile.gettempdir(), filename)
 
 def generate_prd_docx(text, brand, base_filename):
-    prompt = f"""Write a clear, strategic Product Requirements Document (PRD) based on the following customer feedback.
+    prompt = f"""
+You are a senior product manager at eBay. Write a strategic and well-structured Product Requirements Document (PRD) based on the user feedback below.
 
-Include:
-- Overview
-- Customer Problem
-- Strategic Context
-- Personas Affected
-- Proposed Solution
-- UX or Workflow Touchpoints
-- Success Metrics
-- Risks
-- Suggested Next Steps
+Include the following sections:
+- Overview (why this matters now)
+- Customer Problem (from the feedback)
+- Strategic Context (alignment with trust, conversion, or OKRs)
+- Personas Impacted (e.g., sellers, buyers, support)
+- Proposed Solution (clear and feasible)
+- UX/Workflow Touchpoints (which parts of eBay surface are impacted)
+- User Journey (end-to-end path for the persona)
+- Success Metrics (quantifiable KPIs)
+- Risks & Mitigations
+- Testable Hypothesis
+- Suggested Experiment
+- Next Steps
 - Jira Ticket Name and Slack Channel
 
 Feedback:
@@ -104,18 +107,19 @@ Brand: {brand}
     return write_doc("Product Requirements Document (PRD)", content, base_filename)
 
 def generate_brd_docx(text, brand, base_filename):
-    prompt = f"""Write a well-framed Business Requirements Document (BRD) based on this customer feedback.
+    prompt = f"""
+You are a senior product manager at eBay. Write a crisp and strategic Business Requirements Document (BRD) based on the user feedback below.
 
 Include:
-- Executive Summary
-- Business Opportunity
-- Customer Problem
-- Market Context
-- Proposed Solution
-- Revenue or Cost Impact
-- Key Stakeholders
+- Executive Summary (1–2 sentence business case)
+- Business Opportunity (market gap, trust risk, etc.)
+- Customer Problem (from the feedback)
+- Market Context (how others handle this)
+- Proposed Solution (simple, clear)
+- Revenue or Cost Impact (estimates or directional)
+- Key Stakeholders (PM, engineering, CX, trust, etc.)
 - Open Questions
-- Recommended Next Step
+- Recommended Next Step (e.g., discovery sprint, pilot)
 
 Feedback:
 {text}
@@ -126,7 +130,8 @@ Brand: {brand}
     return write_doc("Business Requirements Document (BRD)", content, base_filename)
 
 def generate_jira_bug_ticket(text, brand="eBay"):
-    prompt = f"""Write a JIRA bug report based on this customer complaint.
+    prompt = f"""
+You are a senior QA lead writing a JIRA bug ticket based on this customer complaint.
 
 Include:
 - Title
