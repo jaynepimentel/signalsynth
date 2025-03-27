@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with Individual View above Cluster View
+# app.py — SignalSynth UI with extended filters and link-out support
 
 import os
 import json
@@ -6,6 +6,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
+from datetime import datetime
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
@@ -32,6 +33,7 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
+# Sidebar Settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -55,13 +57,19 @@ filters = {
 }
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
+# New: Time range filter
+st.sidebar.markdown("**Date Range Filter**")
+start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
+end_date = st.sidebar.date_input("End Date", value=datetime.today())
+
+# Summary dashboards
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
 st.subheader("📈 Insight Trends")
 display_insight_charts(scraped_insights)
 
-topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
+topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund", "search"]
 trend_counter = Counter()
 for i in scraped_insights:
     text = i.get("text", "").lower()
@@ -77,11 +85,21 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-filtered = [
-    i for i in scraped_insights
-    if all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-    and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
-]
+# Filter insights based on all criteria
+filtered = []
+for i in scraped_insights:
+    insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
+    try:
+        ts = datetime.strptime(insight_date[:10], "%Y-%m-%d")
+    except:
+        ts = datetime(2024, 1, 1)
+
+    if (
+        all(filters[k] == "All" or i.get(k) == filters[k] for k in filters) and
+        (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends)) and
+        (start_date <= ts.date() <= end_date)
+    ):
+        filtered.append(i)
 
 # --- Explorer ---
 st.subheader("🧭 Insight Explorer Mode")
@@ -107,10 +125,7 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Colored badge utility
-def badge(label, color):
-    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
-
+# Badge styling
 BADGE_COLORS = {
     "Complaint": "#FF6B6B",
     "Confusion": "#FFD166",
@@ -122,32 +137,42 @@ BADGE_COLORS = {
     "Medium": "#F9C74F",
     "High": "#F94144",
     "Clear": "#4CAF50",
-    "Needs Clarification": "#FF9800"
+    "Needs Clarification": "#FF9800",
+    "Live Shopping": "#BC6FF1",
+    "Search": "#118AB2"
 }
+
+def badge(label):
+    color = BADGE_COLORS.get(label, "#ccc")
+    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
 for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
 
     tags = [
-        badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
-        badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
-        badge(i.get("effort"), BADGE_COLORS.get(i.get("effort"), "#ccc")),
-        badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
-        badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
+        badge(i.get("type_tag")),
+        badge(i.get("brand_sentiment")),
+        badge(i.get("effort")),
+        badge(i.get("journey_stage")),
+        badge(i.get("clarity"))
     ]
     st.markdown(" ".join(tags), unsafe_allow_html=True)
 
     st.caption(
-        f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
-        f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
+        f"Score: {i.get('score', 0)} | PM Priority: {i.get('pm_priority_score', '?')} | Persona: {i.get('persona')} | Team: {i.get('team')}"
     )
+    if i.get("type_reason"):
+        st.markdown(f"💡 _{i['type_reason']}_")
 
     with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
         text = i.get("text", "")
         brand = i.get("target_brand", "eBay")
         st.markdown("**User Quote:**")
         st.markdown(f"> {text}")
+
+        # Optional link-out
+        if i.get("url"):
+            st.markdown(f"[🔗 View Original Post]({i['url']})")
 
         if use_gpt and OPENAI_KEY_PRESENT:
             with st.spinner("💡 Generating PM Suggestions..."):
@@ -187,8 +212,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                             f,
                             file_name=os.path.basename(file_path),
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key=f"dl_doc_{idx}"
-                        )
+                            key=f"dl_doc_{idx}")
 
 # --- Clustered Mode — now at bottom ---
 st.subheader("🧱 Clustered Insight Mode")
