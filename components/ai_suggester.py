@@ -191,3 +191,25 @@ Brand: {brand}
 """
     content = generate_gpt_doc_content(prompt)
     return write_doc("Cluster-Based PRD", content, base_filename)
+
+def generate_cluster_prfaq_docx(cluster, base_filename):
+    cluster_texts = "\n\n".join(i.get("text", "") for i in cluster[:10])
+    brand = cluster[0].get("target_brand", "eBay")
+
+    prompt = f"""
+You are a senior product manager at eBay. Write a launch-style PRFAQ (Press Release + FAQ) document based on a recurring customer issue cluster.
+
+Use the following customer quotes as input:
+
+{cluster_texts}
+
+Format:
+- Press Release Summary (hero feature, customer quote, benefit)
+- Launch Narrative (what’s changing and why it matters)
+- Customer Impact Statement
+- FAQs (4–6 strong launch or policy FAQs with answers)
+
+Brand: {brand}
+"""
+    content = generate_gpt_doc_content(prompt)
+    return write_doc("Cluster-Based PRFAQ", content, base_filename + "-prfaq")
