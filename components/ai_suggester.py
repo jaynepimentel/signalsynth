@@ -1,4 +1,4 @@
-# ai_suggester.py — OpenAI v1.0+ safe with caching and quota handling
+# ai_suggester.py — GPT-enhanced strategic document generator
 import os
 import json
 import hashlib
@@ -10,16 +10,8 @@ from docx import Document
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-system_prompt = """
-You are a senior product manager at a major marketplace platform like eBay or Fanatics. 
-Based on user feedback, identify the customer's concern and recommend specific, strategic 
-product improvements or operational actions. Focus on things that would build trust, improve
-conversion, or reduce friction. Use strong PM thinking.
-"""
-
 CACHE_PATH = "gpt_suggestion_cache.json"
 
-# Load or initialize cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
@@ -31,15 +23,12 @@ def generate_pm_ideas(text, brand="eBay"):
     if key in suggestion_cache:
         return suggestion_cache[key]
 
-    if not os.getenv("OPENAI_API_KEY"):
-        return ["[No API key set — using fallback suggestion]"]
-
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Feedback from user:\n{text}\n\nBrand mentioned: {brand}"}
+                {"role": "system", "content": "You are a senior product manager offering concise but strategic PM suggestions."},
+                {"role": "user", "content": f"Customer insight:\n{text}\n\nBrand mentioned: {brand}\n\nReturn 3–5 bullet point product suggestions."}
             ],
             temperature=0.3,
             max_tokens=300
@@ -48,24 +37,17 @@ def generate_pm_ideas(text, brand="eBay"):
         suggestions = [line.strip("- ").strip() for line in output if line.strip()]
         suggestion_cache[key] = suggestions
 
-        # Save to cache
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(suggestion_cache, f, indent=2)
 
         return suggestions
-
     except Exception as e:
-        if "429" in str(e):
-            return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
-        elif "authentication" in str(e).lower():
-            return ["[⚠️ Missing or invalid OpenAI API key]"]
-        else:
-            return [f"[Error calling OpenAI: {e}]"]
+        return [f"[❌ GPT error: {str(e)}]"]
 
 def write_docx(content, filename, title="Product Document"):
     doc = Document()
     doc.add_heading(title, level=1)
-    for line in content.split("\n"):
+    for line in content.strip().split("\n"):
         doc.add_paragraph(line.strip())
     buffer = BytesIO()
     doc.save(buffer)
@@ -74,89 +56,108 @@ def write_docx(content, filename, title="Product Document"):
 
 def generate_prd_docx(insight_text, brand, filename):
     prompt = f"""
-    You are writing a Product Requirements Document (PRD) based on the following insight:
-    ---
-    {insight_text}
-    ---
-    The insight comes from a user mentioning the brand: {brand}.
-    Please include:
-    - Overview
-    - Customer Pain Point
-    - Strategic Context
-    - Personas Impacted
-    - Proposed Solutions
-    - Data or Success Metrics
-    - Risks / Dependencies
-    - Testable Hypothesis
-    - Jobs to Be Done (JTBD) statement
-    """
+You are a senior product manager at a company like eBay. Based on the following customer insight, write a robust, strategic Product Requirements Document (PRD).
+
+Customer Insight:
+"""
+    prompt += f"""
+---
+{insight_text}
+---
+
+Sections:
+1. **Overview**
+2. **Customer Problem**
+3. **Strategic Context**
+4. **Personas Affected**
+5. **Proposed Product Improvements** (3–5)
+6. **User Flow Sketch (Text)**
+7. **Data & Success Metrics**
+8. **Risks & Mitigations**
+9. **Implementation Dependencies**
+10. **Testable Hypothesis**
+11. **JTBD Statement**
+12. **Milestone Plan** (Optional)
+
+Write in professional product tone. Format clearly.
+"""
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a product strategist generating detailed product documentation."},
+                {"role": "system", "content": "You write detailed, enterprise-level product requirement docs."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=1000
+            temperature=0.4,
+            max_tokens=1200
         )
-        prd_content = response.choices[0].message.content.strip()
-        return write_docx(prd_content, filename, "Product Requirements Document (PRD)")
+        content = response.choices[0].message.content.strip()
+        return write_docx(content, filename, "Product Requirements Document (PRD)")
     except Exception as e:
-        fallback = f"PRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
-        return write_docx(fallback, filename, "Product Requirements Document (PRD)")
+        return write_docx(f"PRD generation failed: {str(e)}\n\n{insight_text}", filename, "PRD Error")
 
 def generate_brd_docx(insight_text, brand, filename):
     prompt = f"""
-    You are writing a Business Requirements Document (BRD) based on the following customer insight:
-    ---
-    {insight_text}
-    ---
-    The insight comes from a user mentioning the brand: {brand}.
-    Please include:
-    - Executive Summary
-    - Business Objectives
-    - Customer Problem
-    - Proposed Initiatives
-    - Stakeholders
-    - ROI or Business Impact
-    - Constraints or Assumptions
-    - Timeline Considerations
-    """
+You are a business product strategist. Write a strategic Business Requirements Document (BRD) based on this insight.
+
+Insight:
+---
+{insight_text}
+---
+
+Include:
+1. **Executive Summary**
+2. **Business Objective**
+3. **Customer Problem**
+4. **Proposed Initiatives**
+5. **Key Stakeholders**
+6. **ROI / Business Impact**
+7. **Assumptions / Constraints**
+8. **Timeline Considerations**
+9. **Next Steps**
+
+Use clear, structured business writing.
+"""
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a business product lead crafting strategic BRDs."},
+                {"role": "system", "content": "You write high-quality BRDs for business teams."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
+            temperature=0.4,
             max_tokens=1000
         )
-        brd_content = response.choices[0].message.content.strip()
-        return write_docx(brd_content, filename, "Business Requirements Document (BRD)")
+        content = response.choices[0].message.content.strip()
+        return write_docx(content, filename, "Business Requirements Document (BRD)")
     except Exception as e:
-        fallback = f"BRD generation failed due to error: {str(e)}\n\nInsight: {insight_text}"
-        return write_docx(fallback, filename, "Business Requirements Document (BRD)")
+        return write_docx(f"BRD generation failed: {str(e)}\n\n{insight_text}", filename, "BRD Error")
 
 def generate_jira_bug_ticket(insight_text, brand):
     prompt = f"""
-    You are creating a JIRA bug ticket summary based on the following customer complaint or issue:
-    ---
-    {insight_text}
-    ---
-    This user mentioned the brand: {brand}. Return a markdown-style issue title and description.
-    """
+You are a technical product manager. Write a JIRA-style bug ticket based on this customer complaint:
+
+---
+{insight_text}
+---
+
+Return a markdown-formatted bug with:
+- Title
+- Description
+- Steps to Reproduce (if possible)
+- Expected vs. Actual Behavior
+- Suggested Fix
+"""
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a technical product manager creating JIRA tickets."},
+                {"role": "system", "content": "You generate JIRA markdown tickets from customer complaints."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=300
+            max_tokens=600
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"### Bug Ticket Error\nCould not generate JIRA ticket due to error: {str(e)}"
+        return f"### JIRA Bug Error\nCould not generate JIRA bug ticket: {str(e)}"
