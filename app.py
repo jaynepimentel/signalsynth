@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with Explorer and Cluster modes, fixed expander nesting
+# app.py — SignalSynth UI with UX-optimized Cluster + Explorer Mode + Document Generation
 
 import os
 import json
@@ -6,7 +6,6 @@ import streamlit as st
 from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
-import tempfile
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
@@ -34,7 +33,7 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
-# Sidebar: Filters
+# Sidebar filters
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -50,11 +49,10 @@ filter_fields = {
     "Target Brand": "target_brand",
     "Brand Sentiment": "brand_sentiment"
 }
-filters = {}
-for label, key in filter_fields.items():
-    options = ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights))
-    filters[key] = st.sidebar.selectbox(label, options)
-
+filters = {
+    key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)))
+    for label, key in filter_fields.items()
+}
 show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
 # Dashboards
@@ -64,7 +62,7 @@ display_brand_dashboard(scraped_insights)
 st.subheader("📈 Insight Trends")
 display_insight_charts(scraped_insights)
 
-# Detect trends
+# Detect rising keyword trends
 topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
 trend_counter = Counter()
 for i in scraped_insights:
@@ -81,23 +79,22 @@ if rising_trends:
 else:
     st.info("No trends above threshold this cycle.")
 
-# Filter insights
-filtered = []
-for i in scraped_insights:
-    text = i.get("text", "").lower()
-    match = all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-    if match and (not show_trends_only or any(word in text for word in rising_trends)):
-        filtered.append(i)
+# Filter logic
+filtered = [
+    i for i in scraped_insights
+    if all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
+    and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
+]
 
-# 🔍 Explorer Mode (not nested in expander anymore)
+# Main Display Modes
 st.subheader("🧭 Insight Explorer Mode")
 display_insight_explorer(filtered)
 
-# 📌 Clustered Insight Mode
-with st.expander("🧱 Clustered Insight Mode", expanded=False):
-    display_clustered_insight_cards(filtered)
+st.subheader("🧱 Clustered Insight Mode")
+display_clustered_insight_cards(filtered)
 
-# Pagination
+# Paginated Individual Insights
+st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
@@ -116,8 +113,7 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Individual Insights
-st.subheader("📌 Individual Insights")
+# Render individual insights
 for idx, i in enumerate(paged_insights, start=start_idx):
     summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
