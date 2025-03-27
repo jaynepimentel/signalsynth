@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — GPT summarization + cleaned top idea extraction
+# cluster_synthesizer.py — GPT summarization + cleaned top idea extraction + problem statement
 
 import os
 from collections import defaultdict
@@ -46,6 +46,25 @@ def summarize_cluster_with_gpt(cluster):
     except Exception as e:
         return f"(GPT summary failed: {e})"
 
+def generate_cluster_problem_statement(cluster):
+    if not client:
+        return "(No GPT client available)"
+
+    text_blob = "\n".join(i["text"] for i in cluster[:7])
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a product manager. Identify the shared user problem from this cluster."},
+                {"role": "user", "content": text_blob}
+            ],
+            temperature=0.2,
+            max_tokens=120
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"(Problem synthesis failed: {e})"
+
 def synthesize_cluster(cluster):
     summary = summarize_cluster_with_gpt(cluster)
     brand = cluster[0].get("target_brand", "Unknown")
@@ -67,10 +86,14 @@ def synthesize_cluster(cluster):
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
+    # Shared problem statement from GPT
+    problem = generate_cluster_problem_statement(cluster)
+
     return {
         "title": f"{type_tag}: {subtype} issue ({len(cluster)} mentions)",
         "brand": brand,
         "summary": summary,
+        "problem_statement": problem,
         "quotes": quotes,
         "top_ideas": [i[0] for i in top_ideas],
         "score_range": f"{min_score}–{max_score}"
