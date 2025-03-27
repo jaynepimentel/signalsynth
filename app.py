@@ -95,14 +95,18 @@ total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAG
 if "page" not in st.session_state:
     st.session_state.page = 1
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col1:
-    if st.button("⬅️ Previous") and st.session_state.page > 1:
+with st.container():
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col1:
+        if st.button("⬅️ Previous"):
+            st.session_state.page = max(1, st.session_state.page - 1)
         st.session_state.page -= 1
 with col2:
     st.markdown(f"**Page {st.session_state.page} of {total_pages}**", unsafe_allow_html=True)
-with col3:
-    if st.button("Next ➡️") and st.session_state.page < total_pages:
+    with col3:
+        if st.button("Next ➡️"):
+            st.session_state.page = min(total_pages, st.session_state.page + 1)
         st.session_state.page += 1
 
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
