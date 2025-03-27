@@ -32,8 +32,7 @@ You are a senior product manager at eBay or a major marketplace. Analyze the use
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Customer feedback:\n{text}\n\nBrand: {brand}"}
             ],
-            temperature=0.3,
-            max_tokens=300
+            temperature=0.3
         )
         raw = response.choices[0].message.content.strip().split("\n")
         ideas = [line.strip("-• ").strip() for line in raw if line.strip()]
@@ -54,8 +53,7 @@ def generate_gpt_doc_content(prompt):
                 {"role": "system", "content": "You are a senior product strategist writing clean, structured product documents."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=1000
+            temperature=0.3
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
