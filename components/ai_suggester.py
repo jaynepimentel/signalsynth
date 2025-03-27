@@ -1,6 +1,6 @@
 import os
-import hashlib
 import json
+import hashlib
 import tempfile
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -8,33 +8,42 @@ from docx import Document
 from slugify import slugify
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_KEY:
+    raise ValueError("Missing OPENAI_API_KEY in environment variables")
+
+client = OpenAI(api_key=OPENAI_KEY)
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Load or initialize cache
 if os.path.exists(CACHE_PATH):
     with open(CACHE_PATH, "r", encoding="utf-8") as f:
         suggestion_cache = json.load(f)
 else:
     suggestion_cache = {}
 
+# System prompt reused across GPT calls
+SYSTEM_PM_PROMPT = (
+    "You are a senior product manager at a major marketplace like eBay. "
+    "Generate strategic, high-quality PM ideas based on user feedback. "
+    "Be clear, specific, and impactful."
+)
+
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
     if key in suggestion_cache:
         return suggestion_cache[key]
 
-    system_prompt = "You are a senior product manager at eBay. Generate strategic PM ideas based on user feedback."
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"User feedback:
-{text}
-
-Brand: {brand}"}
+                {"role": "system", "content": SYSTEM_PM_PROMPT},
+                {"role": "user", "content": f"User feedback:\n{text}\n\nBrand: {brand}"}
             ],
-            temperature=0.3
+            temperature=0.3,
+            max_tokens=300
         )
         raw = response.choices[0].message.content.strip().split("\n")
         ideas = [line.strip("-• ").strip() for line in raw if line.strip()]
@@ -42,8 +51,14 @@ Brand: {brand}"}
 
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(suggestion_cache, f, indent=2)
+
         return ideas
+
     except Exception as e:
+        if "429" in str(e):
+            return ["[⚠️ OpenAI rate limit hit — retry later or reduce load]"]
+        elif "authentication" in str(e).lower():
+            return ["[⚠️ Missing or invalid OpenAI API key]"]
         return [f"[⚠️ GPT error: {str(e)}]"]
 
 def generate_gpt_doc_content(prompt, role="You are a senior PM writing a PRD or BRD. Be specific, strategic, and structured."):
@@ -54,7 +69,8 @@ def generate_gpt_doc_content(prompt, role="You are a senior PM writing a PRD or 
                 {"role": "system", "content": role},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3
+            temperature=0.3,
+            max_tokens=1200
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -85,13 +101,7 @@ Feedback:
 Brand: {brand}
 """
     content = generate_gpt_doc_content(prompt)
-    doc = Document()
-    doc.add_heading("Product Requirements Document (PRD)", level=1)
-    for line in content.split("\n"):
-        doc.add_paragraph(line)
-    file_path = safe_file_path(base_filename)
-    doc.save(file_path)
-    return file_path
+    return write_doc("Product Requirements Document (PRD)", content, base_filename)
 
 def generate_brd_docx(text, brand, base_filename):
     prompt = f"""Write a well-framed Business Requirements Document (BRD) based on this customer feedback.
@@ -113,13 +123,7 @@ Feedback:
 Brand: {brand}
 """
     content = generate_gpt_doc_content(prompt)
-    doc = Document()
-    doc.add_heading("Business Requirements Document (BRD)", level=1)
-    for line in content.split("\n"):
-        doc.add_paragraph(line)
-    file_path = safe_file_path(base_filename)
-    doc.save(file_path)
-    return file_path
+    return write_doc("Business Requirements Document (BRD)", content, base_filename)
 
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"""Write a JIRA bug report based on this customer complaint.
@@ -139,3 +143,12 @@ Complaint:
 Brand: {brand}
 """
     return generate_gpt_doc_content(prompt, role="You are a senior QA lead writing a JIRA bug.")
+
+def write_doc(title, content, base_filename):
+    doc = Document()
+    doc.add_heading(title, level=1)
+    for line in content.split("\n"):
+        doc.add_paragraph(line)
+    file_path = safe_file_path(base_filename)
+    doc.save(file_path)
+    return file_path
