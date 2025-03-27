@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — smart clustering with GPT summaries and Streamlit caching
+# cluster_synthesizer.py — GPT-labeled, cached, and serialization-safe clustering
 
 import os
 from collections import defaultdict
@@ -91,6 +91,9 @@ def synthesize_cluster(cluster):
     }
 
 
+def serialize_safe(obj):
+    return {k: v for k, v in obj.items() if isinstance(v, (str, int, float, list, dict, bool, type(None)))}
+
 @st.cache_data(show_spinner=False)
 def cached_cluster_cards(insights_serialized):
     from copy import deepcopy
@@ -100,5 +103,6 @@ def cached_cluster_cards(insights_serialized):
 
 
 def generate_synthesized_insights(insights):
-    insights_serialized = [{k: v for k, v in i.items()} for i in insights]
+    insights_serialized = [serialize_safe(i) for i in insights]
+    print(f"⚡ Caching {len(insights_serialized)} insights for cluster view")
     return cached_cluster_cards(insights_serialized)
