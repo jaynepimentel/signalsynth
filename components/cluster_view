@@ -1,4 +1,4 @@
-# cluster_view.py — Clustered Insight Mode with dropdown document generation
+# cluster_view.py — generates clusters on demand with a button
 
 import streamlit as st
 import os
@@ -11,9 +11,21 @@ def display_clustered_insight_cards(insights):
         st.info("No insights to cluster.")
         return
 
-    st.subheader("🧠 Clustered Insight Themes")
-    clusters = cluster_insights(insights)
-    cards = generate_synthesized_insights(insights)
+    st.subheader("🧱 Clustered Insight Mode")
+
+    if "clusters_ready" not in st.session_state:
+        st.session_state.clusters_ready = False
+
+    if not st.session_state.clusters_ready:
+        if st.button("🔍 Generate Clusters"):
+            st.session_state.clusters_ready = True
+        else:
+            st.info("Click 'Generate Clusters' to load grouped insight themes.")
+            return
+
+    with st.spinner("Clustering and summarizing insights..."):
+        clusters = cluster_insights(insights)
+        cards = generate_synthesized_insights(insights)
 
     if not cards:
         st.warning("No clusters found.")
