@@ -197,17 +197,21 @@ def generate_cluster_prfaq_docx(cluster, base_filename):
     brand = cluster[0].get("target_brand", "eBay")
 
     prompt = f"""
-You are a senior product manager at eBay. Write a launch-style PRFAQ (Press Release + FAQ) document based on a recurring customer issue cluster.
+You are a senior product manager at eBay writing a launch-style PRFAQ (Press Release + FAQ) to support a rollout of a new feature or policy change based on user pain.
 
-Use the following customer quotes as input:
+Use the following grouped user feedback to shape the narrative:
 
 {cluster_texts}
 
-Format:
-- Press Release Summary (hero feature, customer quote, benefit)
-- Launch Narrative (what’s changing and why it matters)
-- Customer Impact Statement
-- FAQs (4–6 strong launch or policy FAQs with answers)
+Write a strategic, compelling PRFAQ that includes:
+
+- Product/Feature Name
+- Press Release Summary: 3–4 paragraphs including a hero benefit statement, sample customer quote, competitive context, and how this improves trust or conversion
+- Launch Narrative: Why we’re launching this now, what changed, and what insights drove this
+- Customer Impact Statement: How buyers, sellers, and support teams benefit
+- 5–7 strategic FAQs: Answer concerns about rollout, eligibility, timing, trust operations, edge cases, and seller safeguards
+
+Avoid generic statements. Use confident, executive-ready language. Do not make up fake data. Base rationale on common product intuition and user feedback themes.
 
 Brand: {brand}
 """
