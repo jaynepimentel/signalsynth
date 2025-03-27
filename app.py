@@ -1,4 +1,4 @@
-# app.py — full SignalSynth UI with Clustered Mode, Explorer Mode, GPT actions
+# app.py — SignalSynth UI with Explorer and Cluster modes, fixed expander nesting
 
 import os
 import json
@@ -89,11 +89,11 @@ for i in scraped_insights:
     if match and (not show_trends_only or any(word in text for word in rising_trends)):
         filtered.append(i)
 
-# Optional: Explorer Mode
-with st.expander("🧭 Insight Explorer Mode", expanded=False):
-    display_insight_explorer(filtered)
+# 🔍 Explorer Mode (not nested in expander anymore)
+st.subheader("🧭 Insight Explorer Mode")
+display_insight_explorer(filtered)
 
-# Optional: Clustered Mode
+# 📌 Clustered Insight Mode
 with st.expander("🧱 Clustered Insight Mode", expanded=False):
     display_clustered_insight_cards(filtered)
 
@@ -116,7 +116,7 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Display paginated insights
+# Individual Insights
 st.subheader("📌 Individual Insights")
 for idx, i in enumerate(paged_insights, start=start_idx):
     summary = i.get("summary") or i.get("text", "")[:80]
