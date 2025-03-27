@@ -1,4 +1,4 @@
-# app.py — SignalSynth UI with filters, insight display, and doc generation
+# app.py — full SignalSynth UI with Clustered Mode, Explorer Mode, GPT actions
 
 import os
 import json
@@ -11,13 +11,21 @@ import tempfile
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
-from components.ai_suggester import generate_pm_ideas, generate_prd_docx, generate_brd_docx, generate_jira_bug_ticket
+from components.cluster_view import display_clustered_insight_cards
+from components.ai_suggester import (
+    generate_pm_ideas,
+    generate_prd_docx,
+    generate_brd_docx,
+    generate_jira_bug_ticket
+)
 
+# Setup
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
+# Load insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -26,11 +34,11 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
-# Sidebar filters
+# Sidebar: Filters
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
-    st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT suggestions disabled.")
+    st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
 st.sidebar.header("🔍 Filter Insights")
 filter_fields = {
@@ -81,6 +89,14 @@ for i in scraped_insights:
     if match and (not show_trends_only or any(word in text for word in rising_trends)):
         filtered.append(i)
 
+# Optional: Explorer Mode
+with st.expander("🧭 Insight Explorer Mode", expanded=False):
+    display_insight_explorer(filtered)
+
+# Optional: Clustered Mode
+with st.expander("🧱 Clustered Insight Mode", expanded=False):
+    display_clustered_insight_cards(filtered)
+
 # Pagination
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
@@ -100,12 +116,12 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Render insights
+# Display paginated insights
+st.subheader("📌 Individual Insights")
 for idx, i in enumerate(paged_insights, start=start_idx):
-    summary = i.get("summary") or i.get("text") or "Untitled"
-    summary = summary[:80]
-
+    summary = i.get("summary") or i.get("text", "")[:80]
     st.markdown(f"### 🧠 Insight: {summary}")
+
     st.caption(
         f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
         f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
@@ -116,7 +132,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
         text = i.get("text", "")
         brand = i.get("target_brand", "eBay")
         st.markdown("**User Quote:**")
-        st.markdown(f"- _{text}_")
+        st.markdown(f"> {text}")
 
         if use_gpt and OPENAI_KEY_PRESENT:
             with st.spinner("💡 Generating PM Suggestions..."):
