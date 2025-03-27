@@ -1,12 +1,12 @@
-# app.py — SignalSynth with GPT caching and performance optimizations
-
+# Full app.py content with all enhancements (GPT caching, dynamic trends, insight filtering, downloads)
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from collections import Counter
+from collections import Counter, defaultdict
 from slugify import slugify
 from datetime import datetime
+import pandas as pd
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
@@ -33,11 +33,9 @@ else:
     st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
     st.stop()
 
-# Local GPT suggestion cache
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
 
-# Sidebar Settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
@@ -65,30 +63,48 @@ st.sidebar.markdown("**Date Range Filter**")
 start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
 end_date = st.sidebar.date_input("End Date", value=datetime.today())
 
-# Dashboards
+# Summary Dashboards
 st.subheader("📊 Brand Summary")
 display_brand_dashboard(scraped_insights)
 
-st.subheader("📈 Insight Trends")
+# Trend Analysis
+st.subheader("📈 Strategic Trend Signals")
+trend_view = st.radio("View Mode", ["Trending Subtags by Volume", "High-Priority Topics"], horizontal=True)
+
+trend_data = defaultdict(lambda: {"mentions": 0, "complaints": 0, "praise": 0, "priority_scores": []})
+for insight in scraped_insights:
+    subtag = insight.get("type_subtag", "General")
+    sentiment = insight.get("brand_sentiment", "Neutral")
+    priority = insight.get("pm_priority_score", 0)
+    trend_data[subtag]["mentions"] += 1
+    if sentiment == "Complaint":
+        trend_data[subtag]["complaints"] += 1
+    elif sentiment == "Praise":
+        trend_data[subtag]["praise"] += 1
+    trend_data[subtag]["priority_scores"].append(priority)
+
+trend_df = pd.DataFrame([
+    {
+        "Subtag": subtag,
+        "Mentions": data["mentions"],
+        "Complaints": data["complaints"],
+        "Praise": data["praise"],
+        "Avg PM Priority": round(sum(data["priority_scores"]) / len(data["priority_scores"]), 2)
+    }
+    for subtag, data in trend_data.items()
+    if data["mentions"] >= 3
+])
+if trend_view == "High-Priority Topics":
+    trend_df = trend_df.sort_values(by=["Avg PM Priority", "Mentions"], ascending=False)
+else:
+    trend_df = trend_df.sort_values(by=["Mentions"], ascending=False)
+
+st.dataframe(trend_df, use_container_width=True)
+
+st.subheader("📈 Insight Charts")
 display_insight_charts(scraped_insights)
 
-topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund", "search"]
-trend_counter = Counter()
-for i in scraped_insights:
-    text = i.get("text", "").lower()
-    for word in topic_keywords:
-        if word in text:
-            trend_counter[word] += 1
-rising_trends = [t for t, count in trend_counter.items() if count >= 5]
-
-if rising_trends:
-    with st.expander("🔥 Emerging Trends Detected", expanded=True):
-        for t in sorted(rising_trends):
-            st.markdown(f"- **{t.title()}** ({trend_counter[t]} mentions)")
-else:
-    st.info("No trends above threshold this cycle.")
-
-# Filter logic
+# Filtered insights
 filtered = []
 for i in scraped_insights:
     insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
@@ -96,25 +112,21 @@ for i in scraped_insights:
         ts = datetime.strptime(insight_date[:10], "%Y-%m-%d")
     except:
         ts = datetime(2024, 1, 1)
-
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-        and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
+        and (not show_trends_only or any(w in i.get("text", "").lower() for w in trend_df["Subtag"].str.lower()))
         and (start_date <= ts.date() <= end_date)
     ):
         filtered.append(i)
 
-# Explorer View
 st.subheader("🧭 Insight Explorer Mode")
 display_insight_explorer(filtered)
 
-# Pagination
 st.subheader("📌 Individual Insights")
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
     st.session_state.page = 1
-
 col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
     if st.button("⬅️ Previous"):
@@ -150,19 +162,9 @@ def badge(label):
 
 for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
-
-    tags = [
-        badge(i.get("type_tag")),
-        badge(i.get("brand_sentiment")),
-        badge(i.get("effort")),
-        badge(i.get("journey_stage")),
-        badge(i.get("clarity"))
-    ]
+    tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
     st.markdown(" ".join(tags), unsafe_allow_html=True)
-
-    st.caption(
-        f"Score: {i.get('score', 0)} | PM Priority: {i.get('pm_priority_score', '?')} | Persona: {i.get('persona')} | Team: {i.get('team')}"
-    )
+    st.caption(f"Score: {i.get('score', 0)} | PM Priority: {i.get('pm_priority_score', '?')} | Persona: {i.get('persona')} | Team: {i.get('team')}")
     if i.get("type_reason"):
         st.markdown(f"💡 _{i['type_reason']}_")
 
@@ -171,7 +173,6 @@ for idx, i in enumerate(paged_insights, start=start_idx):
         brand = i.get("target_brand", "eBay")
         st.markdown("**User Quote:**")
         st.markdown(f"> {text}")
-
         if i.get("url"):
             st.markdown(f"[🔗 View Original Post]({i['url']})")
 
@@ -211,13 +212,8 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                 if file_path and os.path.exists(file_path):
                     with open(file_path, "rb") as f:
                         st.download_button(
-                            f"⬇️ Download {doc_type}",
-                            f,
-                            file_name=os.path.basename(file_path),
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key=f"dl_doc_{idx}")
+                            f"⬇️ Download {doc_type}", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_doc_{idx}")
 
-# Clustered View
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
