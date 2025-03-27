@@ -45,7 +45,9 @@ filter_fields = {
     "Insight Type": "type_tag",
     "Persona": "persona",
     "Target Brand": "target_brand",
-    "Brand Sentiment": "brand_sentiment"
+    "Brand Sentiment": "brand_sentiment",
+    "Journey Stage": "journey_stage",
+    "Clarity": "clarity"
 }
 filters = {
     key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)))
@@ -105,9 +107,35 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
+# Colored badge utility
+def badge(label, color):
+    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
+
+BADGE_COLORS = {
+    "Complaint": "#FF6B6B",
+    "Confusion": "#FFD166",
+    "Feature Request": "#06D6A0",
+    "Discussion": "#118AB2",
+    "Praise": "#8AC926",
+    "Neutral": "#A9A9A9",
+    "Low": "#B5E48C",
+    "Medium": "#F9C74F",
+    "High": "#F94144",
+    "Clear": "#4CAF50",
+    "Needs Clarification": "#FF9800"
+}
+
 for idx, i in enumerate(paged_insights, start=start_idx):
-    summary = i.get("summary") or i.get("text", "")[:80]
-    st.markdown(f"### 🧠 Insight: {summary}")
+    st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
+
+    tags = [
+        badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
+        badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
+        badge(i.get("effort"), BADGE_COLORS.get(i.get("effort"), "#ccc")),
+        badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
+        badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
+    ]
+    st.markdown(" ".join(tags), unsafe_allow_html=True)
 
     st.caption(
         f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
@@ -133,7 +161,12 @@ for idx, i in enumerate(paged_insights, start=start_idx):
             for idea in i["ideas"]:
                 st.markdown(f"- {idea}")
 
-        filename = slugify(summary)[:64]
+        if i.get("clarity") == "Needs Clarification":
+            st.warning("This insight may need refinement.")
+            if st.button("🧼 Clarify This Insight", key=f"clarify_{idx}"):
+                st.info("(This would re-run the insight through GPT to rephrase or flag it for triage.)")
+
+        filename = slugify(i.get("title", i.get("text", "")[:40]))[:64]
         doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"doc_type_{idx}")
         if st.button(f"Generate {doc_type}", key=f"generate_doc_{idx}"):
             with st.spinner(f"Generating {doc_type}..."):
