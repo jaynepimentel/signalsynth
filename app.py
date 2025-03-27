@@ -1,4 +1,4 @@
-# app.py — SignalSynth with GPT, trends, filters, clustering, and bug fix
+# app.py — SignalSynth mobile-friendly with trends, filters, GPT, clusters
 
 import os
 import json
@@ -28,7 +28,6 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 
-# Load data
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -40,15 +39,16 @@ else:
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
 
-# Sidebar: settings
+# GPT toggle
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
-# Sidebar: time filters
-st.sidebar.header("🗓️ Time Filter")
-time_filter = st.sidebar.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"])
+# --- Inline Date Filter (Mobile Friendly)
+st.markdown("### 🗓️ Date Filter")
+time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
+
 if time_filter == "Last 7 Days":
     start_date = datetime.today().date() - timedelta(days=7)
     end_date = datetime.today().date()
@@ -56,17 +56,22 @@ elif time_filter == "Last 30 Days":
     start_date = datetime.today().date() - timedelta(days=30)
     end_date = datetime.today().date()
 elif time_filter == "Custom Range":
-    start_date = st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1)).__class__ == datetime and st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1)).date() or st.sidebar.date_input("Start Date", value=datetime(2024, 1, 1))
-    end_date = st.sidebar.date_input("End Date", value=datetime.today()).__class__ == datetime and st.sidebar.date_input("End Date", value=datetime.today()).date() or st.sidebar.date_input("End Date", value=datetime.today())
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input("Start Date", value=datetime(2024, 1, 1).date(), key="main_start")
+    with col2:
+        end_date = st.date_input("End Date", value=datetime.today().date(), key="main_end")
 else:
     start_date = datetime(2020, 1, 1).date()
     end_date = datetime.today().date()
 
-# Sidebar: filters
-st.sidebar.header("Filter by Metadata")
+# --- Mobile-Friendly Filter Toggle
+mobile_filters_expanded = st.checkbox("🧭 Show Filters Inline (Mobile Friendly)", value=False)
+
+# Filter fields
 filter_fields = {
-    # "Scrum Team": "team",  # hidden
-    # "Workflow Stage": "status",  # hidden
+    # "Scrum Team": "team",
+    # "Workflow Stage": "status",
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
     "Persona": "persona",
@@ -75,20 +80,24 @@ filter_fields = {
     "Journey Stage": "journey_stage",
     "Clarity": "clarity"
 }
-filters = {
-    key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)))
-    for label, key in filter_fields.items()
-}
-show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
 
-# Brand Summary + Charts
-st.subheader("📊 Brand Summary")
-display_brand_dashboard(scraped_insights)
+if mobile_filters_expanded:
+    st.markdown("### 🔎 Filter Insights")
+    filters = {
+        key: st.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"mobile_{key}")
+        for label, key in filter_fields.items()
+    }
+else:
+    st.sidebar.header("Filter by Metadata")
+    filters = {
+        key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"sidebar_{key}")
+        for label, key in filter_fields.items()
+    }
 
-st.subheader("📈 Insight Charts")
-display_insight_charts(scraped_insights)
+# Search bar
+search_query = st.text_input("🔍 Search inside insights (optional)").strip().lower()
 
-# 🔥 Emerging Trends
+# Emerging trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 spikes, flips, keyword_spikes = get_emerging_signals()
 
@@ -121,13 +130,21 @@ for i in scraped_insights:
         ts = datetime(2024, 1, 1).date()
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
-        and (not show_trends_only or subtag in trend_terms or any(k in trend_terms for k in keywords))
+        and (subtag in trend_terms or any(k in trend_terms for k in keywords) or not trend_terms)
         and (start_date <= ts <= end_date)
+        and (search_query in text or search_query in i.get("title", "").lower() if search_query else True)
     ):
         filtered.append(i)
 
-# Insight list
-st.subheader(f"📌 Insights Related to Filters ({len(filtered)} shown)")
+# Dashboards
+st.subheader("📊 Brand Summary")
+display_brand_dashboard(scraped_insights)
+
+st.subheader("📈 Insight Charts")
+display_insight_charts(scraped_insights)
+
+# Show insights
+st.subheader(f"📌 Insights Matching Filters ({len(filtered)} shown)")
 
 # Pagination
 INSIGHTS_PER_PAGE = 10
@@ -147,7 +164,7 @@ with col3:
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Badge colors
+# Badges
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
@@ -159,7 +176,7 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-# Render insights
+# Insight cards
 for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
     tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
@@ -214,7 +231,7 @@ for idx, i in enumerate(paged_insights, start=start_idx):
                         st.download_button(
                             f"⬇️ Download {doc_type}", f, file_name=os.path.basename(file_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_doc_{idx}")
 
-# Clustering
+# Cluster view
 st.subheader("🧱 Clustered Insight Mode")
 display_clustered_insight_cards(filtered)
 
