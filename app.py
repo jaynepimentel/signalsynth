@@ -163,7 +163,7 @@ if view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif view_mode == "Clusters":
     st.subheader("🧠 Clustered Insights")
-    if not paged_insights:
+    if not paged_insights or all(i.get("text", "").strip() == "" for i in paged_insights):
         st.warning("No insights to cluster. Try changing your filters or date range.")
     else:
             clusters = generate_synthesized_insights(paged_insights)
