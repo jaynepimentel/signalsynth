@@ -10,6 +10,7 @@ from components.ai_suggester import (
     generate_pm_ideas,
     generate_prd_docx,
     generate_brd_docx,
+    generate_prfaq_docx,
     generate_jira_bug_ticket
 )
 from components.emerging_trends import get_emerging_signals
@@ -179,15 +180,20 @@ elif view_mode == "Clusters":
                 text_blob = "\n".join(c["quotes"])
                 prd_path = generate_prd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
                 brd_path = generate_brd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
+                prfaq_path = generate_prfaq_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
                 with open(prd_path, "rb") as f:
                     prd_bytes = f.read()
                 with open(brd_path, "rb") as f:
                     brd_bytes = f.read()
-                colA, colB = st.columns(2)
+                with open(prfaq_path, "rb") as f:
+                    prfaq_bytes = f.read()
+                colA, colB, colC = st.columns(3)
                 with colA:
                     st.download_button("📄 Download Cluster PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx")
                 with colB:
                     st.download_button("📘 Download Cluster BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx")
+                with colC:
+                    st.download_button("📰 Download Cluster PRFAQ", prfaq_bytes, file_name=f"cluster_{idx}_prfaq.docx")
             except Exception as e:
                 st.error(f"❌ Document generation failed for cluster {idx}: {e}")
             st.markdown("---")
