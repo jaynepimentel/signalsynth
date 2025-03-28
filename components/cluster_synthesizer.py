@@ -1,5 +1,4 @@
-# cluster_synthesizer.py — Cleaned, cache-safe cluster synthesis with smart summaries
-
+# ✅ cluster_synthesizer.py — Safe, modular cluster generation with GPT summarization
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -54,7 +53,7 @@ def generate_cluster_metadata(cluster):
     prompt = (
         "You are a senior product manager reviewing a cluster of user feedback. For the following grouped posts, "
         "generate:\n1. A concise title (max 10 words)\n2. A theme tag\n3. A clear problem statement that could go in a PRD\n"
-        "\nPosts:\n" + combined + "\n\nFormat your response as:\nTitle: ...\nTheme: ...\nProblem: ..."
+        f"\nPosts:\n{combined}\n\nFormat your response as:\nTitle: ...\nTheme: ...\nProblem: ..."
     )
 
     try:
