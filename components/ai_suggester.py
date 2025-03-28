@@ -1,4 +1,4 @@
-# ai_suggester.py — AI-powered PRD/BRD/PRFAQ/JIRA generation with caching and retries
+# ai_suggester.py — Enhanced AI-powered PRD/BRD/PRFAQ/JIRA generation with fallback logic and strategic metadata injection
 import os
 import hashlib
 import json
@@ -81,77 +81,83 @@ def write_docx(content, heading):
             doc.add_paragraph(line.strip())
     return doc
 
-def generate_prd_docx(text, brand, base_filename):
-    prompt = f"""
-Write a professional Product Requirements Document (PRD) for a product team working on a major marketplace like eBay. Use the user insight below as the starting point.
+def build_metadata_block(brand):
+    return f"""
+Contextual Metadata:
+- Brand: {brand}
+- Objective: Improve trust, conversion, or reduce friction.
+- Note: If any data is missing, make smart assumptions using product best practices.
+"""
 
----
-User Insight:
+def generate_prd_docx(text, brand, base_filename):
+    metadata = build_metadata_block(brand)
+    prompt = f"""
+Write a GTM-ready Product Requirements Document (PRD) for the following user insight:
+
 {text}
 
----
-Metadata:
-- Brand: {brand}
-- Goal: Improve user experience, trust, or conversion
+{metadata}
 
----
-Include the following PRD sections:
+Sections to include:
 1. Overview
 2. Customer Pain Point
 3. Strategic Context
 4. Personas Impacted
 5. Proposed Solutions
 6. Annotated User Journey
-7. Effort Estimate (High/Med/Low)
+7. Effort Estimate (High/Medium/Low)
 8. Risks / Dependencies
-9. Data or Success Metrics
-10. Recommended Next Steps
+9. Success Metrics
+10. Next Steps
 11. Jobs to Be Done (JTBD)
-12. Discovery-to-Delivery Phase (Double Diamond classification)
-13. Testable Hypothesis and Suggested Experiment
+12. Discovery-to-Delivery Phase
+13. Hypothesis + Suggested Experiment
+
+End with a 'Confidence Rating' section based on insight completeness.
 """
-    content = generate_gpt_doc(prompt, "You are a product lead writing a strategic PRD.")
+    content = generate_gpt_doc(prompt, "You are a strategic product manager writing a PRD.")
     doc = write_docx(content, "Product Requirements Document (PRD)")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
     return file_path
 
 def generate_brd_docx(text, brand, base_filename):
+    metadata = build_metadata_block(brand)
     prompt = f"""
-Write a Business Requirements Document (BRD) based on this marketplace customer feedback:
+Write a Business Requirements Document (BRD) based on the marketplace user feedback below:
 
----
-User Insight:
 {text}
 
----
-Include:
+{metadata}
+
+Sections:
 - Executive Summary
 - Problem Statement
 - Market Opportunity
 - Strategic Fit with {brand}
-- Proposed Business Solution
+- Business Solution
 - ROI Estimate
 - Stakeholders
-- Legal or Policy Constraints
+- Legal/Policy Constraints
 - Next Steps
+- Confidence Rating based on data strength
 """
-    content = generate_gpt_doc(prompt, "You are a business strategist writing a BRD.")
+    content = generate_gpt_doc(prompt, "You are a strategic business lead writing a BRD.")
     doc = write_docx(content, "Business Requirements Document (BRD)")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
     return file_path
 
 def generate_prfaq_docx(text, brand, base_filename):
+    metadata = build_metadata_block(brand)
     prompt = f"""
-Write a PRFAQ document for a marketplace team launching a new feature based on the user insight below.
+Write an Amazon-style PRFAQ document for a new product launch based on this feedback:
 
----
-User Insight:
 {text}
 
----
-Include the following sections:
+{metadata}
+
+Sections:
 1. Press Release:
    - Headline
    - Subheadline
@@ -159,19 +165,20 @@ Include the following sections:
    - Customer Quote
    - Internal Quote
 2. FAQ:
-   - Customer Questions and Answers
-   - Internal Stakeholder Questions and Answers
-3. Launch Readiness Checklist (bullets)
+   - External Customer Q&A
+   - Internal Team Q&A
+3. Launch Checklist (bulleted)
+4. Confidence Rating and Notes
 """
-    content = generate_gpt_doc(prompt, "You are a product marketing lead creating a launch-ready PRFAQ.")
+    content = generate_gpt_doc(prompt, "You are a product marketing lead writing a PRFAQ.")
     doc = write_docx(content, "Product PRFAQ Document")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
     return file_path
 
 def generate_jira_bug_ticket(text, brand="eBay"):
-    prompt = f"Turn this user complaint into a JIRA ticket:\n{text}\n\nInclude: Title, Summary, Steps to Reproduce, Expected vs. Actual Results, Severity."
-    return generate_gpt_doc(prompt, "You are a support lead writing a bug report.")
+    prompt = f"Turn this customer complaint into a JIRA ticket:\n{text}\n\nInclude: Title, Summary, Steps to Reproduce, Expected vs. Actual Result, Severity."
+    return generate_gpt_doc(prompt, "You are a support agent writing a bug report.")
 
 def generate_cluster_prd_docx(cluster, filename):
     text = "\n\n".join(i["text"] for i in cluster[:8])
