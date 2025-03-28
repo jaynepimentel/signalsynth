@@ -1,6 +1,7 @@
 import os
 import json
 import streamlit as st
+import hashlib
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from components.brand_trend_dashboard import display_brand_dashboard
@@ -140,87 +141,70 @@ paged_insights = filtered_insights[start_idx:end_idx]
 
 # View mode
 st.subheader("🧭 Explore Insights")
-
-import random
-
-TIPS = [
-    "Try switching to the ‘Clusters’ view and filtering by Journey Stage → Fulfillment to explore grouped user problems.",
-    "Click ‘Generate PRD’ next to any insight or cluster to instantly create a strategic Product Requirements Document.",
-    "Use the Keyword Search to find insights containing phrases like ‘vault,’ ‘grading,’ or ‘authentication’.",
-    "Toggle ‘Enable GPT-4 Suggestions’ in the sidebar to enrich insights with AI-generated product ideas.",
-    "In ‘Raw List’ view, you can generate and download PRDs, BRDs, or JIRA tickets for each insight — ready to plug into your workflow.",
-    "The ‘Brand Summary Dashboard’ below shows sentiment trends across top collectibles brands — explore which ones are praised or struggling.",
-    "Try narrowing by Date Range to view the freshest signals or switch to 'Last 7 Days' to catch spikes early.",
-    "Look at the ‘Emerging Trends’ section to spot sentiment flips and keyword spikes — a great starting point for discovery.",
-    "Use the ‘Effort Estimate’ filter to prioritize quick wins or surface high-effort, high-impact features from user feedback.",
-    "Clusters are auto-generated using semantic AI — if one feels off, try adjusting the date range or subtag filters for better grouping."
-]
-st.info("Tip: " + random.choice(TIPS))
 view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
 
 if view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif view_mode == "Clusters":
     st.subheader("🧠 Clustered Insights")
-    if not paged_insights or all(i.get("text", "").strip() == "" for i in paged_insights):
-        st.warning("No insights to cluster. Try changing your filters or date range.")
-    else:
-        clusters = generate_synthesized_insights(paged_insights)
-        for idx, c in enumerate(clusters):
-            st.markdown(f"#### {c['title']}")
-            st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
-            st.markdown("**Quotes:**")
-            for q in c["quotes"]:
-                st.markdown(q)
-            if c["top_ideas"]:
-                st.markdown("**Top Suggestions:**")
-                for idea in c["top_ideas"]:
-                    st.markdown(f"- {idea}")
-            try:
-                text_blob = "\n".join(c["quotes"])
-                prd_path = generate_prd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
-                brd_path = generate_brd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
-                prfaq_path = generate_prfaq_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
-                with open(prd_path, "rb") as f:
-                    prd_bytes = f.read()
-                with open(brd_path, "rb") as f:
-                    brd_bytes = f.read()
-                with open(prfaq_path, "rb") as f:
-                    prfaq_bytes = f.read()
-                colA, colB, colC = st.columns(3)
-                with colA:
-                    st.download_button("📄 Download Cluster PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx")
-                with colB:
-                    st.download_button("📘 Download Cluster BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx")
-                with colC:
-                    st.download_button("📰 Download Cluster PRFAQ", prfaq_bytes, file_name=f"cluster_{idx}_prfaq.docx")
-            except Exception as e:
-                st.error(f"❌ Document generation failed for cluster {idx}: {e}")
-            st.markdown("---")
+    clusters = generate_synthesized_insights(paged_insights)
+    for idx, c in enumerate(clusters):
+        st.markdown(f"#### {c['title']}")
+        st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
+        st.markdown("**Quotes:**")
+        for q in c["quotes"]:
+            st.markdown(q)
+        if c["top_ideas"]:
+            st.markdown("**Top Suggestions:**")
+            for idea in c["top_ideas"]:
+                st.markdown(f"- {idea}")
+        try:
+            text_blob = "\n".join(c["quotes"])
+            cluster_hash = hashlib.md5(text_blob.encode()).hexdigest()[:8]
+            prd_path = generate_prd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
+            brd_path = generate_brd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
+            prfaq_path = generate_prfaq_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
+            with open(prd_path, "rb") as f:
+                prd_bytes = f.read()
+            with open(brd_path, "rb") as f:
+                brd_bytes = f.read()
+            with open(prfaq_path, "rb") as f:
+                prfaq_bytes = f.read()
+            colA, colB, colC = st.columns(3)
+            with colA:
+                st.download_button("📄 Download Cluster PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx", key=f"download_cluster_prd_{cluster_hash}")
+            with colB:
+                st.download_button("📘 Download Cluster BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx", key=f"download_cluster_brd_{cluster_hash}")
+            with colC:
+                st.download_button("📰 Download Cluster PRFAQ", prfaq_bytes, file_name=f"cluster_{idx}_prfaq.docx", key=f"download_cluster_prfaq_{cluster_hash}")
+        except Exception as e:
+            st.error(f"❌ Document generation failed for cluster {idx}: {e}")
+        st.markdown("---")
 else:
     for i in paged_insights:
         st.markdown(f"- _{i.get('text', '')}_")
         col1, col2, col3 = st.columns(3)
+        insight_hash = hashlib.md5(i['text'].encode()).hexdigest()[:8]
         with col1:
-            if st.button("Generate PRD", key=f"prd_{i['text'][:30]}"):
+            if st.button("Generate PRD", key=f"prd_{insight_hash}"):
                 try:
                     prd_path = generate_prd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
                     with open(prd_path, "rb") as f:
                         prd_bytes = f.read()
-                    st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx")
+                    st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx", key=f"download_prd_{insight_hash}")
                 except Exception as e:
                     st.error(f"PRD generation failed: {e}")
         with col2:
-            if st.button("Generate BRD", key=f"brd_{i['text'][:30]}"):
+            if st.button("Generate BRD", key=f"brd_{insight_hash}"):
                 try:
                     brd_path = generate_brd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
                     with open(brd_path, "rb") as f:
                         brd_bytes = f.read()
-                    st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx")
+                    st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx", key=f"download_brd_{insight_hash}")
                 except Exception as e:
                     st.error(f"BRD generation failed: {e}")
         with col3:
-            if st.button("Generate JIRA", key=f"jira_{i['text'][:30]}"):
+            if st.button("Generate JIRA", key=f"jira_{insight_hash}"):
                 try:
                     _ = generate_jira_bug_ticket(i['text'])
                     st.success("JIRA ticket generated!")
