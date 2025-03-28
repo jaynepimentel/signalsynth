@@ -1,10 +1,12 @@
-# ✅ app.py — SignalSynth full UX and GPT-enhanced app
+# ✅ app.py — SignalSynth full UX with PM intelligence upgrades
 import os
 import json
 import streamlit as st
 import hashlib
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import pandas as pd
+from collections import Counter
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
@@ -48,6 +50,12 @@ use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_K
 st.session_state.power_mode = st.sidebar.checkbox("🧠 Power Mode: Edit GPT Prompt", value=st.session_state.power_mode)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
+
+# Upload Option
+uploaded_file = st.sidebar.file_uploader("📤 Upload New Insights (.txt)", type="txt")
+if uploaded_file:
+    new_lines = [l.decode("utf-8").strip() for l in uploaded_file.readlines() if l.strip()]
+    st.sidebar.success(f"Loaded {len(new_lines)} new lines (not yet enriched)")
 
 # Date Filter
 st.markdown("### 🗓️ Date Filter")
@@ -93,7 +101,7 @@ else:
         for label, key in filter_fields.items()
     }
 
-# ✨ Filter Pills
+# Filter Pills
 active_filters = [(label, val) for label, key in filter_fields.items() if (val := filters[key]) != "All"]
 if active_filters:
     st.markdown("#### 🔖 Active Filters:")
@@ -102,7 +110,7 @@ if active_filters:
         with cols[idx]:
             st.markdown(f"`{label}: {val}`")
 
-# 🔍 Search
+# Search
 st.session_state.search_query = st.text_input("🔍 Search inside insights (optional)", value=st.session_state.search_query).strip().lower()
 
 # 🔥 Trends
@@ -120,9 +128,12 @@ if spikes:
         trend_terms.add(tag.lower())
         st.markdown(f"- **{tag}** spiked ×{ratio}")
         if use_gpt and OPENAI_KEY_PRESENT:
-            suggestion_prompt = f"What product strategy action should we consider if we're seeing a {ratio}x spike in user posts mentioning '{tag}'?"
-            suggestion = generate_gpt_doc(suggestion_prompt, "You are a product strategist giving a fast recommendation.")
-            st.markdown(f"🧠 GPT Suggestion: _{suggestion}_")
+            try:
+                suggestion_prompt = f"What product strategy action should we consider if we're seeing a {ratio}x spike in user posts mentioning '{tag}'?"
+                suggestion = generate_gpt_doc(suggestion_prompt, "You are a product strategist giving a fast recommendation.")
+                st.markdown(f"🧠 GPT Suggestion: _{suggestion}_")
+            except Exception as e:
+                st.warning(f"GPT error: {e}")
 if flips:
     st.markdown("**📉 Sentiment Flips**")
     for brand, msg in flips.items():
@@ -135,7 +146,7 @@ if keyword_spikes:
 if not (spikes or flips or keyword_spikes):
     st.info("No recent emerging trends detected yet.")
 
-# Filter Insights
+# Filter + Search
 filtered_insights = []
 for i in scraped_insights:
     try:
@@ -151,6 +162,12 @@ for i in scraped_insights:
     filtered_insights.append(i)
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
+
+# Weekly Volume Graph
+st.subheader("📆 Insight Volume Over Time")
+dates = [i.get("_logged_at", "2023-01-01")[:10] for i in scraped_insights]
+df = pd.DataFrame(Counter(dates).items(), columns=["date", "count"]).sort_values("date")
+st.line_chart(df.set_index("date"))
 
 # Pagination
 page_size = 10
@@ -174,6 +191,13 @@ else:
         if st.session_state.search_query:
             text = text.replace(st.session_state.search_query, f"**{st.session_state.search_query}**")
         st.markdown(f"- _{text}_")
+
+        summary = i.get("pm_summary")
+        if summary:
+            st.markdown(f"**Summary:** _{summary}_")
+
+        st.caption(f"😠 Frustration: {i.get('frustration', 1)} | 📈 Impact: {i.get('impact', 1)}")
+
         col1, col2, col3 = st.columns(3)
         insight_hash = hashlib.md5(i['text'].encode()).hexdigest()[:8]
         with col1:
