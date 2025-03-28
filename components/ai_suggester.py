@@ -1,4 +1,4 @@
-# ai_suggester.py — Strategic AI-powered PRD/BRD/PRFAQ generation with signal expansion, critique loop, and exec summaries
+# ai_suggester.py — with Signal Brief fallback for sparse insights
 import os
 import hashlib
 import json
@@ -107,7 +107,36 @@ Contextual Metadata:
         context += f"\nCompetitor Mentioned: {competitor_context}"
     return context
 
+def should_fallback_to_signal_brief(text):
+    return len(text.strip()) < 50 or len(text.split()) < 10
+
+def generate_signal_brief_docx(text, brand, base_filename):
+    prompt = f"""
+Turn this brief user signal into a 1-page internal summary for product leadership.
+
+User Input:
+{text}
+
+Brand: {brand}
+
+Format:
+- Observation
+- Hypothesis
+- Strategic Importance
+- Potential Impact
+- Suggested Next Steps
+- Open Questions to Validate
+"""
+    content = generate_gpt_doc(prompt, "You are summarizing a vague signal into a strategic product brief.")
+    doc = write_docx(content, "Strategic Signal Brief")
+    file_path = safe_file_path(base_filename)
+    doc.save(file_path)
+    return file_path
+
 def generate_prd_docx(text, brand, base_filename):
+    if should_fallback_to_signal_brief(text):
+        return generate_signal_brief_docx(text, brand, base_filename)
+
     metadata = build_metadata_block(brand)
     prompt = f"""
 Write a GTM-ready Product Requirements Document (PRD) for the following user insight:
@@ -141,6 +170,9 @@ Sections:
     return file_path
 
 def generate_brd_docx(text, brand, base_filename):
+    if should_fallback_to_signal_brief(text):
+        return generate_signal_brief_docx(text, brand, base_filename)
+
     metadata = build_metadata_block(brand)
     prompt = f"""
 Write a Business Requirements Document (BRD) based on the marketplace user feedback below:
@@ -170,6 +202,9 @@ Sections:
     return file_path
 
 def generate_prfaq_docx(text, brand, base_filename):
+    if should_fallback_to_signal_brief(text):
+        return generate_signal_brief_docx(text, brand, base_filename)
+
     metadata = build_metadata_block(brand)
     prompt = f"""
 Write an Amazon-style PRFAQ document for a new product launch based on this feedback:
