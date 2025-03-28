@@ -1,4 +1,4 @@
-# cluster_view.py — Cluster UX with badges, caching, and filtered insight awareness
+# cluster_view.py — Cluster UX with caching, badges, on-demand doc generation, and index safety
 
 import streamlit as st
 import os
@@ -73,17 +73,18 @@ def display_clustered_insight_cards(insights):
     current_page = st.number_input("📚 Page", min_value=1, max_value=total_pages, value=1, step=1)
     start_idx = (current_page - 1) * clusters_per_page
     end_idx = start_idx + clusters_per_page
-
     st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
 
+    min_len = min(len(cards), len(clusters))
     for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
+        if idx >= min_len:
+            continue
         cluster = clusters[idx]
         with st.container():
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
             st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
             st.markdown(f"**Mentions:** {card['insight_count']} | Score Range: {card.get('score_range', '?')}")
 
-            # Dominant tags
             tag_fields = ["type_tag", "effort", "journey_stage", "brand_sentiment", "clarity"]
             dominant = {}
             for tag in tag_fields:
@@ -115,13 +116,7 @@ def display_clustered_insight_cards(insights):
                             prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
                             if prd_path and os.path.exists(prd_path):
                                 with open(prd_path, "rb") as f:
-                                    st.download_button(
-                                        "⬇️ Download PRD",
-                                        f,
-                                        file_name=os.path.basename(prd_path),
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key=f"cluster_prd_download_{idx}"
-                                    )
+                                    st.download_button("⬇️ Download PRD", f, file_name=os.path.basename(prd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"cluster_prd_download_{idx}")
                         except Exception as e:
                             st.error(f"PRD generation failed: {e}")
 
@@ -132,13 +127,7 @@ def display_clustered_insight_cards(insights):
                             prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
                             if prfaq_path and os.path.exists(prfaq_path):
                                 with open(prfaq_path, "rb") as f:
-                                    st.download_button(
-                                        "⬇️ Download PRFAQ",
-                                        f,
-                                        file_name=os.path.basename(prfaq_path),
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key=f"cluster_prfaq_download_{idx}"
-                                    )
+                                    st.download_button("⬇️ Download PRFAQ", f, file_name=os.path.basename(prfaq_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"cluster_prfaq_download_{idx}")
                         except Exception as e:
                             st.error(f"PRFAQ generation failed: {e}")
 
@@ -149,13 +138,7 @@ def display_clustered_insight_cards(insights):
                             brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
                             if brd_path and os.path.exists(brd_path):
                                 with open(brd_path, "rb") as f:
-                                    st.download_button(
-                                        "⬇️ Download BRD",
-                                        f,
-                                        file_name=os.path.basename(brd_path),
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key=f"cluster_brd_download_{idx}"
-                                    )
+                                    st.download_button("⬇️ Download BRD", f, file_name=os.path.basename(brd_path), mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"cluster_brd_download_{idx}")
                         except Exception as e:
                             st.error(f"BRD generation failed: {e}")
 
