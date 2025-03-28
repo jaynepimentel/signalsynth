@@ -1,4 +1,4 @@
-# ✅ app.py — Streamlit app with resilient insight rendering and GPT enhancements
+# ✅ app.py — Streamlit app with UX enhancements (filter pills, highlight, persistent state)
 import os
 import json
 import streamlit as st
@@ -34,6 +34,12 @@ except Exception as e:
 
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
+
+if "search_query" not in st.session_state:
+    st.session_state.search_query = ""
+
+if "view_mode" not in st.session_state:
+    st.session_state.view_mode = "Explorer"
 
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
@@ -82,7 +88,16 @@ else:
         for label, key in filter_fields.items()
     }
 
-search_query = st.text_input("🔍 Search inside insights (optional)").strip().lower()
+# ✨ Filter pills summary
+active_filters = [(label, val) for label, key in filter_fields.items() if (val := filters[key]) != "All"]
+if active_filters:
+    st.markdown("#### 🔖 Active Filters:")
+    cols = st.columns(len(active_filters))
+    for idx, (label, val) in enumerate(active_filters):
+        with cols[idx]:
+            st.markdown(f"`{label}: {val}`")
+
+st.session_state.search_query = st.text_input("🔍 Search inside insights (optional)", value=st.session_state.search_query).strip().lower()
 
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 try:
@@ -119,7 +134,7 @@ for i in scraped_insights:
         continue
     if any(filters[key] != "All" and i.get(key, "Unknown") != filters[key] for key in filter_fields.values()):
         continue
-    if search_query and search_query not in i.get("text", "").lower():
+    if st.session_state.search_query and st.session_state.search_query not in i.get("text", "").lower():
         continue
     filtered_insights.append(i)
 
@@ -133,15 +148,18 @@ end_idx = start_idx + page_size
 paged_insights = filtered_insights[start_idx:end_idx]
 
 st.subheader("🧭 Explore Insights")
-view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
+st.session_state.view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True, index=["Explorer", "Clusters", "Raw List"].index(st.session_state.view_mode))
 
-if view_mode == "Explorer":
+if st.session_state.view_mode == "Explorer":
     display_insight_explorer(paged_insights)
-elif view_mode == "Clusters":
+elif st.session_state.view_mode == "Clusters":
     display_clustered_insight_cards(paged_insights)
 else:
     for i in paged_insights:
-        st.markdown(f"- _{i.get('text', '')}_")
+        text = i.get("text", "")
+        if st.session_state.search_query:
+            text = text.replace(st.session_state.search_query, f"**{st.session_state.search_query}**")
+        st.markdown(f"- _{text}_")
         col1, col2, col3 = st.columns(3)
         insight_hash = hashlib.md5(i['text'].encode()).hexdigest()[:8]
         with col1:
