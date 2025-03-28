@@ -1,5 +1,4 @@
-# ai_suggester.py — GPT-enhanced with smart signal expansion, trend/competitor injection, critique loop, and executive summaries
-
+# ✅ ai_suggester.py — Updated with safe cache loading
 import os
 import hashlib
 import json
@@ -13,9 +12,14 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Safe loading for cache
 if os.path.exists(CACHE_PATH):
-    with open(CACHE_PATH, "r", encoding="utf-8") as f:
-        suggestion_cache = json.load(f)
+    try:
+        with open(CACHE_PATH, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            suggestion_cache = json.loads(content) if content else {}
+    except json.JSONDecodeError:
+        suggestion_cache = {}
 else:
     suggestion_cache = {}
 
@@ -48,14 +52,13 @@ def generate_pm_ideas(text, brand="eBay"):
             temperature=0.3,
             max_tokens=300
         )
-        ideas = [line.strip("-• ").strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
+        ideas = [line.strip("-\u2022 ").strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
         return cache_and_return(key, ideas)
     except Exception as e:
         return [f"[⚠️ GPT error: {str(e)}]"]
 
 def generate_gpt_doc(prompt, title):
     try:
-        # Initial draft
         draft = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -66,7 +69,6 @@ def generate_gpt_doc(prompt, title):
             max_tokens=2000
         ).choices[0].message.content.strip()
 
-        # Critique + refinement
         critique_prompt = f"Now critique this like a VP of Product. What's weak, missing, or unclear? Then rewrite and improve it.\n\n{draft}"
         improved = client.chat.completions.create(
             model="gpt-4",
