@@ -68,7 +68,6 @@ else:
 # --- Mobile-Friendly Filter Toggle
 mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 
-# Filter fields
 filter_fields = {
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
@@ -92,7 +91,6 @@ else:
         for label, key in filter_fields.items()
     }
 
-# Search bar
 search_query = st.text_input("🔍 Search inside insights (optional)").strip().lower()
 
 # Emerging trends
@@ -123,14 +121,14 @@ for i in scraped_insights:
     keywords = i.get("_trend_keywords", [])
     insight_date = i.get("_source_post_date") or i.get("_logged_date") or i.get("_logged_at") or "2024-01-01"
     try:
-        ts = datetime.strptime(insight_date[:10], "%Y-%m-%d").date()
+        ts = datetime.strptime(insight_date[:10], "%Y-%m-%d")
     except:
-        ts = datetime(2024, 1, 1).date()
+        ts = datetime(2024, 1, 1)
 
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
         and (subtag in trend_terms or any(k in trend_terms for k in keywords) or not trend_terms)
-        and (start_date <= ts <= end_date)
+        and (start_date <= ts.date() <= end_date)
         and (search_query in text or search_query in i.get("title", "").lower() if search_query else True)
     ):
         filtered.append(i)
@@ -145,7 +143,6 @@ display_insight_charts(scraped_insights)
 # Show insights
 st.subheader(f"📌 Insights Matching Filters ({len(filtered)} shown)")
 
-# Pagination
 INSIGHTS_PER_PAGE = 10
 total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
 if "page" not in st.session_state:
@@ -157,13 +154,12 @@ with col1:
 with col2:
     st.markdown(f"**Page {st.session_state.page} of {total_pages}**")
 with col3:
-    if st.button("Next ➔"):
+    if st.button("Next ➡️"):
         st.session_state.page = min(total_pages, st.session_state.page + 1)
 
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
 paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
 
-# Badges
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
@@ -178,7 +174,12 @@ def badge(label):
 
 # Insight cards
 for idx, i in enumerate(paged_insights, start=start_idx):
-    st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
+    title = i.get("title", i.get("text", "")[:60])
+    if i.get("url"):
+        st.markdown(f"### 🧠 [Insight: {title} 🔗]({i['url']})")
+    else:
+        st.markdown(f"### 🧠 Insight: {title}")
+    
     tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
     st.markdown(" ".join(tags), unsafe_allow_html=True)
 
