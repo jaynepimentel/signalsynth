@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Final stable version with brand fix for synthetic clusters
+# ✅ cluster_synthesizer.py — Final version with coherence filtering + diagnostic suppression
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -16,7 +16,6 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
-
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     grouped = defaultdict(list)
@@ -44,7 +43,6 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
                     }))
     return all_clusters
 
-
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
@@ -58,7 +56,6 @@ def cluster_insights(insights, min_cluster_size=3, eps=0.38):
 
     return list(clustered.values())
 
-
 def is_semantically_coherent(cluster, return_score=False):
     if len(cluster) <= 2:
         return (True, 1.0) if return_score else True
@@ -68,7 +65,6 @@ def is_semantically_coherent(cluster, return_score=False):
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
     avg_similarity = upper_triangle.mean()
     return (avg_similarity >= COHERENCE_THRESHOLD, avg_similarity) if return_score else avg_similarity >= COHERENCE_THRESHOLD
-
 
 def split_incoherent_cluster(cluster):
     if len(cluster) <= 3:
@@ -81,7 +77,6 @@ def split_incoherent_cluster(cluster):
         else:
             final.append(c)
     return final
-
 
 def generate_cluster_metadata(cluster):
     if not client:
@@ -119,7 +114,6 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
-
 def find_cross_tag_connections(insights, threshold=0.75):
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
@@ -139,7 +133,6 @@ def find_cross_tag_connections(insights, threshold=0.75):
                     "similarity": round(float(sims[i][j]), 3)
                 })
     return connections
-
 
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
@@ -183,11 +176,8 @@ def synthesize_cluster(cluster):
         "insight_count": len(cluster)
     }
 
-
 def generate_synthesized_insights(insights):
     raw_cluster_tuples = cluster_by_subtag_then_embed(insights)
-    cross_tag_patterns = find_cross_tag_connections(insights)
-
     summaries = []
     for cluster, meta in raw_cluster_tuples:
         card = synthesize_cluster(cluster)
@@ -196,6 +186,8 @@ def generate_synthesized_insights(insights):
         card["avg_similarity"] = f"{meta['avg_similarity']:.2f}"
         summaries.append(card)
 
+    # Add diagnostic cross-tag connection data as hidden/debug-only
+    cross_tag_patterns = find_cross_tag_connections(insights)
     if cross_tag_patterns:
         summaries.append({
             "title": "🔗 Emerging Cross-Tag Patterns",
@@ -203,7 +195,8 @@ def generate_synthesized_insights(insights):
             "problem_statement": f"Identified {len(cross_tag_patterns)} weak-tie patterns across subtags",
             "connections": cross_tag_patterns,
             "insight_count": sum(len(v) for v in cross_tag_patterns.values()),
-            "brand": "Multiple"
+            "brand": "Multiple",
+            "diagnostic_only": True
         })
 
     return summaries
