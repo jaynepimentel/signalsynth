@@ -1,4 +1,4 @@
-# cluster_view.py — Cluster UI with correct doc routing and full PRD/BRD/PRFAQ support
+# cluster_view.py — Cluster UI with generation spinners and full doc support
 
 import streamlit as st
 import os
@@ -48,48 +48,51 @@ def display_clustered_insight_cards(insights):
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                try:
-                    prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
-                    if prd_path and os.path.exists(prd_path):
-                        with open(prd_path, "rb") as f:
-                            st.download_button(
-                                "📄 Download PRD",
-                                f,
-                                file_name=os.path.basename(prd_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"cluster_prd_{idx}"
-                            )
-                except Exception as e:
-                    st.error(f"PRD generation failed: {e}")
+                with st.spinner("Generating PRD..."):
+                    try:
+                        prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
+                        if prd_path and os.path.exists(prd_path):
+                            with open(prd_path, "rb") as f:
+                                st.download_button(
+                                    "📄 Download PRD",
+                                    f,
+                                    file_name=os.path.basename(prd_path),
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"cluster_prd_{idx}"
+                                )
+                    except Exception as e:
+                        st.error(f"PRD generation failed: {e}")
 
             with col2:
-                try:
-                    prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
-                    if prfaq_path and os.path.exists(prfaq_path):
-                        with open(prfaq_path, "rb") as f:
-                            st.download_button(
-                                "📰 Download PRFAQ",
-                                f,
-                                file_name=os.path.basename(prfaq_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"cluster_prfaq_{idx}"
-                            )
-                except Exception as e:
-                    st.error(f"PRFAQ generation failed: {e}")
+                with st.spinner("Generating PRFAQ..."):
+                    try:
+                        prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
+                        if prfaq_path and os.path.exists(prfaq_path):
+                            with open(prfaq_path, "rb") as f:
+                                st.download_button(
+                                    "📰 Download PRFAQ",
+                                    f,
+                                    file_name=os.path.basename(prfaq_path),
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"cluster_prfaq_{idx}"
+                                )
+                    except Exception as e:
+                        st.error(f"PRFAQ generation failed: {e}")
 
             with col3:
-                try:
-                    brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
-                    if brd_path and os.path.exists(brd_path):
-                        with open(brd_path, "rb") as f:
-                            st.download_button(
-                                "📘 Download BRD",
-                                f,
-                                file_name=os.path.basename(brd_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"cluster_brd_{idx}"
-                            )
-                except Exception as e:
-                    st.error(f"BRD generation failed: {e}")
+                with st.spinner("Generating BRD..."):
+                    try:
+                        brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
+                        if brd_path and os.path.exists(brd_path):
+                            with open(brd_path, "rb") as f:
+                                st.download_button(
+                                    "📘 Download BRD",
+                                    f,
+                                    file_name=os.path.basename(brd_path),
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"cluster_brd_{idx}"
+                                )
+                    except Exception as e:
+                        st.error(f"BRD generation failed: {e}")
 
             st.markdown("---")
