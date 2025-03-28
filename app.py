@@ -141,14 +141,18 @@ paged_insights = filtered_insights[start_idx:end_idx]
 
 # View mode
 st.subheader("🧭 Explore Insights")
-view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], index=1, horizontal=True)
+st.info("Tip: Try switching to the 'Clusters' view and setting the Journey Stage filter to 'Fulfillment' to explore grouped insights!")
+view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
 
 if view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif view_mode == "Clusters":
     st.subheader("🧠 Clustered Insights")
-    clusters = generate_synthesized_insights(paged_insights)
-    for idx, c in enumerate(clusters):
+    if not paged_insights:
+        st.warning("No insights to cluster. Try changing your filters or date range.")
+    else:
+            clusters = generate_synthesized_insights(paged_insights)
+            for idx, c in enumerate(clusters):
         st.markdown(f"#### {c['title']}")
         st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
         st.markdown("**Quotes:**")
