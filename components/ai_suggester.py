@@ -1,4 +1,4 @@
-# ai_suggester.py — with Signal Brief fallback for sparse insights
+# ai_suggester.py — with Signal Brief fallback, cache safety, and document generation
 import os
 import hashlib
 import json
@@ -12,11 +12,15 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Safe load of GPT suggestion cache
+suggestion_cache = {}
 if os.path.exists(CACHE_PATH):
-    with open(CACHE_PATH, "r", encoding="utf-8") as f:
-        suggestion_cache = json.load(f)
-else:
-    suggestion_cache = {}
+    try:
+        with open(CACHE_PATH, "r", encoding="utf-8") as f:
+            suggestion_cache = json.load(f)
+    except json.JSONDecodeError:
+        print("⚠️ Corrupted GPT suggestion cache. Resetting to empty.")
+        suggestion_cache = {}
 
 def is_streamlit_mode():
     return os.getenv("RUNNING_IN_STREAMLIT") == "1"
