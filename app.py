@@ -1,4 +1,4 @@
-# ✅ app.py — SignalSynth full UX with robust Cluster Display
+# ✅ app.py — SignalSynth full UX with user-friendly cluster prompt
 import os
 import json
 import streamlit as st
@@ -75,6 +75,7 @@ if st.session_state.view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif st.session_state.view_mode == "Clusters":
     synthesized_clusters = generate_synthesized_insights(paged_insights)
+    synthesized_clusters = [c for c in synthesized_clusters if not c.get('diagnostic_only')]
     synthesized_clusters.sort(key=lambda c: c.get("insight_count", 0), reverse=True)
 
     if synthesized_clusters:
@@ -90,26 +91,17 @@ elif st.session_state.view_mode == "Clusters":
 
         cluster = synthesized_clusters[st.session_state.current_cluster_index]
         st.subheader(f"Cluster {st.session_state.current_cluster_index + 1}/{total_clusters}: {cluster.get('title', 'No Title')}")
-
         st.markdown(f"**Theme:** {cluster.get('theme', 'No Theme')}")
         st.markdown(f"**Problem Statement:** {cluster.get('problem_statement', 'No Problem Statement')}")
 
-        if cluster.get('diagnostic_only'):
-            st.info("🔍 Diagnostic summary cluster (special view)")
-            connections = cluster.get('connections', {})
-            for connection, items in connections.items():
-                st.markdown(f"**Connection:** `{connection}`")
-                for item in items:
-                    st.markdown(f"- {item['a']} ↔ {item['b']} (Similarity: {item['similarity']})")
-        else:
-            st.markdown("**Quotes:**")
-            for quote in cluster.get('quotes', []):
-                st.markdown(quote)
+        st.markdown("**Quotes:**")
+        for quote in cluster.get('quotes', []):
+            st.markdown(quote)
 
-            st.markdown(f"**Insights Count:** {cluster.get('insight_count', 0)}")
-            st.markdown(f"**Average Similarity:** {cluster.get('avg_similarity', 'N/A')}")
+        st.markdown(f"**Insights Count:** {cluster.get('insight_count', 0)}")
+        st.markdown(f"**Average Similarity:** {cluster.get('avg_similarity', 'N/A')}")
     else:
-        st.info("No valid clusters available.")
+        st.info("Use the filters to narrow down insights and select 'Clusters' view to see grouped insights.")
 else:
     for i in paged_insights:
         text = i.get("text", "")
