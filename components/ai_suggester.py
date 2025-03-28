@@ -1,4 +1,4 @@
-# ✅ ai_suggester.py — Updated with safe cache loading
+# ai_suggester.py — Enhanced with meta-tagging, fallback handling, multi-signal support, and cleaner GPT prep
 import os
 import hashlib
 import json
@@ -12,7 +12,6 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
-# Safe loading for cache
 if os.path.exists(CACHE_PATH):
     try:
         with open(CACHE_PATH, "r", encoding="utf-8") as f:
@@ -31,6 +30,9 @@ def cache_and_return(key, value):
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
         json.dump(suggestion_cache, f, indent=2)
     return value
+
+def clean_gpt_input(text, max_words=1000):
+    return " ".join(text.strip().split()[:max_words])
 
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
@@ -52,18 +54,21 @@ def generate_pm_ideas(text, brand="eBay"):
             temperature=0.3,
             max_tokens=300
         )
-        ideas = [line.strip("-\u2022 ").strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
+        ideas = [line.strip("-• ").strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
         return cache_and_return(key, ideas)
     except Exception as e:
         return [f"[⚠️ GPT error: {str(e)}]"]
 
 def generate_gpt_doc(prompt, title):
+    if is_streamlit_mode():
+        return "⚠️ GPT doc generation is disabled in Streamlit mode."
+
     try:
         draft = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": title},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": clean_gpt_input(prompt)}
             ],
             temperature=0.3,
             max_tokens=2000
@@ -74,7 +79,7 @@ def generate_gpt_doc(prompt, title):
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a critical VP of Product."},
-                {"role": "user", "content": critique_prompt}
+                {"role": "user", "content": clean_gpt_input(critique_prompt)}
             ],
             temperature=0.3,
             max_tokens=2000
@@ -84,8 +89,8 @@ def generate_gpt_doc(prompt, title):
     except Exception as e:
         return f"⚠️ GPT Error: {str(e)}"
 
-def safe_file_path(base_name):
-    filename = slugify(base_name)[:64] + ".docx"
+def safe_file_path(base_name, prefix="insight"):
+    filename = slugify(f"{prefix}-{base_name}")[:64] + ".docx"
     return os.path.join(tempfile.gettempdir(), filename)
 
 def write_docx(content, heading):
@@ -98,7 +103,7 @@ def write_docx(content, heading):
             doc.add_paragraph(line.strip())
     return doc
 
-def build_metadata_block(brand, trend_context=None, competitor_context=None):
+def build_metadata_block(brand, trend_context=None, competitor_context=None, meta_fields=None):
     context = f"""
 Contextual Metadata:
 - Brand: {brand}
@@ -109,6 +114,9 @@ Contextual Metadata:
         context += f"\nTrend Signal: {trend_context}"
     if competitor_context:
         context += f"\nCompetitor Mentioned: {competitor_context}"
+    if meta_fields:
+        for k, v in meta_fields.items():
+            context += f"\n- {k}: {v}"
     return context
 
 def should_fallback_to_signal_brief(text):
@@ -133,18 +141,18 @@ Format:
 """
     content = generate_gpt_doc(prompt, "You are summarizing a vague signal into a strategic product brief.")
     doc = write_docx(content, "Strategic Signal Brief")
-    file_path = safe_file_path(base_filename)
+    file_path = safe_file_path(base_filename, prefix="brief")
     doc.save(file_path)
     return file_path
 
 def generate_exec_summary():
     return "\n\n---\n\n**Executive TL;DR**\n- What: [summary]\n- Why it matters: [impact]\n- What decision is needed: [action]"
 
-def generate_prd_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
+def generate_prd_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand, trend_context, competitor_context)
+    metadata = build_metadata_block(brand, trend_context, competitor_context, meta_fields)
     prompt = f"""
 Write a GTM-ready Product Requirements Document (PRD) for the following user insight:
 
@@ -173,15 +181,15 @@ Sections:
 """
     content = generate_gpt_doc(prompt, "You are a strategic product manager writing a PRD.")
     doc = write_docx(content, "Product Requirements Document (PRD)")
-    file_path = safe_file_path(base_filename)
+    file_path = safe_file_path(base_filename, prefix="prd")
     doc.save(file_path)
     return file_path
 
-def generate_brd_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
+def generate_brd_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand, trend_context, competitor_context)
+    metadata = build_metadata_block(brand, trend_context, competitor_context, meta_fields)
     prompt = f"""
 Write a Business Requirements Document (BRD) based on the marketplace user feedback below:
 
@@ -206,15 +214,15 @@ Sections:
 """
     content = generate_gpt_doc(prompt, "You are a strategic business lead writing a BRD.")
     doc = write_docx(content, "Business Requirements Document (BRD)")
-    file_path = safe_file_path(base_filename)
+    file_path = safe_file_path(base_filename, prefix="brd")
     doc.save(file_path)
     return file_path
 
-def generate_prfaq_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
+def generate_prfaq_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand, trend_context, competitor_context)
+    metadata = build_metadata_block(brand, trend_context, competitor_context, meta_fields)
     prompt = f"""
 Write an Amazon-style PRFAQ document for a new product launch based on this feedback:
 
@@ -240,13 +248,17 @@ Sections:
 """
     content = generate_gpt_doc(prompt, "You are a product marketing lead writing a PRFAQ.")
     doc = write_docx(content, "Product PRFAQ Document")
-    file_path = safe_file_path(base_filename)
+    file_path = safe_file_path(base_filename, prefix="faq")
     doc.save(file_path)
     return file_path
 
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"Turn this customer complaint into a JIRA ticket:\n{text}\n\nInclude: Title, Summary, Steps to Reproduce, Expected vs. Actual Result, Severity."
     return generate_gpt_doc(prompt, "You are a support agent writing a bug report.")
+
+def generate_multi_signal_prd(text_list, filename, brand="eBay"):
+    text = "\n\n".join(text_list)
+    return generate_prd_docx(text, brand, filename)
 
 def generate_cluster_prd_docx(cluster, filename):
     text = "\n\n".join(i["text"] for i in cluster[:8])
