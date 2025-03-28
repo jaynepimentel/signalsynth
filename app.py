@@ -177,8 +177,8 @@ elif view_mode == "Clusters":
                     st.markdown(f"- {idea}")
             try:
                 text_blob = "\n".join(c["quotes"])
-                prd_bytes = generate_prd_docx(text_blob)
-                brd_bytes = generate_brd_docx(text_blob)
+                prd_bytes = generate_prd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
+                brd_bytes = generate_brd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
                 colA, colB = st.columns(2)
                 with colA:
                     st.download_button("📄 Download Cluster PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx")
@@ -194,14 +194,14 @@ else:
         with col1:
             if st.button("Generate PRD", key=f"prd_{i['text'][:30]}"):
                 try:
-                    prd_bytes = generate_prd_docx(i['text'])
+                    prd_bytes = generate_prd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
                     st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx")
                 except Exception as e:
                     st.error(f"PRD generation failed: {e}")
         with col2:
             if st.button("Generate BRD", key=f"brd_{i['text'][:30]}"):
                 try:
-                    brd_bytes = generate_brd_docx(i['text'])
+                    brd_bytes = generate_brd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
                     st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx")
                 except Exception as e:
                     st.error(f"BRD generation failed: {e}")
