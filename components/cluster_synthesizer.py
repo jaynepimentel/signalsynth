@@ -1,4 +1,4 @@
-# cluster_synthesizer.py — Advanced Insight Cluster Synthesizer for PMs & Execs
+# cluster_synthesizer.py — Cleaned, cache-safe cluster synthesis with smart summaries
 
 import os
 from collections import defaultdict, Counter
@@ -15,7 +15,6 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     grouped = defaultdict(list)
     for i in insights:
@@ -30,7 +29,6 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
         all_clusters.extend(clusters)
     return all_clusters
 
-
 def cluster_insights(insights, min_cluster_size=3):
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
@@ -43,7 +41,6 @@ def cluster_insights(insights, min_cluster_size=3):
             clustered[label].append(insight)
 
     return list(clustered.values())
-
 
 def generate_cluster_metadata(cluster):
     if not client:
@@ -83,11 +80,7 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
-
 def find_cross_tag_connections(insights, threshold=0.75):
-    """
-    Identifies patterns or weak ties across subtags that humans may miss
-    """
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
     texts = list(text_map.keys())
@@ -99,11 +92,13 @@ def find_cross_tag_connections(insights, threshold=0.75):
             i_tag = text_map[texts[i]].get("type_subtag", "General")
             j_tag = text_map[texts[j]].get("type_subtag", "General")
             if i_tag != j_tag:
-                key = tuple(sorted([i_tag, j_tag]))
-                connections[key].append((texts[i], texts[j], round(float(sims[i][j]), 3)))
-
+                key = f"{i_tag} ↔ {j_tag}"
+                connections[key].append({
+                    "a": texts[i],
+                    "b": texts[j],
+                    "similarity": round(float(sims[i][j]), 3)
+                })
     return connections
-
 
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
@@ -141,7 +136,6 @@ def synthesize_cluster(cluster):
         "score_range": f"{min_score}–{max_score}",
         "insight_count": len(cluster)
     }
-
 
 def generate_synthesized_insights(insights):
     clusters = cluster_by_subtag_then_embed(insights)
