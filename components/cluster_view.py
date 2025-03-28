@@ -1,4 +1,4 @@
-# cluster_view.py — Cluster UI with UX enhancements and full doc generation support
+# cluster_view.py — Cluster UI with correct doc routing and full PRD/BRD/PRFAQ support
 
 import streamlit as st
 import os
@@ -49,7 +49,7 @@ def display_clustered_insight_cards(insights):
 
             with col1:
                 try:
-                    prd_path = generate_cluster_prd_docx(cluster, filename)
+                    prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
                     if prd_path and os.path.exists(prd_path):
                         with open(prd_path, "rb") as f:
                             st.download_button(
@@ -68,7 +68,7 @@ def display_clustered_insight_cards(insights):
                     if prfaq_path and os.path.exists(prfaq_path):
                         with open(prfaq_path, "rb") as f:
                             st.download_button(
-                                "📘 Download PRFAQ",
+                                "📰 Download PRFAQ",
                                 f,
                                 file_name=os.path.basename(prfaq_path),
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
