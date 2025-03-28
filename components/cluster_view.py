@@ -1,16 +1,30 @@
-# cluster_view.py — Document generation on click only + cluster caching
+# cluster_view.py — Cluster UX with badges, caching, and filtered insight awareness
 
 import streamlit as st
 import os
 import json
 import hashlib
 from slugify import slugify
+from collections import Counter
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
 from components.ai_suggester import (
     generate_cluster_prd_docx,
     generate_cluster_prfaq_docx,
     generate_cluster_brd_docx
 )
+
+BADGE_COLORS = {
+    "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
+    "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
+    "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
+    "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
+    "Live Shopping": "#BC6FF1", "Search": "#118AB2",
+    "Fulfillment": "#8ECAE6", "Returns": "#FFB703", "Discovery": "#90BE6D"
+}
+
+def badge(label):
+    color = BADGE_COLORS.get(label, "#ccc")
+    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
 CACHE_DIR = ".cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -68,8 +82,18 @@ def display_clustered_insight_cards(insights):
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
             st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
             st.markdown(f"**Mentions:** {card['insight_count']} | Score Range: {card.get('score_range', '?')}")
-            st.markdown(f"**Personas:** {', '.join(card.get('personas', []))}")
-            st.markdown(f"**Effort Levels:** {', '.join(card.get('effort_levels', []))}")
+
+            # Dominant tags
+            tag_fields = ["type_tag", "effort", "journey_stage", "brand_sentiment", "clarity"]
+            dominant = {}
+            for tag in tag_fields:
+                values = [i.get(tag) for i in cluster if i.get(tag)]
+                if values:
+                    most_common = Counter(values).most_common(1)[0][0]
+                    dominant[tag] = most_common
+
+            if dominant:
+                st.markdown("**🧷 Cluster Tags:** " + " ".join([badge(v) for v in dominant.values()]), unsafe_allow_html=True)
 
             if card.get("quotes"):
                 st.markdown("**📣 Example Quotes:**")
