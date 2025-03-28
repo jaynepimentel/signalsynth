@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Safe, modular cluster generation with GPT summarization
+# ✅ cluster_synthesizer.py — Enhanced with semantic coherence validation
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -14,6 +14,9 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+COHERENCE_THRESHOLD = 0.68
+
+
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     grouped = defaultdict(list)
     for i in insights:
@@ -25,8 +28,13 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
         if len(group) < min_cluster_size:
             continue
         clusters = cluster_insights(group, min_cluster_size=min_cluster_size)
-        all_clusters.extend(clusters)
+        for c in clusters:
+            if is_semantically_coherent(c):
+                all_clusters.append(c)
+            else:
+                all_clusters.extend(split_incoherent_cluster(c))
     return all_clusters
+
 
 def cluster_insights(insights, min_cluster_size=3):
     texts = [i.get("text", "") for i in insights]
@@ -41,6 +49,22 @@ def cluster_insights(insights, min_cluster_size=3):
 
     return list(clustered.values())
 
+
+def is_semantically_coherent(cluster):
+    if len(cluster) <= 2:
+        return True
+    texts = [i["text"] for i in cluster]
+    embeddings = model.encode(texts, convert_to_tensor=True)
+    sim_matrix = np.inner(embeddings, embeddings)
+    upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
+    avg_similarity = upper_triangle.mean()
+    return avg_similarity >= COHERENCE_THRESHOLD
+
+
+def split_incoherent_cluster(cluster):
+    return cluster_insights(cluster, min_cluster_size=2)
+
+
 def generate_cluster_metadata(cluster):
     if not client:
         return {
@@ -48,14 +72,12 @@ def generate_cluster_metadata(cluster):
             "theme": "General",
             "problem": "Could not generate problem statement."
         }
-
     combined = "\n".join(i["text"] for i in cluster[:6])
     prompt = (
         "You are a senior product manager reviewing a cluster of user feedback. For the following grouped posts, "
         "generate:\n1. A concise title (max 10 words)\n2. A theme tag\n3. A clear problem statement that could go in a PRD\n"
         f"\nPosts:\n{combined}\n\nFormat your response as:\nTitle: ...\nTheme: ...\nProblem: ..."
     )
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -79,6 +101,7 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
+
 def find_cross_tag_connections(insights, threshold=0.75):
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
@@ -98,6 +121,7 @@ def find_cross_tag_connections(insights, threshold=0.75):
                     "similarity": round(float(sims[i][j]), 3)
                 })
     return connections
+
 
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
@@ -135,6 +159,7 @@ def synthesize_cluster(cluster):
         "score_range": f"{min_score}–{max_score}",
         "insight_count": len(cluster)
     }
+
 
 def generate_synthesized_insights(insights):
     clusters = cluster_by_subtag_then_embed(insights)
