@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Cluster cards with persona/brand counts and download UX
+# ✅ cluster_view.py — Updated with safe key access to avoid crashes
 import streamlit as st
 import os
 import json
@@ -82,11 +82,10 @@ def display_clustered_insight_cards(insights):
 
         cluster = clusters[idx]
         with st.container():
-            st.markdown(f"### 📌 {card['title']} — {card['brand']}")
+            st.markdown(f"### 📌 {card.get('title', 'Untitled')} — {card.get('brand', 'Unknown')}")
             st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
-            st.markdown(f"**Mentions:** {card['insight_count']} | Score Range: {card.get('score_range', '?')}")
+            st.markdown(f"**Mentions:** {card.get('insight_count', 0)} | Score Range: {card.get('score_range', '?')}")
 
-            # 👥 Source breakdowns
             persona_counts = Counter(i.get("persona", "Unknown") for i in cluster)
             brand_counts = Counter(i.get("target_brand", "Unknown") for i in cluster)
             if persona_counts:
@@ -117,7 +116,7 @@ def display_clustered_insight_cards(insights):
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
 
-            filename = slugify(card['title'])[:64]
+            filename = slugify(card.get('title', f"cluster-{idx}"))[:64]
             col1, col2, col3 = st.columns(3)
 
             with col1:
