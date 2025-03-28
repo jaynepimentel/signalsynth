@@ -1,4 +1,4 @@
-# app.py — Streamlit app with cluster-safe document generation
+# ✅ app.py — Streamlit app with resilient insight rendering and GPT enhancements
 import os
 import json
 import streamlit as st
@@ -67,6 +67,7 @@ filter_fields = {
     "Journey Stage": "journey_stage",
     "Clarity": "clarity"
 }
+
 mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 if mobile_filters_expanded:
     st.markdown("### 🔎 Filter Insights")
@@ -137,7 +138,6 @@ view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizon
 if view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif view_mode == "Clusters":
-    from components.cluster_view import display_clustered_insight_cards
     display_clustered_insight_cards(paged_insights)
 else:
     for i in paged_insights:
