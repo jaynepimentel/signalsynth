@@ -153,12 +153,6 @@ for i in scraped_insights:
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
 
-# Weekly Volume Graph
-st.subheader("📆 Insight Volume Over Time")
-dates = [i.get("_logged_at", "2023-01-01")[:10] for i in scraped_insights]
-df = pd.DataFrame(Counter(dates).items(), columns=["date", "count"]).sort_values("date")
-st.line_chart(df.set_index("date"))
-
 # Pagination
 page_size = 10
 max_page = max(1, len(filtered_insights) // page_size + int(len(filtered_insights) % page_size > 0))
