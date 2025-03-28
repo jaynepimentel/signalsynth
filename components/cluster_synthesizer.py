@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Now with recursive mini-cluster repair for low coherence
+# ✅ cluster_synthesizer.py — Enhanced with reclustering, coherence flags, and diagnostics
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -30,10 +30,18 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
             continue
         clusters = cluster_insights(group, min_cluster_size=min_cluster_size)
         for c in clusters:
-            if is_semantically_coherent(c):
-                all_clusters.append(c)
+            coherent, score = is_semantically_coherent(c, return_score=True)
+            if coherent:
+                all_clusters.append((c, {"coherent": True, "was_reclustered": False, "avg_similarity": score}))
             else:
-                all_clusters.extend(split_incoherent_cluster(c))
+                subclusters = split_incoherent_cluster(c)
+                for sub in subclusters:
+                    sub_coherent, sub_score = is_semantically_coherent(sub, return_score=True)
+                    all_clusters.append((sub, {
+                        "coherent": sub_coherent,
+                        "was_reclustered": True,
+                        "avg_similarity": sub_score
+                    }))
     return all_clusters
 
 
@@ -51,15 +59,15 @@ def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     return list(clustered.values())
 
 
-def is_semantically_coherent(cluster):
+def is_semantically_coherent(cluster, return_score=False):
     if len(cluster) <= 2:
-        return True
+        return (True, 1.0) if return_score else True
     texts = [i["text"] for i in cluster]
     embeddings = model.encode(texts, convert_to_tensor=True)
     sim_matrix = np.inner(embeddings, embeddings)
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
     avg_similarity = upper_triangle.mean()
-    return avg_similarity >= COHERENCE_THRESHOLD
+    return (avg_similarity >= COHERENCE_THRESHOLD, avg_similarity) if return_score else avg_similarity >= COHERENCE_THRESHOLD
 
 
 def split_incoherent_cluster(cluster):
@@ -68,10 +76,10 @@ def split_incoherent_cluster(cluster):
     subclusters = cluster_insights(cluster, min_cluster_size=2, eps=RECLUSTER_EPS)
     final = []
     for c in subclusters:
-        if is_semantically_coherent(c):
-            final.append(c)
+        if len(c) <= 2:
+            final.extend([[i] for i in c])
         else:
-            final.extend([[i] for i in c])  # break into singletons if still incoherent
+            final.append(c)
     return final
 
 
@@ -133,11 +141,13 @@ def find_cross_tag_connections(insights, threshold=0.75):
     return connections
 
 
-def synthesize_cluster(cluster):
+def synthesize_cluster(cluster, metadata_overrides=None):
     metadata = generate_cluster_metadata(cluster)
+    if metadata_overrides:
+        metadata.update(metadata_overrides)
+
     brand = cluster[0].get("target_brand", "Unknown")
     type_tag = cluster[0].get("type_tag", "Insight")
-
     quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
 
     idea_counter = defaultdict(int)
@@ -172,9 +182,18 @@ def synthesize_cluster(cluster):
 
 
 def generate_synthesized_insights(insights):
-    clusters = cluster_by_subtag_then_embed(insights)
+    raw_cluster_tuples = cluster_by_subtag_then_embed(insights)
     cross_tag_patterns = find_cross_tag_connections(insights)
-    summaries = [synthesize_cluster(c) for c in clusters]
+
+    summaries = []
+    for cluster, meta in raw_cluster_tuples:
+        card = synthesize_cluster(cluster, metadata_overrides={
+            "coherent": meta["coherent"],
+            "was_reclustered": meta["was_reclustered"],
+            "avg_similarity": f"{meta['avg_similarity']:.2f}"
+        })
+        summaries.append(card)
+
     if cross_tag_patterns:
         summaries.append({
             "title": "🔗 Emerging Cross-Tag Patterns",
@@ -183,4 +202,5 @@ def generate_synthesized_insights(insights):
             "connections": cross_tag_patterns,
             "insight_count": sum(len(v) for v in cross_tag_patterns.values())
         })
+
     return summaries
