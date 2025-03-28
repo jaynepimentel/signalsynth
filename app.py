@@ -1,10 +1,9 @@
-# ✅ app.py — SignalSynth full UX with PM intelligence upgrades + strategic filters and summaries
+# ✅ app.py — SignalSynth full UX without Date Filtering
 import os
 import json
 import streamlit as st
 import hashlib
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
 import pandas as pd
 from collections import Counter
 from components.brand_trend_dashboard import display_brand_dashboard
@@ -35,16 +34,12 @@ except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-if "cached_ideas" not in st.session_state:
-    st.session_state.cached_ideas = {}
-if "search_query" not in st.session_state:
-    st.session_state.search_query = ""
-if "view_mode" not in st.session_state:
-    st.session_state.view_mode = "Explorer"
-if "power_mode" not in st.session_state:
-    st.session_state.power_mode = False
+# Session state initialization
+for state_var, default_val in [("cached_ideas", {}), ("search_query", ""), ("view_mode", "Explorer"), ("power_mode", False)]:
+    if state_var not in st.session_state:
+        st.session_state[state_var] = default_val
 
-# Add Opportunity Tag filter to filter_fields
+# Filters setup
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -56,42 +51,16 @@ filter_fields = {
     "Opportunity Tag": "opportunity_tag"
 }
 
-# Date Filter defaults
-start_date = datetime(2020, 1, 1).date()
-end_date = datetime.today().date()
-
-# Date Filter UI
-st.markdown("### 🗓️ Date Filter")
-time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
-if time_filter == "Last 7 Days":
-    start_date = datetime.today().date() - timedelta(days=7)
-    end_date = datetime.today().date()
-elif time_filter == "Last 30 Days":
-    start_date = datetime.today().date() - timedelta(days=30)
-    end_date = datetime.today().date()
-elif time_filter == "Custom Range":
-    col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input("Start Date", value=datetime(2024, 1, 1).date(), key="main_start")
-    with col2:
-        end_date = st.date_input("End Date", value=datetime.today().date(), key="main_end")
-
-# Mobile filters and sidebar filters
 mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 if mobile_filters_expanded:
     st.markdown("### 🔎 Filter Insights")
-    filters = {
-        key: st.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"mobile_{key}")
-        for label, key in filter_fields.items()
-    }
+    filters = {key: st.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"mobile_{key}")
+               for label, key in filter_fields.items()}
 else:
     st.sidebar.header("Filter by Metadata")
-    filters = {
-        key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"sidebar_{key}")
-        for label, key in filter_fields.items()
-    }
+    filters = {key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"sidebar_{key}")
+               for label, key in filter_fields.items()}
 
-# Filter Pills
 active_filters = [(label, val) for label, key in filter_fields.items() if (val := filters[key]) != "All"]
 if active_filters:
     st.markdown("#### 🔖 Active Filters:")
@@ -100,10 +69,9 @@ if active_filters:
         with cols[idx]:
             st.markdown(f"`{label}: {val}`")
 
-# Search
 st.session_state.search_query = st.text_input("🔍 Search inside insights (optional)", value=st.session_state.search_query).strip().lower()
 
-# 🔥 Trends
+# Emerging trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 try:
     spikes, flips, keyword_spikes = get_emerging_signals()
@@ -111,59 +79,26 @@ except Exception as e:
     spikes, flips, keyword_spikes = {}, {}, {}
     st.warning(f"⚠️ Failed to detect trends: {e}")
 
-trend_terms = set()
-if spikes:
-    st.markdown("**📈 Spiking Subtags**")
-    for tag, ratio in spikes.items():
-        trend_terms.add(tag.lower())
-        st.markdown(f"- **{tag}** spiked ×{ratio}")
-        if use_gpt and OPENAI_KEY_PRESENT:
-            try:
-                suggestion_prompt = f"What product strategy action should we consider if we're seeing a {ratio}x spike in user posts mentioning '{tag}'?"
-                suggestion = generate_gpt_doc(suggestion_prompt, "You are a product strategist giving a fast recommendation.")
-                st.markdown(f"🧠 GPT Suggestion: _{suggestion}_")
-            except Exception as e:
-                st.warning(f"GPT error: {e}")
-if flips:
-    st.markdown("**📉 Sentiment Flips**")
-    for brand, msg in flips.items():
-        st.markdown(f"- **{brand}** → {msg}")
-if keyword_spikes:
-    st.markdown("**📊 Keyword Spikes**")
-    for word, ratio in keyword_spikes.items():
-        trend_terms.add(word.lower())
-        st.markdown(f"- `{word}` ↑ {ratio}x")
 if not (spikes or flips or keyword_spikes):
     st.info("No recent emerging trends detected yet.")
 
-# Filter + Search
-filtered_insights = []
-for i in scraped_insights:
-    try:
-        date_obj = datetime.fromisoformat(i.get("_logged_at", "2023-01-01")).date()
-    except:
-        continue
-    if not (start_date <= date_obj <= end_date):
-        continue
-    if any(filters[key] != "All" and i.get(key, "Unknown") != filters[key] for key in filter_fields.values()):
-        continue
-    if st.session_state.search_query and st.session_state.search_query not in i.get("text", "").lower():
-        continue
-    filtered_insights.append(i)
+# Filter + Search without date logic
+filtered_insights = [i for i in scraped_insights if
+                     all(filters[key] == "All" or i.get(key, "Unknown") == filters[key] for key in filter_fields.values()) and
+                     (not st.session_state.search_query or st.session_state.search_query in i.get("text", "").lower())]
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
 
 # Pagination
 page_size = 10
-max_page = max(1, len(filtered_insights) // page_size + int(len(filtered_insights) % page_size > 0))
+max_page = max(1, len(filtered_insights) // page_size + (len(filtered_insights) % page_size > 0))
 page = st.number_input("Page", min_value=1, max_value=max_page, value=1)
-start_idx = (page - 1) * page_size
-end_idx = start_idx + page_size
+start_idx, end_idx = (page - 1) * page_size, page * page_size
 paged_insights = filtered_insights[start_idx:end_idx]
 
-# View Mode
+# View mode selection
 st.subheader("🧭 Explore Insights")
-st.session_state.view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True, index=["Explorer", "Clusters", "Raw List"].index(st.session_state.view_mode))
+st.session_state.view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
 
 if st.session_state.view_mode == "Explorer":
     display_insight_explorer(paged_insights)
@@ -172,43 +107,8 @@ elif st.session_state.view_mode == "Clusters":
 else:
     for i in paged_insights:
         text = i.get("text", "")
-        if st.session_state.search_query:
-            text = text.replace(st.session_state.search_query, f"**{st.session_state.search_query}**")
-        st.markdown(f"- _{text}_")
-
-        summary = i.get("pm_summary")
-        if summary:
-            st.markdown(f"**Summary:** _{summary}_")
-
-        st.caption(f"😠 Frustration: {i.get('frustration', 1)} | 📈 Impact: {i.get('impact', 1)}")
-
-        col1, col2, col3 = st.columns(3)
-        insight_hash = hashlib.md5(i['text'].encode()).hexdigest()[:8]
-        with col1:
-            if st.button("Generate PRD", key=f"prd_{insight_hash}"):
-                try:
-                    prd_path = generate_prd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
-                    with open(prd_path, "rb") as f:
-                        prd_bytes = f.read()
-                    st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx", key=f"download_prd_{insight_hash}")
-                except Exception as e:
-                    st.error(f"PRD generation failed: {e}")
-        with col2:
-            if st.button("Generate BRD", key=f"brd_{insight_hash}"):
-                try:
-                    brd_path = generate_brd_docx(i['text'], brand=i.get("target_brand", "eBay"), base_filename="insight")
-                    with open(brd_path, "rb") as f:
-                        brd_bytes = f.read()
-                    st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx", key=f"download_brd_{insight_hash}")
-                except Exception as e:
-                    st.error(f"BRD generation failed: {e}")
-        with col3:
-            if st.button("Generate JIRA", key=f"jira_{insight_hash}"):
-                try:
-                    _ = generate_jira_bug_ticket(i['text'])
-                    st.success("JIRA ticket generated!")
-                except Exception as e:
-                    st.error(f"JIRA ticket failed: {e}")
+        highlighted_text = text.replace(st.session_state.search_query, f"**{st.session_state.search_query}**") if st.session_state.search_query else text
+        st.markdown(f"- _{highlighted_text}_")
 
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(filtered_insights)
