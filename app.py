@@ -56,6 +56,26 @@ filter_fields = {
     "Opportunity Tag": "opportunity_tag"
 }
 
+# Date Filter defaults
+start_date = datetime(2020, 1, 1).date()
+end_date = datetime.today().date()
+
+# Date Filter UI
+st.markdown("### 🗓️ Date Filter")
+time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
+if time_filter == "Last 7 Days":
+    start_date = datetime.today().date() - timedelta(days=7)
+    end_date = datetime.today().date()
+elif time_filter == "Last 30 Days":
+    start_date = datetime.today().date() - timedelta(days=30)
+    end_date = datetime.today().date()
+elif time_filter == "Custom Range":
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input("Start Date", value=datetime(2024, 1, 1).date(), key="main_start")
+    with col2:
+        end_date = st.date_input("End Date", value=datetime.today().date(), key="main_end")
+
 # Mobile filters and sidebar filters
 mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 if mobile_filters_expanded:
