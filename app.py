@@ -1,4 +1,4 @@
-# app.py — SignalSynth: Fully Enhanced Version (Filters + GPT + Clusters + Downloads + Pagination)
+# app.py — Final Enhanced Version with GPT, Safe Loading, and Debug Logging
 
 import os
 import json
@@ -16,7 +16,7 @@ from components.ai_suggester import (
 )
 from components.emerging_trends import get_emerging_signals
 
-# Load environment
+# Load environment and configure
 load_dotenv()
 os.environ["RUNNING_IN_STREAMLIT"] = "1"
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
@@ -24,13 +24,13 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📱 SignalSynth: Collectibles Insight Engine")
 
-# Load data
-if os.path.exists("precomputed_insights.json"):
+# Safe load precomputed insights
+try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
     st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
-else:
-    st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
+except Exception as e:
+    st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
 if "cached_ideas" not in st.session_state:
@@ -61,7 +61,7 @@ else:
     start_date = datetime(2020, 1, 1).date()
     end_date = datetime.today().date()
 
-# Filter UI
+# Filters
 filter_fields = {
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
@@ -87,13 +87,13 @@ else:
 
 search_query = st.text_input("🔍 Search inside insights (optional)").strip().lower()
 
-# Trend detection
+# Emerging Trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 try:
     spikes, flips, keyword_spikes = get_emerging_signals()
-except ValueError:
-    spikes, flips = get_emerging_signals()
-    keyword_spikes = {}
+except Exception as e:
+    spikes, flips, keyword_spikes = {}, {}, {}
+    st.warning(f"⚠️ Failed to detect trends: {e}")
 
 if not (spikes or flips or keyword_spikes):
     st.info("No recent emerging trends detected yet.")
@@ -165,16 +165,25 @@ else:
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Generate PRD", key=f"prd_{i['text'][:30]}"):
-                prd_bytes = generate_prd_docx(i['text'])
-                st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx")
+                try:
+                    prd_bytes = generate_prd_docx(i['text'])
+                    st.download_button("Download PRD", prd_bytes, file_name="insight_prd.docx")
+                except Exception as e:
+                    st.error(f"PRD generation failed: {e}")
         with col2:
             if st.button("Generate BRD", key=f"brd_{i['text'][:30]}"):
-                brd_bytes = generate_brd_docx(i['text'])
-                st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx")
+                try:
+                    brd_bytes = generate_brd_docx(i['text'])
+                    st.download_button("Download BRD", brd_bytes, file_name="insight_brd.docx")
+                except Exception as e:
+                    st.error(f"BRD generation failed: {e}")
         with col3:
             if st.button("Generate JIRA", key=f"jira_{i['text'][:30]}"):
-                _ = generate_jira_bug_ticket(i['text'])
-                st.success("JIRA ticket generated!")
+                try:
+                    _ = generate_jira_bug_ticket(i['text'])
+                    st.success("JIRA ticket generated!")
+                except Exception as e:
+                    st.error(f"JIRA ticket failed: {e}")
 
 # Brand summary
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
