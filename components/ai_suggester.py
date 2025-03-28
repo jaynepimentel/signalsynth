@@ -1,4 +1,4 @@
-# ai_suggester.py — AI-powered PRD/BRD/JIRA generation with caching and retries
+# ai_suggester.py — AI-powered PRD/BRD/PRFAQ/JIRA generation with caching and retries
 import os
 import hashlib
 import json
@@ -143,8 +143,27 @@ Include:
     return file_path
 
 def generate_prfaq_docx(text, brand, base_filename):
-    prompt = f"Create a PRFAQ document for a new feature based on this user feedback:\n{text}\n\nInclude: Press Release (headline, intro, quotes) + FAQ (customer Q&A, internal Q&A)."
-    content = generate_gpt_doc(prompt, "You are a product leader creating an Amazon-style PRFAQ.")
+    prompt = f"""
+Write a PRFAQ document for a marketplace team launching a new feature based on the user insight below.
+
+---
+User Insight:
+{text}
+
+---
+Include the following sections:
+1. Press Release:
+   - Headline
+   - Subheadline
+   - Opening Paragraph
+   - Customer Quote
+   - Internal Quote
+2. FAQ:
+   - Customer Questions and Answers
+   - Internal Stakeholder Questions and Answers
+3. Launch Readiness Checklist (bullets)
+"""
+    content = generate_gpt_doc(prompt, "You are a product marketing lead creating a launch-ready PRFAQ.")
     doc = write_docx(content, "Product PRFAQ Document")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
