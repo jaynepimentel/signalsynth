@@ -1,7 +1,9 @@
-# cluster_view.py — Improved cluster navigation with visual paging indicator
+# cluster_view.py — Document generation on click only + cluster caching
 
 import streamlit as st
 import os
+import json
+import hashlib
 from slugify import slugify
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
 from components.ai_suggester import (
@@ -10,6 +12,13 @@ from components.ai_suggester import (
     generate_cluster_brd_docx
 )
 
+CACHE_DIR = ".cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+def get_cluster_cache_key(insights):
+    key = hashlib.md5(json.dumps(insights, sort_keys=True).encode()).hexdigest()
+    return os.path.join(CACHE_DIR, f"cluster_{key}.json")
+
 def display_clustered_insight_cards(insights):
     if not insights:
         st.info("No insights to cluster.")
@@ -17,9 +26,29 @@ def display_clustered_insight_cards(insights):
 
     st.subheader("🧠 Clustered Insight Themes")
 
-    with st.spinner("Clustering and generating summaries..."):
-        clusters = cluster_insights(insights)
-        cards = generate_synthesized_insights(insights)
+    cache_file = get_cluster_cache_key(insights)
+    clusters, cards = None, None
+
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                clusters = data["clusters"]
+                cards = data["cards"]
+            st.caption("⚡️ Loaded clusters from cache")
+        except Exception as e:
+            st.warning(f"⚠️ Failed to load cache: {e}")
+
+    if not clusters or not cards:
+        with st.spinner("Clustering and generating summaries..."):
+            clusters = cluster_insights(insights)
+            cards = generate_synthesized_insights(insights)
+        try:
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump({"clusters": clusters, "cards": cards}, f, indent=2)
+            st.caption("💾 Clusters cached for faster reloads")
+        except Exception as e:
+            st.warning(f"⚠️ Failed to write cluster cache: {e}")
 
     if not cards:
         st.warning("No clusters found.")
@@ -56,51 +85,54 @@ def display_clustered_insight_cards(insights):
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                with st.spinner("Generating PRD..."):
-                    try:
-                        prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
-                        if prd_path and os.path.exists(prd_path):
-                            with open(prd_path, "rb") as f:
-                                st.download_button(
-                                    "📄 Download PRD",
-                                    f,
-                                    file_name=os.path.basename(prd_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    key=f"cluster_prd_{idx}"
-                                )
-                    except Exception as e:
-                        st.error(f"PRD generation failed: {e}")
+                if st.button("📄 Generate PRD", key=f"generate_prd_{idx}"):
+                    with st.spinner("Generating PRD..."):
+                        try:
+                            prd_path = generate_cluster_prd_docx(cluster, filename + "-prd")
+                            if prd_path and os.path.exists(prd_path):
+                                with open(prd_path, "rb") as f:
+                                    st.download_button(
+                                        "⬇️ Download PRD",
+                                        f,
+                                        file_name=os.path.basename(prd_path),
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key=f"cluster_prd_download_{idx}"
+                                    )
+                        except Exception as e:
+                            st.error(f"PRD generation failed: {e}")
 
             with col2:
-                with st.spinner("Generating PRFAQ..."):
-                    try:
-                        prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
-                        if prfaq_path and os.path.exists(prfaq_path):
-                            with open(prfaq_path, "rb") as f:
-                                st.download_button(
-                                    "📰 Download PRFAQ",
-                                    f,
-                                    file_name=os.path.basename(prfaq_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    key=f"cluster_prfaq_{idx}"
-                                )
-                    except Exception as e:
-                        st.error(f"PRFAQ generation failed: {e}")
+                if st.button("📰 Generate PRFAQ", key=f"generate_prfaq_{idx}"):
+                    with st.spinner("Generating PRFAQ..."):
+                        try:
+                            prfaq_path = generate_cluster_prfaq_docx(cluster, filename + "-prfaq")
+                            if prfaq_path and os.path.exists(prfaq_path):
+                                with open(prfaq_path, "rb") as f:
+                                    st.download_button(
+                                        "⬇️ Download PRFAQ",
+                                        f,
+                                        file_name=os.path.basename(prfaq_path),
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key=f"cluster_prfaq_download_{idx}"
+                                    )
+                        except Exception as e:
+                            st.error(f"PRFAQ generation failed: {e}")
 
             with col3:
-                with st.spinner("Generating BRD..."):
-                    try:
-                        brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
-                        if brd_path and os.path.exists(brd_path):
-                            with open(brd_path, "rb") as f:
-                                st.download_button(
-                                    "📘 Download BRD",
-                                    f,
-                                    file_name=os.path.basename(brd_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    key=f"cluster_brd_{idx}"
-                                )
-                    except Exception as e:
-                        st.error(f"BRD generation failed: {e}")
+                if st.button("📘 Generate BRD", key=f"generate_brd_{idx}"):
+                    with st.spinner("Generating BRD..."):
+                        try:
+                            brd_path = generate_cluster_brd_docx(cluster, filename + "-brd")
+                            if brd_path and os.path.exists(brd_path):
+                                with open(brd_path, "rb") as f:
+                                    st.download_button(
+                                        "⬇️ Download BRD",
+                                        f,
+                                        file_name=os.path.basename(brd_path),
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key=f"cluster_brd_download_{idx}"
+                                    )
+                        except Exception as e:
+                            st.error(f"BRD generation failed: {e}")
 
             st.markdown("---")
