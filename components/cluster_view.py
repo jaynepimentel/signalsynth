@@ -1,4 +1,4 @@
-# cluster_view.py — Cluster UI with generation spinners and full doc support
+# cluster_view.py — Improved cluster navigation with visual paging indicator
 
 import streamlit as st
 import os
@@ -25,7 +25,15 @@ def display_clustered_insight_cards(insights):
         st.warning("No clusters found.")
         return
 
-    for idx, card in enumerate(cards):
+    clusters_per_page = 3
+    total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
+    current_page = st.number_input("📚 Page", min_value=1, max_value=total_pages, value=1, step=1)
+    start_idx = (current_page - 1) * clusters_per_page
+    end_idx = start_idx + clusters_per_page
+
+    st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
+
+    for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
         cluster = clusters[idx]
         with st.container():
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
