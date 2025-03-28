@@ -141,7 +141,22 @@ paged_insights = filtered_insights[start_idx:end_idx]
 
 # View mode
 st.subheader("🧭 Explore Insights")
-st.info("Tip: Try switching to the 'Clusters' view and setting the Journey Stage filter to 'Fulfillment' to explore grouped insights!")
+
+import random
+
+TIPS = [
+    "Try switching to the ‘Clusters’ view and filtering by Journey Stage → Fulfillment to explore grouped user problems.",
+    "Click ‘Generate PRD’ next to any insight or cluster to instantly create a strategic Product Requirements Document.",
+    "Use the Keyword Search to find insights containing phrases like ‘vault,’ ‘grading,’ or ‘authentication’.",
+    "Toggle ‘Enable GPT-4 Suggestions’ in the sidebar to enrich insights with AI-generated product ideas.",
+    "In ‘Raw List’ view, you can generate and download PRDs, BRDs, or JIRA tickets for each insight — ready to plug into your workflow.",
+    "The ‘Brand Summary Dashboard’ below shows sentiment trends across top collectibles brands — explore which ones are praised or struggling.",
+    "Try narrowing by Date Range to view the freshest signals or switch to 'Last 7 Days' to catch spikes early.",
+    "Look at the ‘Emerging Trends’ section to spot sentiment flips and keyword spikes — a great starting point for discovery.",
+    "Use the ‘Effort Estimate’ filter to prioritize quick wins or surface high-effort, high-impact features from user feedback.",
+    "Clusters are auto-generated using semantic AI — if one feels off, try adjusting the date range or subtag filters for better grouping."
+]
+st.info("Tip: " + random.choice(TIPS))
 view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
 
 if view_mode == "Explorer":
