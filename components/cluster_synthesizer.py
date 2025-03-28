@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Enhanced with semantic coherence validation
+# ✅ cluster_synthesizer.py — Now with recursive mini-cluster repair for low coherence
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -15,6 +15,7 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 COHERENCE_THRESHOLD = 0.68
+RECLUSTER_EPS = 0.30
 
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
@@ -36,10 +37,10 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     return all_clusters
 
 
-def cluster_insights(insights, min_cluster_size=3):
+def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
-    clustering = DBSCAN(eps=0.38, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
+    clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
     labels = clustering.labels_
 
     clustered = defaultdict(list)
@@ -62,7 +63,16 @@ def is_semantically_coherent(cluster):
 
 
 def split_incoherent_cluster(cluster):
-    return cluster_insights(cluster, min_cluster_size=2)
+    if len(cluster) <= 3:
+        return [cluster]
+    subclusters = cluster_insights(cluster, min_cluster_size=2, eps=RECLUSTER_EPS)
+    final = []
+    for c in subclusters:
+        if is_semantically_coherent(c):
+            final.append(c)
+        else:
+            final.extend([[i] for i in c])  # break into singletons if still incoherent
+    return final
 
 
 def generate_cluster_metadata(cluster):
