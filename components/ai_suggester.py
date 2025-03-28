@@ -1,4 +1,5 @@
-# ai_suggester.py — with Signal Brief fallback, cache safety, and document generation
+# ai_suggester.py — GPT-enhanced with smart signal expansion, trend/competitor injection, critique loop, and executive summaries
+
 import os
 import hashlib
 import json
@@ -12,15 +13,11 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
-# Safe load of GPT suggestion cache
-suggestion_cache = {}
 if os.path.exists(CACHE_PATH):
-    try:
-        with open(CACHE_PATH, "r", encoding="utf-8") as f:
-            suggestion_cache = json.load(f)
-    except json.JSONDecodeError:
-        print("⚠️ Corrupted GPT suggestion cache. Resetting to empty.")
-        suggestion_cache = {}
+    with open(CACHE_PATH, "r", encoding="utf-8") as f:
+        suggestion_cache = json.load(f)
+else:
+    suggestion_cache = {}
 
 def is_streamlit_mode():
     return os.getenv("RUNNING_IN_STREAMLIT") == "1"
@@ -58,6 +55,7 @@ def generate_pm_ideas(text, brand="eBay"):
 
 def generate_gpt_doc(prompt, title):
     try:
+        # Initial draft
         draft = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -68,8 +66,8 @@ def generate_gpt_doc(prompt, title):
             max_tokens=2000
         ).choices[0].message.content.strip()
 
-        critique_prompt = f"Please review the following draft like a VP of Product. Identify weaknesses or unclear sections, then rewrite it with those fixes:\n\n{draft}"
-
+        # Critique + refinement
+        critique_prompt = f"Now critique this like a VP of Product. What's weak, missing, or unclear? Then rewrite and improve it.\n\n{draft}"
         improved = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -137,11 +135,14 @@ Format:
     doc.save(file_path)
     return file_path
 
-def generate_prd_docx(text, brand, base_filename):
+def generate_exec_summary():
+    return "\n\n---\n\n**Executive TL;DR**\n- What: [summary]\n- Why it matters: [impact]\n- What decision is needed: [action]"
+
+def generate_prd_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand)
+    metadata = build_metadata_block(brand, trend_context, competitor_context)
     prompt = f"""
 Write a GTM-ready Product Requirements Document (PRD) for the following user insight:
 
@@ -166,6 +167,7 @@ Sections:
 12. Discovery-to-Delivery Phase
 13. Hypothesis + Suggested Experiment
 14. Confidence Rating
+{generate_exec_summary()}
 """
     content = generate_gpt_doc(prompt, "You are a strategic product manager writing a PRD.")
     doc = write_docx(content, "Product Requirements Document (PRD)")
@@ -173,11 +175,11 @@ Sections:
     doc.save(file_path)
     return file_path
 
-def generate_brd_docx(text, brand, base_filename):
+def generate_brd_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand)
+    metadata = build_metadata_block(brand, trend_context, competitor_context)
     prompt = f"""
 Write a Business Requirements Document (BRD) based on the marketplace user feedback below:
 
@@ -198,6 +200,7 @@ Sections:
 - Legal/Policy Constraints
 - Next Steps
 - Confidence Rating
+{generate_exec_summary()}
 """
     content = generate_gpt_doc(prompt, "You are a strategic business lead writing a BRD.")
     doc = write_docx(content, "Business Requirements Document (BRD)")
@@ -205,11 +208,11 @@ Sections:
     doc.save(file_path)
     return file_path
 
-def generate_prfaq_docx(text, brand, base_filename):
+def generate_prfaq_docx(text, brand, base_filename, trend_context=None, competitor_context=None):
     if should_fallback_to_signal_brief(text):
         return generate_signal_brief_docx(text, brand, base_filename)
 
-    metadata = build_metadata_block(brand)
+    metadata = build_metadata_block(brand, trend_context, competitor_context)
     prompt = f"""
 Write an Amazon-style PRFAQ document for a new product launch based on this feedback:
 
@@ -231,6 +234,7 @@ Sections:
    - Internal Team Q&A
 3. Launch Checklist (bulleted)
 4. Confidence Rating
+{generate_exec_summary()}
 """
     content = generate_gpt_doc(prompt, "You are a product marketing lead writing a PRFAQ.")
     doc = write_docx(content, "Product PRFAQ Document")
@@ -244,12 +248,15 @@ def generate_jira_bug_ticket(text, brand="eBay"):
 
 def generate_cluster_prd_docx(cluster, filename):
     text = "\n\n".join(i["text"] for i in cluster[:8])
-    return generate_prd_docx(text, cluster[0].get("target_brand", "eBay"), filename)
+    brand = cluster[0].get("target_brand", "eBay")
+    return generate_prd_docx(text, brand, filename)
 
 def generate_cluster_brd_docx(cluster, filename):
     text = "\n\n".join(i["text"] for i in cluster[:8])
-    return generate_brd_docx(text, cluster[0].get("target_brand", "eBay"), filename)
+    brand = cluster[0].get("target_brand", "eBay")
+    return generate_brd_docx(text, brand, filename)
 
 def generate_cluster_prfaq_docx(cluster, filename):
     text = "\n\n".join(i["text"] for i in cluster[:8])
-    return generate_prfaq_docx(text, cluster[0].get("target_brand", "eBay"), filename)
+    brand = cluster[0].get("target_brand", "eBay")
+    return generate_prfaq_docx(text, brand, filename)
