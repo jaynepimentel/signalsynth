@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Streamlit cluster view with cache safety and document generation
+# ✅ cluster_view.py — Cluster cards with persona/brand counts and download UX
 import streamlit as st
 import os
 import json
@@ -85,6 +85,16 @@ def display_clustered_insight_cards(insights):
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
             st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
             st.markdown(f"**Mentions:** {card['insight_count']} | Score Range: {card.get('score_range', '?')}")
+
+            # 👥 Source breakdowns
+            persona_counts = Counter(i.get("persona", "Unknown") for i in cluster)
+            brand_counts = Counter(i.get("target_brand", "Unknown") for i in cluster)
+            if persona_counts:
+                persona_text = " | ".join([f"👤 {k}: {v}" for k, v in persona_counts.items()])
+                st.caption(f"**Persona Breakdown:** {persona_text}")
+            if brand_counts:
+                brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
+                st.caption(f"**Brand Mentions:** {brand_text}")
 
             tag_fields = ["type_tag", "effort", "journey_stage", "brand_sentiment", "clarity"]
             dominant = {}
