@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Stable, enhanced cluster generation with semantic validation
+# ✅ cluster_synthesizer.py — Robust with semantic checks and key safety
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -108,9 +108,9 @@ def generate_cluster_metadata(cluster):
         )
         lines = response.choices[0].message.content.strip().split("\n")
         return {
-            "title": lines[0].replace("Title:", "").strip(),
-            "theme": lines[1].replace("Theme:", "").strip(),
-            "problem": lines[2].replace("Problem:", "").strip(),
+            "title": lines[0].replace("Title:", "").strip() or "Untitled Cluster",
+            "theme": lines[1].replace("Theme:", "").strip() or "General",
+            "problem": lines[2].replace("Problem:", "").strip() or "No problem statement provided."
         }
     except Exception as e:
         return {
@@ -143,8 +143,14 @@ def find_cross_tag_connections(insights, threshold=0.75):
 
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
-    brand = cluster[0].get("target_brand", "Unknown")
-    type_tag = cluster[0].get("type_tag", "Insight")
+
+    brand = cluster[0].get("target_brand") or "Unknown"
+    type_tag = cluster[0].get("type_tag") or "Insight"
+
+    metadata["title"] = metadata.get("title") or "Untitled Cluster"
+    metadata["problem"] = metadata.get("problem") or "No problem statement."
+    metadata["theme"] = metadata.get("theme") or "General"
+
     quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
 
     idea_counter = defaultdict(int)
