@@ -1,3 +1,4 @@
+# app.py — Streamlit app with safe cluster summary fallback
 import os
 import json
 import streamlit as st
@@ -150,16 +151,17 @@ elif view_mode == "Clusters":
     clusters = generate_synthesized_insights(paged_insights)
     for idx, c in enumerate(clusters):
         st.markdown(f"#### {c['title']}")
-        st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
-        st.markdown("**Quotes:**")
-        for q in c["quotes"]:
-            st.markdown(q)
-        if c["top_ideas"]:
+        st.markdown(f"_Brand: {c['brand']} — {c.get('problem_statement', 'No summary available.')}_")
+        if "quotes" in c:
+            st.markdown("**Quotes:**")
+            for q in c["quotes"]:
+                st.markdown(q)
+        if c.get("top_ideas"):
             st.markdown("**Top Suggestions:**")
             for idea in c["top_ideas"]:
                 st.markdown(f"- {idea}")
         try:
-            text_blob = "\n".join(c["quotes"])
+            text_blob = "\n".join(c.get("quotes", []))
             cluster_hash = hashlib.md5(text_blob.encode()).hexdigest()[:8]
             prd_path = generate_prd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
             brd_path = generate_brd_docx(text_blob, brand=c["brand"], base_filename=f"cluster_{idx}")
@@ -212,7 +214,8 @@ else:
                     st.error(f"JIRA ticket failed: {e}")
 
 # Brand summary
-with st.expander("📊 Brand Summary Dashboard", expanded=False):
+default_expanded = False
+with st.expander("📊 Brand Summary Dashboard", expanded=default_expanded):
     display_brand_dashboard(filtered_insights)
 
 st.sidebar.markdown("---")
