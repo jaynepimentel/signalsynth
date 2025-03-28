@@ -1,4 +1,4 @@
-# ai_suggester.py — Enhanced AI-powered PRD/BRD/PRFAQ/JIRA generation with fallback logic and strategic metadata injection
+# ai_suggester.py — Strategic AI-powered PRD/BRD/PRFAQ generation with signal expansion, critique loop, and exec summaries
 import os
 import hashlib
 import json
@@ -54,7 +54,7 @@ def generate_pm_ideas(text, brand="eBay"):
 
 def generate_gpt_doc(prompt, title):
     try:
-        response = client.chat.completions.create(
+        draft = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": title},
@@ -62,8 +62,21 @@ def generate_gpt_doc(prompt, title):
             ],
             temperature=0.3,
             max_tokens=2000
-        )
-        return response.choices[0].message.content.strip()
+        ).choices[0].message.content.strip()
+
+        critique_prompt = f"Please review the following draft like a VP of Product. Identify weaknesses or unclear sections, then rewrite it with those fixes:\n\n{draft}"
+
+        improved = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a critical VP of Product."},
+                {"role": "user", "content": critique_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        ).choices[0].message.content.strip()
+
+        return improved
     except Exception as e:
         return f"⚠️ GPT Error: {str(e)}"
 
@@ -81,13 +94,18 @@ def write_docx(content, heading):
             doc.add_paragraph(line.strip())
     return doc
 
-def build_metadata_block(brand):
-    return f"""
+def build_metadata_block(brand, trend_context=None, competitor_context=None):
+    context = f"""
 Contextual Metadata:
 - Brand: {brand}
 - Objective: Improve trust, conversion, or reduce friction.
 - Note: If any data is missing, make smart assumptions using product best practices.
 """
+    if trend_context:
+        context += f"\nTrend Signal: {trend_context}"
+    if competitor_context:
+        context += f"\nCompetitor Mentioned: {competitor_context}"
+    return context
 
 def generate_prd_docx(text, brand, base_filename):
     metadata = build_metadata_block(brand)
@@ -98,7 +116,9 @@ Write a GTM-ready Product Requirements Document (PRD) for the following user ins
 
 {metadata}
 
-Sections to include:
+Start with a 3-bullet Executive Summary (What, Why, What Now).
+
+Sections:
 1. Overview
 2. Customer Pain Point
 3. Strategic Context
@@ -112,8 +132,7 @@ Sections to include:
 11. Jobs to Be Done (JTBD)
 12. Discovery-to-Delivery Phase
 13. Hypothesis + Suggested Experiment
-
-End with a 'Confidence Rating' section based on insight completeness.
+14. Confidence Rating
 """
     content = generate_gpt_doc(prompt, "You are a strategic product manager writing a PRD.")
     doc = write_docx(content, "Product Requirements Document (PRD)")
@@ -130,6 +149,8 @@ Write a Business Requirements Document (BRD) based on the marketplace user feedb
 
 {metadata}
 
+Start with a 3-bullet Executive Summary (What, Why, What Now).
+
 Sections:
 - Executive Summary
 - Problem Statement
@@ -140,7 +161,7 @@ Sections:
 - Stakeholders
 - Legal/Policy Constraints
 - Next Steps
-- Confidence Rating based on data strength
+- Confidence Rating
 """
     content = generate_gpt_doc(prompt, "You are a strategic business lead writing a BRD.")
     doc = write_docx(content, "Business Requirements Document (BRD)")
@@ -157,6 +178,8 @@ Write an Amazon-style PRFAQ document for a new product launch based on this feed
 
 {metadata}
 
+Start with a 3-bullet Executive Summary (What, Why, What Now).
+
 Sections:
 1. Press Release:
    - Headline
@@ -168,7 +191,7 @@ Sections:
    - External Customer Q&A
    - Internal Team Q&A
 3. Launch Checklist (bulleted)
-4. Confidence Rating and Notes
+4. Confidence Rating
 """
     content = generate_gpt_doc(prompt, "You are a product marketing lead writing a PRFAQ.")
     doc = write_docx(content, "Product PRFAQ Document")
