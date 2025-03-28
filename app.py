@@ -1,5 +1,3 @@
-# app.py — Fully Enhanced with Cluster-Level Document Generation
-
 import os
 import json
 import streamlit as st
@@ -166,35 +164,29 @@ elif view_mode == "Clusters":
     if not paged_insights or all(i.get("text", "").strip() == "" for i in paged_insights):
         st.warning("No insights to cluster. Try changing your filters or date range.")
     else:
-            clusters = generate_synthesized_insights(paged_insights)
-            for idx, c in enumerate(clusters):
-        st.markdown(f"#### {c['title']}")
-        st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
-        st.markdown("**Quotes:**")
-        for q in c["quotes"]:
-            st.markdown(q)
-        if c["top_ideas"]:
-            st.markdown("**Top Suggestions:**")
-            for idea in c["top_ideas"]:
-                st.markdown(f"- {idea}")
-        colA, colB = st.columns(2)
-        with colA:
-            if st.button("Generate Cluster PRD", key=f"cluster_prd_{idx}"):
-                try:
-                    text_blob = "\n".join(c["quotes"])
-                    prd_bytes = generate_prd_docx(text_blob)
-                    st.download_button("Download PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx")
-                except Exception as e:
-                    st.error(f"Cluster PRD failed: {e}")
-        with colB:
-            if st.button("Generate Cluster BRD", key=f"cluster_brd_{idx}"):
-                try:
-                    text_blob = "\n".join(c["quotes"])
-                    brd_bytes = generate_brd_docx(text_blob)
-                    st.download_button("Download BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx")
-                except Exception as e:
-                    st.error(f"Cluster BRD failed: {e}")
-        st.markdown("---")
+        clusters = generate_synthesized_insights(paged_insights)
+        for idx, c in enumerate(clusters):
+            st.markdown(f"#### {c['title']}")
+            st.markdown(f"_Brand: {c['brand']} — {c['summary']}_")
+            st.markdown("**Quotes:**")
+            for q in c["quotes"]:
+                st.markdown(q)
+            if c["top_ideas"]:
+                st.markdown("**Top Suggestions:**")
+                for idea in c["top_ideas"]:
+                    st.markdown(f"- {idea}")
+            try:
+                text_blob = "\n".join(c["quotes"])
+                prd_bytes = generate_prd_docx(text_blob)
+                brd_bytes = generate_brd_docx(text_blob)
+                colA, colB = st.columns(2)
+                with colA:
+                    st.download_button("📄 Download Cluster PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx")
+                with colB:
+                    st.download_button("📘 Download Cluster BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx")
+            except Exception as e:
+                st.error(f"❌ Document generation failed for cluster {idx}: {e}")
+            st.markdown("---")
 else:
     for i in paged_insights:
         st.markdown(f"- _{i.get('text', '')}_")
