@@ -1,5 +1,4 @@
-# cluster_view.py — Cluster UX with caching, badges, on-demand doc generation, and index safety
-
+# ✅ cluster_view.py — Streamlit cluster view with cache safety and document generation
 import streamlit as st
 import os
 import json
@@ -47,8 +46,8 @@ def display_clustered_insight_cards(insights):
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                clusters = data["clusters"]
-                cards = data["cards"]
+                clusters = data.get("clusters")
+                cards = data.get("cards")
             st.caption("⚡️ Loaded clusters from cache")
         except Exception as e:
             st.warning(f"⚠️ Failed to load cache: {e}")
@@ -64,7 +63,7 @@ def display_clustered_insight_cards(insights):
         except Exception as e:
             st.warning(f"⚠️ Failed to write cluster cache: {e}")
 
-    if not cards:
+    if not cards or not clusters:
         st.warning("No clusters found.")
         return
 
@@ -78,7 +77,9 @@ def display_clustered_insight_cards(insights):
     min_len = min(len(cards), len(clusters))
     for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
         if idx >= min_len:
+            st.warning(f"⚠️ Cluster index {idx} out of range")
             continue
+
         cluster = clusters[idx]
         with st.container():
             st.markdown(f"### 📌 {card['title']} — {card['brand']}")
