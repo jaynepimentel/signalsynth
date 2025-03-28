@@ -1,22 +1,12 @@
-# ✅ app.py — SignalSynth full UX without Date Filtering
+# ✅ app.py — SignalSynth full UX with Default Cluster Display
 import os
 import json
 import streamlit as st
-import hashlib
 from dotenv import load_dotenv
-import pandas as pd
-from collections import Counter
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
-from components.ai_suggester import (
-    generate_pm_ideas,
-    generate_prd_docx,
-    generate_brd_docx,
-    generate_prfaq_docx,
-    generate_jira_bug_ticket,
-    generate_gpt_doc
-)
+from components.cluster_synthesizer import generate_synthesized_insights
 from components.emerging_trends import get_emerging_signals
 
 load_dotenv()
@@ -26,6 +16,7 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📱 SignalSynth: Collectibles Insight Engine")
 
+# Load insights
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -35,11 +26,12 @@ except Exception as e:
     st.stop()
 
 # Session state initialization
-for state_var, default_val in [("cached_ideas", {}), ("search_query", ""), ("view_mode", "Explorer"), ("power_mode", False)]:
+for state_var, default_val in [("current_cluster_index", 0), ("search_query", ""), ("view_mode", "Explorer")]:
     if state_var not in st.session_state:
         st.session_state[state_var] = default_val
 
-# Filters setup
+# Sidebar filters
+st.sidebar.header("Filter by Metadata")
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -50,42 +42,21 @@ filter_fields = {
     "Clarity": "clarity",
     "Opportunity Tag": "opportunity_tag"
 }
-
-mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
-if mobile_filters_expanded:
-    st.markdown("### 🔎 Filter Insights")
-    filters = {key: st.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"mobile_{key}")
-               for label, key in filter_fields.items()}
-else:
-    st.sidebar.header("Filter by Metadata")
-    filters = {key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"sidebar_{key}")
-               for label, key in filter_fields.items()}
-
-active_filters = [(label, val) for label, key in filter_fields.items() if (val := filters[key]) != "All"]
-if active_filters:
-    st.markdown("#### 🔖 Active Filters:")
-    cols = st.columns(len(active_filters))
-    for idx, (label, val) in enumerate(active_filters):
-        with cols[idx]:
-            st.markdown(f"`{label}: {val}`")
+filters = {key: st.sidebar.selectbox(label, ["All"] + sorted(set(i.get(key, "Unknown") for i in scraped_insights)), key=f"sidebar_{key}")
+           for label, key in filter_fields.items()}
 
 st.session_state.search_query = st.text_input("🔍 Search inside insights (optional)", value=st.session_state.search_query).strip().lower()
 
-# Emerging trends
-st.subheader("🔥 Emerging Trends & Sentiment Shifts")
-try:
-    spikes, flips, keyword_spikes = get_emerging_signals()
-except Exception as e:
-    spikes, flips, keyword_spikes = {}, {}, {}
-    st.warning(f"⚠️ Failed to detect trends: {e}")
-
-if not (spikes or flips or keyword_spikes):
-    st.info("No recent emerging trends detected yet.")
-
-# Filter + Search without date logic
+# Filter + Search
 filtered_insights = [i for i in scraped_insights if
                      all(filters[key] == "All" or i.get(key, "Unknown") == filters[key] for key in filter_fields.values()) and
                      (not st.session_state.search_query or st.session_state.search_query in i.get("text", "").lower())]
+
+# Emerging trends
+st.subheader("🔥 Emerging Trends & Sentiment Shifts")
+spikes, flips, keyword_spikes = get_emerging_signals()
+if not (spikes or flips or keyword_spikes):
+    st.info("No recent emerging trends detected yet.")
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
 
@@ -103,7 +74,33 @@ st.session_state.view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Ra
 if st.session_state.view_mode == "Explorer":
     display_insight_explorer(paged_insights)
 elif st.session_state.view_mode == "Clusters":
-    display_clustered_insight_cards(paged_insights)
+    synthesized_clusters = generate_synthesized_insights(paged_insights)
+    synthesized_clusters.sort(key=lambda c: c["insight_count"], reverse=True)
+
+    if synthesized_clusters:
+        total_clusters = len(synthesized_clusters)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("⬅️ Previous"):
+                st.session_state.current_cluster_index = max(0, st.session_state.current_cluster_index - 1)
+
+        with col2:
+            if st.button("Next ➡️"):
+                st.session_state.current_cluster_index = min(total_clusters - 1, st.session_state.current_cluster_index + 1)
+
+        cluster = synthesized_clusters[st.session_state.current_cluster_index]
+        st.subheader(f"Cluster {st.session_state.current_cluster_index + 1}/{total_clusters}: {cluster['title']}")
+        st.markdown(f"**Theme:** {cluster['theme']}")
+        st.markdown(f"**Problem Statement:** {cluster['problem_statement']}")
+
+        st.markdown("**Quotes:**")
+        for quote in cluster.get('quotes', []):
+            st.markdown(quote)
+
+        st.markdown(f"**Insights Count:** {cluster['insight_count']}")
+        st.markdown(f"**Average Similarity:** {cluster['avg_similarity']}")
+    else:
+        st.info("No valid clusters available.")
 else:
     for i in paged_insights:
         text = i.get("text", "")
