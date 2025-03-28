@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Enhanced with reclustering, coherence flags, and diagnostics
+# ✅ cluster_synthesizer.py — Stable, enhanced cluster generation with semantic validation
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -141,11 +141,8 @@ def find_cross_tag_connections(insights, threshold=0.75):
     return connections
 
 
-def synthesize_cluster(cluster, metadata_overrides=None):
+def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
-    if metadata_overrides:
-        metadata.update(metadata_overrides)
-
     brand = cluster[0].get("target_brand", "Unknown")
     type_tag = cluster[0].get("type_tag", "Insight")
     quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
@@ -187,11 +184,10 @@ def generate_synthesized_insights(insights):
 
     summaries = []
     for cluster, meta in raw_cluster_tuples:
-        card = synthesize_cluster(cluster, metadata_overrides={
-            "coherent": meta["coherent"],
-            "was_reclustered": meta["was_reclustered"],
-            "avg_similarity": f"{meta['avg_similarity']:.2f}"
-        })
+        card = synthesize_cluster(cluster)
+        card["coherent"] = meta["coherent"]
+        card["was_reclustered"] = meta["was_reclustered"]
+        card["avg_similarity"] = f"{meta['avg_similarity']:.2f}"
         summaries.append(card)
 
     if cross_tag_patterns:
