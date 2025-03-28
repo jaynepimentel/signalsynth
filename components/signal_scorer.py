@@ -1,4 +1,4 @@
-# signal_scorer.py — Enhanced AI scoring for SignalSynth v2
+# signal_scorer.py — Enhanced AI scoring for SignalSynth v3 with strategic flags
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
@@ -63,48 +63,46 @@ def tag_topic_focus(text):
     return tags
 
 def generate_insight_title(text):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are an expert product analyst."},
-                {"role": "user", "content": f"Summarize this user feedback into a short, 8–12 word title:\n{text}"}
-            ],
-            max_tokens=30,
-            temperature=0.3
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print("[GPT title error]", e)
-        return text[:60] + "..."
+    return text.strip().capitalize()[:60] + "..." if len(text) > 60 else text.strip().capitalize()
 
 def classify_journey_stage(text):
-    stages = {
-        "Discovery": ["looking for", "trying to find", "searching"],
-        "Purchase": ["buy", "purchase", "checkout"],
-        "Post-Purchase": ["received", "delivered", "after purchase"],
-        "Returns/Grading": ["return", "refund", "grading"],
-        "Resell": ["resell", "sell again", "secondary market"]
-    }
-    text_lower = text.lower()
-    for stage, keywords in stages.items():
-        if any(keyword in text_lower for keyword in keywords):
-            return stage
+    text = text.lower()
+    if any(x in text for x in ["search", "browse", "can't find", "filter", "looking for"]):
+        return "Discovery"
+    elif any(x in text for x in ["buy", "add to cart", "checkout", "purchase", "payment"]):
+        return "Purchase"
+    elif any(x in text for x in ["ship", "shipping", "tracking", "delivered", "delay", "package"]):
+        return "Fulfillment"
+    elif any(x in text for x in ["return", "refund", "problem", "issue", "feedback", "support", "bad experience"]):
+        return "Post-Purchase"
     return "Unknown"
+
+def classify_opportunity_type(text):
+    if any(x in text.lower() for x in ["policy", "terms", "blocked", "suspended"]):
+        return "Policy Risk"
+    if any(x in text.lower() for x in ["conversion", "checkout", "didn’t buy"]):
+        return "Conversion Blocker"
+    if any(x in text.lower() for x in ["leaving", "stop using", "quit"]):
+        return "Retention Risk"
+    if any(x in text.lower() for x in ["compared to", "fanatics", "whatnot", "alt"]):
+        return "Competitor Signal"
+    if any(x in text.lower() for x in ["trust", "scam", "fraud"]):
+        return "Trust Erosion"
+    if any(x in text.lower() for x in ["love", "amazing", "recommend"]):
+        return "Referral Amplifier"
+    return "General Insight"
 
 def enrich_single_insight(i, min_score=3):
     text = i.get("text", "")
     if not text or len(text.strip()) < 10:
         return None
 
-    # Semantic + heuristic scores
     semantic_score = score_insight_semantic(text)
     heuristic_score = score_insight_heuristic(text)
     i["semantic_score"] = semantic_score
     i["heuristic_score"] = heuristic_score
     i["score"] = combined_score(semantic_score, heuristic_score)
 
-    # Type classification
     type_tag, confidence, reason = classify_insight_type(text)
     if confidence < 75:
         type_tag, confidence, reason = classify_insight_type_gpt(text)
@@ -112,10 +110,8 @@ def enrich_single_insight(i, min_score=3):
     i["type_confidence"] = confidence
     i["type_reason"] = reason
 
-    # Brand, sentiment, etc.
     i = enhance_insight(i)
 
-    # Rich GPT sentiment + subtag + summary enrichment
     gpt_tags = gpt_estimate_sentiment_subtag(text)
     i["gpt_sentiment"] = gpt_tags.get("sentiment")
     i["gpt_subtags"] = gpt_tags.get("subtags")
@@ -123,17 +119,8 @@ def enrich_single_insight(i, min_score=3):
     i["impact"] = gpt_tags.get("impact")
     i["pm_summary"] = gpt_tags.get("summary")
 
-    # Persona
     i["persona"] = classify_persona(text)
-
-    # PM Suggestions
-    i["ideas"] = generate_pm_ideas(
-        text=text,
-        brand=i.get("target_brand"),
-        sentiment=i.get("brand_sentiment")
-    )
-
-    # Effort + Shovel Ready logic
+    i["ideas"] = generate_pm_ideas(text=text, brand=i.get("target_brand"), sentiment=i.get("brand_sentiment"))
     i["effort"] = classify_effort(i["ideas"])
     i["shovel_ready"] = (
         i["effort"] in ["Low", "Medium"]
@@ -141,21 +128,19 @@ def enrich_single_insight(i, min_score=3):
         and i["frustration"] >= 3
     )
 
-    # Tagging
     i["topic_focus"] = tag_topic_focus(text)
     i["journey_stage"] = classify_journey_stage(text)
     i["clarity"] = rate_clarity(text)
     i["title"] = generate_insight_title(text)
 
-    # Confidence scoring
-    if i["type_tag"] in ["Complaint", "Feature Request"] and i["score"] > 80:
-        i["discovery_confidence"] = "High"
-    elif i["score"] > 60:
-        i["discovery_confidence"] = "Medium"
-    else:
-        i["discovery_confidence"] = "Low"
+    # New strategic fields
+    i["opportunity_tag"] = classify_opportunity_type(text)
+    i["cluster_ready_score"] = round((i["score"] + (i["frustration"] or 0)*5 + (i["impact"] or 0)*5) / 3, 2)
+    i["fingerprint"] = hashlib.md5(text.lower().encode()).hexdigest()
 
-    return i if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score else None
+    if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score:
+        return i
+    return None
 
 def filter_relevant_insights(insights, min_score=3):
     enriched = [enrich_single_insight(i, min_score) for i in insights]
