@@ -82,16 +82,61 @@ def write_docx(content, heading):
     return doc
 
 def generate_prd_docx(text, brand, base_filename):
-    prompt = f"Write a GTM-ready Product Requirements Document (PRD) for the following insight:\n{text}\n\nInclude sections like:\nOverview, Problem, Context, Personas, Solution, UX Touchpoints, User Journey, Metrics, Risks, Next Steps."
-    content = generate_gpt_doc(prompt, "You are a product lead writing a PRD.")
+    prompt = f"""
+Write a professional Product Requirements Document (PRD) for a product team working on a major marketplace like eBay. Use the user insight below as the starting point.
+
+---
+User Insight:
+{text}
+
+---
+Metadata:
+- Brand: {brand}
+- Goal: Improve user experience, trust, or conversion
+
+---
+Include the following PRD sections:
+1. Overview
+2. Customer Pain Point
+3. Strategic Context
+4. Personas Impacted
+5. Proposed Solutions
+6. Annotated User Journey
+7. Effort Estimate (High/Med/Low)
+8. Risks / Dependencies
+9. Data or Success Metrics
+10. Recommended Next Steps
+11. Jobs to Be Done (JTBD)
+12. Discovery-to-Delivery Phase (Double Diamond classification)
+13. Testable Hypothesis and Suggested Experiment
+"""
+    content = generate_gpt_doc(prompt, "You are a product lead writing a strategic PRD.")
     doc = write_docx(content, "Product Requirements Document (PRD)")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
     return file_path
 
 def generate_brd_docx(text, brand, base_filename):
-    prompt = f"Write a Business Requirements Document (BRD) based on the following insight:\n{text}\n\nInclude: Exec Summary, Problem, Opportunity, Proposed Solution, ROI, Stakeholders, Legal, Next Steps."
-    content = generate_gpt_doc(prompt, "You are a product strategist writing a BRD.")
+    prompt = f"""
+Write a Business Requirements Document (BRD) based on this marketplace customer feedback:
+
+---
+User Insight:
+{text}
+
+---
+Include:
+- Executive Summary
+- Problem Statement
+- Market Opportunity
+- Strategic Fit with {brand}
+- Proposed Business Solution
+- ROI Estimate
+- Stakeholders
+- Legal or Policy Constraints
+- Next Steps
+"""
+    content = generate_gpt_doc(prompt, "You are a business strategist writing a BRD.")
     doc = write_docx(content, "Business Requirements Document (BRD)")
     file_path = safe_file_path(base_filename)
     doc.save(file_path)
