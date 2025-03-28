@@ -90,7 +90,7 @@ elif st.session_state.view_mode == "Clusters":
                 st.session_state.current_cluster_index = min(total_clusters - 1, st.session_state.current_cluster_index + 1)
 
         cluster = synthesized_clusters[st.session_state.current_cluster_index]
-        st.subheader(f"Cluster {st.session_state.current_cluster_index + 1}/{total_clusters}: {cluster.get('title', 'No Title')}")
+        st.subheader(f"{cluster.get('title', 'No Title')}")
         st.markdown(f"**Theme:** {cluster.get('theme', 'No Theme')}")
         st.markdown(f"**Problem Statement:** {cluster.get('problem_statement', 'No Problem Statement')}")
 
