@@ -1,4 +1,4 @@
-# ✅ app.py — SignalSynth full UX with PM intelligence upgrades
+# ✅ app.py — SignalSynth full UX with PM intelligence upgrades + strategic filters and summaries
 import os
 import json
 import streamlit as st
@@ -44,39 +44,7 @@ if "view_mode" not in st.session_state:
 if "power_mode" not in st.session_state:
     st.session_state.power_mode = False
 
-# Sidebar
-st.sidebar.header("⚙️ Settings")
-use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
-st.session_state.power_mode = st.sidebar.checkbox("🧠 Power Mode: Edit GPT Prompt", value=st.session_state.power_mode)
-if use_gpt and not OPENAI_KEY_PRESENT:
-    st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
-
-# Upload Option
-uploaded_file = st.sidebar.file_uploader("📤 Upload New Insights (.txt)", type="txt")
-if uploaded_file:
-    new_lines = [l.decode("utf-8").strip() for l in uploaded_file.readlines() if l.strip()]
-    st.sidebar.success(f"Loaded {len(new_lines)} new lines (not yet enriched)")
-
-# Date Filter
-st.markdown("### 🗓️ Date Filter")
-time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
-if time_filter == "Last 7 Days":
-    start_date = datetime.today().date() - timedelta(days=7)
-    end_date = datetime.today().date()
-elif time_filter == "Last 30 Days":
-    start_date = datetime.today().date() - timedelta(days=30)
-    end_date = datetime.today().date()
-elif time_filter == "Custom Range":
-    col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input("Start Date", value=datetime(2024, 1, 1).date(), key="main_start")
-    with col2:
-        end_date = st.date_input("End Date", value=datetime.today().date(), key="main_end")
-else:
-    start_date = datetime(2020, 1, 1).date()
-    end_date = datetime.today().date()
-
-# Filters
+# Add Opportunity Tag filter to filter_fields
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -84,9 +52,11 @@ filter_fields = {
     "Insight Type": "type_tag",
     "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
-    "Clarity": "clarity"
+    "Clarity": "clarity",
+    "Opportunity Tag": "opportunity_tag"
 }
 
+# Mobile filters and sidebar filters
 mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 if mobile_filters_expanded:
     st.markdown("### 🔎 Filter Insights")
