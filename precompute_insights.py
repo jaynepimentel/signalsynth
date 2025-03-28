@@ -1,10 +1,11 @@
-# precompute_insights.py — full enrichment pipeline with journey tagging + keyword tracking
+# precompute_insights.py — deduplicated AI enrichment with keyword & journey tagging
 
 import os
 import json
 import time
 import argparse
 import re
+import hashlib
 from collections import Counter
 from dotenv import load_dotenv
 from utils.load_scraped_insights import load_scraped_posts, process_insights
@@ -30,9 +31,12 @@ def show_diagnostics(insights):
     print("\n🔍 Diagnostic Summary:")
     brands = sorted(set(i.get("target_brand", "Unknown") for i in insights))
     types = sorted(set(i.get("type_tag", "Unknown") for i in insights))
-    print(f"- Total insights: {len(insights)}")
+    print(f"- Total new insights: {len(insights)}")
     print(f"- Brands mentioned: {', '.join(brands)}")
     print(f"- Types tagged: {', '.join(types)}")
+
+def hash_insight(text):
+    return hashlib.md5(text.encode("utf-8")).hexdigest()
 
 # --- Journey stage and title helpers ---
 def generate_insight_title(text):
@@ -75,7 +79,7 @@ def inject_keywords(insights):
 
 # --- Main pipeline ---
 def main(limit=None, dry_run=False):
-    print("🧠 Mode: PRECOMPUTE (GPT calls ENABLED)")
+    print("🧠 Mode: PRECOMPUTE with deduplication")
     key = os.getenv("OPENAI_API_KEY")
     print(f"🔑 OpenAI key loaded: {key[:6]}..." if key else "❌ Missing API key! GPT enrichment will fail.")
 
@@ -86,22 +90,45 @@ def main(limit=None, dry_run=False):
     if limit:
         raw = raw[:limit]
 
-    # Step 2: Clean + prep
+    # Step 2: Clean and hash insights
     log_step("Preprocessing posts")
     processed = process_insights(raw)
+    for i in processed:
+        i["hash"] = hash_insight(i["text"])
 
-    # Step 3: Enrich via AI
-    log_step("Scoring and enriching insights with AI")
-    start = time.time()
-    enriched = filter_relevant_insights(processed, min_score=3)
-    duration = round(time.time() - start, 2)
-    print(f"✅ Enriched {len(enriched)} insights in {duration}s")
+    # Step 3: Load previously enriched insights
+    log_step("Loading existing precomputed insights")
+    if os.path.exists(PRECOMPUTED_PATH):
+        with open(PRECOMPUTED_PATH, "r", encoding="utf-8") as f:
+            try:
+                previous = json.load(f)
+                existing_hashes = set(i.get("hash") for i in previous if "hash" in i)
+            except:
+                previous = []
+                existing_hashes = set()
+    else:
+        previous = []
+        existing_hashes = set()
 
-    if not enriched:
-        print("⚠️ No enriched insights passed the filter. Exiting early.")
+    new_only = [i for i in processed if i["hash"] not in existing_hashes]
+    print(f"🆕 Found {len(new_only)} new posts to enrich")
+
+    # Step 4: AI enrichment
+    if not new_only:
+        print("⚠️ No new insights to enrich. Exiting early.")
         return
 
-    # Step 4: Add titles, journey stages, and trend keywords
+    log_step("Scoring and enriching insights with AI")
+    start = time.time()
+    enriched = filter_relevant_insights(new_only, min_score=3)
+    duration = round(time.time() - start, 2)
+    print(f"✅ Enriched {len(enriched)} new insights in {duration}s")
+
+    if not enriched:
+        print("⚠️ No enriched insights passed the filter.")
+        return
+
+    # Step 5: Add titles, journey stages, and keywords
     log_step("Generating titles, journey stages, and keyword metadata")
     enriched = enrich_titles_and_journey(enriched)
     enriched = inject_keywords(enriched)
@@ -113,15 +140,16 @@ def main(limit=None, dry_run=False):
         print("🧪 Dry run — skipping file write.")
         return
 
-    # Step 5: Save enriched output
+    # Step 6: Save combined file
     log_step(f"Saving enriched insights to {PRECOMPUTED_PATH}")
-    save_json(enriched, PRECOMPUTED_PATH)
+    combined = previous + enriched
+    save_json(combined, PRECOMPUTED_PATH)
 
-    # Step 6: Append to trend timeline
+    # Step 7: Log to trend timeline
     log_step(f"Appending to {TREND_LOG_PATH}")
     log_insights_over_time(enriched)
 
-    log_step(f"🎉 Done! {len(enriched)} insights saved + logged.")
+    log_step(f"🎉 Done! {len(enriched)} new insights saved + logged.")
 
 # Entry point
 if __name__ == "__main__":
