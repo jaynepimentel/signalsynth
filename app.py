@@ -1,4 +1,4 @@
-# ✅ app.py — Streamlit app with UX enhancements (filter pills, highlight, persistent state)
+# ✅ app.py — SignalSynth full UX and GPT-enhanced app
 import os
 import json
 import streamlit as st
@@ -13,7 +13,8 @@ from components.ai_suggester import (
     generate_prd_docx,
     generate_brd_docx,
     generate_prfaq_docx,
-    generate_jira_bug_ticket
+    generate_jira_bug_ticket,
+    generate_gpt_doc
 )
 from components.emerging_trends import get_emerging_signals
 
@@ -34,18 +35,21 @@ except Exception as e:
 
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
-
 if "search_query" not in st.session_state:
     st.session_state.search_query = ""
-
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "Explorer"
+if "power_mode" not in st.session_state:
+    st.session_state.power_mode = False
 
+# Sidebar
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
+st.session_state.power_mode = st.sidebar.checkbox("🧠 Power Mode: Edit GPT Prompt", value=st.session_state.power_mode)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
+# Date Filter
 st.markdown("### 🗓️ Date Filter")
 time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
 if time_filter == "Last 7 Days":
@@ -64,6 +68,7 @@ else:
     start_date = datetime(2020, 1, 1).date()
     end_date = datetime.today().date()
 
+# Filters
 filter_fields = {
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
@@ -88,7 +93,7 @@ else:
         for label, key in filter_fields.items()
     }
 
-# ✨ Filter pills summary
+# ✨ Filter Pills
 active_filters = [(label, val) for label, key in filter_fields.items() if (val := filters[key]) != "All"]
 if active_filters:
     st.markdown("#### 🔖 Active Filters:")
@@ -97,8 +102,10 @@ if active_filters:
         with cols[idx]:
             st.markdown(f"`{label}: {val}`")
 
+# 🔍 Search
 st.session_state.search_query = st.text_input("🔍 Search inside insights (optional)", value=st.session_state.search_query).strip().lower()
 
+# 🔥 Trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 try:
     spikes, flips, keyword_spikes = get_emerging_signals()
@@ -112,6 +119,10 @@ if spikes:
     for tag, ratio in spikes.items():
         trend_terms.add(tag.lower())
         st.markdown(f"- **{tag}** spiked ×{ratio}")
+        if use_gpt and OPENAI_KEY_PRESENT:
+            suggestion_prompt = f"What product strategy action should we consider if we're seeing a {ratio}x spike in user posts mentioning '{tag}'?"
+            suggestion = generate_gpt_doc(suggestion_prompt, "You are a product strategist giving a fast recommendation.")
+            st.markdown(f"🧠 GPT Suggestion: _{suggestion}_")
 if flips:
     st.markdown("**📉 Sentiment Flips**")
     for brand, msg in flips.items():
@@ -124,6 +135,7 @@ if keyword_spikes:
 if not (spikes or flips or keyword_spikes):
     st.info("No recent emerging trends detected yet.")
 
+# Filter Insights
 filtered_insights = []
 for i in scraped_insights:
     try:
@@ -140,6 +152,7 @@ for i in scraped_insights:
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
 
+# Pagination
 page_size = 10
 max_page = max(1, len(filtered_insights) // page_size + int(len(filtered_insights) % page_size > 0))
 page = st.number_input("Page", min_value=1, max_value=max_page, value=1)
@@ -147,6 +160,7 @@ start_idx = (page - 1) * page_size
 end_idx = start_idx + page_size
 paged_insights = filtered_insights[start_idx:end_idx]
 
+# View Mode
 st.subheader("🧭 Explore Insights")
 st.session_state.view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True, index=["Explorer", "Clusters", "Raw List"].index(st.session_state.view_mode))
 
