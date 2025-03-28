@@ -70,12 +70,12 @@ else:
 
 # Filters
 filter_fields = {
-    "Effort Estimate": "effort",
-    "Insight Type": "type_tag",
-    "Persona": "persona",
     "Target Brand": "target_brand",
-    "Brand Sentiment": "brand_sentiment",
+    "Persona": "persona",
     "Journey Stage": "journey_stage",
+    "Insight Type": "type_tag",
+    "Effort Estimate": "effort",
+    "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity"
 }
 
