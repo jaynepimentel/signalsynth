@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Robust with semantic checks and key safety
+# ✅ cluster_synthesizer.py — Final stable version with brand fix for synthetic clusters
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -202,7 +202,8 @@ def generate_synthesized_insights(insights):
             "theme": "Cross-Topic Insight",
             "problem_statement": f"Identified {len(cross_tag_patterns)} weak-tie patterns across subtags",
             "connections": cross_tag_patterns,
-            "insight_count": sum(len(v) for v in cross_tag_patterns.values())
+            "insight_count": sum(len(v) for v in cross_tag_patterns.values()),
+            "brand": "Multiple"
         })
 
     return summaries
