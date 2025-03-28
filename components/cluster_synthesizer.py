@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Final version with coherence filtering + diagnostic suppression
+# ✅ cluster_synthesizer.py — Final merged version with strategic clustering + diagnostic suppression
 import os
 from collections import defaultdict, Counter
 from sentence_transformers import SentenceTransformer
@@ -16,6 +16,7 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
+
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     grouped = defaultdict(list)
@@ -43,6 +44,7 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
                     }))
     return all_clusters
 
+
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
@@ -56,6 +58,7 @@ def cluster_insights(insights, min_cluster_size=3, eps=0.38):
 
     return list(clustered.values())
 
+
 def is_semantically_coherent(cluster, return_score=False):
     if len(cluster) <= 2:
         return (True, 1.0) if return_score else True
@@ -65,6 +68,7 @@ def is_semantically_coherent(cluster, return_score=False):
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
     avg_similarity = upper_triangle.mean()
     return (avg_similarity >= COHERENCE_THRESHOLD, avg_similarity) if return_score else avg_similarity >= COHERENCE_THRESHOLD
+
 
 def split_incoherent_cluster(cluster):
     if len(cluster) <= 3:
@@ -77,6 +81,7 @@ def split_incoherent_cluster(cluster):
         else:
             final.append(c)
     return final
+
 
 def generate_cluster_metadata(cluster):
     if not client:
@@ -114,6 +119,7 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
+
 def find_cross_tag_connections(insights, threshold=0.75):
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
@@ -134,16 +140,12 @@ def find_cross_tag_connections(insights, threshold=0.75):
                 })
     return connections
 
+
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
 
     brand = cluster[0].get("target_brand") or "Unknown"
     type_tag = cluster[0].get("type_tag") or "Insight"
-
-    metadata["title"] = metadata.get("title") or "Untitled Cluster"
-    metadata["problem"] = metadata.get("problem") or "No problem statement."
-    metadata["theme"] = metadata.get("theme") or "General"
-
     quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
 
     idea_counter = defaultdict(int)
@@ -157,24 +159,23 @@ def synthesize_cluster(cluster):
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
-    personas = list({i.get("persona", "Unknown") for i in cluster})
-    effort_levels = list({i.get("effort", "Unknown") for i in cluster})
-    sentiments = list({i.get("brand_sentiment", "Neutral") for i in cluster})
-
     return {
         "title": metadata["title"],
         "theme": metadata["theme"],
         "problem_statement": metadata["problem"],
         "brand": brand,
         "type": type_tag,
-        "personas": personas,
-        "effort_levels": effort_levels,
-        "sentiments": sentiments,
+        "personas": list({i.get("persona", "Unknown") for i in cluster}),
+        "effort_levels": list({i.get("effort", "Unknown") for i in cluster}),
+        "sentiments": list({i.get("brand_sentiment", "Neutral") for i in cluster}),
+        "opportunity_tags": list({i.get("opportunity_tag", "General Insight") for i in cluster}),
         "quotes": quotes,
         "top_ideas": [i[0] for i in top_ideas],
         "score_range": f"{min_score}–{max_score}",
-        "insight_count": len(cluster)
+        "insight_count": len(cluster),
+        "avg_cluster_ready": round(np.mean([i.get("cluster_ready_score", 0) for i in cluster]), 2)
     }
+
 
 def generate_synthesized_insights(insights):
     raw_cluster_tuples = cluster_by_subtag_then_embed(insights)
@@ -186,7 +187,6 @@ def generate_synthesized_insights(insights):
         card["avg_similarity"] = f"{meta['avg_similarity']:.2f}"
         summaries.append(card)
 
-    # Add diagnostic cross-tag connection data as hidden/debug-only
     cross_tag_patterns = find_cross_tag_connections(insights)
     if cross_tag_patterns:
         summaries.append({
