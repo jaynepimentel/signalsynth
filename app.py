@@ -1,4 +1,4 @@
-# app.py — Streamlit app with full cluster safety and cross-tag rendering
+# app.py — Streamlit app with cluster-safe document generation
 import os
 import json
 import streamlit as st
@@ -17,7 +17,6 @@ from components.ai_suggester import (
 )
 from components.emerging_trends import get_emerging_signals
 
-# Load environment and configure
 load_dotenv()
 os.environ["RUNNING_IN_STREAMLIT"] = "1"
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
@@ -25,7 +24,6 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📱 SignalSynth: Collectibles Insight Engine")
 
-# Load precomputed insights
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -37,13 +35,11 @@ except Exception as e:
 if "cached_ideas" not in st.session_state:
     st.session_state.cached_ideas = {}
 
-# Sidebar Settings
 st.sidebar.header("⚙️ Settings")
 use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
 if use_gpt and not OPENAI_KEY_PRESENT:
     st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
 
-# Date Filter
 st.markdown("### 🗓️ Date Filter")
 time_filter = st.radio("Show Insights From:", ["All Time", "Last 7 Days", "Last 30 Days", "Custom Range"], horizontal=True)
 if time_filter == "Last 7 Days":
@@ -62,7 +58,6 @@ else:
     start_date = datetime(2020, 1, 1).date()
     end_date = datetime.today().date()
 
-# Filters
 filter_fields = {
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
@@ -88,7 +83,6 @@ else:
 
 search_query = st.text_input("🔍 Search inside insights (optional)").strip().lower()
 
-# Emerging Trends
 st.subheader("🔥 Emerging Trends & Sentiment Shifts")
 try:
     spikes, flips, keyword_spikes = get_emerging_signals()
@@ -114,7 +108,6 @@ if keyword_spikes:
 if not (spikes or flips or keyword_spikes):
     st.info("No recent emerging trends detected yet.")
 
-# Filter insights by metadata and date
 filtered_insights = []
 for i in scraped_insights:
     try:
@@ -131,7 +124,6 @@ for i in scraped_insights:
 
 st.markdown(f"### 📋 Showing {len(filtered_insights)} filtered insights")
 
-# Pagination
 page_size = 10
 max_page = max(1, len(filtered_insights) // page_size + int(len(filtered_insights) % page_size > 0))
 page = st.number_input("Page", min_value=1, max_value=max_page, value=1)
@@ -139,13 +131,11 @@ start_idx = (page - 1) * page_size
 end_idx = start_idx + page_size
 paged_insights = filtered_insights[start_idx:end_idx]
 
-# View mode
 st.subheader("🧭 Explore Insights")
 view_mode = st.radio("View Mode:", ["Explorer", "Clusters", "Raw List"], horizontal=True)
 
 if view_mode == "Explorer":
     display_insight_explorer(paged_insights)
-
 elif view_mode == "Clusters":
     st.subheader("🧠 Clustered Insights")
     clusters = generate_synthesized_insights(paged_insights)
@@ -153,50 +143,48 @@ elif view_mode == "Clusters":
         st.markdown(f"#### {c.get('title', '[Untitled Cluster]')}")
         st.markdown(f"_Brand: {c.get('brand', 'Unknown')} — {c.get('problem_statement', 'No summary available.')}_")
 
-        # Quotes & ideas (only if this is a standard cluster)
         if "quotes" in c:
             st.markdown("**Quotes:**")
             for q in c["quotes"]:
                 st.markdown(q)
-
             if c.get("top_ideas"):
                 st.markdown("**Top Suggestions:**")
                 for idea in c["top_ideas"]:
                     st.markdown(f"- {idea}")
 
-            # Document generation
-            try:
-                text_blob = "\n".join(c.get("quotes", []))
-                cluster_hash = hashlib.md5(text_blob.encode()).hexdigest()[:8]
-                prd_path = generate_prd_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
-                brd_path = generate_brd_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
-                prfaq_path = generate_prfaq_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
-                with open(prd_path, "rb") as f:
-                    prd_bytes = f.read()
-                with open(brd_path, "rb") as f:
-                    brd_bytes = f.read()
-                with open(prfaq_path, "rb") as f:
-                    prfaq_bytes = f.read()
-                colA, colB, colC = st.columns(3)
-                with colA:
-                    st.download_button("📄 Download PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx", key=f"download_cluster_prd_{cluster_hash}")
-                with colB:
-                    st.download_button("📘 Download BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx", key=f"download_cluster_brd_{cluster_hash}")
-                with colC:
-                    st.download_button("📰 Download PRFAQ", prfaq_bytes, file_name=f"cluster_{idx}_prfaq.docx", key=f"download_cluster_prfaq_{cluster_hash}")
-            except Exception as e:
-                st.error(f"❌ Document generation failed for cluster {idx}: {e}")
-        elif "connections" in c:
+        # Always allow document generation from cluster text
+        text_blob = "\n".join(c.get("quotes", [])) if c.get("quotes") else (
+            c.get("problem_statement", "") or c.get("title", "")
+        )
+        try:
+            cluster_hash = hashlib.md5(text_blob.encode()).hexdigest()[:8]
+            prd_path = generate_prd_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
+            brd_path = generate_brd_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
+            prfaq_path = generate_prfaq_docx(text_blob, brand=c.get("brand", "eBay"), base_filename=f"cluster_{idx}")
+            with open(prd_path, "rb") as f:
+                prd_bytes = f.read()
+            with open(brd_path, "rb") as f:
+                brd_bytes = f.read()
+            with open(prfaq_path, "rb") as f:
+                prfaq_bytes = f.read()
+            colA, colB, colC = st.columns(3)
+            with colA:
+                st.download_button("📄 Download PRD", prd_bytes, file_name=f"cluster_{idx}_prd.docx", key=f"download_cluster_prd_{cluster_hash}")
+            with colB:
+                st.download_button("📘 Download BRD", brd_bytes, file_name=f"cluster_{idx}_brd.docx", key=f"download_cluster_brd_{cluster_hash}")
+            with colC:
+                st.download_button("📰 Download PRFAQ", prfaq_bytes, file_name=f"cluster_{idx}_prfaq.docx", key=f"download_cluster_prfaq_{cluster_hash}")
+        except Exception as e:
+            st.error(f"❌ Document generation failed for cluster {idx}: {e}")
+
+        if "connections" in c:
             st.markdown("**🔀 Cross-Topic Connections:**")
             for (tag1, tag2), pairs in c["connections"].items():
                 st.markdown(f"- **{tag1} ↔ {tag2}** ({len(pairs)} overlaps)")
                 for a, b, sim in pairs[:3]:
                     st.markdown(f"    - \"{a}\" ↔ \"{b}\" _(similarity: {sim})_")
-        else:
-            st.info("Meta insight cluster. No quotes or suggestions available.")
 
         st.markdown("---")
-
 else:
     for i in paged_insights:
         st.markdown(f"- _{i.get('text', '')}_")
@@ -228,7 +216,6 @@ else:
                 except Exception as e:
                     st.error(f"JIRA ticket failed: {e}")
 
-# Brand Summary
 with st.expander("📊 Brand Summary Dashboard", expanded=False):
     display_brand_dashboard(filtered_insights)
 
