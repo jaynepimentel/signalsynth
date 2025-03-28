@@ -26,7 +26,7 @@ from components.emerging_trends import get_emerging_signals
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
-st.title("📡 SignalSynth: Collectibles Insight Engine")
+st.title("📱 SignalSynth: Collectibles Insight Engine")
 
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
@@ -66,12 +66,10 @@ else:
     end_date = datetime.today().date()
 
 # --- Mobile-Friendly Filter Toggle
-mobile_filters_expanded = st.checkbox("🧭 Show Filters Inline (Mobile Friendly)", value=False)
+mobile_filters_expanded = st.checkbox("🛍 Show Filters Inline (Mobile Friendly)", value=False)
 
 # Filter fields
 filter_fields = {
-    # "Scrum Team": "team",
-    # "Workflow Stage": "status",
     "Effort Estimate": "effort",
     "Insight Type": "type_tag",
     "Persona": "persona",
@@ -123,11 +121,12 @@ for i in scraped_insights:
     text = i.get("text", "").lower()
     subtag = i.get("type_subtag", "").lower()
     keywords = i.get("_trend_keywords", [])
-    insight_date = i.get("_logged_at") or i.get("timestamp") or "2024-01-01"
+    insight_date = i.get("_source_post_date") or i.get("_logged_date") or i.get("_logged_at") or "2024-01-01"
     try:
         ts = datetime.strptime(insight_date[:10], "%Y-%m-%d").date()
     except:
         ts = datetime(2024, 1, 1).date()
+
     if (
         all(filters[k] == "All" or i.get(k) == filters[k] for k in filters)
         and (subtag in trend_terms or any(k in trend_terms for k in keywords) or not trend_terms)
@@ -158,7 +157,7 @@ with col1:
 with col2:
     st.markdown(f"**Page {st.session_state.page} of {total_pages}**")
 with col3:
-    if st.button("Next ➡️"):
+    if st.button("Next ➔"):
         st.session_state.page = min(total_pages, st.session_state.page + 1)
 
 start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
@@ -172,6 +171,7 @@ BADGE_COLORS = {
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
     "Live Shopping": "#BC6FF1", "Search": "#118AB2"
 }
+
 def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
@@ -181,7 +181,13 @@ for idx, i in enumerate(paged_insights, start=start_idx):
     st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
     tags = [badge(i.get(t)) for t in ["type_tag", "brand_sentiment", "effort", "journey_stage", "clarity"] if i.get(t)]
     st.markdown(" ".join(tags), unsafe_allow_html=True)
-    st.caption(f"Score: {i.get('score', 0)} | PM Priority: {i.get('pm_priority_score', '?')} | Persona: {i.get('persona')} | Team: {i.get('team')}")
+
+    post_date = i.get("_source_post_date") or i.get("_logged_date") or "Unknown"
+    st.caption(
+        f"🗓️ Posted: {post_date} | Score: {i.get('score', 0)} | PM Priority: {i.get('pm_priority_score', '?')} "
+        f"| Persona: {i.get('persona')} | Team: {i.get('team')}"
+    )
+
     if i.get("type_reason"):
         st.markdown(f"💡 _{i['type_reason']}_")
 
