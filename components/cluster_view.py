@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Revised for robust cluster handling and UI fixes
+# ✅ cluster_view.py — Revised with robust cache handling
 import streamlit as st
 import os
 import json
@@ -50,6 +50,8 @@ def display_clustered_insight_cards(insights):
             st.caption("⚡️ Loaded clusters from cache")
         except Exception as e:
             st.warning(f"⚠️ Failed to load cache: {e}")
+            os.remove(cache_file)  # Remove corrupted cache
+            clusters, cards = None, None
 
     if not clusters or not cards:
         with st.spinner("Clustering and generating summaries..."):
