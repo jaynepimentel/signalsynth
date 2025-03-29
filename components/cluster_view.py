@@ -1,9 +1,8 @@
-# ✅ cluster_view.py — Fully revised with safe key access and diagnostic cluster handling
+# ✅ cluster_view.py — Revised for robust cluster handling and UI fixes
 import streamlit as st
 import os
 import json
 import hashlib
-from slugify import slugify
 from collections import Counter
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
 from components.ai_suggester import (
@@ -101,7 +100,14 @@ def display_clustered_insight_cards(insights):
                 brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
                 st.caption(f"**Brand Mentions:** {brand_text}")
 
-            tags = [badge(card.get(tag, "Unknown")) for tag in ["type", "effort_levels", "sentiments", "opportunity_tags"] if card.get(tag)]
+            tags = []
+            for tag in ["type", "effort_levels", "sentiments", "opportunity_tags"]:
+                values = card.get(tag)
+                if isinstance(values, list):
+                    tags.extend([badge(v) for v in values])
+                elif values:
+                    tags.append(badge(values))
+
             if tags:
                 st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
