@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache + feedback
+# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache + metadata display + feedback
 import streamlit as st
 import os
 import json
@@ -17,7 +17,8 @@ BADGE_COLORS = {
     "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
     "Live Shopping": "#BC6FF1", "Search": "#118AB2",
-    "Fulfillment": "#8ECAE6", "Returns": "#FFB703", "Discovery": "#90BE6D"
+    "Fulfillment": "#8ECAE6", "Returns": "#FFB703", "Discovery": "#90BE6D",
+    "Unclear": "#888", "UI": "#58A4B0", "Feature": "#C8553D", "Policy": "#A26769", "Marketplace": "#5FAD56"
 }
 
 def badge(label):
@@ -43,7 +44,6 @@ def display_clustered_insight_cards(insights):
     cache_file = get_cluster_cache_key(insights)
     clusters, cards = None, None
 
-    # Try local cache
     if os.path.exists(cache_file):
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
@@ -56,7 +56,6 @@ def display_clustered_insight_cards(insights):
             os.remove(cache_file)
             clusters, cards = None, None
 
-    # Try precomputed fallback
     if not cards and os.path.exists(PRECOMPUTED_CLUSTERS):
         try:
             with open(PRECOMPUTED_CLUSTERS, "r", encoding="utf-8") as f:
@@ -68,7 +67,6 @@ def display_clustered_insight_cards(insights):
             st.warning(f"⚠️ Failed to load precomputed clusters: {e}")
             clusters, cards = None, None
 
-    # Live clustering fallback
     if not cards:
         with st.spinner("Clustering and summarizing live..."):
             cards = generate_synthesized_insights(insights)
@@ -126,6 +124,14 @@ def display_clustered_insight_cards(insights):
                 elif values:
                     tags.append(badge(values))
 
+            # Add new tag fields
+            if card.get("topic_focus_tags"):
+                tags.extend([badge(t) for t in card["topic_focus_tags"]])
+            if card.get("action_type_distribution"):
+                tags.extend([badge(t) for t in card["action_type_distribution"].keys()])
+            if card.get("mentions_competitor"):
+                tags.extend([badge(f"⚔ {c.title()}") for c in card["mentions_competitor"]])
+
             if tags:
                 st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
@@ -139,9 +145,7 @@ def display_clustered_insight_cards(insights):
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
 
-            # Feedback on relevance
             if st.button(f"❌ This cluster isn't relevant (#{idx+1})", key=f"bad_cluster_{idx}"):
                 st.success("✅ Thanks for the feedback! We'll use this to improve clustering logic.")
-                # Future: Log to file or backend
 
             st.markdown("---")
