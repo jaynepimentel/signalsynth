@@ -1,10 +1,8 @@
-# signal_scorer.py — Final unified version with embedded classify_effort and enriched clustering fields
+# signal_scorer.py — Final self-contained version with insight type classifiers, effort, and enrichment
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
     generate_pm_ideas,
-    classify_insight_type,
-    classify_insight_type_gpt,
     rate_clarity
 )
 from components.scoring_utils import gpt_estimate_sentiment_subtag
@@ -57,6 +55,21 @@ def classify_effort(ideas):
     if any(x in text for x in ["add filter", "combine", "enhance", "link", "simplify", "group", "new tab"]):
         return "Medium"
     return "High"
+
+def classify_insight_type(text):
+    lowered = text.lower()
+    if any(x in lowered for x in ["can't find", "search", "filter", "browse"]):
+        return "Discovery Friction", 80, "Search-related terms"
+    if any(x in lowered for x in ["refund", "problem", "issue", "support", "delay", "authentic"]):
+        return "Trust Issue", 85, "Post-purchase or authentication problems"
+    if any(x in lowered for x in ["want", "wish", "add feature", "missing", "would be better"]):
+        return "Feature Request", 75, "Improvement language"
+    if any(x in lowered for x in ["love", "great", "awesome", "easy"]):
+        return "Praise", 90, "Positive sentiment"
+    return "Marketplace Chatter", 50, "Unclassified"
+
+def classify_insight_type_gpt(text):
+    return "Marketplace Chatter", 45, "GPT fallback not implemented"
 
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
