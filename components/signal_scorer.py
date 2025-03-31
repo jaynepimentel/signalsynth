@@ -1,9 +1,8 @@
-# signal_scorer.py — Enhanced AI scoring for SignalSynth v3 with strategic flags and flexible filtering
+# signal_scorer.py — Enriched for clustering context, competitive tags, action type, and cluster confidence
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
     generate_pm_ideas,
-    classify_persona,
     classify_effort,
     classify_insight_type,
     classify_insight_type_gpt,
@@ -11,7 +10,7 @@ from components.ai_suggester import (
 )
 from components.scoring_utils import gpt_estimate_sentiment_subtag
 from sentence_transformers import SentenceTransformer, util
-import openai
+import numpy as np
 import hashlib
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -42,6 +41,16 @@ HEURISTIC_KEYWORDS = {
     "box break": 4
 }
 
+KNOWN_COMPETITORS = ["fanatics", "whatnot", "alt", "loupe", "tiktok"]
+KNOWN_PARTNERS = ["psa", "comc", "goldin", "ebay live", "ebay vault"]
+
+ACTION_TYPES = {
+    "ui": ["filter", "search", "tooltip", "label", "navigation"],
+    "feature": ["add", "introduce", "enable", "support", "integration"],
+    "policy": ["refund", "suspend", "blocked", "authentication"],
+    "marketplace": ["grading", "shipping", "vault", "case break", "pack"]
+}
+
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
     similarity = util.cos_sim(embedding, EXEMPLAR_EMBEDDINGS).max().item()
@@ -58,6 +67,16 @@ def score_insight_heuristic(text):
 def combined_score(semantic, heuristic):
     return round((0.6 * semantic) + (0.4 * heuristic), 2)
 
+def classify_persona(text):
+    text = text.lower()
+    buyer_signals = ["bought", "paid", "picked up", "acquired", "pc", "investment"]
+    seller_signals = ["sold", "selling", "consigning", "listing", "submitted", "vault", "liquidating", "offloading"]
+    if any(word in text for word in buyer_signals):
+        return "Buyer"
+    elif any(word in text for word in seller_signals):
+        return "Seller"
+    return "General"
+
 def tag_topic_focus(text):
     lowered = text.lower()
     tags = []
@@ -72,6 +91,19 @@ def tag_topic_focus(text):
     if "case break" in lowered or "box break" in lowered:
         tags.append("Case Break")
     return tags
+
+def detect_competitor_and_partner_mentions(text):
+    lowered = text.lower()
+    competitors = [c for c in KNOWN_COMPETITORS if c in lowered]
+    partners = [p for p in KNOWN_PARTNERS if p in lowered]
+    return competitors, partners
+
+def classify_action_type(text):
+    lowered = text.lower()
+    for category, terms in ACTION_TYPES.items():
+        if any(term in lowered for term in terms):
+            return category.capitalize()
+    return "Unclear"
 
 def generate_insight_title(text):
     return text.strip().capitalize()[:60] + "..." if len(text) > 60 else text.strip().capitalize()
@@ -89,17 +121,18 @@ def classify_journey_stage(text):
     return "Unknown"
 
 def classify_opportunity_type(text):
-    if any(x in text.lower() for x in ["policy", "terms", "blocked", "suspended"]):
+    lowered = text.lower()
+    if any(x in lowered for x in ["policy", "terms", "blocked", "suspended"]):
         return "Policy Risk"
-    if any(x in text.lower() for x in ["conversion", "checkout", "didn’t buy"]):
+    if any(x in lowered for x in ["conversion", "checkout", "didn’t buy"]):
         return "Conversion Blocker"
-    if any(x in text.lower() for x in ["leaving", "stop using", "quit"]):
+    if any(x in lowered for x in ["leaving", "stop using", "quit"]):
         return "Retention Risk"
-    if any(x in text.lower() for x in ["compared to", "fanatics", "whatnot", "alt"]):
+    if any(x in lowered for x in ["compared to", "fanatics", "whatnot", "alt"]):
         return "Competitor Signal"
-    if any(x in text.lower() for x in ["trust", "scam", "fraud"]):
+    if any(x in lowered for x in ["trust", "scam", "fraud"]):
         return "Trust Erosion"
-    if any(x in text.lower() for x in ["love", "amazing", "recommend"]):
+    if any(x in lowered for x in ["love", "amazing", "recommend"]):
         return "Referral Amplifier"
     return "General Insight"
 
@@ -138,6 +171,11 @@ def enrich_single_insight(i, min_score=3):
         and i["type_tag"] in ["Feature Request", "Complaint"]
         and i["frustration"] >= 3
     )
+
+    competitors, partners = detect_competitor_and_partner_mentions(text)
+    i["mentions_competitor"] = competitors
+    i["mentions_ecosystem_partner"] = partners
+    i["action_type"] = classify_action_type(text)
 
     i["topic_focus"] = tag_topic_focus(text)
     i["journey_stage"] = classify_journey_stage(text)
