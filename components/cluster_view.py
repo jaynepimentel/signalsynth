@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Revised with robust cache handling
+# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache handling
 import streamlit as st
 import os
 import json
@@ -41,6 +41,7 @@ def display_clustered_insight_cards(insights):
     cache_file = get_cluster_cache_key(insights)
     clusters, cards = None, None
 
+    # Attempt to load cached cluster results
     if os.path.exists(cache_file):
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
@@ -50,13 +51,15 @@ def display_clustered_insight_cards(insights):
             st.caption("⚡️ Loaded clusters from cache")
         except Exception as e:
             st.warning(f"⚠️ Failed to load cache: {e}")
-            os.remove(cache_file)  # Remove corrupted cache
+            os.remove(cache_file)
             clusters, cards = None, None
 
-    if not clusters or not cards:
+    # Generate new clusters if cache is unavailable
+    if not cards:
         with st.spinner("Clustering and generating summaries..."):
-            clusters = cluster_insights(insights)
             cards = generate_synthesized_insights(insights)
+            clusters = cluster_insights(insights)  # fallback to basic list if model is missing
+
         try:
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump({"clusters": clusters, "cards": cards}, f, indent=2)
@@ -64,8 +67,8 @@ def display_clustered_insight_cards(insights):
         except Exception as e:
             st.warning(f"⚠️ Failed to write cluster cache: {e}")
 
-    if not cards or not clusters:
-        st.warning("No clusters found.")
+    if not cards:
+        st.warning("No clusters found or model is unavailable.")
         return
 
     clusters_per_page = 3
@@ -76,15 +79,15 @@ def display_clustered_insight_cards(insights):
     st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
 
     for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
-        cluster = clusters[idx] if idx < len(clusters) else []
+        cluster = clusters[idx] if clusters and idx < len(clusters) else []
 
         with st.container():
             st.markdown(f"### 📌 {card.get('title', 'Untitled')} — {card.get('brand', 'Unknown')}")
             st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
 
-            if card.get('diagnostic_only'):
+            if card.get("diagnostic_only"):
                 st.info("🔍 Diagnostic summary cluster (special view)")
-                connections = card.get('connections', {})
+                connections = card.get("connections", {})
                 for connection, items in connections.items():
                     st.markdown(f"**Connection:** `{connection}`")
                     for item in items:
@@ -102,6 +105,7 @@ def display_clustered_insight_cards(insights):
                 brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
                 st.caption(f"**Brand Mentions:** {brand_text}")
 
+            # Visual tags
             tags = []
             for tag in ["type", "effort_levels", "sentiments", "opportunity_tags"]:
                 values = card.get(tag)
@@ -113,11 +117,13 @@ def display_clustered_insight_cards(insights):
             if tags:
                 st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
+            # Quotes
             if card.get("quotes"):
                 st.markdown("**📣 Example Quotes:**")
                 for quote in card["quotes"]:
                     st.markdown(quote)
 
+            # Suggestions
             if card.get("top_ideas"):
                 st.markdown("**💡 Top Suggestions:**")
                 for idea in card["top_ideas"]:
