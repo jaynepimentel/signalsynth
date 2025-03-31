@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Streamlit-safe with intelligent clustering
+# ✅ cluster_synthesizer.py — Streamlit-safe with intelligent clustering and metadata-aware synthesis
 import os
 from collections import defaultdict, Counter
 from sklearn.cluster import DBSCAN
@@ -24,7 +24,6 @@ else:
 
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
-
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     if not model:
@@ -56,7 +55,6 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
                     }))
     return all_clusters
 
-
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     if not model:
         return []
@@ -72,7 +70,6 @@ def cluster_insights(insights, min_cluster_size=3, eps=0.38):
 
     return list(clustered.values())
 
-
 def is_semantically_coherent(cluster, return_score=False):
     if not model:
         return (False, 0.0) if return_score else False
@@ -84,7 +81,6 @@ def is_semantically_coherent(cluster, return_score=False):
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
     avg_similarity = upper_triangle.mean()
     return (avg_similarity >= COHERENCE_THRESHOLD, avg_similarity) if return_score else avg_similarity >= COHERENCE_THRESHOLD
-
 
 def split_incoherent_cluster(cluster):
     if not model:
@@ -99,7 +95,6 @@ def split_incoherent_cluster(cluster):
         else:
             final.append(c)
     return final
-
 
 def generate_cluster_metadata(cluster):
     if not client:
@@ -137,7 +132,6 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
-
 def find_cross_tag_connections(insights, threshold=0.75):
     if not model:
         return {}
@@ -160,7 +154,6 @@ def find_cross_tag_connections(insights, threshold=0.75):
                 })
     return connections
 
-
 def synthesize_cluster(cluster):
     metadata = generate_cluster_metadata(cluster)
 
@@ -179,6 +172,11 @@ def synthesize_cluster(cluster):
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
+    # New: tag aggregations
+    action_types = Counter(i.get("action_type", "Unclear") for i in cluster)
+    competitors = sorted({c for i in cluster for c in i.get("mentions_competitor", [])})
+    topics = sorted({t for i in cluster for t in i.get("topic_focus", [])})
+
     return {
         "title": metadata["title"],
         "theme": metadata["theme"],
@@ -193,9 +191,11 @@ def synthesize_cluster(cluster):
         "top_ideas": [i[0] for i in top_ideas],
         "score_range": f"{min_score}–{max_score}",
         "insight_count": len(cluster),
-        "avg_cluster_ready": round(np.mean([i.get("cluster_ready_score", 0) for i in cluster]), 2)
+        "avg_cluster_ready": round(np.mean([i.get("cluster_ready_score", 0) for i in cluster]), 2),
+        "action_type_distribution": dict(action_types),
+        "topic_focus_tags": topics,
+        "mentions_competitor": competitors
     }
-
 
 def generate_synthesized_insights(insights):
     raw_cluster_tuples = cluster_by_subtag_then_embed(insights)
