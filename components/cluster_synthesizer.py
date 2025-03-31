@@ -1,7 +1,6 @@
-# ✅ cluster_synthesizer.py — Final merged version with strategic clustering + diagnostic suppression
+# ✅ cluster_synthesizer.py — Streamlit-safe version with strategic clustering + fallback protection
 import os
 from collections import defaultdict, Counter
-from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 import numpy as np
 from dotenv import load_dotenv
@@ -12,13 +11,23 @@ load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Only load transformer model if not in Streamlit
+model = None
+if os.getenv("RUNNING_IN_STREAMLIT") != "1":
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+else:
+    print("⚠️ SentenceTransformer model skipped in Streamlit mode.")
 
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
 
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
+    if not model:
+        print("⚠️ Clustering skipped — embedding model unavailable.")
+        return []
+
     grouped = defaultdict(list)
     for i in insights:
         for subtag in i.get("type_subtags", [i.get("type_subtag", "General")]):
@@ -46,6 +55,9 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
 
 
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
+    if not model:
+        return []
+
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
     clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
@@ -60,6 +72,8 @@ def cluster_insights(insights, min_cluster_size=3, eps=0.38):
 
 
 def is_semantically_coherent(cluster, return_score=False):
+    if not model:
+        return (False, 0.0) if return_score else False
     if len(cluster) <= 2:
         return (True, 1.0) if return_score else True
     texts = [i["text"] for i in cluster]
@@ -71,6 +85,8 @@ def is_semantically_coherent(cluster, return_score=False):
 
 
 def split_incoherent_cluster(cluster):
+    if not model:
+        return [cluster]
     if len(cluster) <= 3:
         return [cluster]
     subclusters = cluster_insights(cluster, min_cluster_size=2, eps=RECLUSTER_EPS)
@@ -121,6 +137,9 @@ def generate_cluster_metadata(cluster):
 
 
 def find_cross_tag_connections(insights, threshold=0.75):
+    if not model:
+        return {}
+
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
     texts = list(text_map.keys())
