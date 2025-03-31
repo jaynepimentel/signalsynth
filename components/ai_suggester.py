@@ -1,5 +1,4 @@
-# ai_suggester.py — Enhanced with meta-tagging, fallback handling, multi-signal support, and cleaner GPT prep
-
+# ai_suggester.py — Enhanced GPT doc generation with meta-tagging, fallback, and rate_clarity
 import os
 import hashlib
 import json
@@ -13,6 +12,7 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 CACHE_PATH = "gpt_suggestion_cache.json"
 
+# Load suggestion cache
 if os.path.exists(CACHE_PATH):
     try:
         with open(CACHE_PATH, "r", encoding="utf-8") as f:
@@ -35,6 +35,13 @@ def cache_and_return(key, value):
 def clean_gpt_input(text, max_words=1000):
     return " ".join(text.strip().split()[:max_words])
 
+def rate_clarity(text):
+    if len(text.strip()) < 50:
+        return "Needs Clarification"
+    elif any(x in text.lower() for x in ["not sure", "confused", "???", "unclear", "idk"]):
+        return "Needs Clarification"
+    return "Clear"
+
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
     if key in suggestion_cache:
@@ -43,7 +50,14 @@ def generate_pm_ideas(text, brand="eBay"):
     if is_streamlit_mode():
         return ["[GPT disabled in Streamlit mode — use precompute_insights.py]"]
 
-    prompt = f"You are a senior product manager at a marketplace like eBay. Based on the user feedback below, generate 3 concise product suggestions that would improve trust, conversion, or reduce friction.\n\nFeedback:\n{text}\n\nBrand: {brand}"
+    prompt = f"""You are a senior product manager at a marketplace like eBay. 
+Based on the user feedback below, generate 3 concise product suggestions that would improve trust, conversion, or reduce friction.
+
+Feedback:
+{text}
+
+Brand: {brand}
+"""
 
     try:
         response = client.chat.completions.create(
@@ -59,6 +73,8 @@ def generate_pm_ideas(text, brand="eBay"):
         return cache_and_return(key, ideas)
     except Exception as e:
         return [f"[GPT error: {str(e)}]"]
+
+# ========== Document Generation ==========
 
 def generate_gpt_doc(prompt, title):
     if is_streamlit_mode():
@@ -256,6 +272,8 @@ Sections:
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"Turn this customer complaint into a JIRA ticket:\n{text}\n\nInclude: Title, Summary, Steps to Reproduce, Expected vs. Actual Result, Severity."
     return generate_gpt_doc(prompt, "You are a support agent writing a bug report.")
+
+# === Cluster + Multi-insight ===
 
 def generate_multi_signal_prd(text_list, filename, brand="eBay"):
     text = "\n\n".join(text_list)
