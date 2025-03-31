@@ -1,4 +1,5 @@
-# enhanced_classifier.py — hybrid GPT + keyword enrichment
+# enhanced_classifier.py — hybrid GPT + keyword enrichment with severity unpack fix
+
 import os
 import re
 from components.brand_recognizer import recognize_brand
@@ -34,14 +35,16 @@ def classify_sentiment(text):
         }
 
     # fallback to GPT-based
-    return gpt_estimate_sentiment_subtag(text)["sentiment"], 70
+    result = gpt_estimate_sentiment_subtag(text)
+    return {
+        "sentiment": result["sentiment"],
+        "confidence": 70
+    }
 
 def detect_subtags(text):
-    # GPT-based fallback or hybrid
     if not USE_LIGHT_MODEL:
         return gpt_estimate_sentiment_subtag(text)["subtags"]
-    
-    # regex fallback
+
     SUBTAG_MAP = {
         "delay": "Delays", "scam": "Fraud Concern", "slow": "Speed Issue",
         "authentication": "Trust Issue", "refund": "Refund Issue", "tracking": "Tracking Confusion",
@@ -73,8 +76,9 @@ def enhance_insight(insight):
     insight["type_subtag"] = subtags[0]
 
     # Severity scoring
-    severity = estimate_severity(text)
+    severity, reason = estimate_severity(text)
     insight["severity_score"] = severity
+    insight["severity_reason"] = reason
     insight["frustration_flag"] = severity >= 85
 
     # PM Priority
