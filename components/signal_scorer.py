@@ -1,4 +1,4 @@
-# signal_scorer.py — Enhanced AI scoring for SignalSynth v3 with strategic flags
+# signal_scorer.py — Enhanced AI scoring for SignalSynth v3 with strategic flags and flexible filtering
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
@@ -20,9 +20,27 @@ HIGH_SIGNAL_EXAMPLES = [
     "Authentication guarantee failed and refund denied",
     "Vault is down and I can't access my items",
     "PSA integration broke and delayed my grading by 30 days",
-    "Shipping label created but never scanned, refund blocked"
+    "Shipping label created but never scanned, refund blocked",
+    "Case break was rigged on eBay Live and nobody moderated"
 ]
 EXEMPLAR_EMBEDDINGS = model.encode(HIGH_SIGNAL_EXAMPLES, convert_to_tensor=True)
+
+HEURISTIC_KEYWORDS = {
+    "authenticity guarantee": 15,
+    "authentication failed": 15,
+    "grading psa": 12,
+    "ebay psa": 10,
+    "vault authentication": 10,
+    "return after authentication": 8,
+    "delay": 5,
+    "scam": 5,
+    "broken": 5,
+    "never received": 5,
+    "ebay live": 5,
+    "fanatics live": 5,
+    "case break": 4,
+    "box break": 4
+}
 
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
@@ -32,18 +50,9 @@ def score_insight_semantic(text):
 def score_insight_heuristic(text):
     lowered = text.lower()
     score = 0
-    if "authenticity guarantee" in lowered or "authentication failed" in lowered:
-        score += 15
-    if "grading" in lowered and "psa" in lowered:
-        score += 12
-    if "ebay" in lowered and "psa" in lowered:
-        score += 10
-    if "vault" in lowered and "authentication" in lowered:
-        score += 10
-    if "return after authentication" in lowered:
-        score += 8
-    if any(term in lowered for term in ["delay", "scam", "broken", "never received"]):
-        score += 5
+    for keyword, value in HEURISTIC_KEYWORDS.items():
+        if keyword in lowered:
+            score += value
     return score
 
 def combined_score(semantic, heuristic):
@@ -60,6 +69,8 @@ def tag_topic_focus(text):
         tags.append("Vault")
     if "refund" in lowered and "graded" in lowered:
         tags.append("Graded Refund Issue")
+    if "case break" in lowered or "box break" in lowered:
+        tags.append("Case Break")
     return tags
 
 def generate_insight_title(text):
@@ -132,16 +143,21 @@ def enrich_single_insight(i, min_score=3):
     i["journey_stage"] = classify_journey_stage(text)
     i["clarity"] = rate_clarity(text)
     i["title"] = generate_insight_title(text)
-
-    # New strategic fields
     i["opportunity_tag"] = classify_opportunity_type(text)
     i["cluster_ready_score"] = round((i["score"] + (i["frustration"] or 0)*5 + (i["impact"] or 0)*5) / 3, 2)
     i["fingerprint"] = hashlib.md5(text.lower().encode()).hexdigest()
 
-    if i["type_tag"] != "Marketplace Chatter" and i["score"] >= min_score:
+    if i["type_tag"] != "Marketplace Chatter" and (i["score"] >= min_score or i["type_tag"] in ["Complaint", "Feature Request"]):
         return i
     return None
 
 def filter_relevant_insights(insights, min_score=3):
-    enriched = [enrich_single_insight(i, min_score) for i in insights]
-    return [i for i in enriched if i is not None]
+    enriched = []
+    for i in insights:
+        enriched_item = enrich_single_insight(i, min_score)
+        if enriched_item:
+            enriched.append(enriched_item)
+        else:
+            print(f"[SKIPPED] Score too low or irrelevant: {i.get('text')[:80]}...")
+    print(f"[SUMMARY] Enriched {len(enriched)} / {len(insights)} total insights")
+    return enriched
