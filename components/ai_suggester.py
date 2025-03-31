@@ -1,4 +1,5 @@
 # ai_suggester.py — Enhanced with meta-tagging, fallback handling, multi-signal support, and cleaner GPT prep
+
 import os
 import hashlib
 import json
@@ -40,7 +41,7 @@ def generate_pm_ideas(text, brand="eBay"):
         return suggestion_cache[key]
 
     if is_streamlit_mode():
-        return ["[⚠️ GPT disabled in Streamlit mode — use precompute_insights.py]"]
+        return ["[GPT disabled in Streamlit mode — use precompute_insights.py]"]
 
     prompt = f"You are a senior product manager at a marketplace like eBay. Based on the user feedback below, generate 3 concise product suggestions that would improve trust, conversion, or reduce friction.\n\nFeedback:\n{text}\n\nBrand: {brand}"
 
@@ -57,7 +58,7 @@ def generate_pm_ideas(text, brand="eBay"):
         ideas = [line.strip("-• ").strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
         return cache_and_return(key, ideas)
     except Exception as e:
-        return [f"[⚠️ GPT error: {str(e)}]"]
+        return [f"[GPT error: {str(e)}]"]
 
 def generate_gpt_doc(prompt, title):
     if is_streamlit_mode():
