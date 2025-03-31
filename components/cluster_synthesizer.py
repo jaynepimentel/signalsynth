@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Streamlit-safe version with strategic clustering + fallback protection
+# ✅ cluster_synthesizer.py — Streamlit-safe with intelligent clustering
 import os
 from collections import defaultdict, Counter
 from sklearn.cluster import DBSCAN
@@ -11,13 +11,16 @@ load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
-# Only load transformer model if not in Streamlit
+# --- STREAMLIT-SAFE MODEL LOADING ---
 model = None
 if os.getenv("RUNNING_IN_STREAMLIT") != "1":
-    from sentence_transformers import SentenceTransformer
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    try:
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+    except Exception as e:
+        print("❌ Failed to load SentenceTransformer:", e)
 else:
-    print("⚠️ SentenceTransformer model skipped in Streamlit mode.")
+    print("⚠️ Skipping model load — running in Streamlit environment.")
 
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
@@ -25,7 +28,7 @@ RECLUSTER_EPS = 0.30
 
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     if not model:
-        print("⚠️ Clustering skipped — embedding model unavailable.")
+        print("⚠️ Embedding model unavailable. Skipping clustering.")
         return []
 
     grouped = defaultdict(list)
@@ -57,7 +60,6 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     if not model:
         return []
-
     texts = [i.get("text", "") for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
     clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
@@ -139,7 +141,6 @@ def generate_cluster_metadata(cluster):
 def find_cross_tag_connections(insights, threshold=0.75):
     if not model:
         return {}
-
     connections = defaultdict(list)
     text_map = {i["text"]: i for i in insights}
     texts = list(text_map.keys())
