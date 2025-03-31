@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache handling
+# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache + feedback
 import streamlit as st
 import os
 import json
@@ -27,6 +27,8 @@ def badge(label):
 CACHE_DIR = ".cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
+PRECOMPUTED_CLUSTERS = "precomputed_clusters.json"
+
 def get_cluster_cache_key(insights):
     key = hashlib.md5(json.dumps(insights, sort_keys=True).encode()).hexdigest()
     return os.path.join(CACHE_DIR, f"cluster_{key}.json")
@@ -41,34 +43,45 @@ def display_clustered_insight_cards(insights):
     cache_file = get_cluster_cache_key(insights)
     clusters, cards = None, None
 
-    # Attempt to load cached cluster results
+    # Try local cache
     if os.path.exists(cache_file):
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 clusters = data.get("clusters")
                 cards = data.get("cards")
-            st.caption("⚡️ Loaded clusters from cache")
+            st.caption("⚡️ Loaded clusters from local cache")
         except Exception as e:
-            st.warning(f"⚠️ Failed to load cache: {e}")
+            st.warning(f"⚠️ Failed to load cluster cache: {e}")
             os.remove(cache_file)
             clusters, cards = None, None
 
-    # Generate new clusters if cache is unavailable
-    if not cards:
-        with st.spinner("Clustering and generating summaries..."):
-            cards = generate_synthesized_insights(insights)
-            clusters = cluster_insights(insights)  # fallback to basic list if model is missing
+    # Try precomputed fallback
+    if not cards and os.path.exists(PRECOMPUTED_CLUSTERS):
+        try:
+            with open(PRECOMPUTED_CLUSTERS, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                clusters = data.get("clusters")
+                cards = data.get("cards")
+            st.caption("📦 Loaded precomputed clusters")
+        except Exception as e:
+            st.warning(f"⚠️ Failed to load precomputed clusters: {e}")
+            clusters, cards = None, None
 
+    # Live clustering fallback
+    if not cards:
+        with st.spinner("Clustering and summarizing live..."):
+            cards = generate_synthesized_insights(insights)
+            clusters = cluster_insights(insights)
         try:
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump({"clusters": clusters, "cards": cards}, f, indent=2)
-            st.caption("💾 Clusters cached for faster reloads")
+            st.caption("💾 Saved cluster cache")
         except Exception as e:
             st.warning(f"⚠️ Failed to write cluster cache: {e}")
 
     if not cards:
-        st.warning("No clusters found or model is unavailable.")
+        st.warning("No clusters found or model unavailable.")
         return
 
     clusters_per_page = 3
@@ -105,7 +118,6 @@ def display_clustered_insight_cards(insights):
                 brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
                 st.caption(f"**Brand Mentions:** {brand_text}")
 
-            # Visual tags
             tags = []
             for tag in ["type", "effort_levels", "sentiments", "opportunity_tags"]:
                 values = card.get(tag)
@@ -117,16 +129,19 @@ def display_clustered_insight_cards(insights):
             if tags:
                 st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
-            # Quotes
             if card.get("quotes"):
                 st.markdown("**📣 Example Quotes:**")
                 for quote in card["quotes"]:
                     st.markdown(quote)
 
-            # Suggestions
             if card.get("top_ideas"):
                 st.markdown("**💡 Top Suggestions:**")
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
+
+            # Feedback on relevance
+            if st.button(f"❌ This cluster isn't relevant (#{idx+1})", key=f"bad_cluster_{idx}"):
+                st.success("✅ Thanks for the feedback! We'll use this to improve clustering logic.")
+                # Future: Log to file or backend
 
             st.markdown("---")
