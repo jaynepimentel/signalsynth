@@ -1,9 +1,8 @@
-# signal_scorer.py — Enriched for clustering context, competitive tags, action type, and cluster confidence
+# signal_scorer.py — Final unified version with embedded classify_effort and enriched clustering fields
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import (
     generate_pm_ideas,
-    classify_effort,
     classify_insight_type,
     classify_insight_type_gpt,
     rate_clarity
@@ -50,6 +49,14 @@ ACTION_TYPES = {
     "policy": ["refund", "suspend", "blocked", "authentication"],
     "marketplace": ["grading", "shipping", "vault", "case break", "pack"]
 }
+
+def classify_effort(ideas):
+    text = " ".join(ideas).lower()
+    if any(x in text for x in ["rename", "change label", "copy", "show tooltip", "highlight", "reorder", "color"]):
+        return "Low"
+    if any(x in text for x in ["add filter", "combine", "enhance", "link", "simplify", "group", "new tab"]):
+        return "Medium"
+    return "High"
 
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
