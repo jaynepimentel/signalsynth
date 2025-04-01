@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Streamlit-safe cluster explorer with cache + metadata + enhanced cards
+# cluster_view.py — Enhanced cluster view with GPT tools, bundling, and doc generation
 import streamlit as st
 import os
 import json
@@ -8,7 +8,9 @@ from components.cluster_synthesizer import generate_synthesized_insights, cluste
 from components.ai_suggester import (
     generate_cluster_prd_docx,
     generate_cluster_prfaq_docx,
-    generate_cluster_brd_docx
+    generate_cluster_brd_docx,
+    generate_gpt_doc,
+    generate_multi_signal_prd
 )
 
 # Visual badge coloring
@@ -55,7 +57,6 @@ def display_clustered_insight_cards(insights):
         except Exception as e:
             st.warning(f"⚠️ Failed to load cluster cache: {e}")
             os.remove(cache_file)
-            clusters, cards = None, None
 
     if not cards and os.path.exists(PRECOMPUTED_CLUSTERS):
         try:
@@ -66,7 +67,6 @@ def display_clustered_insight_cards(insights):
             st.caption("📦 Loaded precomputed clusters")
         except Exception as e:
             st.warning(f"⚠️ Failed to load precomputed clusters: {e}")
-            clusters, cards = None, None
 
     if not cards:
         with st.spinner("🔄 Clustering and summarizing live..."):
@@ -83,7 +83,6 @@ def display_clustered_insight_cards(insights):
         st.warning("No clusters found or model unavailable.")
         return
 
-    # Pagination
     clusters_per_page = 3
     total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
     current_page = st.number_input("📚 Page", min_value=1, max_value=total_pages, value=1, step=1)
@@ -91,7 +90,6 @@ def display_clustered_insight_cards(insights):
     end_idx = start_idx + clusters_per_page
     st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
 
-    # Card display
     for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
         cluster = clusters[idx] if clusters and idx < len(clusters) else []
 
@@ -104,11 +102,9 @@ def display_clustered_insight_cards(insights):
             persona_counts = Counter(i.get("persona", "Unknown") for i in cluster)
             brand_counts = Counter(i.get("target_brand", "Unknown") for i in cluster)
             if persona_counts:
-                persona_text = " | ".join([f"👤 {k}: {v}" for k, v in persona_counts.items()])
-                st.caption(f"**Persona Breakdown:** {persona_text}")
+                st.caption("**Persona Breakdown:** " + " | ".join([f"👤 {k}: {v}" for k, v in persona_counts.items()]))
             if brand_counts:
-                brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
-                st.caption(f"**Brand Mentions:** {brand_text}")
+                st.caption("**Brand Mentions:** " + " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()]))
 
             # Tag badges
             tags = []
@@ -122,7 +118,6 @@ def display_clustered_insight_cards(insights):
                 tags.extend([badge(t) for t in card["action_type_distribution"].keys()])
             if card.get("mentions_competitor"):
                 tags.extend([badge(f"⚔ {c.title()}") for c in card["mentions_competitor"]])
-
             if tags:
                 st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
@@ -135,6 +130,43 @@ def display_clustered_insight_cards(insights):
                 st.markdown("**💡 Top Suggestions:**")
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
+
+            st.markdown("")
+
+            with st.expander("✨ AI Tools for This Cluster"):
+                joined_text = "\n\n".join([i["text"] for i in cluster[:8]])
+
+                if st.button(f"🧼 Clarify This Cluster", key=f"clarify_cluster_{idx}"):
+                    with st.spinner("Rewriting for clarity..."):
+                        clarified = generate_gpt_doc(
+                            f"Rewrite these feedback snippets to clearly summarize the key customer concern:\n\n{joined_text}",
+                            "You are rewriting vague customer feedback for clarity."
+                        )
+                        st.markdown("✅ Clarified Summary:")
+                        st.markdown(f"> {clarified}")
+
+                if st.button(f"🏷️ Suggest Tags for Cluster", key=f"tags_cluster_{idx}"):
+                    with st.spinner("Suggesting tags..."):
+                        tag_summary = generate_gpt_doc(
+                            f"Suggest 3–5 product tags or themes that describe these user signals:\n\n{joined_text}",
+                            "You are a PM classifying this feedback."
+                        )
+                        st.info("💡 Suggested Tags:")
+                        st.markdown(f"`{tag_summary}`")
+
+                if st.button(f"📦 Generate Combined PRD", key=f"bundle_cluster_prd_{idx}"):
+                    path = generate_multi_signal_prd([i["text"] for i in cluster[:8]], filename=f"bundle-cluster-{idx}")
+                    if path and os.path.exists(path):
+                        with open(path, "rb") as f:
+                            st.download_button(
+                                "⬇️ Download Cluster PRD",
+                                f,
+                                file_name=os.path.basename(path),
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_bundle_prd_{idx}"
+                            )
+
+            st.markdown("")
 
             col1, col2 = st.columns([1, 3])
             with col1:
