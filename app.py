@@ -7,7 +7,14 @@ from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
 from datetime import datetime
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
+import streamlit as st
+
+@st.cache_resource(show_spinner="Loading sentence transformer model...")
+def get_embedding_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+model = get_embedding_model()
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
