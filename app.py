@@ -31,6 +31,7 @@ from components.strategic_tools import (
     display_prd_bundler,
     display_spark_suggestions
 )
+from components.journey_heatmap import display_journey_heatmap
 
 # ───────────────────────────────────────
 load_dotenv()
@@ -92,7 +93,15 @@ BADGE_COLORS = {
 }
 def badge(label, color): return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging", "🧠 Strategic Tools"])
+tabs = st.tabs([
+    "📌 Insights",
+    "🧱 Clusters",
+    "🔎 Explorer",
+    "📈 Trends",
+    "🔥 Emerging",
+    "🧠 Strategic Tools",
+    "🗺 Journey Heatmap"
+])
 
 # ───────────────────────────────────────
 # Tab 0: Individual Insights
@@ -226,3 +235,7 @@ with tabs[0]:
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key=f"dl_doc_{idx}"
                             )
+# ───────────────────────────────────────
+# Tab 6: Journey Heatmap
+with tabs[6]:
+    display_journey_heatmap(scraped_insights)
