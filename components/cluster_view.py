@@ -1,4 +1,4 @@
-# ✅ cluster_view.py — Streamlit-safe cluster explorer with robust cache + metadata display + feedback
+# ✅ cluster_view.py — Streamlit-safe cluster explorer with cache + metadata + enhanced cards
 import streamlit as st
 import os
 import json
@@ -11,6 +11,7 @@ from components.ai_suggester import (
     generate_cluster_brd_docx
 )
 
+# Visual badge coloring
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
@@ -25,9 +26,9 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
+# Caching logic
 CACHE_DIR = ".cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
-
 PRECOMPUTED_CLUSTERS = "precomputed_clusters.json"
 
 def get_cluster_cache_key(insights):
@@ -68,7 +69,7 @@ def display_clustered_insight_cards(insights):
             clusters, cards = None, None
 
     if not cards:
-        with st.spinner("Clustering and summarizing live..."):
+        with st.spinner("🔄 Clustering and summarizing live..."):
             cards = generate_synthesized_insights(insights)
             clusters = cluster_insights(insights)
         try:
@@ -82,6 +83,7 @@ def display_clustered_insight_cards(insights):
         st.warning("No clusters found or model unavailable.")
         return
 
+    # Pagination
     clusters_per_page = 3
     total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
     current_page = st.number_input("📚 Page", min_value=1, max_value=total_pages, value=1, step=1)
@@ -89,23 +91,15 @@ def display_clustered_insight_cards(insights):
     end_idx = start_idx + clusters_per_page
     st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
 
+    # Card display
     for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
         cluster = clusters[idx] if clusters and idx < len(clusters) else []
 
         with st.container():
             st.markdown(f"### 📌 {card.get('title', 'Untitled')} — {card.get('brand', 'Unknown')}")
-            st.markdown(f"**Problem Statement:** {card.get('problem_statement', '(none)')}")
+            st.markdown(f"**Summary:** {card.get('summary', '(none)')}")
 
-            if card.get("diagnostic_only"):
-                st.info("🔍 Diagnostic summary cluster (special view)")
-                connections = card.get("connections", {})
-                for connection, items in connections.items():
-                    st.markdown(f"**Connection:** `{connection}`")
-                    for item in items:
-                        st.markdown(f"- {item['a']} ↔ {item['b']} (Similarity: {item['similarity']})")
-                continue
-
-            st.markdown(f"**Mentions:** {card.get('insight_count', 0)} | Score Range: {card.get('score_range', '?')}")
+            st.caption(f"Mentions: {card.get('insight_count', len(cluster))} | Score Range: {card.get('score_range', '?')}")
 
             persona_counts = Counter(i.get("persona", "Unknown") for i in cluster)
             brand_counts = Counter(i.get("target_brand", "Unknown") for i in cluster)
@@ -116,17 +110,14 @@ def display_clustered_insight_cards(insights):
                 brand_text = " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()])
                 st.caption(f"**Brand Mentions:** {brand_text}")
 
+            # Tag badges
             tags = []
-            for tag in ["type", "effort_levels", "sentiments", "opportunity_tags"]:
-                values = card.get(tag)
+            for tag_field in ["type", "effort_levels", "sentiments", "opportunity_tags", "topic_focus_tags"]:
+                values = card.get(tag_field)
                 if isinstance(values, list):
                     tags.extend([badge(v) for v in values])
                 elif values:
                     tags.append(badge(values))
-
-            # Add new tag fields
-            if card.get("topic_focus_tags"):
-                tags.extend([badge(t) for t in card["topic_focus_tags"]])
             if card.get("action_type_distribution"):
                 tags.extend([badge(t) for t in card["action_type_distribution"].keys()])
             if card.get("mentions_competitor"):
@@ -145,7 +136,31 @@ def display_clustered_insight_cards(insights):
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
 
-            if st.button(f"❌ This cluster isn't relevant (#{idx+1})", key=f"bad_cluster_{idx}"):
-                st.success("✅ Thanks for the feedback! We'll use this to improve clustering logic.")
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                if st.button(f"❌ Not relevant", key=f"bad_cluster_{idx}"):
+                    st.success("✅ Thanks for the feedback!")
+
+            with col2:
+                doc_type = st.selectbox("Generate doc:", ["PRD", "BRD", "PRFAQ"], key=f"doc_type_cluster_{idx}")
+                if st.button("📄 Generate", key=f"generate_doc_cluster_{idx}"):
+                    filename = f"cluster_{idx}_{card.get('title', 'untitled')[:40].replace(' ', '_')}"
+                    with st.spinner(f"Generating {doc_type}..."):
+                        if doc_type == "PRD":
+                            path = generate_cluster_prd_docx(card, filename)
+                        elif doc_type == "BRD":
+                            path = generate_cluster_brd_docx(card, filename + "-brd")
+                        elif doc_type == "PRFAQ":
+                            path = generate_cluster_prfaq_docx(card, filename + "-prfaq")
+
+                        if path and os.path.exists(path):
+                            with open(path, "rb") as f:
+                                st.download_button(
+                                    label=f"⬇️ Download {doc_type}",
+                                    data=f,
+                                    file_name=os.path.basename(path),
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"dl_cluster_{doc_type}_{idx}"
+                                )
 
             st.markdown("---")
