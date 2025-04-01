@@ -1,10 +1,9 @@
+# components/strategic_tools.py
 import streamlit as st
 import pandas as pd
 import random
 import altair as alt
 from collections import Counter
-
-from components.ai_suggester import generate_multi_signal_prd, generate_gpt_doc
 
 # ─────────────────────────────────────────────
 # 🔹 SPARK SUGGESTIONS
@@ -29,6 +28,7 @@ def display_signal_digest(insights):
     st.markdown("- Fastest rising tag: **{}**".format(spiking_topic(insights)))
     st.markdown("- Most mentioned brand: **{}**".format(most_mentioned_brand(insights)))
     st.markdown("- Average PM priority: **{}**".format(round(sum(i.get('pm_priority_score', 0) for i in insights)/len(insights), 2)))
+
 
 def top_complaint_subtag(insights):
     tags = [i.get("type_subtag", "") for i in insights if i.get("brand_sentiment") == "Complaint"]
@@ -120,19 +120,7 @@ def display_impact_heatmap(insights):
 
 def display_prd_bundler(insights):
     st.markdown("### 📦 Bundle Insights into One PRD")
-    title_map = {f"{i.get('title') or i.get('text')[:50]}...": i for i in insights}
-    selected_titles = st.multiselect("Select Insights to Combine", list(title_map.keys()), max_selections=5)
-    if selected_titles:
-        selected_texts = [title_map[t]["text"] for t in selected_titles]
-        if st.button("🛠 Generate Consolidated PRD"):
-            with st.spinner("Generating..."):
-                filename = "bundled-prd"
-                file_path = generate_multi_signal_prd(selected_texts, filename=filename)
-                if file_path and os.path.exists(file_path):
-                    with open(file_path, "rb") as f:
-                        st.download_button(
-                            label="⬇️ Download PRD",
-                            data=f,
-                            file_name=os.path.basename(file_path),
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        )
+    options = [f"{i.get('title') or i.get('text')[:50]}" for i in insights]
+    selected = st.multiselect("Select Insights to Combine", options, max_selections=5)
+    if selected and st.button("🛠 Generate Consolidated PRD"):
+        st.info("(This would call generate_multi_signal_prd and create a download link.)")
