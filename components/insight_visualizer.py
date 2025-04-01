@@ -33,18 +33,21 @@ def display_insight_charts(insights):
         st.subheader("📊 PM Priority Score Trend (7-day Avg)")
         if 'pm_priority_score' in df.columns:
             trend = df.set_index('_date').resample('7D')['pm_priority_score'].mean().dropna()
-            st.line_chart(trend, use_container_width=True)
+            if not trend.empty:
+                st.line_chart(trend, use_container_width=True)
 
         st.subheader("📊 Complaint vs Praise Over Time")
         if 'brand_sentiment' in df.columns:
             sent_trend = df.groupby([pd.Grouper(key='_date', freq='W'), 'brand_sentiment']).size().unstack(fill_value=0)
-            st.area_chart(sent_trend, use_container_width=True)
+            if not sent_trend.empty:
+                st.area_chart(sent_trend, use_container_width=True)
 
         if '_trend_keywords' in df.columns:
             st.subheader("🔥 Top Emerging Keywords")
             keyword_df = df.explode('_trend_keywords')
             top_kw = keyword_df['_trend_keywords'].value_counts().head(10)
-            st.bar_chart(top_kw)
+            if not top_kw.empty:
+                st.bar_chart(top_kw)
 
         if 'effort' in df.columns:
             st.subheader("💼 Effort Breakdown")
