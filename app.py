@@ -1,4 +1,4 @@
-# app.py — Fully Enhanced SignalSynth App with all tabs functioning and enhancements applied
+# app.py — Optimized embedding model caching for Streamlit performance
 
 import os
 import json
@@ -8,8 +8,8 @@ from collections import Counter
 from slugify import slugify
 from datetime import datetime
 from sentence_transformers import SentenceTransformer
-import streamlit as st
 
+# Caching embedding model
 @st.cache_resource(show_spinner="Loading sentence transformer model...")
 def get_embedding_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -41,9 +41,10 @@ from components.strategic_tools import (
 )
 from components.journey_heatmap import display_journey_heatmap
 
-# ───────────────────────────────────────
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
+
+# (Continue with the rest of your code...)
 
 def get_embedding_model():
     from sentence_transformers import SentenceTransformer
