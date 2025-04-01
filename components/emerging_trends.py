@@ -1,18 +1,21 @@
-# emerging_trends.py — spike and sentiment shift detection with keyword-level AI hooks
+# emerging_trends.py — detects emerging issues based on spikes and sentiment shifts
 import pandas as pd
 import json
 from datetime import datetime
-from collections import defaultdict
+import streamlit as st
 
 def load_trend_data(path="trend_log.jsonl"):
     rows = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            rows.append(json.loads(line))
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                rows.append(json.loads(line))
+    except Exception as e:
+        st.warning(f"⚠️ Could not load trend log: {e}")
     return pd.DataFrame(rows)
 
 def detect_spiking_subtags(df, window_days=7, threshold=2.0):
-    df["_logged_at"] = pd.to_datetime(df["_logged_at"])
+    df["_logged_at"] = pd.to_datetime(df["_logged_at"], errors="coerce")
     recent = df[df["_logged_at"] >= pd.Timestamp.now() - pd.Timedelta(days=window_days)]
     prior = df[df["_logged_at"] < pd.Timestamp.now() - pd.Timedelta(days=window_days)]
 
@@ -24,22 +27,8 @@ def detect_spiking_subtags(df, window_days=7, threshold=2.0):
 
     return spikes.round(2).to_dict()
 
-def detect_keyword_spikes(df, keyword_field="_trend_keywords", window_days=7, threshold=2.0):
-    df["_logged_at"] = pd.to_datetime(df["_logged_at"])
-    df = df.explode(keyword_field)
-    df = df.dropna(subset=[keyword_field])
-
-    recent = df[df["_logged_at"] >= pd.Timestamp.now() - pd.Timedelta(days=window_days)]
-    prior = df[df["_logged_at"] < pd.Timestamp.now() - pd.Timedelta(days=window_days)]
-
-    recent_counts = recent[keyword_field].value_counts()
-    prior_counts = prior[keyword_field].value_counts().add(1)
-
-    ratio = (recent_counts / prior_counts).sort_values(ascending=False)
-    return ratio[ratio > threshold].round(2).to_dict()
-
 def detect_sentiment_flips(df):
-    df["_logged_at"] = pd.to_datetime(df["_logged_at"])
+    df["_logged_at"] = pd.to_datetime(df["_logged_at"], errors="coerce")
     df["day"] = df["_logged_at"].dt.date
 
     grouped = df.groupby(["day", "target_brand", "brand_sentiment"]).size().unstack(fill_value=0)
@@ -50,24 +39,35 @@ def detect_sentiment_flips(df):
         if "Praise" in brand_data.columns and "Complaint" in brand_data.columns:
             praise_trend = brand_data["Praise"].rolling(3).mean()
             complaint_trend = brand_data["Complaint"].rolling(3).mean()
-            if len(praise_trend) > 3 and praise_trend.iloc[-1] < complaint_trend.iloc[-1]:
-                sentiment_flips[brand] = "Complaint > Praise trend reversal"
+            if len(praise_trend) > 0 and len(complaint_trend) > 0:
+                if praise_trend.iloc[-1] < complaint_trend.iloc[-1]:
+                    sentiment_flips[brand] = "Complaint > Praise trend reversal"
 
     return sentiment_flips
 
-def get_emerging_signals(path="trend_log.jsonl"):
-    df = load_trend_data(path)
-    if df.empty:
-        return {}, {}, {}
+def detect_emerging_topics(insights):
+    df = pd.DataFrame(insights)
+    if df.empty or '_logged_at' not in df.columns:
+        return {"spikes": {}, "flips": {}}
 
     spikes = detect_spiking_subtags(df)
     flips = detect_sentiment_flips(df)
+    return {"spikes": spikes, "flips": flips}
 
-    keyword_spikes = {}
-    if "_trend_keywords" in df.columns:
-        try:
-            keyword_spikes = detect_keyword_spikes(df)
-        except Exception as e:
-            print(f"⚠️ Keyword spike detection failed: {e}")
+def render_emerging_topics(results):
+    spikes = results.get("spikes", {})
+    flips = results.get("flips", {})
 
-    return spikes, flips, keyword_spikes
+    if not spikes and not flips:
+        st.info("No emerging topics found in this cycle.")
+        return
+
+    if spikes:
+        st.subheader("📈 Subtag Spike Alerts")
+        for k, v in spikes.items():
+            st.markdown(f"- **{k}** spiked by **{v}x**")
+
+    if flips:
+        st.subheader("⚠️ Sentiment Reversals")
+        for brand, note in flips.items():
+            st.markdown(f"- **{brand}**: {note}")
