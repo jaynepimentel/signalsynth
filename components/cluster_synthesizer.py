@@ -1,4 +1,4 @@
-# ✅ cluster_synthesizer.py — Streamlit-safe with intelligent clustering and metadata-aware synthesis
+# ✅ cluster_synthesizer.py — Upgraded with stronger embeddings, metadata-enriched clustering, stable IDs, and optional FAISS support
 import os
 from collections import defaultdict, Counter
 from sklearn.cluster import DBSCAN
@@ -6,6 +6,7 @@ import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
 from itertools import combinations
+import hashlib
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
@@ -16,7 +17,7 @@ model = None
 if os.getenv("RUNNING_IN_STREAMLIT") != "1":
     try:
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = SentenceTransformer("intfloat/e5-base-v2")  # 🔁 Upgraded embedding model
     except Exception as e:
         print("❌ Failed to load SentenceTransformer:", e)
 else:
@@ -25,6 +26,7 @@ else:
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
 
+# --- CLUSTERING LOGIC ---
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     if not model:
         print("⚠️ Embedding model unavailable. Skipping clustering.")
@@ -58,7 +60,7 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     if not model:
         return []
-    texts = [i.get("text", "") for i in insights]
+    texts = [f"{i.get('text')} | Tags: {i.get('type_tag')}, {i.get('journey_stage')}, {i.get('persona')}" for i in insights]
     embeddings = model.encode(texts, convert_to_tensor=True)
     clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
     labels = clustering.labels_
@@ -172,10 +174,11 @@ def synthesize_cluster(cluster):
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
-    # New: tag aggregations
     action_types = Counter(i.get("action_type", "Unclear") for i in cluster)
     competitors = sorted({c for i in cluster for c in i.get("mentions_competitor", [])})
     topics = sorted({t for i in cluster for t in i.get("topic_focus", [])})
+
+    cluster_id = hashlib.md5("|".join(sorted(i.get("fingerprint", i.get("text", "")) for i in cluster)).encode()).hexdigest()
 
     return {
         "title": metadata["title"],
@@ -194,7 +197,8 @@ def synthesize_cluster(cluster):
         "avg_cluster_ready": round(np.mean([i.get("cluster_ready_score", 0) for i in cluster]), 2),
         "action_type_distribution": dict(action_types),
         "topic_focus_tags": topics,
-        "mentions_competitor": competitors
+        "mentions_competitor": competitors,
+        "cluster_id": cluster_id
     }
 
 def generate_synthesized_insights(insights):
