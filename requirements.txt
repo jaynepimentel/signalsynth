@@ -18,4 +18,4 @@ python-dotenv
 fuzzywuzzy
 python-docx
 python-slugify
-seaborn
+seaborn==0.13.2
