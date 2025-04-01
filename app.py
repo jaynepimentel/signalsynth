@@ -1,4 +1,4 @@
-# app.py — Unified Explorer + Trends + GPT + Cluster View
+# app.py — Unified Explorer + Trends + GPT + Cluster View + Intro Assistant
 import os
 import json
 import streamlit as st
@@ -28,6 +28,29 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
+
+# ───────────────────────────────────────
+# Show welcome assistant on first load
+if "show_intro" not in st.session_state:
+    st.session_state.show_intro = True
+
+if st.session_state.show_intro:
+    with st.expander("🧠 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
+        st.markdown("""
+        SignalSynth helps you transform user signals into strategic action.
+
+        **💥 Explore the full power of this tool:**
+
+        - 🔍 **Filter by brand, persona, type, effort, etc.** using advanced filters
+        - 📌 **Click into any insight** to generate a PRD, BRD, PRFAQ, or JIRA ticket
+        - 🧱 **View clusters** of similar feedback to spot themes
+        - 📈 **Track sentiment and volume trends** over time
+        - 🔥 **Spot emerging topics** from community signals
+        - 💡 **Enable GPT Suggestions** for AI-powered product ideas
+
+        _(You can reopen this anytime by refreshing the app.)_
+        """)
+        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
 # ───────────────────────────────────────
 # Load insights
