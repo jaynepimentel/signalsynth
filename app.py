@@ -1,5 +1,3 @@
-# app.py — Optimized for performance, clarity, and reliability
-
 import os
 import json
 import streamlit as st
@@ -9,15 +7,15 @@ from slugify import slugify
 from datetime import datetime
 from sentence_transformers import SentenceTransformer, util
 import torch
+
+# Must be first Streamlit command
 st.set_page_config(page_title="SignalSynth", layout="wide")
-st.title("📱 SignalSynth: Collectibles Insight Engine")
-st.caption(f"🗕️ Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
 # Load embedding model with caching
 @st.cache_resource(show_spinner="Loading sentence transformer model...")
 def get_embedding_model():
     model = SentenceTransformer("all-MiniLM-L6-v2")
-    model = model.to(torch.device("cpu"))  # Ensure compatibility with CPU environments
+    model = model.to(torch.device("cpu"))
     return model
 
 model = get_embedding_model()
@@ -52,6 +50,9 @@ from components.journey_heatmap import display_journey_heatmap
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
+# Now safe to use UI functions
+st.title("📱 SignalSynth: Collectibles Insight Engine")
+st.caption(f"🗕️ Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 # Hide sidebar
 st.markdown("""
     <style>
