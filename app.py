@@ -2,20 +2,17 @@ import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from collections import Counter
-from slugify import slugify
 from datetime import datetime
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 import torch
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 
 # Load embedding model with caching
-@st.cache_resource(show_spinner="Loading sentence transformer model...")
+@st.cache_resource(show_spinner="Loading embedding model...")
 def get_embedding_model():
     model = SentenceTransformer("all-MiniLM-L6-v2")
-    model = model.to(torch.device("cpu"))
-    return model
+    return model.to(torch.device("cpu"))
 
 model = get_embedding_model()
 
@@ -26,15 +23,7 @@ from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
 from components.emerging_themes import detect_emerging_topics, render_emerging_topics
 from components.floating_filters import render_floating_filters
-from components.ai_suggester import (
-    generate_pm_ideas,
-    generate_prd_docx,
-    generate_brd_docx,
-    generate_prfaq_docx,
-    generate_jira_bug_ticket,
-    generate_gpt_doc,
-    generate_multi_signal_prd
-)
+from components.ai_suggester import generate_pm_ideas
 from components.strategic_tools import (
     display_signal_digest,
     display_journey_breakdown,
@@ -75,13 +64,31 @@ if st.session_state.show_intro:
         st.button("✅ Got it", on_click=lambda: st.session_state.update({"show_intro": False}))
 
 # Load insights
-if os.path.exists("precomputed_insights.json"):
-    with open("precomputed_insights.json", encoding="utf-8") as f:
+insights_path = "precomputed_insights.json"
+
+try:
+    with open(insights_path, encoding="utf-8") as f:
         scraped_insights = json.load(f)
     st.success(f"✅ Loaded {len(scraped_insights)} insights")
-else:
-    st.error("❌ Insights file missing.")
+except Exception as e:
+    st.error(f"❌ Insights file missing or corrupted: {e}")
     st.stop()
+
+# Load GPT suggestions cache
+cache_path = "gpt_suggestion_cache.json"
+if os.path.exists(cache_path):
+    with open(cache_path, encoding="utf-8") as f:
+        suggestion_cache = json.load(f)
+else:
+    suggestion_cache = {}
+
+# Inject cached PM suggestions
+for insight in scraped_insights:
+    insight_text = insight.get("text", "")
+    if insight_text in suggestion_cache:
+        insight["ideas"] = suggestion_cache[insight_text]
+    else:
+        insight["ideas"] = []
 
 filter_fields = {
     "Target Brand": "target_brand",
