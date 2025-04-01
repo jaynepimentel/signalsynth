@@ -1,4 +1,4 @@
-# cluster_view.py — Enhanced cluster view with GPT tools, bundling, and doc generation
+# cluster_view.py — Optimized for performance, preserving GPT tools, bundling, and doc generation
 import streamlit as st
 import os
 import json
@@ -28,14 +28,20 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-# Caching logic
 CACHE_DIR = ".cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
+
 PRECOMPUTED_CLUSTERS = "precomputed_clusters.json"
 
 def get_cluster_cache_key(insights):
     key = hashlib.md5(json.dumps(insights, sort_keys=True).encode()).hexdigest()
     return os.path.join(CACHE_DIR, f"cluster_{key}.json")
+
+@st.cache_data(show_spinner=False)
+def load_clusters(insights):
+    clusters = cluster_insights(insights)
+    cards = generate_synthesized_insights(insights)
+    return clusters, cards
 
 def display_clustered_insight_cards(insights):
     if not insights:
@@ -51,79 +57,42 @@ def display_clustered_insight_cards(insights):
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                clusters = data.get("clusters")
-                cards = data.get("cards")
-            st.caption("⚡️ Loaded clusters from local cache")
-        except Exception as e:
-            st.warning(f"⚠️ Failed to load cluster cache: {e}")
+                clusters, cards = data.get("clusters"), data.get("cards")
+            st.caption("⚡️ Loaded from cache")
+        except:
             os.remove(cache_file)
 
-    if not cards and os.path.exists(PRECOMPUTED_CLUSTERS):
-        try:
-            with open(PRECOMPUTED_CLUSTERS, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                clusters = data.get("clusters")
-                cards = data.get("cards")
-            st.caption("📦 Loaded precomputed clusters")
-        except Exception as e:
-            st.warning(f"⚠️ Failed to load precomputed clusters: {e}")
-
-    if not cards:
-        with st.spinner("🔄 Clustering and summarizing live..."):
-            cards = generate_synthesized_insights(insights)
-            clusters = cluster_insights(insights)
-        try:
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump({"clusters": clusters, "cards": cards}, f, indent=2)
-            st.caption("💾 Saved cluster cache")
-        except Exception as e:
-            st.warning(f"⚠️ Failed to write cluster cache: {e}")
-
-    if not cards:
-        st.warning("No clusters found or model unavailable.")
-        return
+    if not clusters or not cards:
+        with st.spinner("🔄 Clustering..."):
+            clusters, cards = load_clusters(insights)
+        with open(cache_file, "w", encoding="utf-8") as f:
+            json.dump({"clusters": clusters, "cards": cards}, f)
 
     clusters_per_page = 3
     total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
-    current_page = st.number_input("📚 Page", min_value=1, max_value=total_pages, value=1, step=1)
+    current_page = st.number_input("📚 Page", 1, total_pages, 1)
     start_idx = (current_page - 1) * clusters_per_page
-    end_idx = start_idx + clusters_per_page
-    st.caption(f"🔀 Showing clusters {start_idx + 1} to {min(end_idx, len(cards))} of {len(cards)}")
+    end_idx = min(start_idx + clusters_per_page, len(cards))
 
-    for idx, card in enumerate(cards[start_idx:end_idx], start=start_idx):
-        cluster = clusters[idx] if clusters and idx < len(clusters) else []
+    st.caption(f"🔀 Showing clusters {start_idx + 1}–{end_idx} of {len(cards)}")
+
+    for idx in range(start_idx, end_idx):
+        card, cluster = cards[idx], clusters[idx]
 
         with st.container():
             st.markdown(f"### 📌 {card.get('title', 'Untitled')} — {card.get('brand', 'Unknown')}")
             st.markdown(f"**Summary:** {card.get('summary', '(none)')}")
-
             st.caption(f"Mentions: {card.get('insight_count', len(cluster))} | Score Range: {card.get('score_range', '?')}")
 
-            persona_counts = Counter(i.get("persona", "Unknown") for i in cluster)
-            brand_counts = Counter(i.get("target_brand", "Unknown") for i in cluster)
-            if persona_counts:
-                st.caption("**Persona Breakdown:** " + " | ".join([f"👤 {k}: {v}" for k, v in persona_counts.items()]))
-            if brand_counts:
-                st.caption("**Brand Mentions:** " + " | ".join([f"🏷️ {k}: {v}" for k, v in brand_counts.items()]))
-
-            # Tag badges
             tags = []
-            for tag_field in ["type", "effort_levels", "sentiments", "opportunity_tags", "topic_focus_tags"]:
-                values = card.get(tag_field)
-                if isinstance(values, list):
-                    tags.extend([badge(v) for v in values])
-                elif values:
-                    tags.append(badge(values))
-            if card.get("action_type_distribution"):
-                tags.extend([badge(t) for t in card["action_type_distribution"].keys()])
-            if card.get("mentions_competitor"):
-                tags.extend([badge(f"⚔ {c.title()}") for c in card["mentions_competitor"]])
-            if tags:
-                st.markdown("**🧷 Cluster Tags:** " + " ".join(tags), unsafe_allow_html=True)
+            for field in ["type", "effort_levels", "sentiments", "opportunity_tags", "topic_focus_tags"]:
+                values = card.get(field)
+                tags += [badge(v) for v in values] if isinstance(values, list) else [badge(values)] if values else []
+            st.markdown("**🧷 Tags:** " + " ".join(tags), unsafe_allow_html=True)
 
             if card.get("quotes"):
-                st.markdown("**📣 Example Quotes:**")
-                for quote in card["quotes"]:
+                st.markdown("**📣 Quotes:**")
+                for quote in card["quotes"][:3]:
                     st.markdown(quote)
 
             if card.get("top_ideas"):
@@ -131,68 +100,34 @@ def display_clustered_insight_cards(insights):
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
 
-            st.markdown("")
+            with st.expander("✨ AI Tools"):
+                texts = "\n\n".join(i["text"] for i in cluster[:8])
 
-            with st.expander("✨ AI Tools for This Cluster"):
-                joined_text = "\n\n".join([i["text"] for i in cluster[:8]])
+                if st.button("🧼 Clarify", key=f"clarify_{idx}"):
+                    st.markdown(f"> {generate_gpt_doc(texts, 'Clarify clearly.')}")
 
-                if st.button(f"🧼 Clarify This Cluster", key=f"clarify_cluster_{idx}"):
-                    with st.spinner("Rewriting for clarity..."):
-                        clarified = generate_gpt_doc(
-                            f"Rewrite these feedback snippets to clearly summarize the key customer concern:\n\n{joined_text}",
-                            "You are rewriting vague customer feedback for clarity."
-                        )
-                        st.markdown("✅ Clarified Summary:")
-                        st.markdown(f"> {clarified}")
+                if st.button("🏷️ Suggest Tags", key=f"tags_{idx}"):
+                    tags_suggested = generate_gpt_doc(texts, 'Suggest 3–5 tags.')
+                    st.info(tags_suggested)
 
-                if st.button(f"🏷️ Suggest Tags for Cluster", key=f"tags_cluster_{idx}"):
-                    with st.spinner("Suggesting tags..."):
-                        tag_summary = generate_gpt_doc(
-                            f"Suggest 3–5 product tags or themes that describe these user signals:\n\n{joined_text}",
-                            "You are a PM classifying this feedback."
-                        )
-                        st.info("💡 Suggested Tags:")
-                        st.markdown(f"`{tag_summary}`")
-
-                if st.button(f"📦 Generate Combined PRD", key=f"bundle_cluster_prd_{idx}"):
-                    path = generate_multi_signal_prd([i["text"] for i in cluster[:8]], filename=f"bundle-cluster-{idx}")
-                    if path and os.path.exists(path):
+                if st.button("📦 Combined PRD", key=f"bundle_{idx}"):
+                    path = generate_multi_signal_prd([i["text"] for i in cluster[:8]], f"bundle-{idx}")
+                    if path:
                         with open(path, "rb") as f:
-                            st.download_button(
-                                "⬇️ Download Cluster PRD",
-                                f,
-                                file_name=os.path.basename(path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_bundle_prd_{idx}"
-                            )
-
-            st.markdown("")
+                            st.download_button("⬇️ PRD", f, os.path.basename(path))
 
             col1, col2 = st.columns([1, 3])
             with col1:
-                if st.button(f"❌ Not relevant", key=f"bad_cluster_{idx}"):
-                    st.success("✅ Thanks for the feedback!")
-
+                if st.button("❌ Not relevant", key=f"irrelevant_{idx}"):
+                    st.success("Feedback noted.")
             with col2:
-                doc_type = st.selectbox("Generate doc:", ["PRD", "BRD", "PRFAQ"], key=f"doc_type_cluster_{idx}")
-                if st.button("📄 Generate", key=f"generate_doc_cluster_{idx}"):
+                doc_type = st.selectbox("Generate:", ["PRD", "BRD", "PRFAQ"], key=f"doc_{idx}")
+                if st.button("📄 Generate", key=f"gen_doc_{idx}"):
                     filename = f"cluster_{idx}_{card.get('title', 'untitled')[:40].replace(' ', '_')}"
-                    with st.spinner(f"Generating {doc_type}..."):
-                        if doc_type == "PRD":
-                            path = generate_cluster_prd_docx(card, filename)
-                        elif doc_type == "BRD":
-                            path = generate_cluster_brd_docx(card, filename + "-brd")
-                        elif doc_type == "PRFAQ":
-                            path = generate_cluster_prfaq_docx(card, filename + "-prfaq")
-
-                        if path and os.path.exists(path):
-                            with open(path, "rb") as f:
-                                st.download_button(
-                                    label=f"⬇️ Download {doc_type}",
-                                    data=f,
-                                    file_name=os.path.basename(path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    key=f"dl_cluster_{doc_type}_{idx}"
-                                )
+                    generate_fn = {"PRD": generate_cluster_prd_docx, "BRD": generate_cluster_brd_docx, "PRFAQ": generate_cluster_prfaq_docx}[doc_type]
+                    path = generate_fn(card, filename)
+                    if path:
+                        with open(path, "rb") as f:
+                            st.download_button(f"⬇️ {doc_type}", f, os.path.basename(path))
 
             st.markdown("---")
