@@ -118,7 +118,7 @@ with tabs[0]:
                 trend_counter[word] += 1
     rising_trends = [t for t, count in trend_counter.items() if count >= 5]
 
-    filters = render_floating_filters(scraped_insights, filter_fields)
+    filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
     filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
     show_trends_only = st.checkbox("Highlight Emerging Topics Only", value=False)
     if show_trends_only:
@@ -216,7 +216,7 @@ with tabs[1]:
 # Tab 2: Explorer View
 with tabs[2]:
     st.header("🔍 Insight Explorer")
-    explorer_filters = render_floating_filters(scraped_insights, filter_fields)
+    explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
     explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
     display_insight_explorer(explorer_filtered[:50])
 
