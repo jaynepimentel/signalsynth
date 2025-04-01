@@ -20,6 +20,14 @@ from components.ai_suggester import (
     generate_prfaq_docx,
     generate_jira_bug_ticket
 )
+from components.strategic_tools import (
+    display_signal_digest,
+    display_journey_breakdown,
+    display_brand_comparator,
+    display_impact_heatmap,
+    display_prd_bundler,
+    display_spark_suggestions
+)
 
 # ───────────────────────────────────────
 load_dotenv()
@@ -73,7 +81,7 @@ st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
 
 # ───────────────────────────────────────
 # Tabs
-tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging"])
+tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging", "🧠 Strategic Tools"])
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -231,3 +239,21 @@ with tabs[4]:
     st.header("🔥 Emerging Topics")
     trends = detect_emerging_topics(scraped_insights)
     render_emerging_topics(trends)
+# ───────────────────────────────────────
+# Tab 6: Strategic Tools
+with tabs[5]:
+    st.header("🧠 Strategic Tools")
+
+    st.markdown("This tab provides high-leverage tools for product strategy, prioritization, and portfolio decision-making.")
+
+    display_spark_suggestions(scraped_insights)
+    st.markdown("---")
+    display_signal_digest(scraped_insights)
+    st.markdown("---")
+    display_impact_heatmap(scraped_insights)
+    st.markdown("---")
+    display_journey_breakdown(scraped_insights)
+    st.markdown("---")
+    display_brand_comparator(scraped_insights)
+    st.markdown("---")
+    display_prd_bundler(scraped_insights)
