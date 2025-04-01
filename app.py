@@ -73,7 +73,7 @@ st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
 
 # ───────────────────────────────────────
 # Tabs
-tabs = st.tabs(["🔎 Explorer", "📌 Insights", "🧱 Clusters", "📈 Trends", "🔥 Emerging"])
+tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging"])
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
