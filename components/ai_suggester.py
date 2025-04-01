@@ -1,4 +1,4 @@
-# ai_suggester.py — Enhanced GPT doc generation with meta-tagging, fallback, and rate_clarity
+# ai_suggester.py — Enhanced GPT doc generation with meta-tagging, fallback, and clarity rating
 import os
 import hashlib
 import json
@@ -23,6 +23,7 @@ if os.path.exists(CACHE_PATH):
 else:
     suggestion_cache = {}
 
+# ─────────────────────────────────────
 def is_streamlit_mode():
     return os.getenv("RUNNING_IN_STREAMLIT") == "1"
 
@@ -41,6 +42,9 @@ def rate_clarity(text):
     elif any(x in text.lower() for x in ["not sure", "confused", "???", "unclear", "idk"]):
         return "Needs Clarification"
     return "Clear"
+
+# ─────────────────────────────────────
+# PM Suggestions
 
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
@@ -74,7 +78,8 @@ Brand: {brand}
     except Exception as e:
         return [f"[GPT error: {str(e)}]"]
 
-# ========== Document Generation ==========
+# ─────────────────────────────────────
+# Document Generation Utilities
 
 def generate_gpt_doc(prompt, title):
     if is_streamlit_mode():
@@ -91,6 +96,7 @@ def generate_gpt_doc(prompt, title):
             max_tokens=2000
         ).choices[0].message.content.strip()
 
+        # Critique + Improve
         critique_prompt = f"Now critique this like a VP of Product. What's weak, missing, or unclear? Then rewrite and improve it.\n\n{draft}"
         improved = client.chat.completions.create(
             model="gpt-4",
@@ -138,6 +144,9 @@ Contextual Metadata:
 
 def should_fallback_to_signal_brief(text):
     return len(text.strip()) < 50 or len(text.split()) < 10
+
+# ─────────────────────────────────────
+# PRD, BRD, PRFAQ, Brief Generators
 
 def generate_signal_brief_docx(text, brand, base_filename):
     prompt = f"""
@@ -273,23 +282,36 @@ def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = f"Turn this customer complaint into a JIRA ticket:\n{text}\n\nInclude: Title, Summary, Steps to Reproduce, Expected vs. Actual Result, Severity."
     return generate_gpt_doc(prompt, "You are a support agent writing a bug report.")
 
-# === Cluster + Multi-insight ===
+# ─────────────────────────────────────
+# Cluster + Multi-Signal Generators
 
 def generate_multi_signal_prd(text_list, filename, brand="eBay"):
     text = "\n\n".join(text_list)
     return generate_prd_docx(text, brand, filename)
 
-def generate_cluster_prd_docx(cluster, filename):
-    text = "\n\n".join(i["text"] for i in cluster[:8])
-    brand = cluster[0].get("target_brand", "eBay")
+def generate_cluster_prd_docx(cluster_or_card, filename):
+    if isinstance(cluster_or_card, dict) and "quotes" in cluster_or_card:
+        text = "\n\n".join(q.strip("- _") for q in cluster_or_card["quotes"])
+        brand = cluster_or_card.get("brand", "eBay")
+    else:
+        text = "\n\n".join(i["text"] for i in cluster_or_card[:8])
+        brand = cluster_or_card[0].get("target_brand", "eBay")
     return generate_prd_docx(text, brand, filename)
 
-def generate_cluster_brd_docx(cluster, filename):
-    text = "\n\n".join(i["text"] for i in cluster[:8])
-    brand = cluster[0].get("target_brand", "eBay")
+def generate_cluster_brd_docx(cluster_or_card, filename):
+    if isinstance(cluster_or_card, dict) and "quotes" in cluster_or_card:
+        text = "\n\n".join(q.strip("- _") for q in cluster_or_card["quotes"])
+        brand = cluster_or_card.get("brand", "eBay")
+    else:
+        text = "\n\n".join(i["text"] for i in cluster_or_card[:8])
+        brand = cluster_or_card[0].get("target_brand", "eBay")
     return generate_brd_docx(text, brand, filename)
 
-def generate_cluster_prfaq_docx(cluster, filename):
-    text = "\n\n".join(i["text"] for i in cluster[:8])
-    brand = cluster[0].get("target_brand", "eBay")
+def generate_cluster_prfaq_docx(cluster_or_card, filename):
+    if isinstance(cluster_or_card, dict) and "quotes" in cluster_or_card:
+        text = "\n\n".join(q.strip("- _") for q in cluster_or_card["quotes"])
+        brand = cluster_or_card.get("brand", "eBay")
+    else:
+        text = "\n\n".join(i["text"] for i in cluster_or_card[:8])
+        brand = cluster_or_card[0].get("target_brand", "eBay")
     return generate_prfaq_docx(text, brand, filename)
