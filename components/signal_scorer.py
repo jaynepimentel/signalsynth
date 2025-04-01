@@ -1,10 +1,8 @@
-# signal_scorer.py — Final version with embedded insight classifiers and clean imports
+# signal_scorer.py — Final version with GPT-enhanced tagging + embedded classifiers
 
 from components.enhanced_classifier import enhance_insight
-from components.ai_suggester import (
-    generate_pm_ideas,
-    rate_clarity
-)
+from components.ai_suggester import generate_pm_ideas, rate_clarity
+from components.gpt_classifier import enrich_with_gpt_tags
 from components.scoring_utils import gpt_estimate_sentiment_subtag
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
@@ -175,6 +173,7 @@ def enrich_single_insight(i, min_score=3):
     i["type_reason"] = reason
 
     i = enhance_insight(i)
+    i = enrich_with_gpt_tags(i)  # ← NEW GPT-based metadata tagging
 
     gpt_tags = gpt_estimate_sentiment_subtag(text)
     i["gpt_sentiment"] = gpt_tags.get("sentiment")
@@ -183,7 +182,7 @@ def enrich_single_insight(i, min_score=3):
     i["impact"] = gpt_tags.get("impact")
     i["pm_summary"] = gpt_tags.get("summary")
 
-    i["persona"] = classify_persona(text)
+    i["persona"] = i.get("persona") or classify_persona(text)
     i["ideas"] = generate_pm_ideas(text=text, brand=i.get("target_brand"))
     i["effort"] = classify_effort(i["ideas"])
     i["shovel_ready"] = (
@@ -198,10 +197,10 @@ def enrich_single_insight(i, min_score=3):
     i["action_type"] = classify_action_type(text)
 
     i["topic_focus"] = tag_topic_focus(text)
-    i["journey_stage"] = classify_journey_stage(text)
+    i["journey_stage"] = i.get("journey_stage") or classify_journey_stage(text)
     i["clarity"] = rate_clarity(text)
     i["title"] = generate_insight_title(text)
-    i["opportunity_tag"] = classify_opportunity_type(text)
+    i["opportunity_tag"] = i.get("opportunity_tag") or classify_opportunity_type(text)
     i["cluster_ready_score"] = round((i["score"] + (i["frustration"] or 0)*5 + (i["impact"] or 0)*5) / 3, 2)
     i["fingerprint"] = hashlib.md5(text.lower().encode()).hexdigest()
 
