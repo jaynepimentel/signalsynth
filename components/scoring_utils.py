@@ -21,6 +21,12 @@ def save_cache(cache):
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2)
 
+def clear_sentiment_cache():
+    global sentiment_cache
+    sentiment_cache = {}
+    if os.path.exists(CACHE_PATH):
+        os.remove(CACHE_PATH)
+
 sentiment_cache = load_cache()
 
 def estimate_severity(text):
@@ -52,7 +58,7 @@ def normalize_priority_scores(insights):
 
 def gpt_estimate_sentiment_subtag(text):
     if not client:
-        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1}
+        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1, "gpt_confidence": 0}
 
     key = hashlib.md5(text.strip().encode()).hexdigest()
     if key in sentiment_cache:
@@ -114,7 +120,8 @@ Summary: [One sentence summarizing the pain point]
             "subtags": subtags or ["General"],
             "frustration": frustration,
             "impact": impact,
-            "summary": summary
+            "summary": summary,
+            "gpt_confidence": round(float(response.usage.total_tokens or 200) / 200 * 100, 2)
         }
         sentiment_cache[key] = result
         save_cache(sentiment_cache)
@@ -122,4 +129,5 @@ Summary: [One sentence summarizing the pain point]
 
     except Exception as e:
         print("[GPT fallback error]", e)
-        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1}
+        print("[GPT raw output]", content)
+        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1, "gpt_confidence": 0}
