@@ -27,9 +27,6 @@ else:
 # ─────────────────────────────────────
 # 🔧 UTILS
 
-def is_streamlit_mode():
-    return os.getenv("RUNNING_IN_STREAMLIT") == "1"
-
 def cache_and_return(key, value):
     suggestion_cache[key] = value
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
@@ -79,8 +76,6 @@ def generate_exec_summary():
 # ✨ GPT Utilities
 
 def generate_gpt_doc(prompt, title):
-    if is_streamlit_mode():
-        return "⚠️ GPT doc generation is disabled in Streamlit mode."
     try:
         draft = client.chat.completions.create(
             model="gpt-4",
@@ -122,9 +117,6 @@ def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
     if key in suggestion_cache:
         return suggestion_cache[key]
-
-    if is_streamlit_mode():
-        return ["[GPT disabled in Streamlit mode — use precompute_insights.py]"]
 
     prompt = f"""You are a senior product manager at a marketplace like eBay. 
 Based on the user feedback below, generate 3 concise product suggestions that would improve trust, conversion, or reduce friction.
