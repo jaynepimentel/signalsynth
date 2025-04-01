@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
 from datetime import datetime
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 
 # Caching embedding model
 @st.cache_resource(show_spinner="Loading sentence transformer model...")
@@ -43,14 +43,6 @@ from components.journey_heatmap import display_journey_heatmap
 
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
-
-# (Continue with the rest of your code...)
-
-def get_embedding_model():
-    from sentence_transformers import SentenceTransformer
-    return SentenceTransformer("all-MiniLM-L6-v2")
-
-model = get_embedding_model()
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
