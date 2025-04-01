@@ -11,5 +11,6 @@ def render_floating_filters(insights, filter_fields, key_prefix=""):
             cols = st.columns(min(3, len(field_items[i:i+3])))
             for col, (label, key) in zip(cols, field_items[i:i+3]):
                 options = ["All"] + sorted({str(i.get(key, "Unknown")) for i in insights})
-                filters[key] = col.selectbox(label, options, key=f"{key_prefix}_filter_{key}")
+                unique_key = f"{key_prefix}_filter_{key}"
+                filters[key] = col.selectbox(label, options, key=unique_key)
     return filters
