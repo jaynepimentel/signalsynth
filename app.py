@@ -1,4 +1,4 @@
-# app.py — Final merged version with enhancements, intro, journey heatmap, live OpenAI fallback
+# app.py — Final merged version with fixes for deployment, seaborn safe, clustering optional
 import os
 import json
 import streamlit as st
@@ -7,11 +7,15 @@ from datetime import datetime
 from slugify import slugify
 from sentence_transformers import SentenceTransformer, util
 
+# 🔧 MUST BE FIRST STREAMLIT CALL
+st.set_page_config(page_title="SignalSynth", layout="wide")
+
+# Core component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
-from components.emerging_themes import detect_emerging_topics, render_emerging_topics
+from components.emerging_trends import detect_emerging_topics, render_emerging_topics
 from components.floating_filters import render_floating_filters
 from components.journey_heatmap import display_journey_heatmap
 from components.ai_suggester import (
@@ -24,22 +28,29 @@ from components.strategic_tools import (
     display_brand_comparator, display_impact_heatmap,
     display_prd_bundler, display_spark_suggestions
 )
+from enhanced_insight_view import render_insight_cards
 
+# Load env + OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# Embedding model with caching
+# Embedding model cache
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    return model.to("cpu")
+    try:
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        return model.to("cpu")
+    except Exception as e:
+        st.warning(f"⚠️ Failed to load embedding model: {e}")
+        return None
 
 model = get_model()
 
-st.set_page_config(page_title="SignalSynth", layout="wide")
+# UI Header
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
+# Hide sidebar
 st.markdown("""
     <style>
     [data-testid="collapsedControl"] { display: none }
@@ -64,7 +75,7 @@ if st.session_state.show_intro:
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
-# Load precomputed insights + cached GPT suggestions
+# Load insights + suggestions
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -72,11 +83,12 @@ try:
         cache = json.load(f)
     for i in scraped_insights:
         i["ideas"] = cache.get(i.get("text", ""), [])
-    st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
+    st.success(f"✅ Loaded {len(scraped_insights)} insights")
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
+# Filter field config
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -87,43 +99,38 @@ filter_fields = {
     "Clarity": "clarity"
 }
 
-BADGE_COLORS = {
-    "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
-    "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
-    "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
-    "Clear": "#4CAF50", "Needs Clarification": "#FF9800"
-}
-
-def badge(label, color):
-    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
-
+# Define tabs
 TABS = [
     "📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends",
     "🔥 Emerging", "🧠 Strategic Tools", "📺 Journey Heatmap"
 ]
 tabs = st.tabs(TABS)
 
-# Tab 0: Insights Explorer with enhancements
+# Tab 0: Full Insight View
 with tabs[0]:
-    from components.enhanced_insight_view import render_insight_cards
     st.header("📌 Individual Insights")
     filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
     filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
     render_insight_cards(filtered, model)
 
-# Tab 1: Clustered Insights
+# Tab 1: Clusters
 with tabs[1]:
     st.header("🧱 Clustered Insight Mode")
-    display_clustered_insight_cards(scraped_insights)
+    if model:
+        display_clustered_insight_cards(scraped_insights)
+    else:
+        st.warning("⚠️ Embedding model not available. Skipping clustering.")
 
-# Tab 2: Keyword Explorer
+# Tab 2: Explorer + keyword
 with tabs[2]:
     st.header("🔎 Insight Explorer")
-    results = display_insight_explorer(scraped_insights)
+    explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
+    explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+    results = display_insight_explorer(explorer_filtered)
     if results:
         render_insight_cards(results[:50], model)
 
-# Tab 3: Trends
+# Tab 3: Brand + Type Trends
 with tabs[3]:
     st.header("📈 Trends + Brand Summary")
     display_insight_charts(scraped_insights)
@@ -132,8 +139,7 @@ with tabs[3]:
 # Tab 4: Emerging Topics
 with tabs[4]:
     st.header("🔥 Emerging Topics")
-    trends = detect_emerging_topics(scraped_insights)
-    render_emerging_topics(trends)
+    render_emerging_topics(detect_emerging_topics(scraped_insights))
 
 # Tab 5: Strategic Tools
 with tabs[5]:
