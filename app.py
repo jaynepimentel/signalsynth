@@ -1,4 +1,4 @@
-# app.py — Final merged version with fixes for deployment, seaborn safe, clustering optional
+# app.py — Final merged version with fixes for deployment, seaborn safe, clustering optional, and unique key_prefixes
 import os
 import json
 import streamlit as st
@@ -38,7 +38,7 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
     try:
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = SentenceTransformer("models/all-MiniLM-L6-v2")
         return model.to("cpu")
     except Exception as e:
         st.warning(f"⚠️ Failed to load embedding model: {e}")
@@ -111,7 +111,7 @@ with tabs[0]:
     st.header("📌 Individual Insights")
     filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
     filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
-    render_insight_cards(filtered, model)
+    render_insight_cards(filtered, model, key_prefix="insights")
 
 # Tab 1: Clusters
 with tabs[1]:
@@ -128,7 +128,7 @@ with tabs[2]:
     explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
     results = display_insight_explorer(explorer_filtered)
     if results:
-        render_insight_cards(results[:50], model)
+        render_insight_cards(results[:50], model, key_prefix="explorer")
 
 # Tab 3: Brand + Type Trends
 with tabs[3]:
