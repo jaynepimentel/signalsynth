@@ -21,8 +21,7 @@ def badge(label, color):
 
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-
-def render_insight_cards(filtered, model, per_page=10):
+def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
     if not filtered:
         st.info("No matching insights.")
         return
@@ -45,6 +44,7 @@ def render_insight_cards(filtered, model, per_page=10):
     paged = filtered[start:start + per_page]
 
     for idx, i in enumerate(paged, start=start):
+        unique_id = f"{key_prefix}_{idx}"
         st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
         tags = [
             badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
@@ -79,7 +79,7 @@ def render_insight_cards(filtered, model, per_page=10):
                 for idea in i["ideas"]:
                     st.markdown(f"- {idea}")
 
-            if st.button("🧼 Clarify This Insight", key=f"clarify_{idx}"):
+            if st.button("🧼 Clarify This Insight", key=f"{unique_id}_clarify"):
                 with st.spinner("Clarifying..."):
                     clarified = generate_gpt_doc(
                         f"Rewrite this vague user feedback in a clearer, more specific way:\n\n{text}",
@@ -88,7 +88,7 @@ def render_insight_cards(filtered, model, per_page=10):
                     st.success("✅ Clarified Insight:")
                     st.markdown(f"> {clarified}")
 
-            if st.button("🏷️ Suggest Tags", key=f"tags_{idx}"):
+            if st.button("🏷️ Suggest Tags", key=f"{unique_id}_tags"):
                 with st.spinner("Analyzing..."):
                     tags = generate_gpt_doc(
                         f"Suggest 3–5 product tags for this user feedback:\n\n{text}",
@@ -97,7 +97,7 @@ def render_insight_cards(filtered, model, per_page=10):
                     st.info("💡 Suggested Tags:")
                     st.markdown(f"`{tags}`")
 
-            if st.button("🧩 Bundle Similar Insights", key=f"bundle_{idx}"):
+            if st.button("🧩 Bundle Similar Insights", key=f"{unique_id}_bundle"):
                 base_embed = model.encode(text, convert_to_tensor=True)
                 all_texts = [x["text"] for x in filtered]
                 all_embeds = model.encode(all_texts, convert_to_tensor=True)
@@ -110,7 +110,7 @@ def render_insight_cards(filtered, model, per_page=10):
                     st.markdown(f"- _{related['text'][:180]}_")
                     bundled.append(related["text"])
 
-                if st.button("📄 Generate Combined PRD", key=f"bundle_prd_{idx}"):
+                if st.button("📄 Generate Combined PRD", key=f"{unique_id}_bundle_prd"):
                     file_path = generate_multi_signal_prd(bundled, filename=f"bundle-{idx}")
                     if file_path and os.path.exists(file_path):
                         with open(file_path, "rb") as f:
@@ -119,12 +119,12 @@ def render_insight_cards(filtered, model, per_page=10):
                                 f,
                                 file_name=os.path.basename(file_path),
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_bundle_prd_{idx}"
+                                key=f"{unique_id}_dl_bundle_prd"
                             )
 
             filename = slugify(i.get("title", text[:40]))[:64]
-            doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"doc_type_{idx}")
-            if st.button(f"Generate {doc_type}", key=f"generate_doc_{idx}"):
+            doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"{unique_id}_doc_type")
+            if st.button(f"Generate {doc_type}", key=f"{unique_id}_generate_doc"):
                 with st.spinner(f"Generating {doc_type}..."):
                     if doc_type == "PRD":
                         file_path = generate_prd_docx(text, brand, filename)
@@ -134,7 +134,7 @@ def render_insight_cards(filtered, model, per_page=10):
                         file_path = generate_prfaq_docx(text, brand, filename + "-prfaq")
                     elif doc_type == "JIRA":
                         file_content = generate_jira_bug_ticket(text, brand)
-                        st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
+                        st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"{unique_id}_dl_jira")
                         file_path = None
                     if file_path and os.path.exists(file_path):
                         with open(file_path, "rb") as f:
@@ -143,5 +143,5 @@ def render_insight_cards(filtered, model, per_page=10):
                                 f,
                                 file_name=os.path.basename(file_path),
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_doc_{idx}"
+                                key=f"{unique_id}_dl_doc"
                             )
