@@ -9,6 +9,9 @@ from slugify import slugify
 from datetime import datetime
 from sentence_transformers import SentenceTransformer, util
 import torch
+st.set_page_config(page_title="SignalSynth", layout="wide")
+st.title("📱 SignalSynth: Collectibles Insight Engine")
+st.caption(f"🗕️ Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
 # Load embedding model with caching
 @st.cache_resource(show_spinner="Loading sentence transformer model...")
@@ -48,10 +51,6 @@ from components.journey_heatmap import display_journey_heatmap
 # App setup
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
-
-st.set_page_config(page_title="SignalSynth", layout="wide")
-st.title("📱 SignalSynth: Collectibles Insight Engine")
-st.caption(f"🗕️ Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
 # Hide sidebar
 st.markdown("""
