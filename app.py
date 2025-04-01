@@ -28,7 +28,7 @@ from components.strategic_tools import (
     display_brand_comparator, display_impact_heatmap,
     display_prd_bundler, display_spark_suggestions
 )
-from enhanced_insight_view import render_insight_cards
+from components.enhanced_insight_view import render_insight_cards
 
 # Load env + OpenAI key
 load_dotenv()
