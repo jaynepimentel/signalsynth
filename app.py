@@ -36,7 +36,9 @@ from components.journey_heatmap import display_journey_heatmap
 # ───────────────────────────────────────
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
-model = SentenceTransformer("all-MiniLM-L6-v2")
+def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
