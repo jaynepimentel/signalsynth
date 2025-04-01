@@ -1,4 +1,4 @@
-# app.py — SignalSynth with polished UX, fixed tabs, badge colors, and sidebar minimized
+# app.py — SignalSynth with enhancements 1–5: scoring breakdown, clarification, tag suggestions, bundling assistant
 import os
 import json
 import streamlit as st
@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from collections import Counter
 from slugify import slugify
 from datetime import datetime
+from sentence_transformers import SentenceTransformer, util
 
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
@@ -18,7 +19,9 @@ from components.ai_suggester import (
     generate_prd_docx,
     generate_brd_docx,
     generate_prfaq_docx,
-    generate_jira_bug_ticket
+    generate_jira_bug_ticket,
+    generate_gpt_doc,
+    generate_multi_signal_prd
 )
 from components.strategic_tools import (
     display_signal_digest,
@@ -32,12 +35,12 @@ from components.strategic_tools import (
 # ───────────────────────────────────────
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
-# 🧠 Minimize the sidebar entirely
 st.markdown("""
     <style>
     [data-testid="collapsedControl"] { display: none }
@@ -55,28 +58,22 @@ if st.session_state.show_intro:
         SignalSynth helps you transform user signals into strategic action.
 
         **💥 Explore the full power of this tool:**
-
-        - 🔍 **Filter by brand, persona, type, effort, etc.**
-        - 📌 **Click any insight** to generate a PRD, BRD, PRFAQ, or JIRA ticket
-        - 🧱 **View clusters** of similar feedback to spot themes
-        - 📈 **Track sentiment and trends** over time
-        - 🔥 **Spot emerging topics** from the community
-        - 💡 **Enable GPT Suggestions** for AI-powered product ideas
+        - 🔍 Filter by brand, persona, journey stage, and sentiment
+        - 📌 Click any insight to generate a PRD, BRD, PRFAQ, or JIRA ticket
+        - 📈 Visualize trend shifts and brand sentiment
+        - 🧠 Bundle insights, clarify vague signals, or suggest tags
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
 # ───────────────────────────────────────
-# Load precomputed insights
 if os.path.exists("precomputed_insights.json"):
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
     st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
 else:
-    st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
+    st.error("❌ No precomputed insights found.")
     st.stop()
 
-# ───────────────────────────────────────
-# Tab setup
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -84,45 +81,26 @@ filter_fields = {
     "Insight Type": "type_tag",
     "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
-    "Clarity": "clarity",
-    "Opportunity Tag": "opportunity_tag",
-    "Action Type": "action_type",
-    "Topic Focus": "topic_focus_tags",
-    "Mentions Competitor": "mentions_competitor"
+    "Clarity": "clarity"
 }
 
-tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging", "🧠 Strategic Tools"])
-
-# Color-coded badge system
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
     "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800"
 }
+def badge(label, color): return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-def badge(label, color):
-    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
+tabs = st.tabs(["📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends", "🔥 Emerging", "🧠 Strategic Tools"])
 
 # ───────────────────────────────────────
 # Tab 0: Individual Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
 
-    topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
-    trend_counter = Counter()
-    for i in scraped_insights:
-        text = i.get("text", "").lower()
-        for word in topic_keywords:
-            if word in text:
-                trend_counter[word] += 1
-    rising_trends = [t for t, count in trend_counter.items() if count >= 5]
-
     filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
     filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
-    show_trends_only = st.checkbox("Highlight Emerging Topics Only", value=False)
-    if show_trends_only:
-        filtered = [i for i in filtered if any(w in i.get("text", "").lower() for w in rising_trends)]
 
     INSIGHTS_PER_PAGE = 10
     total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
@@ -159,7 +137,16 @@ with tabs[0]:
             f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
         )
 
-        with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
+        with st.expander("🧮 Scoring Breakdown"):
+            st.markdown(f"""
+            - **Insight Score**: {i.get('score', 0)}
+            - **Severity Score**: {i.get('severity_score', 0)}
+            - **Type Confidence**: {i.get('type_confidence', 50)}%
+            - **Sentiment Confidence**: {i.get('sentiment_confidence', 50)}%
+            - **PM Priority Score**: {i.get('pm_priority_score', 0)}
+            """)
+
+        with st.expander("🧠 Full Insight"):
             text = i.get("text", "")
             brand = i.get("target_brand", "eBay")
             st.markdown("**User Quote:**")
@@ -177,10 +164,44 @@ with tabs[0]:
                 for idea in i["ideas"]:
                     st.markdown(f"- {idea}")
 
-            if i.get("clarity") == "Needs Clarification":
-                st.warning("This insight may need refinement.")
-                if st.button("🧼 Clarify This Insight", key=f"clarify_{idx}"):
-                    st.info("(This would re-run the insight through GPT to rephrase or flag it for triage.)")
+            if st.button("🧼 Clarify This Insight", key=f"clarify_{idx}"):
+                with st.spinner("Clarifying..."):
+                    clarify_prompt = f"Rewrite this vague user feedback in a clearer, more specific way:\n\n{text}"
+                    clarified = generate_gpt_doc(clarify_prompt, "You are a PM rephrasing vague customer input.")
+                    st.success("✅ Clarified Insight:")
+                    st.markdown(f"> {clarified}")
+
+            if st.button("🏷️ Suggest Tags", key=f"tags_{idx}"):
+                with st.spinner("Analyzing..."):
+                    tag_prompt = f"""Suggest 3–5 product tags for this user feedback:\n\n{text}"""
+                    tag_output = generate_gpt_doc(tag_prompt, "You are tagging this signal with product themes.")
+                    st.info("💡 Suggested Tags:")
+                    st.markdown(f"`{tag_output}`")
+
+            if st.button("🧩 Bundle Similar Insights", key=f"bundle_{idx}"):
+                base_embed = model.encode(text, convert_to_tensor=True)
+                all_texts = [x["text"] for x in filtered]
+                all_embeds = model.encode(all_texts, convert_to_tensor=True)
+                similarities = util.pytorch_cos_sim(base_embed, all_embeds)[0]
+                top_indices = similarities.argsort(descending=True)[:5]
+                bundled = []
+                st.markdown("**🧠 Related Insights:**")
+                for j in top_indices:
+                    related = filtered[j]
+                    st.markdown(f"- _{related['text'][:180]}_")
+                    bundled.append(related["text"])
+
+                if st.button("📄 Generate Combined PRD", key=f"bundle_prd_{idx}"):
+                    file_path = generate_multi_signal_prd(bundled, filename=f"bundle-{idx}")
+                    if file_path and os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            st.download_button(
+                                "⬇️ Download Combined PRD",
+                                f,
+                                file_name=os.path.basename(file_path),
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_bundle_prd_{idx}"
+                            )
 
             filename = slugify(i.get("title", i.get("text", "")[:40]))[:64]
             doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"doc_type_{idx}")
@@ -205,48 +226,3 @@ with tabs[0]:
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key=f"dl_doc_{idx}"
                             )
-
-# ───────────────────────────────────────
-# Tab 1: Cluster View
-with tabs[1]:
-    st.header("🧱 Clustered Insight Mode")
-    display_clustered_insight_cards(scraped_insights)
-
-# ───────────────────────────────────────
-# Tab 2: Explorer View
-with tabs[2]:
-    st.header("🔍 Insight Explorer")
-    explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-    explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
-    display_insight_explorer(explorer_filtered[:50])
-
-# ───────────────────────────────────────
-# Tab 3: Trends
-with tabs[3]:
-    st.header("📈 Trends + Brand Summary")
-    display_insight_charts(scraped_insights)
-    display_brand_dashboard(scraped_insights)
-
-# ───────────────────────────────────────
-# Tab 4: Emerging Topics
-with tabs[4]:
-    st.header("🔥 Emerging Topics")
-    trends = detect_emerging_topics(scraped_insights)
-    render_emerging_topics(trends)
-
-# ───────────────────────────────────────
-# Tab 5: Strategic Tools
-with tabs[5]:
-    st.header("🧠 Strategic Tools")
-    st.markdown("This tab provides high-leverage tools for product strategy, prioritization, and portfolio decision-making.")
-    display_spark_suggestions(scraped_insights)
-    st.markdown("---")
-    display_signal_digest(scraped_insights)
-    st.markdown("---")
-    display_impact_heatmap(scraped_insights)
-    st.markdown("---")
-    display_journey_breakdown(scraped_insights)
-    st.markdown("---")
-    display_brand_comparator(scraped_insights)
-    st.markdown("---")
-    display_prd_bundler(scraped_insights)
