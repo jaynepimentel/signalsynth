@@ -1,4 +1,5 @@
-# enhanced_classifier.py — hybrid GPT + keyword enrichment
+# enhanced_classifier.py — hybrid GPT + keyword enrichment with severity unpack fix
+
 import os
 import re
 from components.brand_recognizer import recognize_brand
@@ -34,14 +35,16 @@ def classify_sentiment(text):
         }
 
     # fallback to GPT-based
-    return gpt_estimate_sentiment_subtag(text)["sentiment"], 70
+    result = gpt_estimate_sentiment_subtag(text)
+    return {
+        "sentiment": result["sentiment"],
+        "confidence": 70
+    }
 
 def detect_subtags(text):
-    # GPT-based fallback or hybrid
     if not USE_LIGHT_MODEL:
         return gpt_estimate_sentiment_subtag(text)["subtags"]
-    
-    # regex fallback
+
     SUBTAG_MAP = {
         "delay": "Delays", "scam": "Fraud Concern", "slow": "Speed Issue",
         "authentication": "Trust Issue", "refund": "Refund Issue", "tracking": "Tracking Confusion",
@@ -55,7 +58,7 @@ def detect_subtags(text):
             found.add(label)
     return list(found) if found else ["General"]
 
-def enhance_insight(insight):
+def enhance_insight(insight, skip_gpt=False):
     text = insight.get("text", "").lower()
 
     # Brand detection
@@ -63,18 +66,29 @@ def enhance_insight(insight):
     insight["target_brand"] = brand
 
     # Sentiment classification
-    sentiment_result = classify_sentiment(text)
+    if skip_gpt or USE_LIGHT_MODEL:
+        sentiment_result = classify_sentiment(text)
+    else:
+        sentiment_result = {
+            "sentiment": gpt_estimate_sentiment_subtag(text)["sentiment"],
+            "confidence": 70
+        }
     insight["brand_sentiment"] = sentiment_result["sentiment"]
     insight["sentiment_confidence"] = sentiment_result["confidence"]
 
     # Subtags
-    subtags = detect_subtags(text)
+    if skip_gpt or USE_LIGHT_MODEL:
+        subtags = detect_subtags(text)
+    else:
+        subtags = gpt_estimate_sentiment_subtag(text)["subtags"]
+
     insight["type_subtags"] = subtags
     insight["type_subtag"] = subtags[0]
 
     # Severity scoring
-    severity = estimate_severity(text)
+    severity, reason = estimate_severity(text)
     insight["severity_score"] = severity
+    insight["severity_reason"] = reason
     insight["frustration_flag"] = severity >= 85
 
     # PM Priority

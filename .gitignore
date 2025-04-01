@@ -37,3 +37,4 @@ run_scraper*.sh
 
 # VS Code
 .vscode/
+twitterScrape/

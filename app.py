@@ -1,47 +1,94 @@
-# app.py — SignalSynth UI with merged Explorer, GPT, and Cluster View with filters and trends
-
+# app.py — Final merged version with fixes for deployment, seaborn safe, clustering optional
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from collections import Counter
-from slugify import slugify
 from datetime import datetime
+from slugify import slugify
+from sentence_transformers import SentenceTransformer, util
 
+# 🔧 MUST BE FIRST STREAMLIT CALL
+st.set_page_config(page_title="SignalSynth", layout="wide")
+
+# Core component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
+from components.emerging_trends import detect_emerging_topics, render_emerging_topics
+from components.floating_filters import render_floating_filters
+from components.journey_heatmap import display_journey_heatmap
 from components.ai_suggester import (
-    generate_pm_ideas,
-    generate_prd_docx,
-    generate_brd_docx,
-    generate_prfaq_docx,
-    generate_jira_bug_ticket
+    generate_pm_ideas, generate_prd_docx, generate_brd_docx,
+    generate_prfaq_docx, generate_jira_bug_ticket, generate_gpt_doc,
+    generate_multi_signal_prd
 )
+from components.strategic_tools import (
+    display_signal_digest, display_journey_breakdown,
+    display_brand_comparator, display_impact_heatmap,
+    display_prd_bundler, display_spark_suggestions
+)
+from components.enhanced_insight_view import render_insight_cards
 
+# Load env + OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
-st.set_page_config(page_title="SignalSynth", layout="wide")
+
+# Embedding model cache
+@st.cache_resource(show_spinner="Loading embedding model...")
+def get_model():
+    try:
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        return model.to("cpu")
+    except Exception as e:
+        st.warning(f"⚠️ Failed to load embedding model: {e}")
+        return None
+
+model = get_model()
+
+# UI Header
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
-# Load insights
-if os.path.exists("precomputed_insights.json"):
+# Hide sidebar
+st.markdown("""
+    <style>
+    [data-testid="collapsedControl"] { display: none }
+    section[data-testid="stSidebar"] { width: 0px !important; display: none }
+    </style>
+""", unsafe_allow_html=True)
+
+# Onboarding expander
+if "show_intro" not in st.session_state:
+    st.session_state.show_intro = True
+
+if st.session_state.show_intro:
+    with st.expander("🧠 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
+        st.markdown("""
+        SignalSynth helps you transform user signals into strategic action.
+
+        **💥 Key Features:**
+        - Filter by brand, persona, journey stage, and sentiment
+        - Generate PRD, BRD, PRFAQ, or JIRA ticket for any insight
+        - Visualize trend shifts and brand sentiment
+        - Bundle, clarify, and tag insights
+        """)
+        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
+
+# Load insights + suggestions
+try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
-    st.success(f"✅ Loaded {len(scraped_insights)} precomputed insights")
-else:
-    st.error("❌ No precomputed insights found. Please run `precompute_insights.py`.")
+    with open("gpt_suggestion_cache.json", "r", encoding="utf-8") as f:
+        cache = json.load(f)
+    for i in scraped_insights:
+        i["ideas"] = cache.get(i.get("text", ""), [])
+    st.success(f"✅ Loaded {len(scraped_insights)} insights")
+except Exception as e:
+    st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-st.sidebar.header("⚙️ Settings")
-use_gpt = st.sidebar.checkbox("💡 Enable GPT-4 PM Suggestions", value=OPENAI_KEY_PRESENT)
-if use_gpt and not OPENAI_KEY_PRESENT:
-    st.sidebar.warning("⚠️ Missing OpenAI API Key — GPT disabled.")
-
-# Sidebar filters
-st.sidebar.header("🔍 Filter Insights")
+# Filter field config
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -49,152 +96,62 @@ filter_fields = {
     "Insight Type": "type_tag",
     "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
-    "Clarity": "clarity",
-    "Opportunity Tag": "opportunity_tag",
-    "Action Type": "action_type",
-    "Topic Focus": "topic_focus_tags",
-    "Mentions Competitor": "mentions_competitor"
-}
-filters = {
-    key: st.sidebar.selectbox(label, ["All"] + sorted({str(i.get(key, "Unknown")) for i in scraped_insights}), key=f"sidebar_{key}")
-    for label, key in filter_fields.items()
+    "Clarity": "clarity"
 }
 
-show_trends_only = st.sidebar.checkbox("Highlight Emerging Topics Only", value=False)
-
-# Keyword trends
-topic_keywords = ["vault", "psa", "graded", "fanatics", "cancel", "authenticity", "shipping", "refund"]
-trend_counter = Counter()
-for i in scraped_insights:
-    text = i.get("text", "").lower()
-    for word in topic_keywords:
-        if word in text:
-            trend_counter[word] += 1
-rising_trends = [t for t, count in trend_counter.items() if count >= 5]
-
-if rising_trends:
-    with st.expander("🔥 Emerging Trends Detected", expanded=True):
-        for t in sorted(rising_trends):
-            st.markdown(f"- **{t.title()}** ({trend_counter[t]} mentions)")
-else:
-    st.info("No trends above threshold this cycle.")
-
-# Filtering
-filtered = [
-    i for i in scraped_insights
-    if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)
-    and (not show_trends_only or any(w in i.get("text", "").lower() for w in rising_trends))
+# Define tabs
+TABS = [
+    "📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends",
+    "🔥 Emerging", "🧠 Strategic Tools", "📺 Journey Heatmap"
 ]
+tabs = st.tabs(TABS)
 
-# Summary + dashboard
-st.subheader("📊 Brand Summary")
-display_brand_dashboard(scraped_insights)
+# Tab 0: Full Insight View
+with tabs[0]:
+    st.header("📌 Individual Insights")
+    filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
+    filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+    render_insight_cards(filtered, model)
 
-st.subheader("📈 Insight Trends")
-display_insight_charts(scraped_insights)
+# Tab 1: Clusters
+with tabs[1]:
+    st.header("🧱 Clustered Insight Mode")
+    if model:
+        display_clustered_insight_cards(scraped_insights)
+    else:
+        st.warning("⚠️ Embedding model not available. Skipping clustering.")
 
-# Explorer
-st.subheader("🧭 Insight Explorer")
-display_insight_explorer(filtered[:25])
+# Tab 2: Explorer + keyword
+with tabs[2]:
+    st.header("🔎 Insight Explorer")
+    explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
+    explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+    results = display_insight_explorer(explorer_filtered)
+    if results:
+        render_insight_cards(results[:50], model)
 
-# Individual View
-st.subheader("📌 Individual Insights")
-INSIGHTS_PER_PAGE = 10
-total_pages = max(1, (len(filtered) + INSIGHTS_PER_PAGE - 1) // INSIGHTS_PER_PAGE)
-if "page" not in st.session_state:
-    st.session_state.page = 1
+# Tab 3: Brand + Type Trends
+with tabs[3]:
+    st.header("📈 Trends + Brand Summary")
+    display_insight_charts(scraped_insights)
+    display_brand_dashboard(scraped_insights)
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col1:
-    if st.button("⬅️ Previous"):
-        st.session_state.page = max(1, st.session_state.page - 1)
-with col2:
-    st.markdown(f"**Page {st.session_state.page} of {total_pages}**")
-with col3:
-    if st.button("Next ➡️"):
-        st.session_state.page = min(total_pages, st.session_state.page + 1)
+# Tab 4: Emerging Topics
+with tabs[4]:
+    st.header("🔥 Emerging Topics")
+    render_emerging_topics(detect_emerging_topics(scraped_insights))
 
-start_idx = (st.session_state.page - 1) * INSIGHTS_PER_PAGE
-paged_insights = filtered[start_idx:start_idx + INSIGHTS_PER_PAGE]
+# Tab 5: Strategic Tools
+with tabs[5]:
+    st.header("🧠 Strategic Tools")
+    display_spark_suggestions(scraped_insights)
+    display_signal_digest(scraped_insights)
+    display_impact_heatmap(scraped_insights)
+    display_journey_breakdown(scraped_insights)
+    display_brand_comparator(scraped_insights)
+    display_prd_bundler(scraped_insights)
 
-BADGE_COLORS = {
-    "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
-    "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
-    "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
-    "Clear": "#4CAF50", "Needs Clarification": "#FF9800"
-}
-
-def badge(label, color):
-    return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
-
-for idx, i in enumerate(paged_insights, start=start_idx):
-    st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
-
-    tags = [
-        badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
-        badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
-        badge(i.get("effort"), BADGE_COLORS.get(i.get("effort"), "#ccc")),
-        badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
-        badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
-    ]
-    st.markdown(" ".join(tags), unsafe_allow_html=True)
-
-    st.caption(
-        f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
-        f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-        f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
-    )
-
-    with st.expander(f"🧠 Full Insight ({i.get('status', 'Unknown')})"):
-        text = i.get("text", "")
-        brand = i.get("target_brand", "eBay")
-        st.markdown("**User Quote:**")
-        st.markdown(f"> {text}")
-
-        if use_gpt and OPENAI_KEY_PRESENT:
-            with st.spinner("💡 Generating PM Suggestions..."):
-                try:
-                    i["ideas"] = generate_pm_ideas(text, brand)
-                except Exception as e:
-                    i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
-
-        if i.get("ideas"):
-            st.markdown("**💡 PM Suggestions:**")
-            for idea in i["ideas"]:
-                st.markdown(f"- {idea}")
-
-        if i.get("clarity") == "Needs Clarification":
-            st.warning("This insight may need refinement.")
-            if st.button("🧼 Clarify This Insight", key=f"clarify_{idx}"):
-                st.info("(This would re-run the insight through GPT to rephrase or flag it for triage.)")
-
-        filename = slugify(i.get("title", i.get("text", "")[:40]))[:64]
-        doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"doc_type_{idx}")
-        if st.button(f"Generate {doc_type}", key=f"generate_doc_{idx}"):
-            with st.spinner(f"Generating {doc_type}..."):
-                if doc_type == "PRD":
-                    file_path = generate_prd_docx(text, brand, filename)
-                elif doc_type == "BRD":
-                    file_path = generate_brd_docx(text, brand, filename + "-brd")
-                elif doc_type == "PRFAQ":
-                    file_path = generate_prfaq_docx(text, brand, filename + "-prfaq")
-                elif doc_type == "JIRA":
-                    file_content = generate_jira_bug_ticket(text, brand)
-                    st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_{idx}")
-                    file_path = None
-                if file_path and os.path.exists(file_path):
-                    with open(file_path, "rb") as f:
-                        st.download_button(
-                            f"⬇️ Download {doc_type}",
-                            f,
-                            file_name=os.path.basename(file_path),
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key=f"dl_doc_{idx}"
-                        )
-
-# Clustered view
-st.subheader("🧱 Clustered Insight Mode")
-display_clustered_insight_cards(filtered)
-
-st.sidebar.markdown("---")
-st.sidebar.caption("🔁 Powered by strategic signal + customer voice ✨")
+# Tab 6: Journey Heatmap
+with tabs[6]:
+    st.header("📺 Journey Heatmap")
+    display_journey_heatmap(scraped_insights)

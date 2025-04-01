@@ -32,18 +32,19 @@ def clean_text(text):
 def is_high_signal(text):
     t = text.lower()
     if len(t) < 40:
-        return False
+        return False, "Too short"
     if any(noise in t for noise in NOISE_PHRASES):
-        return False
+        return False, "Noise phrase detected"
     if any(required in t for required in REQUIRED_KEYWORDS):
-        return True
+        return True, "Keyword matched"
     if USE_GPT_OVERRIDE:
         result = gpt_estimate_sentiment_subtag(text)
-        return result.get("sentiment") != "Neutral" or result.get("impact", 1) >= 3
-    return False
+        signal = result.get("sentiment") != "Neutral" or result.get("impact", 1) >= 3
+        return signal, "GPT override" if signal else "GPT = Neutral"
+    return False, "No keyword match"
 
 # Main loaders
-def load_scraped_posts():
+def load_scraped_posts(debug=False):
     insights = []
     for file_path in SOURCE_PATHS:
         if not os.path.exists(file_path):
@@ -53,10 +54,12 @@ def load_scraped_posts():
         with open(file_path, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f if line.strip()]
 
-        count = 0
+        keep_count = 0
         for line in lines:
-            if is_high_signal(line):
+            keep, reason = is_high_signal(line)
+            if keep:
                 cleaned = clean_text(line)
+                gpt_tags = gpt_estimate_sentiment_subtag(line) if USE_GPT_OVERRIDE else {}
                 insights.append({
                     "post_id": hash_text(line),
                     "raw_text": line,
@@ -64,11 +67,18 @@ def load_scraped_posts():
                     "source": "twitter" if "twitter" in file_path.lower() else "reddit",
                     "source_file": file_path,
                     "char_count": len(line),
-                    "type_tag": "Discussion"
+                    "type_tag": "Discussion",
+                    "gpt_sentiment": gpt_tags.get("sentiment"),
+                    "gpt_subtags": gpt_tags.get("subtags"),
+                    "frustration": gpt_tags.get("frustration"),
+                    "impact": gpt_tags.get("impact"),
+                    "gpt_reason": reason
                 })
-                count += 1
+                keep_count += 1
+            elif debug:
+                print(f"❌ Rejected [{reason}]: {line[:80]}...")
 
-        print(f"✅ {count} high-signal posts from {file_path} ({round(100 * count / max(len(lines),1), 1)}%)")
+        print(f"✅ {keep_count} high-signal posts from {file_path} ({round(100 * keep_count / max(len(lines),1), 1)}%)")
     return insights
 
 def process_insights(raw):
