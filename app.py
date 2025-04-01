@@ -1,4 +1,5 @@
-# app.py — SignalSynth with enhancements 1–5: scoring breakdown, clarification, tag suggestions, bundling assistant
+# app.py — Fully Enhanced SignalSynth App with all tabs functioning and enhancements applied
+
 import os
 import json
 import streamlit as st
@@ -36,9 +37,12 @@ from components.journey_heatmap import display_journey_heatmap
 # ───────────────────────────────────────
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
+
 def get_embedding_model():
     from sentence_transformers import SentenceTransformer
     return SentenceTransformer("all-MiniLM-L6-v2")
+
+model = get_embedding_model()
 
 st.set_page_config(page_title="SignalSynth", layout="wide")
 st.title("📡 SignalSynth: Collectibles Insight Engine")
@@ -51,7 +55,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🧠 Onboarding Lightbox
 if "show_intro" not in st.session_state:
     st.session_state.show_intro = True
 
@@ -237,7 +240,63 @@ with tabs[0]:
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key=f"dl_doc_{idx}"
                             )
-# ───────────────────────────────────────
-# Tab 6: Journey Heatmap
+
+# Tabs 1–6
+with tabs[1]:
+    st.header("🧱 Clustered Insight Mode")
+    try:
+        display_clustered_insight_cards(scraped_insights)
+    except Exception as e:
+        st.error(f"⚠️ Cluster view error: {e}")
+
+with tabs[2]:
+    st.header("🔎 Insight Explorer")
+    try:
+        explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
+        explorer_filtered = [
+            i for i in scraped_insights
+            if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)
+        ]
+        display_insight_explorer(explorer_filtered[:50])
+    except Exception as e:
+        st.error(f"⚠️ Explorer error: {e}")
+
+with tabs[3]:
+    st.header("📈 Trends + Brand Summary")
+    try:
+        display_insight_charts(scraped_insights)
+        display_brand_dashboard(scraped_insights)
+    except Exception as e:
+        st.error(f"⚠️ Trend dashboard error: {e}")
+
+with tabs[4]:
+    st.header("🔥 Emerging Topics")
+    try:
+        trends = detect_emerging_topics(scraped_insights)
+        render_emerging_topics(trends)
+    except Exception as e:
+        st.error(f"⚠️ Emerging topics error: {e}")
+
+with tabs[5]:
+    st.header("🧠 Strategic Tools")
+    try:
+        display_spark_suggestions(scraped_insights)
+        st.markdown("---")
+        display_signal_digest(scraped_insights)
+        st.markdown("---")
+        display_impact_heatmap(scraped_insights)
+        st.markdown("---")
+        display_journey_breakdown(scraped_insights)
+        st.markdown("---")
+        display_brand_comparator(scraped_insights)
+        st.markdown("---")
+        display_prd_bundler(scraped_insights)
+    except Exception as e:
+        st.error(f"⚠️ Strategic tools error: {e}")
+
 with tabs[6]:
-    display_journey_heatmap(scraped_insights)
+    st.header("🗺 Journey Heatmap")
+    try:
+        display_journey_heatmap(scraped_insights)
+    except Exception as e:
+        st.error(f"⚠️ Heatmap failed: {e}")
