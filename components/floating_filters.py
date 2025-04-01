@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-def render_floating_filters(insights, filter_fields):
+def render_floating_filters(insights, filter_fields, key_prefix=""):
     filters = {}
 
     with st.expander("🧰 Advanced Filters", expanded=True):
@@ -11,5 +11,5 @@ def render_floating_filters(insights, filter_fields):
             cols = st.columns(min(3, len(field_items[i:i+3])))
             for col, (label, key) in zip(cols, field_items[i:i+3]):
                 options = ["All"] + sorted({str(i.get(key, "Unknown")) for i in insights})
-                filters[key] = col.selectbox(label, options, key=f"filter_{key}")
+                filters[key] = col.selectbox(label, options, key=f"{key_prefix}_filter_{key}")
     return filters
