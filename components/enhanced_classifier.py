@@ -58,7 +58,7 @@ def detect_subtags(text):
             found.add(label)
     return list(found) if found else ["General"]
 
-def enhance_insight(insight):
+def enhance_insight(insight, skip_gpt=False):
     text = insight.get("text", "").lower()
 
     # Brand detection
@@ -66,12 +66,22 @@ def enhance_insight(insight):
     insight["target_brand"] = brand
 
     # Sentiment classification
-    sentiment_result = classify_sentiment(text)
+    if skip_gpt or USE_LIGHT_MODEL:
+        sentiment_result = classify_sentiment(text)
+    else:
+        sentiment_result = {
+            "sentiment": gpt_estimate_sentiment_subtag(text)["sentiment"],
+            "confidence": 70
+        }
     insight["brand_sentiment"] = sentiment_result["sentiment"]
     insight["sentiment_confidence"] = sentiment_result["confidence"]
 
     # Subtags
-    subtags = detect_subtags(text)
+    if skip_gpt or USE_LIGHT_MODEL:
+        subtags = detect_subtags(text)
+    else:
+        subtags = gpt_estimate_sentiment_subtag(text)["subtags"]
+
     insight["type_subtags"] = subtags
     insight["type_subtag"] = subtags[0]
 
