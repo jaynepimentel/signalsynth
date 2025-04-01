@@ -18,3 +18,4 @@ python-dotenv
 fuzzywuzzy
 python-docx
 python-slugify
+seaborn
