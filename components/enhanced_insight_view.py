@@ -126,6 +126,7 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
             doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"{unique_id}_doc_type")
             if st.button(f"Generate {doc_type}", key=f"{unique_id}_generate_doc"):
                 with st.spinner(f"Generating {doc_type}..."):
+                    file_path = None
                     if doc_type == "PRD":
                         file_path = generate_prd_docx(text, brand, filename)
                     elif doc_type == "BRD":
@@ -135,7 +136,7 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
                     elif doc_type == "JIRA":
                         file_content = generate_jira_bug_ticket(text, brand)
                         st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"{unique_id}_dl_jira")
-                        file_path = None
+
                     if file_path and os.path.exists(file_path):
                         with open(file_path, "rb") as f:
                             st.download_button(
@@ -145,3 +146,5 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key=f"{unique_id}_dl_doc"
                             )
+                    else:
+                        st.warning(f"⚠️ Failed to generate or locate {doc_type} document.")
