@@ -1,7 +1,7 @@
 # signal_scorer.py — Final version with GPT-enhanced tagging + embedded classifiers
 
 from components.enhanced_classifier import enhance_insight
-from components.ai_suggester import generate_pm_ideas, rate_clarity
+from components.ai_suggester import generate_pm_ideas
 from components.gpt_classifier import enrich_with_gpt_tags
 from components.scoring_utils import gpt_estimate_sentiment_subtag
 from sentence_transformers import SentenceTransformer, util
@@ -46,6 +46,9 @@ ACTION_TYPES = {
     "marketplace": ["grading", "shipping", "vault", "case break", "pack"]
 }
 
+# ─────────────────────────────────────
+# 🔧 Helpers
+
 def classify_effort(ideas):
     text = " ".join(ideas).lower()
     if any(x in text for x in ["rename", "change label", "copy", "show tooltip", "highlight", "reorder", "color"]):
@@ -66,9 +69,6 @@ def classify_insight_type(text):
         return "Praise", 90, "Positive sentiment"
     return "Marketplace Chatter", 50, "Unclassified"
 
-def classify_insight_type_gpt(text):
-    return "Marketplace Chatter", 45, "GPT fallback not implemented"
-
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
     similarity = util.cos_sim(embedding, EXEMPLAR_EMBEDDINGS).max().item()
@@ -76,22 +76,16 @@ def score_insight_semantic(text):
 
 def score_insight_heuristic(text):
     lowered = text.lower()
-    score = 0
-    for keyword, value in HEURISTIC_KEYWORDS.items():
-        if keyword in lowered:
-            score += value
-    return score
+    return sum(v for k, v in HEURISTIC_KEYWORDS.items() if k in lowered)
 
 def combined_score(semantic, heuristic):
     return round((0.6 * semantic) + (0.4 * heuristic), 2)
 
 def classify_persona(text):
     text = text.lower()
-    buyer_signals = ["bought", "paid", "picked up", "acquired", "pc", "investment"]
-    seller_signals = ["sold", "selling", "consigning", "listing", "submitted", "vault", "liquidating", "offloading"]
-    if any(word in text for word in buyer_signals):
+    if any(w in text for w in ["bought", "paid", "picked up", "acquired", "investment"]):
         return "Buyer"
-    elif any(word in text for word in seller_signals):
+    if any(w in text for w in ["sold", "selling", "consigning", "listing", "vault", "liquidating"]):
         return "Seller"
     return "General"
 
@@ -134,7 +128,7 @@ def classify_journey_stage(text):
         return "Purchase"
     elif any(x in text for x in ["ship", "shipping", "tracking", "delivered", "delay", "package"]):
         return "Fulfillment"
-    elif any(x in text for x in ["return", "refund", "problem", "issue", "feedback", "support", "bad experience"]):
+    elif any(x in text for x in ["return", "refund", "problem", "issue", "feedback", "support"]):
         return "Post-Purchase"
     return "Unknown"
 
@@ -154,6 +148,15 @@ def classify_opportunity_type(text):
         return "Referral Amplifier"
     return "General Insight"
 
+def infer_clarity(text):
+    text = text.strip().lower()
+    if len(text) < 40 or "???" in text or "idk" in text or "confused" in text:
+        return "Needs Clarification"
+    return "Clear"
+
+# ─────────────────────────────────────
+# 🚀 Enrichment Pipeline
+
 def enrich_single_insight(i, min_score=3):
     text = i.get("text", "")
     if not text or len(text.strip()) < 10:
@@ -167,13 +170,13 @@ def enrich_single_insight(i, min_score=3):
 
     type_tag, confidence, reason = classify_insight_type(text)
     if confidence < 75:
-        type_tag, confidence, reason = classify_insight_type_gpt(text)
+        type_tag, confidence, reason = "Marketplace Chatter", 50, "Fallback tag"
     i["type_tag"] = type_tag
     i["type_confidence"] = confidence
     i["type_reason"] = reason
 
     i = enhance_insight(i)
-    i = enrich_with_gpt_tags(i)  # ← NEW GPT-based metadata tagging
+    i = enrich_with_gpt_tags(i)
 
     gpt_tags = gpt_estimate_sentiment_subtag(text)
     i["gpt_sentiment"] = gpt_tags.get("sentiment")
@@ -198,7 +201,7 @@ def enrich_single_insight(i, min_score=3):
 
     i["topic_focus"] = tag_topic_focus(text)
     i["journey_stage"] = i.get("journey_stage") or classify_journey_stage(text)
-    i["clarity"] = rate_clarity(text)
+    i["clarity"] = infer_clarity(text)
     i["title"] = generate_insight_title(text)
     i["opportunity_tag"] = i.get("opportunity_tag") or classify_opportunity_type(text)
     i["cluster_ready_score"] = round((i["score"] + (i["frustration"] or 0)*5 + (i["impact"] or 0)*5) / 3, 2)
