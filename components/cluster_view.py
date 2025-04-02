@@ -1,10 +1,11 @@
-# cluster_view.py — Optimized for performance, preserving GPT tools, bundling, and doc generation
+# cluster_view.py — Fast-loading clusters with lazy GPT and smart caching
+
 import streamlit as st
 import os
 import json
 import hashlib
 from collections import Counter
-from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
+from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights, generate_cluster_metadata
 from components.ai_suggester import (
     generate_cluster_prd_docx,
     generate_cluster_prfaq_docx,
@@ -13,7 +14,6 @@ from components.ai_suggester import (
     generate_multi_signal_prd
 )
 
-# Visual badge coloring
 BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
@@ -28,20 +28,16 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-# Caching logic
 CACHE_DIR = ".cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
-PRECOMPUTED_CLUSTERS = "precomputed_clusters.json"
 
 def get_cluster_cache_key(insights):
-    key = hashlib.md5(json.dumps(insights, sort_keys=True).encode()).hexdigest()
-    return os.path.join(CACHE_DIR, f"cluster_{key}.json")
+    short_hash = hashlib.md5("".join(i["text"] for i in insights).encode()).hexdigest()
+    return os.path.join(CACHE_DIR, f"cluster_{short_hash}.json")
 
 @st.cache_data(show_spinner=False)
 def load_clusters(insights):
-    clusters = cluster_insights(insights)
-    cards = generate_synthesized_insights(insights)
-    return clusters, cards
+    return cluster_insights(insights), generate_synthesized_insights(insights)
 
 def display_clustered_insight_cards(insights):
     if not insights:
@@ -49,7 +45,6 @@ def display_clustered_insight_cards(insights):
         return
 
     st.subheader("🧠 Clustered Insight Themes")
-
     cache_file = get_cluster_cache_key(insights)
     clusters, cards = None, None
 
@@ -63,12 +58,11 @@ def display_clustered_insight_cards(insights):
             os.remove(cache_file)
 
     if not clusters or not cards:
-        with st.spinner("🔄 Clustering..."):
+        with st.spinner("🔄 Clustering insights..."):
             clusters, cards = load_clusters(insights)
         with open(cache_file, "w", encoding="utf-8") as f:
             json.dump({"clusters": clusters, "cards": cards}, f)
 
-    # Pagination
     clusters_per_page = 3
     total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
     current_page = st.number_input("📚 Page", 1, total_pages, 1)
@@ -82,10 +76,8 @@ def display_clustered_insight_cards(insights):
 
         with st.container():
             st.markdown(f"### 📌 {card.get('title', 'Untitled')} — {card.get('brand', 'Unknown')}")
-            st.markdown(f"**Summary:** {card.get('summary', '(none)')}")
-            st.caption(f"Mentions: {card.get('insight_count', len(cluster))} | Score Range: {card.get('score_range', '?')}")
+            st.caption(f"Mentions: {card.get('insight_count')} | Score Range: {card.get('score_range', '?')}")
 
-            # Tag badges
             tags = []
             for field in ["type", "effort_levels", "sentiments", "opportunity_tags", "topic_focus_tags"]:
                 values = card.get(field)
@@ -103,20 +95,23 @@ def display_clustered_insight_cards(insights):
                     st.markdown(f"- {idea}")
 
             with st.expander("✨ AI Tools"):
-                texts = "\n\n".join(i["text"] for i in cluster[:8])
+                texts = "\n\n".join(i["text"] for i in cluster[:6])
 
                 if st.button("🧼 Clarify", key=f"clarify_{idx}"):
                     st.markdown(f"> {generate_gpt_doc(texts, 'Clarify clearly.')}")
 
                 if st.button("🏷️ Suggest Tags", key=f"tags_{idx}"):
-                    tags_suggested = generate_gpt_doc(texts, 'Suggest 3–5 tags.')
-                    st.info(tags_suggested)
+                    st.info(generate_gpt_doc(texts, "Suggest 3–5 tags."))
 
                 if st.button("📦 Combined PRD", key=f"bundle_{idx}"):
-                    path = generate_multi_signal_prd([i["text"] for i in cluster[:8]], f"bundle-{idx}")
+                    path = generate_multi_signal_prd([i["text"] for i in cluster], f"bundle-{idx}")
                     if path:
                         with open(path, "rb") as f:
                             st.download_button("⬇️ PRD", f, os.path.basename(path))
+
+                if st.button("🧠 Generate Summary", key=f"summary_{idx}"):
+                    metadata = generate_cluster_metadata(cluster)
+                    st.success(f"**{metadata['title']}**  \n*Theme:* {metadata['theme']}  \n*Problem:* {metadata['problem']}")
 
             col1, col2 = st.columns([1, 3])
             with col1:
@@ -126,7 +121,11 @@ def display_clustered_insight_cards(insights):
                 doc_type = st.selectbox("Generate:", ["PRD", "BRD", "PRFAQ"], key=f"doc_{idx}")
                 if st.button("📄 Generate", key=f"gen_doc_{idx}"):
                     filename = f"cluster_{idx}_{card.get('title', 'untitled')[:40].replace(' ', '_')}"
-                    generate_fn = {"PRD": generate_cluster_prd_docx, "BRD": generate_cluster_brd_docx, "PRFAQ": generate_cluster_prfaq_docx}[doc_type]
+                    generate_fn = {
+                        "PRD": generate_cluster_prd_docx,
+                        "BRD": generate_cluster_brd_docx,
+                        "PRFAQ": generate_cluster_prfaq_docx
+                    }[doc_type]
                     path = generate_fn(card, filename)
                     if path:
                         with open(path, "rb") as f:
