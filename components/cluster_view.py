@@ -1,11 +1,11 @@
-# cluster_view.py — Fast-loading clusters with lazy GPT and smart caching
+# cluster_view.py — Loads precomputed clusters and cards for ultra-fast rendering
 
 import streamlit as st
 import os
 import json
 import hashlib
 from collections import Counter
-from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights, generate_cluster_metadata
+from components.cluster_synthesizer import generate_cluster_metadata
 from components.ai_suggester import (
     generate_cluster_prd_docx,
     generate_cluster_prfaq_docx,
@@ -28,40 +28,18 @@ def badge(label):
     color = BADGE_COLORS.get(label, "#ccc")
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
-CACHE_DIR = ".cache"
-os.makedirs(CACHE_DIR, exist_ok=True)
+def display_clustered_insight_cards(insights=None):
+    st.subheader("🧠 Precomputed Clustered Insight Themes")
 
-def get_cluster_cache_key(insights):
-    short_hash = hashlib.md5("".join(i["text"] for i in insights).encode()).hexdigest()
-    return os.path.join(CACHE_DIR, f"cluster_{short_hash}.json")
-
-@st.cache_data(show_spinner=False)
-def load_clusters(insights):
-    return cluster_insights(insights), generate_synthesized_insights(insights)
-
-def display_clustered_insight_cards(insights):
-    if not insights:
-        st.info("No insights to cluster.")
+    try:
+        with open(".cache/clusters.json", "r", encoding="utf-8") as f:
+            clusters = json.load(f)
+        with open(".cache/cards.json", "r", encoding="utf-8") as f:
+            cards = json.load(f)
+        st.caption("⚡️ Loaded from precomputed cache")
+    except Exception as e:
+        st.error(f"❌ Failed to load precomputed clusters: {e}")
         return
-
-    st.subheader("🧠 Clustered Insight Themes")
-    cache_file = get_cluster_cache_key(insights)
-    clusters, cards = None, None
-
-    if os.path.exists(cache_file):
-        try:
-            with open(cache_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                clusters, cards = data.get("clusters"), data.get("cards")
-            st.caption("⚡️ Loaded from cache")
-        except:
-            os.remove(cache_file)
-
-    if not clusters or not cards:
-        with st.spinner("🔄 Clustering insights..."):
-            clusters, cards = load_clusters(insights)
-        with open(cache_file, "w", encoding="utf-8") as f:
-            json.dump({"clusters": clusters, "cards": cards}, f)
 
     clusters_per_page = 3
     total_pages = (len(cards) + clusters_per_page - 1) // clusters_per_page
