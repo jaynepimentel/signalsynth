@@ -1,4 +1,5 @@
-# ✅ cluster_synthesizer.py — Upgraded with stronger embeddings, metadata-enriched clustering, stable IDs, and optional FAISS support
+# cluster_synthesizer.py — Optimized clustering with caching, lazy GPT, and faster embeddings
+
 import os
 from collections import defaultdict, Counter
 from sklearn.cluster import DBSCAN
@@ -7,17 +8,17 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from itertools import combinations
 import hashlib
+from functools import lru_cache
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
-# --- STREAMLIT-SAFE MODEL LOADING ---
 model = None
 if os.getenv("RUNNING_IN_STREAMLIT") != "1":
     try:
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer("intfloat/e5-base-v2")  # 🔁 Upgraded embedding model
+        model = SentenceTransformer("intfloat/e5-base-v2")
     except Exception as e:
         print("❌ Failed to load SentenceTransformer:", e)
 else:
@@ -26,7 +27,10 @@ else:
 COHERENCE_THRESHOLD = 0.68
 RECLUSTER_EPS = 0.30
 
-# --- CLUSTERING LOGIC ---
+@lru_cache(maxsize=2048)
+def get_embedding(text):
+    return model.encode([text], convert_to_tensor=True)[0].cpu().numpy()
+
 def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
     if not model:
         print("⚠️ Embedding model unavailable. Skipping clustering.")
@@ -44,25 +48,19 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=3):
         clusters = cluster_insights(group, min_cluster_size=min_cluster_size)
         for c in clusters:
             coherent, score = is_semantically_coherent(c, return_score=True)
-            if coherent:
-                all_clusters.append((c, {"coherent": True, "was_reclustered": False, "avg_similarity": score}))
-            else:
-                subclusters = split_incoherent_cluster(c)
-                for sub in subclusters:
-                    sub_coherent, sub_score = is_semantically_coherent(sub, return_score=True)
-                    all_clusters.append((sub, {
-                        "coherent": sub_coherent,
-                        "was_reclustered": True,
-                        "avg_similarity": sub_score
-                    }))
+            all_clusters.append((c, {
+                "coherent": coherent,
+                "was_reclustered": False,
+                "avg_similarity": score
+            }))
     return all_clusters
 
 def cluster_insights(insights, min_cluster_size=3, eps=0.38):
     if not model:
         return []
-    texts = [f"{i.get('text')} | Tags: {i.get('type_tag')}, {i.get('journey_stage')}, {i.get('persona')}" for i in insights]
-    embeddings = model.encode(texts, convert_to_tensor=True)
-    clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings.cpu().numpy())
+    texts = [i.get("text", "")[:220] for i in insights]
+    embeddings = np.array([get_embedding(t) for t in texts])
+    clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(embeddings)
     labels = clustering.labels_
 
     clustered = defaultdict(list)
@@ -78,25 +76,11 @@ def is_semantically_coherent(cluster, return_score=False):
     if len(cluster) <= 2:
         return (True, 1.0) if return_score else True
     texts = [i["text"] for i in cluster]
-    embeddings = model.encode(texts, convert_to_tensor=True)
+    embeddings = np.array([get_embedding(t) for t in texts])
     sim_matrix = np.inner(embeddings, embeddings)
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]
     avg_similarity = upper_triangle.mean()
     return (avg_similarity >= COHERENCE_THRESHOLD, avg_similarity) if return_score else avg_similarity >= COHERENCE_THRESHOLD
-
-def split_incoherent_cluster(cluster):
-    if not model:
-        return [cluster]
-    if len(cluster) <= 3:
-        return [cluster]
-    subclusters = cluster_insights(cluster, min_cluster_size=2, eps=RECLUSTER_EPS)
-    final = []
-    for c in subclusters:
-        if len(c) <= 2:
-            final.extend([[i] for i in c])
-        else:
-            final.append(c)
-    return final
 
 def generate_cluster_metadata(cluster):
     if not client:
@@ -134,33 +118,15 @@ def generate_cluster_metadata(cluster):
             "problem": str(e)
         }
 
-def find_cross_tag_connections(insights, threshold=0.75):
-    if not model:
-        return {}
-    connections = defaultdict(list)
-    text_map = {i["text"]: i for i in insights}
-    texts = list(text_map.keys())
-    embeddings = model.encode(texts, convert_to_tensor=True)
-    sims = np.inner(embeddings, embeddings)
-
-    for i, j in combinations(range(len(texts)), 2):
-        if sims[i][j] > threshold:
-            i_tag = text_map[texts[i]].get("type_subtag", "General")
-            j_tag = text_map[texts[j]].get("type_subtag", "General")
-            if i_tag != j_tag:
-                key = f"{i_tag} ↔ {j_tag}"
-                connections[key].append({
-                    "a": texts[i],
-                    "b": texts[j],
-                    "similarity": round(float(sims[i][j]), 3)
-                })
-    return connections
-
 def synthesize_cluster(cluster):
-    metadata = generate_cluster_metadata(cluster)
+    metadata = {
+        "title": cluster[0]["text"][:80] + "...",
+        "theme": "General",
+        "problem": "Click to generate with GPT"
+    }
 
-    brand = cluster[0].get("target_brand") or "Unknown"
-    type_tag = cluster[0].get("type_tag") or "Insight"
+    brand = cluster[0].get("target_brand", "Unknown")
+    type_tag = cluster[0].get("type_tag", "Insight")
     quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
 
     idea_counter = defaultdict(int)
@@ -174,10 +140,8 @@ def synthesize_cluster(cluster):
     min_score = round(min(scores), 2)
     max_score = round(max(scores), 2)
 
-    action_types = Counter(i.get("action_type", "Unclear") for i in cluster)
-    competitors = sorted({c for i in cluster for c in i.get("mentions_competitor", [])})
-    topics = sorted({t for i in cluster for t in i.get("topic_focus", [])})
-
+    personas = list({i.get("persona", "Unknown") for i in cluster})
+    sentiments = list({i.get("brand_sentiment", "Neutral") for i in cluster})
     cluster_id = hashlib.md5("|".join(sorted(i.get("fingerprint", i.get("text", "")) for i in cluster)).encode()).hexdigest()
 
     return {
@@ -186,18 +150,15 @@ def synthesize_cluster(cluster):
         "problem_statement": metadata["problem"],
         "brand": brand,
         "type": type_tag,
-        "personas": list({i.get("persona", "Unknown") for i in cluster}),
+        "personas": personas,
         "effort_levels": list({i.get("effort", "Unknown") for i in cluster}),
-        "sentiments": list({i.get("brand_sentiment", "Neutral") for i in cluster}),
+        "sentiments": sentiments,
         "opportunity_tags": list({i.get("opportunity_tag", "General Insight") for i in cluster}),
         "quotes": quotes,
         "top_ideas": [i[0] for i in top_ideas],
         "score_range": f"{min_score}–{max_score}",
         "insight_count": len(cluster),
         "avg_cluster_ready": round(np.mean([i.get("cluster_ready_score", 0) for i in cluster]), 2),
-        "action_type_distribution": dict(action_types),
-        "topic_focus_tags": topics,
-        "mentions_competitor": competitors,
         "cluster_id": cluster_id
     }
 
@@ -210,17 +171,4 @@ def generate_synthesized_insights(insights):
         card["was_reclustered"] = meta["was_reclustered"]
         card["avg_similarity"] = f"{meta['avg_similarity']:.2f}"
         summaries.append(card)
-
-    cross_tag_patterns = find_cross_tag_connections(insights)
-    if cross_tag_patterns:
-        summaries.append({
-            "title": "🔗 Emerging Cross-Tag Patterns",
-            "theme": "Cross-Topic Insight",
-            "problem_statement": f"Identified {len(cross_tag_patterns)} weak-tie patterns across subtags",
-            "connections": cross_tag_patterns,
-            "insight_count": sum(len(v) for v in cross_tag_patterns.values()),
-            "brand": "Multiple",
-            "diagnostic_only": True
-        })
-
     return summaries
