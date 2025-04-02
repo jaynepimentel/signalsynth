@@ -39,7 +39,14 @@ def display_journey_heatmap(insights, metric="count"):
     sns.heatmap(heat_df, annot=True, fmt=fmt, cmap="YlOrRd", linewidths=0.5)
     st.pyplot(fig)
 
-    # Toggle between metrics
-    toggle = st.radio("Switch Metric", options=["Count", "Priority"], index=0, horizontal=True)
+    # Toggle between metrics — now with unique key
+    toggle = st.radio(
+        "Switch Metric",
+        options=["Count", "Priority"],
+        index=0,
+        horizontal=True,
+        key=f"journey_heatmap_toggle_{metric}"
+    )
+
     if toggle.lower() != metric:
         display_journey_heatmap(insights, metric=toggle.lower())
