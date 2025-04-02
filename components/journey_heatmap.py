@@ -5,13 +5,28 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def display_journey_heatmap(insights, metric="count"):
+def display_journey_heatmap(insights):
     st.header("🧭 Persona × Journey Stage Heatmap")
 
     df = pd.DataFrame(insights)
     if "persona" not in df.columns or "journey_stage" not in df.columns:
         st.warning("Missing persona or journey stage data.")
         return
+
+    # Store toggle state in session
+    if "journey_heatmap_metric" not in st.session_state:
+        st.session_state.journey_heatmap_metric = "count"
+
+    toggle = st.radio(
+        "Switch Metric",
+        options=["Count", "Priority"],
+        index=0 if st.session_state.journey_heatmap_metric == "count" else 1,
+        horizontal=True,
+        key="journey_heatmap_radio"
+    )
+
+    st.session_state.journey_heatmap_metric = toggle.lower()
+    metric = st.session_state.journey_heatmap_metric
 
     if metric == "priority":
         if "pm_priority_score" not in df.columns:
@@ -38,15 +53,3 @@ def display_journey_heatmap(insights, metric="count"):
     fig, ax = plt.subplots(figsize=(10, 4))
     sns.heatmap(heat_df, annot=True, fmt=fmt, cmap="YlOrRd", linewidths=0.5)
     st.pyplot(fig)
-
-    # Toggle between metrics — now with unique key
-    toggle = st.radio(
-        "Switch Metric",
-        options=["Count", "Priority"],
-        index=0,
-        horizontal=True,
-        key=f"journey_heatmap_toggle_{metric}"
-    )
-
-    if toggle.lower() != metric:
-        display_journey_heatmap(insights, metric=toggle.lower())
