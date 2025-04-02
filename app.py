@@ -1,4 +1,5 @@
-# app.py — Final merged version with fixes for deployment, seaborn safe, clustering optional, and unique key_prefixes
+# app.py — Stable version with error-handled tabs and Journey Map as Tab 1
+
 import os
 import json
 import streamlit as st
@@ -38,8 +39,7 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 def get_model():
     try:
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        return model
+        return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     except Exception as e:
         st.warning(f"⚠️ Failed to load embedding model: {e}")
         return None
@@ -97,62 +97,87 @@ filter_fields = {
     "Clarity": "clarity"
 }
 
-# Define tabs
-TABS = [
-    "📌 Insights", "🧱 Clusters", "🔎 Explorer", "📈 Trends",
-    "🔥 Emerging", "🧠 Strategic Tools", "📺 Journey Heatmap"
-]
-tabs = st.tabs(TABS)
+# Define tabs (Journey Map moved to Tab 1)
+tabs = st.tabs([
+    "📌 Insights",
+    "🗺 Journey Heatmap",
+    "🧱 Clusters",
+    "🔎 Explorer",
+    "📈 Trends",
+    "🔥 Emerging",
+    "🧠 Strategic Tools"
+])
 
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
-    filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
-    filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
-    model = get_model()
-    render_insight_cards(filtered, model, key_prefix="insights")
-
-# Tab 1 — Clusters
-with tabs[1]:
-    st.header("🧱 Clustered Insight Mode")
-    model = get_model()
-    if model:
-        display_clustered_insight_cards(scraped_insights)
-    else:
-        st.warning("⚠️ Embedding model not available. Skipping clustering.")
-
-# Tab 2 — Explorer
-with tabs[2]:
-    st.header("🔎 Insight Explorer")
-    explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-    explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
-    results = display_insight_explorer(explorer_filtered)
-    if results:
+    try:
+        filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
+        filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
         model = get_model()
-        render_insight_cards(results[:50], model, key_prefix="explorer")
+        render_insight_cards(filtered, model, key_prefix="insights")
+    except Exception as e:
+        st.error(f"❌ Insights tab error: {e}")
 
-# Tab 3 — Brand + Type Trends
+# Tab 1 — Journey Map
+with tabs[1]:
+    st.header("🗺 Journey Heatmap")
+    try:
+        display_journey_heatmap(scraped_insights)
+    except Exception as e:
+        st.error(f"❌ Journey Heatmap error: {e}")
+
+# Tab 2 — Clusters
+with tabs[2]:
+    st.header("🧱 Clustered Insight Mode")
+    try:
+        model = get_model()
+        if model:
+            display_clustered_insight_cards(scraped_insights)
+        else:
+            st.warning("⚠️ Embedding model not available. Skipping clustering.")
+    except Exception as e:
+        st.error(f"❌ Cluster view error: {e}")
+
+# Tab 3 — Explorer
 with tabs[3]:
-    st.header("📈 Trends + Brand Summary")
-    display_insight_charts(scraped_insights)
-    display_brand_dashboard(scraped_insights)
+    st.header("🔎 Insight Explorer")
+    try:
+        explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
+        explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+        results = display_insight_explorer(explorer_filtered)
+        if results:
+            model = get_model()
+            render_insight_cards(results[:50], model, key_prefix="explorer")
+    except Exception as e:
+        st.error(f"❌ Explorer tab error: {e}")
 
-# Tab 4 — Emerging Topics
+# Tab 4 — Trends
 with tabs[4]:
-    st.header("🔥 Emerging Topics")
-    render_emerging_topics(detect_emerging_topics(scraped_insights))
+    st.header("📈 Trends + Brand Summary")
+    try:
+        display_insight_charts(scraped_insights)
+        display_brand_dashboard(scraped_insights)
+    except Exception as e:
+        st.error(f"❌ Trends tab error: {e}")
 
-# Tab 5 — Strategic Tools
+# Tab 5 — Emerging
 with tabs[5]:
-    st.header("🧠 Strategic Tools")
-    display_spark_suggestions(scraped_insights)
-    display_signal_digest(scraped_insights)
-    display_impact_heatmap(scraped_insights)
-    display_journey_breakdown(scraped_insights)
-    display_brand_comparator(scraped_insights)
-    display_prd_bundler(scraped_insights)
+    st.header("🔥 Emerging Topics")
+    try:
+        render_emerging_topics(detect_emerging_topics(scraped_insights))
+    except Exception as e:
+        st.error(f"❌ Emerging tab error: {e}")
 
-# Tab 6 — Journey Heatmap
+# Tab 6 — Strategic Tools
 with tabs[6]:
-    st.header("📺 Journey Heatmap")
-    display_journey_heatmap(scraped_insights)
+    st.header("🧠 Strategic Tools")
+    try:
+        display_spark_suggestions(scraped_insights)
+        display_signal_digest(scraped_insights)
+        display_impact_heatmap(scraped_insights)
+        display_journey_breakdown(scraped_insights)
+        display_brand_comparator(scraped_insights)
+        display_prd_bundler(scraped_insights)
+    except Exception as e:
+        st.error(f"❌ Strategic Tools tab error: {e}")
