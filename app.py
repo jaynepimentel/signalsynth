@@ -5,12 +5,11 @@ import streamlit as st
 from dotenv import load_dotenv
 from datetime import datetime
 from slugify import slugify
-from sentence_transformers import SentenceTransformer, util
 
 # 🔧 MUST BE FIRST STREAMLIT CALL
 st.set_page_config(page_title="SignalSynth", layout="wide")
 
-# Core component imports
+# Component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
@@ -34,19 +33,18 @@ from components.enhanced_insight_view import render_insight_cards
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# Embedding model cache
+# Lazy embedding model loader
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
     try:
-        model = SentenceTransformer("models/all-MiniLM-L6-v2")
-        return model.to("cpu")
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        return model
     except Exception as e:
         st.warning(f"⚠️ Failed to load embedding model: {e}")
         return None
 
-model = get_model()
-
-# UI Header
+# Header UI
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
@@ -58,7 +56,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Onboarding expander
+# Onboarding
 if "show_intro" not in st.session_state:
     st.session_state.show_intro = True
 
@@ -75,7 +73,7 @@ if st.session_state.show_intro:
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
-# Load insights + suggestions
+# Load insights and cache
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -88,7 +86,7 @@ except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# Filter field config
+# Filters
 filter_fields = {
     "Target Brand": "target_brand",
     "Persona": "persona",
@@ -106,42 +104,45 @@ TABS = [
 ]
 tabs = st.tabs(TABS)
 
-# Tab 0: Full Insight View
+# Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
     filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+    model = get_model()
     render_insight_cards(filtered, model, key_prefix="insights")
 
-# Tab 1: Clusters
+# Tab 1 — Clusters
 with tabs[1]:
     st.header("🧱 Clustered Insight Mode")
+    model = get_model()
     if model:
         display_clustered_insight_cards(scraped_insights)
     else:
         st.warning("⚠️ Embedding model not available. Skipping clustering.")
 
-# Tab 2: Explorer + keyword
+# Tab 2 — Explorer
 with tabs[2]:
     st.header("🔎 Insight Explorer")
     explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
     explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
     results = display_insight_explorer(explorer_filtered)
     if results:
+        model = get_model()
         render_insight_cards(results[:50], model, key_prefix="explorer")
 
-# Tab 3: Brand + Type Trends
+# Tab 3 — Brand + Type Trends
 with tabs[3]:
     st.header("📈 Trends + Brand Summary")
     display_insight_charts(scraped_insights)
     display_brand_dashboard(scraped_insights)
 
-# Tab 4: Emerging Topics
+# Tab 4 — Emerging Topics
 with tabs[4]:
     st.header("🔥 Emerging Topics")
     render_emerging_topics(detect_emerging_topics(scraped_insights))
 
-# Tab 5: Strategic Tools
+# Tab 5 — Strategic Tools
 with tabs[5]:
     st.header("🧠 Strategic Tools")
     display_spark_suggestions(scraped_insights)
@@ -151,7 +152,7 @@ with tabs[5]:
     display_brand_comparator(scraped_insights)
     display_prd_bundler(scraped_insights)
 
-# Tab 6: Journey Heatmap
+# Tab 6 — Journey Heatmap
 with tabs[6]:
     st.header("📺 Journey Heatmap")
     display_journey_heatmap(scraped_insights)
