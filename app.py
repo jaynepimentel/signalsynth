@@ -1,10 +1,10 @@
-# app.py — Debug-enhanced with diagnostics, safe filters, and date fallback
+# app.py — Date range removed for simplified filtering and debugging
 
 import os
 import json
 import streamlit as st
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 from slugify import slugify
 
 # 🔧 MUST BE FIRST STREAMLIT CALL
@@ -33,19 +33,6 @@ from components.enhanced_insight_view import render_insight_cards
 # Load env + OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
-
-# Safe date parser with fallback
-def safe_date_from_insight(i):
-    for field in ["post_date", "_logged_date"]:
-        value = i.get(field)
-        if isinstance(value, datetime):
-            return value.date()
-        if isinstance(value, str):
-            try:
-                return datetime.fromisoformat(value).date()
-            except:
-                continue
-    return None
 
 # Lazy embedding model loader
 @st.cache_resource(show_spinner="Loading embedding model...")
@@ -105,25 +92,13 @@ tabs = st.tabs([
     "🧠 Strategic Tools"
 ])
 
-# Global time range filter
-st.sidebar.header("🕓 Time Range Filter")
-min_date = st.sidebar.date_input("Start Date", datetime.now().date() - timedelta(days=30))
-max_date = st.sidebar.date_input("End Date", datetime.now().date())
-
-filtered_by_date = [i for i in scraped_insights if (d := safe_date_from_insight(i)) and min_date <= d <= max_date]
-
-# DEBUG
-st.sidebar.markdown(f"📊 Insights in date range: {len(filtered_by_date)}")
-if filtered_by_date:
-    st.sidebar.code(list(filtered_by_date[0].keys()))
-
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     try:
-        filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="insights")
+        filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
         filtered = [
-            i for i in filtered_by_date
+            i for i in scraped_insights
             if all(
                 filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == filters[k].strip().lower()
                 for k in filters
@@ -143,7 +118,7 @@ with tabs[0]:
 with tabs[1]:
     st.header("🗺 Journey Heatmap")
     try:
-        display_journey_heatmap(filtered_by_date)
+        display_journey_heatmap(scraped_insights)
     except Exception as e:
         st.error(f"❌ Journey Heatmap error: {e}")
 
@@ -153,7 +128,7 @@ with tabs[2]:
     try:
         model = get_model()
         if model:
-            display_clustered_insight_cards(filtered_by_date)
+            display_clustered_insight_cards(scraped_insights)
         else:
             st.warning("⚠️ Embedding model not available. Skipping clustering.")
     except Exception as e:
@@ -163,9 +138,9 @@ with tabs[2]:
 with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
-        explorer_filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="explorer")
+        explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
         explorer_filtered = [
-            i for i in filtered_by_date
+            i for i in scraped_insights
             if all(
                 explorer_filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == explorer_filters[k].strip().lower()
                 for k in explorer_filters
@@ -182,8 +157,8 @@ with tabs[3]:
 with tabs[4]:
     st.header("📈 Trends + Brand Summary")
     try:
-        display_insight_charts(filtered_by_date)
-        display_brand_dashboard(filtered_by_date)
+        display_insight_charts(scraped_insights)
+        display_brand_dashboard(scraped_insights)
     except Exception as e:
         st.error(f"❌ Trends tab error: {e}")
 
@@ -191,7 +166,7 @@ with tabs[4]:
 with tabs[5]:
     st.header("🔥 Emerging Topics")
     try:
-        render_emerging_topics(detect_emerging_topics(filtered_by_date))
+        render_emerging_topics(detect_emerging_topics(scraped_insights))
     except Exception as e:
         st.error(f"❌ Emerging tab error: {e}")
 
@@ -199,11 +174,11 @@ with tabs[5]:
 with tabs[6]:
     st.header("🧠 Strategic Tools")
     try:
-        display_spark_suggestions(filtered_by_date)
-        display_signal_digest(filtered_by_date)
-        display_impact_heatmap(filtered_by_date)
-        display_journey_breakdown(filtered_by_date)
-        display_brand_comparator(filtered_by_date)
-        display_prd_bundler(filtered_by_date)
+        display_spark_suggestions(scraped_insights)
+        display_signal_digest(scraped_insights)
+        display_impact_heatmap(scraped_insights)
+        display_journey_breakdown(scraped_insights)
+        display_brand_comparator(scraped_insights)
+        display_prd_bundler(scraped_insights)
     except Exception as e:
         st.error(f"❌ Strategic Tools tab error: {e}")
