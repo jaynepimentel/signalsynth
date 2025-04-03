@@ -1,4 +1,4 @@
-# app.py — Stable version with error-handled tabs and Journey Map as Tab 1
+# app.py — Enhanced version with complaint %, dev filters, and time range support
 
 import os
 import json
@@ -56,24 +56,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Onboarding
-if "show_intro" not in st.session_state:
-    st.session_state.show_intro = True
-
-if st.session_state.show_intro:
-    with st.expander("🧠 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
-        st.markdown("""
-        SignalSynth helps you transform user signals into strategic action.
-
-        **💥 Key Features:**
-        - Filter by brand, persona, journey stage, and sentiment
-        - Generate PRD, BRD, PRFAQ, or JIRA ticket for any insight
-        - Visualize trend shifts and brand sentiment
-        - Bundle, clarify, and tag insights
-        """)
-        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
-
-# Load insights and cache
+# Load insights
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -92,12 +75,13 @@ filter_fields = {
     "Persona": "persona",
     "Journey Stage": "journey_stage",
     "Insight Type": "type_tag",
+    "Subtag": "type_subtag",
     "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity"
 }
 
-# Define tabs (Journey Map moved to Tab 1)
+# Define tabs
 tabs = st.tabs([
     "📌 Insights",
     "🗺 Journey Heatmap",
@@ -108,22 +92,34 @@ tabs = st.tabs([
     "🧠 Strategic Tools"
 ])
 
+# Global time range filter
+st.sidebar.header("🕓 Time Range Filter")
+min_date = st.sidebar.date_input("Start Date", datetime.now().date() - timedelta(days=30))
+max_date = st.sidebar.date_input("End Date", datetime.now().date())
+filtered_by_date = [i for i in scraped_insights if min_date <= datetime.fromisoformat(i.get("post_date") or i.get("_logged_date")).date() <= max_date]
+
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     try:
-        filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
-        filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+        filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="insights")
+        filtered = [i for i in filtered_by_date if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+
+        # 🔎 Complaint % and Dev Count Diagnostic
+        complaint_count = sum(1 for i in filtered if i.get("brand_sentiment") == "Complaint")
+        dev_count = sum(1 for i in filtered if i.get("is_dev_feedback"))
+        st.markdown(f"✅ **Filtered Count**: {len(filtered)} — 🔥 **Complaint %**: {round(100 * complaint_count / len(filtered), 1) if filtered else 0}% — 🧑‍💻 **Dev Feedback**: {dev_count}")
+
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# Tab 1 — Journey Map
+# Tab 1 — Journey Heatmap
 with tabs[1]:
     st.header("🗺 Journey Heatmap")
     try:
-        display_journey_heatmap(scraped_insights)
+        display_journey_heatmap(filtered_by_date)
     except Exception as e:
         st.error(f"❌ Journey Heatmap error: {e}")
 
@@ -133,7 +129,7 @@ with tabs[2]:
     try:
         model = get_model()
         if model:
-            display_clustered_insight_cards(scraped_insights)
+            display_clustered_insight_cards(filtered_by_date)
         else:
             st.warning("⚠️ Embedding model not available. Skipping clustering.")
     except Exception as e:
@@ -143,8 +139,8 @@ with tabs[2]:
 with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
-        explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-        explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+        explorer_filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="explorer")
+        explorer_filtered = [i for i in filtered_by_date if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
         results = display_insight_explorer(explorer_filtered)
         if results:
             model = get_model()
@@ -156,16 +152,16 @@ with tabs[3]:
 with tabs[4]:
     st.header("📈 Trends + Brand Summary")
     try:
-        display_insight_charts(scraped_insights)
-        display_brand_dashboard(scraped_insights)
+        display_insight_charts(filtered_by_date)
+        display_brand_dashboard(filtered_by_date)
     except Exception as e:
         st.error(f"❌ Trends tab error: {e}")
 
-# Tab 5 — Emerging
+# Tab 5 — Emerging Topics
 with tabs[5]:
     st.header("🔥 Emerging Topics")
     try:
-        render_emerging_topics(detect_emerging_topics(scraped_insights))
+        render_emerging_topics(detect_emerging_topics(filtered_by_date))
     except Exception as e:
         st.error(f"❌ Emerging tab error: {e}")
 
@@ -173,11 +169,11 @@ with tabs[5]:
 with tabs[6]:
     st.header("🧠 Strategic Tools")
     try:
-        display_spark_suggestions(scraped_insights)
-        display_signal_digest(scraped_insights)
-        display_impact_heatmap(scraped_insights)
-        display_journey_breakdown(scraped_insights)
-        display_brand_comparator(scraped_insights)
-        display_prd_bundler(scraped_insights)
+        display_spark_suggestions(filtered_by_date)
+        display_signal_digest(filtered_by_date)
+        display_impact_heatmap(filtered_by_date)
+        display_journey_breakdown(filtered_by_date)
+        display_brand_comparator(filtered_by_date)
+        display_prd_bundler(filtered_by_date)
     except Exception as e:
         st.error(f"❌ Strategic Tools tab error: {e}")
