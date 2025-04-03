@@ -1,4 +1,6 @@
-# enhanced_insight_view.py — insight card rendering with GPT tools, pagination, badges, and feedback-aware updates
+# enhanced_insight_view.py — now fully aligned with updated manager feedback
+# Includes dev feedback badge, date visibility, and support for new fields
+
 import os
 import streamlit as st
 from slugify import slugify
@@ -15,7 +17,8 @@ BADGE_COLORS = {
     "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
     "Discovery": "#90BE6D", "Purchase": "#F8961E", "Fulfillment": "#577590",
-    "Post-Purchase": "#43AA8B", "Live Shopping": "#BC6FF1", "Search": "#118AB2"
+    "Post-Purchase": "#43AA8B", "Live Shopping": "#BC6FF1", "Search": "#118AB2",
+    "Developer": "#7F00FF"
 }
 
 def badge(label, color):
@@ -56,15 +59,17 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
             badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
             badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
         ]
+        if i.get("is_dev_feedback"):
+            tags.append(badge("Developer", BADGE_COLORS["Developer"]))
         st.markdown(" ".join(tags), unsafe_allow_html=True)
 
         st.caption(
             f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
             f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-            f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
+            f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')} | "
+            f"Post Date: {i.get('post_date') or i.get('_logged_date', 'N/A')}"
         )
 
-        # Link to original post if available
         if i.get("url"):
             st.markdown(f"[🔗 View Original Post]({i['url']})", unsafe_allow_html=True)
 
