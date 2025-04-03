@@ -1,4 +1,4 @@
-# components/floating_filters.py
+# components/floating_filters.py — now with safer defaults for empty fields
 
 import streamlit as st
 
@@ -10,7 +10,8 @@ def render_floating_filters(insights, filter_fields, key_prefix=""):
         for i in range(0, len(field_items), 3):  # Max 3 filters per row
             cols = st.columns(min(3, len(field_items[i:i+3])))
             for col, (label, key) in zip(cols, field_items[i:i+3]):
-                options = ["All"] + sorted({str(i.get(key, "Unknown")) for i in insights})
+                values = sorted(set(str(i.get(key, "Unknown")) for i in insights if i.get(key) is not None))
+                options = ["All"] + values if values else ["All"]
                 unique_key = f"{key_prefix}_filter_{key}"
                 filters[key] = col.selectbox(label, options, key=unique_key)
     return filters
