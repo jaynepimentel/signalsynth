@@ -1,4 +1,4 @@
-# app.py — Final version with safe date parsing, complaint %, dev filters, and time range support
+# app.py — Final patch: robust date fallback for Streamlit filtering
 
 import os
 import json
@@ -34,12 +34,16 @@ from components.enhanced_insight_view import render_insight_cards
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# Safe date parser
+# ✅ Safe date parser with fallback
+
 def safe_date_from_insight(i):
-    try:
-        return datetime.fromisoformat(i.get("post_date") or i.get("_logged_date")).date()
-    except Exception:
-        return None
+    for field in ["post_date", "_logged_date"]:
+        try:
+            if i.get(field):
+                return datetime.fromisoformat(i[field]).date()
+        except Exception:
+            continue
+    return None
 
 # Lazy embedding model loader
 @st.cache_resource(show_spinner="Loading embedding model...")
