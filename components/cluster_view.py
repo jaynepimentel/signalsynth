@@ -1,4 +1,4 @@
-# cluster_view.py — loads precomputed cluster cards + clusters
+# cluster_view.py — updated for complete metadata and manager-level cluster support
 
 import streamlit as st
 import json
@@ -42,15 +42,17 @@ def display_clustered_insight_cards(insights):
     for idx, card in enumerate(cards[:10]):  # Limit to 10 clusters to avoid UI overload
         cluster = clusters[idx]
         with st.container():
-            st.markdown(f"### 📌 {card['title']} — {card['brand']}")
-            st.markdown(f"**Summary:** {card['summary']}")
-            st.markdown(f"**Mentions:** {len(cluster)}")
+            st.markdown(f"### 📌 {card['title']} — {card['brand']} ({card.get('theme', 'Theme N/A')})")
+            st.markdown(f"**Problem:** {card.get('problem_statement', 'No summary available.')}\n\n")
+            st.markdown(f"**Persona(s):** {', '.join(card.get('personas', []))} | Effort: {', '.join(card.get('effort_levels', []))} | Sentiments: {', '.join(card.get('sentiments', []))}")
+            st.markdown(f"**Mentions:** {len(cluster)} | Score Range: {card.get('score_range', 'N/A')} | Avg Similarity: {card.get('avg_similarity', 'N/A')}\n")
+            st.markdown(f"**Was Reclustered:** {'✅' if card.get('was_reclustered') else '❌'} | Coherent: {'✅' if card.get('coherent') else '❌'}")
 
             st.markdown("**Example Quotes:**")
-            for quote in card["quotes"]:
+            for quote in card.get("quotes", [])[:3]:
                 st.markdown(quote)
 
-            if card["top_ideas"]:
+            if card.get("top_ideas"):
                 st.markdown("**💡 Top Suggestions:**")
                 for idea in card["top_ideas"]:
                     st.markdown(f"- {idea}")
