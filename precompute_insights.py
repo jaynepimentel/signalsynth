@@ -1,4 +1,4 @@
-# precompute_insights.py — now with clarity tagging, sentiment stats, and GPT diagnostics
+# precompute_insights.py — with cluster_ready_score, fingerprint, and clustering-safe fields
 
 import os
 import json
@@ -7,6 +7,7 @@ import argparse
 import re
 import hashlib
 from collections import Counter
+from datetime import datetime
 from dotenv import load_dotenv
 from utils.load_scraped_insights import load_scraped_posts, process_insights
 from components.signal_scorer import filter_relevant_insights
@@ -25,14 +26,6 @@ def log_step(msg):
 def save_json(obj, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
-
-def show_diagnostics(insights):
-    print("\n🔍 Diagnostic Summary:")
-    print(f"- Total new insights: {len(insights)}")
-    print(f"- Avg PM Priority: {round(sum(i.get('pm_priority_score', 0) for i in insights)/len(insights), 2)}")
-    print(f"- Top Complaint Tag: {top_complaint_tag(insights)}")
-    print(f"- Sentiment Breakdown: {Counter(i.get('brand_sentiment') for i in insights)}")
-    print(f"- Journey stages: {Counter(i.get('journey_stage') for i in insights)}")
 
 def top_complaint_tag(insights):
     tags = [i.get("type_subtag", "General") for i in insights if i.get("brand_sentiment") == "Complaint"]
@@ -67,6 +60,21 @@ def enrich_titles_and_journey(insights):
         i["title"] = generate_insight_title(i["text"])
         i["journey_stage"] = classify_journey_stage(i["text"])
         i["clarity"] = infer_clarity(i["text"])
+        if "persona" not in i:
+            if any(dev in i["text"].lower() for dev in ["ebay api", "developer.ebay", "ebay sdk", "auth token", "rate limit", "graphql"]):
+                i["persona"] = "Developer"
+                i["is_dev_feedback"] = True
+            else:
+                i["is_dev_feedback"] = False
+        # Fallbacks
+        i.setdefault("type_tag", "Insight")
+        i.setdefault("type_subtag", "General")
+        i.setdefault("target_brand", "eBay")
+        i.setdefault("opportunity_tag", "General Insight")
+        i.setdefault("topic_focus", [])
+        i.setdefault("mentions_competitor", [])
+        i["cluster_ready_score"] = i.get("score", 0)
+        i["fingerprint"] = hash_insight(i["text"])
     return insights
 
 def extract_trend_keywords(text, top_k=5):
@@ -84,6 +92,18 @@ def inject_keywords(insights):
     for i in insights:
         i["_trend_keywords"] = extract_trend_keywords(i.get("text", ""))
     return insights
+
+def show_diagnostics(insights):
+    print("\n🔍 Diagnostic Summary:")
+    print(f"- Total new insights: {len(insights)}")
+    print(f"- Avg PM Priority: {round(sum(i.get('pm_priority_score', 0) for i in insights)/len(insights), 2)}")
+    print(f"- Top Complaint Tag: {top_complaint_tag(insights)}")
+    print(f"- Sentiment Breakdown: {Counter(i.get('brand_sentiment') for i in insights)}")
+    print(f"- Journey stages: {Counter(i.get('journey_stage') for i in insights)}")
+    print(f"- Dev Feedback Count: {sum(1 for i in insights if i.get('is_dev_feedback'))}")
+    total = len(insights)
+    complaints = sum(1 for i in insights if i.get("brand_sentiment") == "Complaint")
+    print(f"- Complaint %: {round(100 * complaints / total, 1)}%")
 
 def main(limit=None, dry_run=False):
     print("🧠 Mode: PRECOMPUTE + Signal Enrichment")
