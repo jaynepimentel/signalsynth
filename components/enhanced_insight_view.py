@@ -1,4 +1,4 @@
-# enhanced_insight_view.py — insight card rendering with GPT tools, pagination, badges
+# enhanced_insight_view.py — insight card rendering with GPT tools, pagination, badges, and feedback-aware updates
 import os
 import streamlit as st
 from slugify import slugify
@@ -13,7 +13,9 @@ BADGE_COLORS = {
     "Complaint": "#FF6B6B", "Confusion": "#FFD166", "Feature Request": "#06D6A0",
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
     "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
-    "Clear": "#4CAF50", "Needs Clarification": "#FF9800"
+    "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
+    "Discovery": "#90BE6D", "Purchase": "#F8961E", "Fulfillment": "#577590",
+    "Post-Purchase": "#43AA8B", "Live Shopping": "#BC6FF1", "Search": "#118AB2"
 }
 
 def badge(label, color):
@@ -46,6 +48,7 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
     for idx, i in enumerate(paged, start=start):
         unique_id = f"{key_prefix}_{idx}"
         st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
+
         tags = [
             badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
             badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
@@ -60,6 +63,10 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
             f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
             f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')}"
         )
+
+        # Link to original post if available
+        if i.get("url"):
+            st.markdown(f"[🔗 View Original Post]({i['url']})", unsafe_allow_html=True)
 
         with st.expander("🧠 Full Insight"):
             text = i.get("text", "")
