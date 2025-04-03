@@ -32,20 +32,21 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
         return
 
     total_pages = max(1, (len(filtered) + per_page - 1) // per_page)
-    if "page" not in st.session_state:
-        st.session_state.page = 1
+    page_key = f"{key_prefix}_page"
+    if page_key not in st.session_state:
+        st.session_state[page_key] = 1
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("⬅️ Previous"):
-            st.session_state.page = max(1, st.session_state.page - 1)
+        if st.button("⬅️ Previous", key=f"{key_prefix}_prev"):
+            st.session_state[page_key] = max(1, st.session_state[page_key] - 1)
     with col2:
-        st.markdown(f"**Page {st.session_state.page} of {total_pages}**")
+        st.markdown(f"**Page {st.session_state[page_key]} of {total_pages}**")
     with col3:
-        if st.button("Next ➡️"):
-            st.session_state.page = min(total_pages, st.session_state.page + 1)
+        if st.button("Next ➡️", key=f"{key_prefix}_next"):
+            st.session_state[page_key] = min(total_pages, st.session_state[page_key] + 1)
 
-    start = (st.session_state.page - 1) * per_page
+    start = (st.session_state[page_key] - 1) * per_page
     paged = filtered[start:start + per_page]
 
     for idx, i in enumerate(paged, start=start):
