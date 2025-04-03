@@ -39,11 +39,13 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 def safe_date_from_insight(i):
     for field in ["post_date", "_logged_date"]:
         value = i.get(field)
-        try:
-            if value:
-                return datetime.fromisoformat(str(value)).date()
-        except:
-            continue
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value).date()
+            except:
+                continue
     return None
 
 # Lazy embedding model loader
