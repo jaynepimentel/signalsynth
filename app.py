@@ -1,4 +1,4 @@
-# app.py — Enhanced version with complaint %, dev filters, and time range support
+# app.py — Final version with safe date parsing, complaint %, dev filters, and time range support
 
 import os
 import json
@@ -33,6 +33,13 @@ from components.enhanced_insight_view import render_insight_cards
 # Load env + OpenAI key
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
+
+# Safe date parser
+def safe_date_from_insight(i):
+    try:
+        return datetime.fromisoformat(i.get("post_date") or i.get("_logged_date")).date()
+    except Exception:
+        return None
 
 # Lazy embedding model loader
 @st.cache_resource(show_spinner="Loading embedding model...")
@@ -96,7 +103,7 @@ tabs = st.tabs([
 st.sidebar.header("🕓 Time Range Filter")
 min_date = st.sidebar.date_input("Start Date", datetime.now().date() - timedelta(days=30))
 max_date = st.sidebar.date_input("End Date", datetime.now().date())
-filtered_by_date = [i for i in scraped_insights if min_date <= datetime.fromisoformat(i.get("post_date") or i.get("_logged_date")).date() <= max_date]
+filtered_by_date = [i for i in scraped_insights if (d := safe_date_from_insight(i)) and min_date <= d <= max_date]
 
 # Tab 0 — Insights
 with tabs[0]:
@@ -105,7 +112,6 @@ with tabs[0]:
         filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="insights")
         filtered = [i for i in filtered_by_date if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
 
-        # 🔎 Complaint % and Dev Count Diagnostic
         complaint_count = sum(1 for i in filtered if i.get("brand_sentiment") == "Complaint")
         dev_count = sum(1 for i in filtered if i.get("is_dev_feedback"))
         st.markdown(f"✅ **Filtered Count**: {len(filtered)} — 🔥 **Complaint %**: {round(100 * complaint_count / len(filtered), 1) if filtered else 0}% — 🧑‍💻 **Dev Feedback**: {dev_count}")
