@@ -1,4 +1,4 @@
-# app.py — Final patch: robust date fallback for Streamlit filtering
+# app.py — Debug-enhanced with diagnostics, safe filters, and date fallback
 
 import os
 import json
@@ -34,8 +34,7 @@ from components.enhanced_insight_view import render_insight_cards
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# ✅ Safe date parser with fallback
-
+# Safe date parser with fallback
 def safe_date_from_insight(i):
     for field in ["post_date", "_logged_date"]:
         value = i.get(field)
@@ -110,14 +109,26 @@ tabs = st.tabs([
 st.sidebar.header("🕓 Time Range Filter")
 min_date = st.sidebar.date_input("Start Date", datetime.now().date() - timedelta(days=30))
 max_date = st.sidebar.date_input("End Date", datetime.now().date())
+
 filtered_by_date = [i for i in scraped_insights if (d := safe_date_from_insight(i)) and min_date <= d <= max_date]
+
+# DEBUG
+st.sidebar.markdown(f"📊 Insights in date range: {len(filtered_by_date)}")
+if filtered_by_date:
+    st.sidebar.code(list(filtered_by_date[0].keys()))
 
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     try:
         filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="insights")
-        filtered = [i for i in filtered_by_date if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+        filtered = [
+            i for i in filtered_by_date
+            if all(
+                filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == filters[k].strip().lower()
+                for k in filters
+            )
+        ]
 
         complaint_count = sum(1 for i in filtered if i.get("brand_sentiment") == "Complaint")
         dev_count = sum(1 for i in filtered if i.get("is_dev_feedback"))
@@ -153,7 +164,13 @@ with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
         explorer_filters = render_floating_filters(filtered_by_date, filter_fields, key_prefix="explorer")
-        explorer_filtered = [i for i in filtered_by_date if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+        explorer_filtered = [
+            i for i in filtered_by_date
+            if all(
+                explorer_filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == explorer_filters[k].strip().lower()
+                for k in explorer_filters
+            )
+        ]
         results = display_insight_explorer(explorer_filtered)
         if results:
             model = get_model()
