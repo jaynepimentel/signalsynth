@@ -38,10 +38,11 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 def safe_date_from_insight(i):
     for field in ["post_date", "_logged_date"]:
+        value = i.get(field)
         try:
-            if i.get(field):
-                return datetime.fromisoformat(i[field]).date()
-        except Exception:
+            if value:
+                return datetime.fromisoformat(str(value)).date()
+        except:
             continue
     return None
 
