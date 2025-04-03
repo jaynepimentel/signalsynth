@@ -1,4 +1,4 @@
-# app.py — Date range removed for simplified filtering and debugging
+# app.py — Stable version with error-handled tabs and Journey Map as Tab 1
 
 import os
 import json
@@ -56,7 +56,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load insights
+# Onboarding
+if "show_intro" not in st.session_state:
+    st.session_state.show_intro = True
+
+if st.session_state.show_intro:
+    with st.expander("🧠 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
+        st.markdown("""
+        SignalSynth helps you transform user signals into strategic action.
+
+        **💥 Key Features:**
+        - Filter by brand, persona, journey stage, and sentiment
+        - Generate PRD, BRD, PRFAQ, or JIRA ticket for any insight
+        - Visualize trend shifts and brand sentiment
+        - Bundle, clarify, and tag insights
+        """)
+        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
+
+# Load insights and cache
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -75,13 +92,12 @@ filter_fields = {
     "Persona": "persona",
     "Journey Stage": "journey_stage",
     "Insight Type": "type_tag",
-    "Subtag": "type_subtag",
     "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity"
 }
 
-# Define tabs
+# Define tabs (Journey Map moved to Tab 1)
 tabs = st.tabs([
     "📌 Insights",
     "🗺 Journey Heatmap",
@@ -97,24 +113,13 @@ with tabs[0]:
     st.header("📌 Individual Insights")
     try:
         filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
-        filtered = [
-            i for i in scraped_insights
-            if all(
-                filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == filters[k].strip().lower()
-                for k in filters
-            )
-        ]
-
-        complaint_count = sum(1 for i in filtered if i.get("brand_sentiment") == "Complaint")
-        dev_count = sum(1 for i in filtered if i.get("is_dev_feedback"))
-        st.markdown(f"✅ **Filtered Count**: {len(filtered)} — 🔥 **Complaint %**: {round(100 * complaint_count / len(filtered), 1) if filtered else 0}% — 🧑‍💻 **Dev Feedback**: {dev_count}")
-
+        filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# Tab 1 — Journey Heatmap
+# Tab 1 — Journey Map
 with tabs[1]:
     st.header("🗺 Journey Heatmap")
     try:
@@ -139,13 +144,7 @@ with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
         explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-        explorer_filtered = [
-            i for i in scraped_insights
-            if all(
-                explorer_filters[k] == "All" or str(i.get(k, "Unknown")).strip().lower() == explorer_filters[k].strip().lower()
-                for k in explorer_filters
-            )
-        ]
+        explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
         results = display_insight_explorer(explorer_filtered)
         if results:
             model = get_model()
@@ -162,7 +161,7 @@ with tabs[4]:
     except Exception as e:
         st.error(f"❌ Trends tab error: {e}")
 
-# Tab 5 — Emerging Topics
+# Tab 5 — Emerging
 with tabs[5]:
     st.header("🔥 Emerging Topics")
     try:
