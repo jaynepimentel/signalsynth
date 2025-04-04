@@ -1,4 +1,4 @@
-# app.py — Stable version with error-handled tabs and Journey Map as Tab 1
+# app.py — Fully fixed with Topic Focus multi-match and strategic filter restructuring
 
 import os
 import json
@@ -34,7 +34,6 @@ from components.enhanced_insight_view import render_insight_cards
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# Lazy embedding model loader
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
     try:
@@ -44,11 +43,9 @@ def get_model():
         st.warning(f"⚠️ Failed to load embedding model: {e}")
         return None
 
-# Header UI
 st.title("📡 SignalSynth: Collectibles Insight Engine")
 st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
-# Hide sidebar
 st.markdown("""
     <style>
     [data-testid="collapsedControl"] { display: none }
@@ -56,7 +53,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Onboarding
 if "show_intro" not in st.session_state:
     st.session_state.show_intro = True
 
@@ -66,14 +62,13 @@ if st.session_state.show_intro:
         SignalSynth helps you transform user signals into strategic action.
 
         **💥 Key Features:**
-        - Filter by brand, persona, journey stage, and sentiment
+        - Filter by brand, persona, journey stage, topic, and sentiment
         - Generate PRD, BRD, PRFAQ, or JIRA ticket for any insight
         - Visualize trend shifts and brand sentiment
         - Bundle, clarify, and tag insights
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
-# Load insights and cache
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -81,31 +76,33 @@ try:
         cache = json.load(f)
     for i in scraped_insights:
         i["ideas"] = cache.get(i.get("text", ""), [])
+        i["topic_focus_str"] = ", ".join(i.get("topic_focus", [])) if isinstance(i.get("topic_focus"), list) else i.get("topic_focus", "None")
+        i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
+        i["action_type"] = i.get("action_type", "Unclear")
     st.success(f"✅ Loaded {len(scraped_insights)} insights")
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# Filters — Grouped to reflect Journey, Signal Quality, and Strategic Theme
+# Strategic filter structure
 filter_fields = {
-    # 📍 Customer Experience
+    # 📍 Experience
     "Persona": "persona",
     "Journey Stage": "journey_stage",
 
-    # 🧠 Signal Strength / Quality
+    # 🧠 Signal Quality
     "Insight Type": "type_tag",
     "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity",
     "Effort Estimate": "effort",
 
-    # 🧭 Strategic + Product Dimensions
+    # 🧭 Strategic Focus
     "Target Brand": "target_brand",
     "Topic Focus": "topic_focus_str",
     "Action Type": "action_type",
     "Opportunity Tag": "opportunity_tag"
 }
 
-# Define tabs (Journey Map moved to Tab 1)
 tabs = st.tabs([
     "📌 Insights",
     "🗺 Journey Heatmap",
@@ -116,12 +113,26 @@ tabs = st.tabs([
     "🧠 Strategic Tools"
 ])
 
+# Filter match that supports comma-separated values
+def match_filters(insight, active_filters):
+    for k in active_filters:
+        selected = active_filters[k]
+        field_val = str(insight.get(filter_fields[k], "Unknown"))
+        if selected == "All":
+            continue
+        if "," in field_val:
+            if selected not in [s.strip() for s in field_val.split(",")]:
+                return False
+        elif selected != field_val:
+            return False
+    return True
+
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     try:
         filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
-        filtered = [i for i in scraped_insights if all(filters[k] == "All" or str(i.get(k, "Unknown")) == filters[k] for k in filters)]
+        filtered = [i for i in scraped_insights if match_filters(i, filters)]
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
@@ -152,7 +163,7 @@ with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
         explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-        explorer_filtered = [i for i in scraped_insights if all(explorer_filters[k] == "All" or str(i.get(k, "Unknown")) == explorer_filters[k] for k in explorer_filters)]
+        explorer_filtered = [i for i in scraped_insights if match_filters(i, explorer_filters)]
         results = display_insight_explorer(explorer_filtered)
         if results:
             model = get_model()
