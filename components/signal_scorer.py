@@ -59,6 +59,8 @@ def classify_effort(ideas):
 
 def classify_insight_type(text):
     lowered = text.lower()
+    if any(x in lowered for x in ["scam", "trying to scam", "fraud", "report them", "fake"]):
+        return "Complaint", 90, "Scam or trust-related concern"
     if any(x in lowered for x in ["can't find", "search", "filter", "browse"]):
         return "Discovery Friction", 80, "Search-related terms"
     if any(x in lowered for x in ["refund", "problem", "issue", "support", "delay", "authentic"]):
