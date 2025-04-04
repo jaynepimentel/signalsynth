@@ -74,7 +74,8 @@ try:
         scraped_insights = json.load(f)
     with open("gpt_suggestion_cache.json", "r", encoding="utf-8") as f:
         cache = json.load(f)
-    for i in scraped_insights:
+    # Enrich and patch each insight with safe defaults
+for i in scraped_insights:
     i["ideas"] = cache.get(i.get("text", ""), [])
     i["persona"] = i.get("persona", "Unknown")
     i["journey_stage"] = i.get("journey_stage", "Unknown")
