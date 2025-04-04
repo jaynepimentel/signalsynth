@@ -75,11 +75,17 @@ try:
     with open("gpt_suggestion_cache.json", "r", encoding="utf-8") as f:
         cache = json.load(f)
     for i in scraped_insights:
-        i["ideas"] = cache.get(i.get("text", ""), [])
-        i["topic_focus_str"] = ", ".join(i.get("topic_focus", [])) if isinstance(i.get("topic_focus"), list) else i.get("topic_focus", "None")
-        i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
-        i["action_type"] = i.get("action_type", "Unclear")
-    st.success(f"✅ Loaded {len(scraped_insights)} insights")
+    i["ideas"] = cache.get(i.get("text", ""), [])
+    i["persona"] = i.get("persona", "Unknown")
+    i["journey_stage"] = i.get("journey_stage", "Unknown")
+    i["type_tag"] = i.get("type_tag", "Unclassified")
+    i["brand_sentiment"] = i.get("brand_sentiment", "Neutral")
+    i["clarity"] = i.get("clarity", "Unknown")
+    i["effort"] = i.get("effort", "Unknown")
+    i["target_brand"] = i.get("target_brand", "Unknown")
+    i["topic_focus_str"] = ", ".join(i.get("topic_focus", [])) if isinstance(i.get("topic_focus"), list) else i.get("topic_focus", "None")
+    i["action_type"] = i.get("action_type", "Unclear")
+    i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
