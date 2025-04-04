@@ -1,4 +1,4 @@
-# cluster_view.py — Final merged version with advanced metadata, GPT tools, and cache loading
+# cluster_view.py — Final version with live GPT fallback if cache is missing
 
 import streamlit as st
 import json
@@ -30,17 +30,20 @@ def badge(label):
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
 CACHE_DIR = ".cache"
+CACHE_CLUSTERS = os.path.join(CACHE_DIR, "clusters.json")
+CACHE_CARDS = os.path.join(CACHE_DIR, "cards.json")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-@st.cache_data(show_spinner=False)
 def load_cached_clusters():
-    try:
-        with open(".cache/clusters.json", "r", encoding="utf-8") as f1, \
-             open(".cache/cards.json", "r", encoding="utf-8") as f2:
-            return json.load(f1), json.load(f2)
-    except Exception as e:
-        st.error(f"❌ Failed to load cluster cache: {e}")
-        return [], []
+    if os.path.exists(CACHE_CLUSTERS) and os.path.exists(CACHE_CARDS):
+        try:
+            with open(CACHE_CLUSTERS, "r", encoding="utf-8") as f1, \
+                 open(CACHE_CARDS, "r", encoding="utf-8") as f2:
+                return json.load(f1), json.load(f2)
+        except Exception as e:
+            st.error(f"❌ Failed to load cluster cache: {e}")
+            return [], []
+    return [], []
 
 def display_clustered_insight_cards(insights):
     if not insights:
@@ -53,14 +56,21 @@ def display_clustered_insight_cards(insights):
         st.session_state.clusters_ready = False
 
     if not st.session_state.clusters_ready:
-        if st.button("🔍 Load Precomputed Clusters"):
+        if st.button("🔍 Load Precomputed or Generate Clusters"):
             st.session_state.clusters_ready = True
         else:
             st.info("Click the button above to view grouped insight themes.")
             return
 
-    with st.spinner("Loading cluster summaries..."):
+    with st.spinner("🔄 Loading or generating cluster summaries..."):
         clusters, cards = load_cached_clusters()
+        if not cards or not clusters:
+            clusters = cluster_insights(insights)
+            cards = generate_synthesized_insights(insights)
+            with open(CACHE_CLUSTERS, "w", encoding="utf-8") as f1:
+                json.dump(clusters, f1)
+            with open(CACHE_CARDS, "w", encoding="utf-8") as f2:
+                json.dump(cards, f2)
 
     if not cards or not clusters:
         st.warning("No cluster data available.")
@@ -113,4 +123,4 @@ def display_clustered_insight_cards(insights):
                         else:
                             st.error("❌ Document file was not created.")
 
-            st.markdown("---")
+        st.markdown("---")
