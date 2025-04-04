@@ -1,4 +1,4 @@
-# app.py — Updated with eBay default filters + full multi-select support
+# app.py — Full fixed version with eBay-safe defaults and multi-select filtering
 
 import os
 import json
@@ -94,26 +94,20 @@ except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# Filter configuration
+# Filter config
 filter_fields = {
-    # 📍 Experience
     "Persona": "persona",
     "Journey Stage": "journey_stage",
-
-    # 🧠 Signal Quality
     "Insight Type": "type_tag",
     "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity",
     "Effort Estimate": "effort",
-
-    # 🧭 Strategic Focus
     "Target Brand": "target_brand",
     "Topic Focus": "topic_focus_str",
     "Action Type": "action_type",
     "Opportunity Tag": "opportunity_tag"
 }
 
-# Render multi-select filters with sensible defaults
 def render_multiselect_filters(insights, filter_fields, key_prefix=""):
     filters = {}
     with st.expander("🧰 Advanced Filters", expanded=True):
@@ -121,13 +115,20 @@ def render_multiselect_filters(insights, filter_fields, key_prefix=""):
         for i in range(0, len(field_items), 3):
             cols = st.columns(min(3, len(field_items[i:i+3])))
             for col, (label, key) in zip(cols, field_items[i:i+3]):
-                values = sorted({str(i.get(key, "Unknown")) for i in insights})
+                values = sorted({str(i.get(key, "Unknown")).strip() for i in insights})
                 options = ["All"] + values
-                default = ["eBay"] if "brand" in key else ["All"]
+
+                # Default brand to eBay if it exists
+                default = ["All"]
+                if "brand" in key:
+                    for v in options:
+                        if v.strip().lower() == "ebay":
+                            default = [v]
+                            break
+
                 filters[key] = col.multiselect(label, options, default=default, key=f"{key_prefix}_filter_{key}")
     return filters
 
-# Match logic that supports multi-tags and multi-selects
 def match_multiselect_filters(insight, active_filters, filter_fields):
     for label, field in filter_fields.items():
         selected_values = active_filters.get(field, [])
