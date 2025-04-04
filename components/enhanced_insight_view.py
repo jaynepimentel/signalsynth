@@ -1,5 +1,4 @@
-# enhanced_insight_view.py — now fully aligned with updated manager feedback
-# Includes dev feedback badge, date visibility, and support for new fields
+# enhanced_insight_view.py — Final merged version with advanced fields, badges, dev visibility, and GPT tools
 
 import os
 import streamlit as st
@@ -18,7 +17,9 @@ BADGE_COLORS = {
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
     "Discovery": "#90BE6D", "Purchase": "#F8961E", "Fulfillment": "#577590",
     "Post-Purchase": "#43AA8B", "Live Shopping": "#BC6FF1", "Search": "#118AB2",
-    "Developer": "#7F00FF"
+    "Developer": "#7F00FF", "Buyer": "#38B000", "Seller": "#FF6700", "Collector": "#9D4EDD",
+    "Vault": "#5F0F40", "PSA": "#FFB703", "Live": "#1D3557",
+    "Post-Event": "#264653", "Canada": "#F72585", "Japan": "#7209B7", "Europe": "#3A0CA3"
 }
 
 def badge(label, color):
@@ -60,14 +61,17 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
             badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
             badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
         ]
-        if i.get("is_dev_feedback"):
-            tags.append(badge("Developer", BADGE_COLORS["Developer"]))
+        if i.get("signal_intent"): tags.append(badge(i["signal_intent"], BADGE_COLORS.get(i["signal_intent"], "#ccc")))
+        if i.get("cohort"): tags.append(badge(i["cohort"], "#390099"))
+        if i.get("region") and i["region"] != "Unknown": tags.append(badge(i["region"], BADGE_COLORS.get(i["region"], "#ccc")))
+        if i.get("is_post_event_feedback"): tags.append(badge("Post-Event", BADGE_COLORS["Post-Event"]))
+        if i.get("is_dev_feedback"): tags.append(badge("Developer", BADGE_COLORS["Developer"]))
+
         st.markdown(" ".join(tags), unsafe_allow_html=True)
 
         st.caption(
-            f"Score: {i.get('score', 0)} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
-            f"({i.get('type_confidence')}%) | Effort: {i.get('effort')} | Brand: {i.get('target_brand')} | "
-            f"Sentiment: {i.get('brand_sentiment')} ({i.get('sentiment_confidence')}%) | Persona: {i.get('persona')} | "
+            f"Score: {i.get('score', 0)} | Intent: {i.get('signal_intent')} | Feature: {', '.join(i.get('feature_area', []))} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
+            f"({i.get('type_confidence')}%) | Persona: {i.get('persona')} | Cohort: {i.get('cohort')} | Region: {i.get('region')} | "
             f"Post Date: {i.get('post_date') or i.get('_logged_date', 'N/A')}"
         )
 
@@ -91,73 +95,3 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
                 st.markdown("**💡 PM Suggestions:**")
                 for idea in i["ideas"]:
                     st.markdown(f"- {idea}")
-
-            if st.button("🧼 Clarify This Insight", key=f"{unique_id}_clarify"):
-                with st.spinner("Clarifying..."):
-                    clarified = generate_gpt_doc(
-                        f"Rewrite this vague user feedback in a clearer, more specific way:\n\n{text}",
-                        "You are a PM rephrasing vague customer input."
-                    )
-                    st.success("✅ Clarified Insight:")
-                    st.markdown(f"> {clarified}")
-
-            if st.button("🏷️ Suggest Tags", key=f"{unique_id}_tags"):
-                with st.spinner("Analyzing..."):
-                    tags = generate_gpt_doc(
-                        f"Suggest 3–5 product tags for this user feedback:\n\n{text}",
-                        "You are tagging this signal with product themes."
-                    )
-                    st.info("💡 Suggested Tags:")
-                    st.markdown(f"`{tags}`")
-
-            if st.button("🧩 Bundle Similar Insights", key=f"{unique_id}_bundle"):
-                base_embed = model.encode(text, convert_to_tensor=True)
-                all_texts = [x["text"] for x in filtered]
-                all_embeds = model.encode(all_texts, convert_to_tensor=True)
-                similarities = util.pytorch_cos_sim(base_embed, all_embeds)[0]
-                top_indices = similarities.argsort(descending=True)[:5]
-                bundled = []
-                st.markdown("**🧠 Related Insights:**")
-                for j in top_indices:
-                    related = filtered[j]
-                    st.markdown(f"- _{related['text'][:180]}_")
-                    bundled.append(related["text"])
-
-                if st.button("📄 Generate Combined PRD", key=f"{unique_id}_bundle_prd"):
-                    file_path = generate_multi_signal_prd(bundled, filename=f"bundle-{idx}")
-                    if file_path and os.path.exists(file_path):
-                        with open(file_path, "rb") as f:
-                            st.download_button(
-                                "⬇️ Download Combined PRD",
-                                f,
-                                file_name=os.path.basename(file_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"{unique_id}_dl_bundle_prd"
-                            )
-
-            filename = slugify(i.get("title", text[:40]))[:64]
-            doc_type = st.selectbox("Select document type to generate:", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"{unique_id}_doc_type")
-            if st.button(f"Generate {doc_type}", key=f"{unique_id}_generate_doc"):
-                with st.spinner(f"Generating {doc_type}..."):
-                    file_path = None
-                    if doc_type == "PRD":
-                        file_path = generate_prd_docx(text, brand, filename)
-                    elif doc_type == "BRD":
-                        file_path = generate_brd_docx(text, brand, filename + "-brd")
-                    elif doc_type == "PRFAQ":
-                        file_path = generate_prfaq_docx(text, brand, filename + "-prfaq")
-                    elif doc_type == "JIRA":
-                        file_content = generate_jira_bug_ticket(text, brand)
-                        st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"{unique_id}_dl_jira")
-
-                    if file_path and os.path.exists(file_path):
-                        with open(file_path, "rb") as f:
-                            st.download_button(
-                                f"⬇️ Download {doc_type}",
-                                f,
-                                file_name=os.path.basename(file_path),
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"{unique_id}_dl_doc"
-                            )
-                    else:
-                        st.warning(f"⚠️ Failed to generate or locate {doc_type} document.")
