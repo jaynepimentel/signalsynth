@@ -1,4 +1,4 @@
-# signal_scorer.py — Final version with GPT-enhanced tagging + embedded classifiers
+# signal_scorer.py — Final version with full enrichment for Collectibles PMs
 
 from components.enhanced_classifier import enhance_insight
 from components.ai_suggester import generate_pm_ideas
@@ -7,6 +7,7 @@ from components.scoring_utils import gpt_estimate_sentiment_subtag
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import hashlib
+import datetime
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -20,24 +21,16 @@ HIGH_SIGNAL_EXAMPLES = [
 EXEMPLAR_EMBEDDINGS = model.encode(HIGH_SIGNAL_EXAMPLES, convert_to_tensor=True)
 
 HEURISTIC_KEYWORDS = {
-    "authenticity guarantee": 15,
-    "authentication failed": 15,
-    "grading psa": 12,
-    "ebay psa": 10,
-    "vault authentication": 10,
-    "return after authentication": 8,
-    "delay": 5,
-    "scam": 5,
-    "broken": 5,
-    "never received": 5,
-    "ebay live": 5,
-    "fanatics live": 5,
-    "case break": 4,
-    "box break": 4
+    "authenticity guarantee": 15, "authentication failed": 15, "grading psa": 12,
+    "ebay psa": 10, "vault authentication": 10, "return after authentication": 8,
+    "delay": 5, "scam": 5, "broken": 5, "never received": 5, "ebay live": 5,
+    "fanatics live": 5, "case break": 4, "box break": 4
 }
 
 KNOWN_COMPETITORS = ["fanatics", "whatnot", "alt", "loupe", "tiktok"]
 KNOWN_PARTNERS = ["psa", "comc", "goldin", "ebay live", "ebay vault"]
+KNOWN_FEATURES = ["vault", "grading", "psa", "scan to list", "price guide", "live"]
+LIVE_EVENT_DATES = ["2024-10-03", "2024-11-15", "2024-12-10"]
 
 ACTION_TYPES = {
     "ui": ["filter", "search", "tooltip", "label", "navigation"],
@@ -46,30 +39,6 @@ ACTION_TYPES = {
     "marketplace": ["grading", "shipping", "vault", "case break", "pack"]
 }
 
-# ─────────────────────────────────────
-# 🔧 Helpers
-
-def classify_effort(ideas):
-    text = " ".join(ideas).lower()
-    if any(x in text for x in ["rename", "change label", "copy", "show tooltip", "highlight", "reorder", "color"]):
-        return "Low"
-    if any(x in text for x in ["add filter", "combine", "enhance", "link", "simplify", "group", "new tab"]):
-        return "Medium"
-    return "High"
-
-def classify_insight_type(text):
-    lowered = text.lower()
-    if any(x in lowered for x in ["scam", "trying to scam", "fraud", "report them", "fake"]):
-        return "Complaint", 90, "Scam or trust-related concern"
-    if any(x in lowered for x in ["can't find", "search", "filter", "browse"]):
-        return "Discovery Friction", 80, "Search-related terms"
-    if any(x in lowered for x in ["refund", "problem", "issue", "support", "delay", "authentic"]):
-        return "Trust Issue", 85, "Post-purchase or authentication problems"
-    if any(x in lowered for x in ["want", "wish", "add feature", "missing", "would be better"]):
-        return "Feature Request", 75, "Improvement language"
-    if any(x in lowered for x in ["love", "great", "awesome", "easy"]):
-        return "Praise", 90, "Positive sentiment"
-    return "Marketplace Chatter", 50, "Unclassified"
 
 def score_insight_semantic(text):
     embedding = model.encode(text, convert_to_tensor=True)
@@ -83,124 +52,136 @@ def score_insight_heuristic(text):
 def combined_score(semantic, heuristic):
     return round((0.6 * semantic) + (0.4 * heuristic), 2)
 
+def classify_effort(ideas):
+    text = " ".join(ideas).lower()
+    if any(x in text for x in ["rename", "change label", "tooltip"]): return "Low"
+    if any(x in text for x in ["add filter", "enhance", "combine"]): return "Medium"
+    return "High"
+
+def classify_insight_type(text):
+    lowered = text.lower()
+    if any(x in lowered for x in ["scam", "trying to scam", "fraud"]): return "Complaint", 90, "Scam related"
+    if any(x in lowered for x in ["can't find", "search"]): return "Discovery Friction", 80, "Search"
+    if any(x in lowered for x in ["refund", "problem", "delay"]): return "Trust Issue", 85, "Post-purchase"
+    if any(x in lowered for x in ["want", "wish", "add feature"]): return "Feature Request", 75, "Feature gap"
+    if any(x in lowered for x in ["love", "great", "awesome"]): return "Praise", 90, "Positive"
+    return "Marketplace Chatter", 50, "Fallback"
+
 def classify_persona(text):
     text = text.lower()
-    if any(w in text for w in ["bought", "paid", "picked up", "acquired", "investment"]):
-        return "Buyer"
-    if any(w in text for w in ["sold", "selling", "consigning", "listing", "vault", "liquidating"]):
-        return "Seller"
+    if any(w in text for w in ["bought", "paid", "acquired"]): return "Buyer"
+    if any(w in text for w in ["sold", "selling", "consigned"]): return "Seller"
+    if any(w in text for w in ["collecting", "collector"]): return "Collector"
     return "General"
+
+def classify_journey_stage(text):
+    text = text.lower()
+    if any(x in text for x in ["search", "browse", "filter"]): return "Discovery"
+    if any(x in text for x in ["buy", "checkout"]): return "Purchase"
+    if any(x in text for x in ["ship", "tracking"]): return "Fulfillment"
+    if any(x in text for x in ["return", "issue", "refund"]): return "Post-Purchase"
+    return "Unknown"
 
 def tag_topic_focus(text):
     lowered = text.lower()
     tags = []
-    if "authenticity guarantee" in lowered or "authentication" in lowered:
-        tags.append("Authenticity Guarantee")
-    if "grading" in lowered and "psa" in lowered:
-        tags.append("eBay PSA Grading")
-    if "vault" in lowered:
-        tags.append("Vault")
-    if "refund" in lowered and "graded" in lowered:
-        tags.append("Graded Refund Issue")
-    if "case break" in lowered or "box break" in lowered:
-        tags.append("Case Break")
+    if "authenticity guarantee" in lowered: tags.append("Authenticity Guarantee")
+    if "grading" in lowered and "psa" in lowered: tags.append("eBay PSA Grading")
+    if "vault" in lowered: tags.append("Vault")
+    if "case break" in lowered: tags.append("Case Break")
     return tags
-
-def detect_competitor_and_partner_mentions(text):
-    lowered = text.lower()
-    competitors = [c for c in KNOWN_COMPETITORS if c in lowered]
-    partners = [p for p in KNOWN_PARTNERS if p in lowered]
-    return competitors, partners
 
 def classify_action_type(text):
     lowered = text.lower()
     for category, terms in ACTION_TYPES.items():
-        if any(term in lowered for term in terms):
-            return category.capitalize()
+        if any(term in lowered for term in terms): return category.capitalize()
     return "Unclear"
-
-def generate_insight_title(text):
-    return text.strip().capitalize()[:60] + "..." if len(text) > 60 else text.strip().capitalize()
-
-def classify_journey_stage(text):
-    text = text.lower()
-    if any(x in text for x in ["search", "browse", "can't find", "filter", "looking for"]):
-        return "Discovery"
-    elif any(x in text for x in ["buy", "add to cart", "checkout", "purchase", "payment"]):
-        return "Purchase"
-    elif any(x in text for x in ["ship", "shipping", "tracking", "delivered", "delay", "package"]):
-        return "Fulfillment"
-    elif any(x in text for x in ["return", "refund", "problem", "issue", "feedback", "support"]):
-        return "Post-Purchase"
-    return "Unknown"
 
 def classify_opportunity_type(text):
     lowered = text.lower()
-    if any(x in lowered for x in ["policy", "terms", "blocked", "suspended"]):
-        return "Policy Risk"
-    if any(x in lowered for x in ["conversion", "checkout", "didn’t buy"]):
-        return "Conversion Blocker"
-    if any(x in lowered for x in ["leaving", "stop using", "quit"]):
-        return "Retention Risk"
-    if any(x in lowered for x in ["compared to", "fanatics", "whatnot", "alt"]):
-        return "Competitor Signal"
-    if any(x in lowered for x in ["trust", "scam", "fraud"]):
-        return "Trust Erosion"
-    if any(x in lowered for x in ["love", "amazing", "recommend"]):
-        return "Referral Amplifier"
+    if "policy" in lowered or "blocked" in lowered: return "Policy Risk"
+    if "conversion" in lowered or "checkout" in lowered: return "Conversion Blocker"
+    if "leaving" in lowered or "quit" in lowered: return "Retention Risk"
+    if any(c in lowered for c in KNOWN_COMPETITORS): return "Competitor Signal"
+    if "trust" in lowered or "fraud" in lowered: return "Trust Erosion"
+    if "love" in lowered: return "Referral Amplifier"
     return "General Insight"
 
 def infer_clarity(text):
-    text = text.strip().lower()
-    if len(text) < 40 or "???" in text or "idk" in text or "confused" in text:
-        return "Needs Clarification"
+    text = text.lower()
+    if len(text) < 40 or "???" in text or "idk" in text: return "Needs Clarification"
     return "Clear"
 
-# ─────────────────────────────────────
-# 🚀 Enrichment Pipeline
+def detect_feature_area(text):
+    lowered = text.lower()
+    return [f for f in KNOWN_FEATURES if f in lowered]
+
+def infer_signal_intent(text):
+    lowered = text.lower()
+    if any(k in lowered for k in ["sold", "listing"]): return "Seller"
+    if any(k in lowered for k in ["bought", "paid"]): return "Buyer"
+    if any(k in lowered for k in ["collector", "collecting"]): return "Collector"
+    return "General"
+
+def is_post_event_feedback(post_date_str):
+    try:
+        post_date = datetime.datetime.fromisoformat(post_date_str).date()
+        return any(abs((post_date - datetime.date.fromisoformat(e)).days) <= 1 for e in LIVE_EVENT_DATES)
+    except:
+        return False
+
+def detect_comparison_sentiment(text):
+    lowered = text.lower()
+    if any(x in lowered for x in ["better than", "prefer", "vs", "compared to"]):
+        if any(c in lowered for c in KNOWN_COMPETITORS):
+            return {"competitor_comparison_score": 2, "comparison_context": "User Comparison"}
+    if any(x in lowered for x in ["worse than"]):
+        return {"competitor_comparison_score": -2, "comparison_context": "Negative Comparison"}
+    return {"competitor_comparison_score": 0, "comparison_context": "None"}
+
+def infer_region(text):
+    lowered = text.lower()
+    if "canada" in lowered: return "Canada"
+    if "japan" in lowered: return "Japan"
+    if "germany" in lowered or "eu" in lowered: return "Europe"
+    return "Unknown"
+
+def detect_strategic_cohort(text):
+    lowered = text.lower()
+    if any(x in lowered for x in ["$10k", "goldin", "auction house"]): return "High-End Buyer"
+    if any(x in lowered for x in ["bulk selling", "top-rated"]): return "Bulk Seller"
+    if "collector" in lowered or "collecting" in lowered: return "Power Collector"
+    return "General"
 
 def enrich_single_insight(i, min_score=3):
     text = i.get("text", "")
-    if not text or len(text.strip()) < 10:
-        return None
+    if not text or len(text.strip()) < 10: return None
 
-    semantic_score = score_insight_semantic(text)
-    heuristic_score = score_insight_heuristic(text)
-    i["semantic_score"] = semantic_score
-    i["heuristic_score"] = heuristic_score
-    i["score"] = combined_score(semantic_score, heuristic_score)
+    i["semantic_score"] = score_insight_semantic(text)
+    i["heuristic_score"] = score_insight_heuristic(text)
+    i["score"] = combined_score(i["semantic_score"], i["heuristic_score"])
 
-    type_tag, confidence, reason = classify_insight_type(text)
-    if confidence < 75:
-        type_tag, confidence, reason = "Marketplace Chatter", 50, "Fallback tag"
-    i["type_tag"] = type_tag
-    i["type_confidence"] = confidence
-    i["type_reason"] = reason
+    tag, conf, reason = classify_insight_type(text)
+    i.update({"type_tag": tag, "type_confidence": conf, "type_reason": reason})
 
     i = enhance_insight(i)
     i = enrich_with_gpt_tags(i)
-
-    gpt_tags = gpt_estimate_sentiment_subtag(text)
-    i["gpt_sentiment"] = gpt_tags.get("sentiment")
-    i["gpt_subtags"] = gpt_tags.get("subtags")
-    i["frustration"] = gpt_tags.get("frustration")
-    i["impact"] = gpt_tags.get("impact")
-    i["pm_summary"] = gpt_tags.get("summary")
+    gpt = gpt_estimate_sentiment_subtag(text)
+    i.update({
+        "gpt_sentiment": gpt.get("sentiment"),
+        "gpt_subtags": gpt.get("subtags"),
+        "frustration": gpt.get("frustration"),
+        "impact": gpt.get("impact"),
+        "pm_summary": gpt.get("summary")
+    })
 
     i["persona"] = i.get("persona") or classify_persona(text)
     i["ideas"] = generate_pm_ideas(text=text, brand=i.get("target_brand"))
     i["effort"] = classify_effort(i["ideas"])
-    i["shovel_ready"] = (
-        i["effort"] in ["Low", "Medium"]
-        and i["type_tag"] in ["Feature Request", "Complaint"]
-        and i["frustration"] >= 3
-    )
+    i["shovel_ready"] = (i["effort"] in ["Low", "Medium"] and i["type_tag"] in ["Feature Request", "Complaint"] and i["frustration"] >= 3)
 
-    competitors, partners = detect_competitor_and_partner_mentions(text)
-    i["mentions_competitor"] = competitors
-    i["mentions_ecosystem_partner"] = partners
+    i["mentions_competitor"], i["mentions_ecosystem_partner"] = detect_competitor_and_partner_mentions(text)
     i["action_type"] = classify_action_type(text)
-
     i["topic_focus"] = tag_topic_focus(text)
     i["journey_stage"] = i.get("journey_stage") or classify_journey_stage(text)
     i["clarity"] = infer_clarity(text)
@@ -208,6 +189,14 @@ def enrich_single_insight(i, min_score=3):
     i["opportunity_tag"] = i.get("opportunity_tag") or classify_opportunity_type(text)
     i["cluster_ready_score"] = round((i["score"] + (i["frustration"] or 0)*5 + (i["impact"] or 0)*5) / 3, 2)
     i["fingerprint"] = hashlib.md5(text.lower().encode()).hexdigest()
+
+    # 🧠 Advanced
+    i["signal_intent"] = infer_signal_intent(text)
+    i["feature_area"] = detect_feature_area(text)
+    i["is_post_event_feedback"] = is_post_event_feedback(i.get("post_date", datetime.date.today().isoformat()))
+    i["region"] = infer_region(text)
+    i["cohort"] = detect_strategic_cohort(text)
+    i.update(detect_comparison_sentiment(text))
 
     if i["type_tag"] != "Marketplace Chatter" and (i["score"] >= min_score or i["type_tag"] in ["Complaint", "Feature Request"]):
         return i
