@@ -86,15 +86,23 @@ except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# Filters
+# Filters — Grouped to reflect Journey, Signal Quality, and Strategic Theme
 filter_fields = {
-    "Target Brand": "target_brand",
+    # 📍 Customer Experience
     "Persona": "persona",
     "Journey Stage": "journey_stage",
+
+    # 🧠 Signal Strength / Quality
     "Insight Type": "type_tag",
-    "Effort Estimate": "effort",
     "Brand Sentiment": "brand_sentiment",
-    "Clarity": "clarity"
+    "Clarity": "clarity",
+    "Effort Estimate": "effort",
+
+    # 🧭 Strategic + Product Dimensions
+    "Target Brand": "target_brand",
+    "Topic Focus": "topic_focus_str",
+    "Action Type": "action_type",
+    "Opportunity Tag": "opportunity_tag"
 }
 
 # Define tabs (Journey Map moved to Tab 1)
