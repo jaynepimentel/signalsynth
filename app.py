@@ -1,4 +1,4 @@
-# app.py — Full fixed version with eBay-safe defaults and multi-select filtering
+# app.py — Final version with fixed multi-select logic and safe defaults
 
 import os
 import json
@@ -118,7 +118,7 @@ def render_multiselect_filters(insights, filter_fields, key_prefix=""):
                 values = sorted({str(i.get(key, "Unknown")).strip() for i in insights})
                 options = ["All"] + values
 
-                # Default brand to eBay if it exists
+                # Default brand = eBay only if exists
                 default = ["All"]
                 if "brand" in key:
                     for v in options:
@@ -131,12 +131,12 @@ def render_multiselect_filters(insights, filter_fields, key_prefix=""):
 
 def match_multiselect_filters(insight, active_filters, filter_fields):
     for label, field in filter_fields.items():
-        selected_values = active_filters.get(field, [])
-        value = str(insight.get(field, "Unknown"))
-        values = [v.strip() for v in value.split(",")] if "," in value else [value]
-        if "All" in selected_values:
+        selected = active_filters.get(field, [])
+        if not selected or "All" in selected:
             continue
-        if not any(v in selected_values for v in values):
+        value = str(insight.get(field, "Unknown")).strip()
+        values = [v.strip() for v in value.split(",")] if "," in value else [value]
+        if not any(v in selected for v in values):
             return False
     return True
 
