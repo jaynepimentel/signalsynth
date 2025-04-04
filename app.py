@@ -1,4 +1,4 @@
-# app.py — Fully fixed with Topic Focus multi-match and strategic filter restructuring
+# app.py — Updated with eBay default filters + full multi-select support
 
 import os
 import json
@@ -16,7 +16,6 @@ from components.insight_visualizer import display_insight_charts
 from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
 from components.emerging_trends import detect_emerging_topics, render_emerging_topics
-from components.floating_filters import render_floating_filters
 from components.journey_heatmap import display_journey_heatmap
 from components.ai_suggester import (
     generate_pm_ideas, generate_prd_docx, generate_brd_docx,
@@ -69,29 +68,33 @@ if st.session_state.show_intro:
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
+# Load and enrich insights safely
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
     with open("gpt_suggestion_cache.json", "r", encoding="utf-8") as f:
         cache = json.load(f)
-    # Enrich and patch each insight with safe defaults
-for i in scraped_insights:
-    i["ideas"] = cache.get(i.get("text", ""), [])
-    i["persona"] = i.get("persona", "Unknown")
-    i["journey_stage"] = i.get("journey_stage", "Unknown")
-    i["type_tag"] = i.get("type_tag", "Unclassified")
-    i["brand_sentiment"] = i.get("brand_sentiment", "Neutral")
-    i["clarity"] = i.get("clarity", "Unknown")
-    i["effort"] = i.get("effort", "Unknown")
-    i["target_brand"] = i.get("target_brand", "Unknown")
-    i["topic_focus_str"] = ", ".join(i.get("topic_focus", [])) if isinstance(i.get("topic_focus"), list) else i.get("topic_focus", "None")
-    i["action_type"] = i.get("action_type", "Unclear")
-    i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
+
+    for i in scraped_insights:
+        i["ideas"] = cache.get(i.get("text", ""), [])
+        i["persona"] = i.get("persona", "Unknown")
+        i["journey_stage"] = i.get("journey_stage", "Unknown")
+        i["type_tag"] = i.get("type_tag", "Unclassified")
+        i["brand_sentiment"] = i.get("brand_sentiment", "Neutral")
+        i["clarity"] = i.get("clarity", "Unknown")
+        i["effort"] = i.get("effort", "Unknown")
+        i["target_brand"] = i.get("target_brand", "Unknown")
+        i["topic_focus_str"] = ", ".join(i.get("topic_focus", [])) if isinstance(i.get("topic_focus"), list) else i.get("topic_focus", "None")
+        i["action_type"] = i.get("action_type", "Unclear")
+        i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
+
+    st.success(f"✅ Loaded {len(scraped_insights)} insights")
+
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# Strategic filter structure
+# Filter configuration
 filter_fields = {
     # 📍 Experience
     "Persona": "persona",
@@ -110,6 +113,32 @@ filter_fields = {
     "Opportunity Tag": "opportunity_tag"
 }
 
+# Render multi-select filters with sensible defaults
+def render_multiselect_filters(insights, filter_fields, key_prefix=""):
+    filters = {}
+    with st.expander("🧰 Advanced Filters", expanded=True):
+        field_items = list(filter_fields.items())
+        for i in range(0, len(field_items), 3):
+            cols = st.columns(min(3, len(field_items[i:i+3])))
+            for col, (label, key) in zip(cols, field_items[i:i+3]):
+                values = sorted({str(i.get(key, "Unknown")) for i in insights})
+                options = ["All"] + values
+                default = ["eBay"] if "brand" in key else ["All"]
+                filters[key] = col.multiselect(label, options, default=default, key=f"{key_prefix}_filter_{key}")
+    return filters
+
+# Match logic that supports multi-tags and multi-selects
+def match_multiselect_filters(insight, active_filters, filter_fields):
+    for label, field in filter_fields.items():
+        selected_values = active_filters.get(field, [])
+        value = str(insight.get(field, "Unknown"))
+        values = [v.strip() for v in value.split(",")] if "," in value else [value]
+        if "All" in selected_values:
+            continue
+        if not any(v in selected_values for v in values):
+            return False
+    return True
+
 tabs = st.tabs([
     "📌 Insights",
     "🗺 Journey Heatmap",
@@ -120,32 +149,18 @@ tabs = st.tabs([
     "🧠 Strategic Tools"
 ])
 
-# Filter match that supports comma-separated values
-def match_filters(insight, active_filters):
-    for k in active_filters:
-        selected = active_filters[k]
-        field_val = str(insight.get(filter_fields[k], "Unknown"))
-        if selected == "All":
-            continue
-        if "," in field_val:
-            if selected not in [s.strip() for s in field_val.split(",")]:
-                return False
-        elif selected != field_val:
-            return False
-    return True
-
 # Tab 0 — Insights
 with tabs[0]:
     st.header("📌 Individual Insights")
     try:
-        filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="insights")
-        filtered = [i for i in scraped_insights if match_filters(i, filters)]
+        filters = render_multiselect_filters(scraped_insights, filter_fields, key_prefix="insights")
+        filtered = [i for i in scraped_insights if match_multiselect_filters(i, filters, filter_fields)]
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# Tab 1 — Journey Map
+# Tab 1 — Journey Heatmap
 with tabs[1]:
     st.header("🗺 Journey Heatmap")
     try:
@@ -169,8 +184,8 @@ with tabs[2]:
 with tabs[3]:
     st.header("🔎 Insight Explorer")
     try:
-        explorer_filters = render_floating_filters(scraped_insights, filter_fields, key_prefix="explorer")
-        explorer_filtered = [i for i in scraped_insights if match_filters(i, explorer_filters)]
+        explorer_filters = render_multiselect_filters(scraped_insights, filter_fields, key_prefix="explorer")
+        explorer_filtered = [i for i in scraped_insights if match_multiselect_filters(i, explorer_filters, filter_fields)]
         results = display_insight_explorer(explorer_filtered)
         if results:
             model = get_model()
