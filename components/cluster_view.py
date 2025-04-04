@@ -1,4 +1,4 @@
-# cluster_view.py — Final version with live GPT fallback if cache is missing
+# cluster_view.py — now with automatic cluster cache cleanup if older than TTL
 
 import streamlit as st
 import json
@@ -6,6 +6,7 @@ import os
 import hashlib
 from slugify import slugify
 from collections import Counter
+from datetime import datetime, timedelta
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
 from components.ai_suggester import (
     generate_cluster_prd_docx, generate_cluster_prfaq_docx, generate_cluster_brd_docx,
@@ -32,18 +33,30 @@ def badge(label):
 CACHE_DIR = ".cache"
 CACHE_CLUSTERS = os.path.join(CACHE_DIR, "clusters.json")
 CACHE_CARDS = os.path.join(CACHE_DIR, "cards.json")
+CLUSTER_CACHE_TTL_DAYS = int(os.getenv("CLUSTER_CACHE_TTL", "7"))
 os.makedirs(CACHE_DIR, exist_ok=True)
 
+def is_expired(path, ttl_days):
+    if not os.path.exists(path): return True
+    last_modified = datetime.fromtimestamp(os.path.getmtime(path))
+    return (datetime.now() - last_modified) > timedelta(days=ttl_days)
+
 def load_cached_clusters():
-    if os.path.exists(CACHE_CLUSTERS) and os.path.exists(CACHE_CARDS):
+    expired = is_expired(CACHE_CLUSTERS, CLUSTER_CACHE_TTL_DAYS) or is_expired(CACHE_CARDS, CLUSTER_CACHE_TTL_DAYS)
+    if expired:
         try:
-            with open(CACHE_CLUSTERS, "r", encoding="utf-8") as f1, \
-                 open(CACHE_CARDS, "r", encoding="utf-8") as f2:
-                return json.load(f1), json.load(f2)
-        except Exception as e:
-            st.error(f"❌ Failed to load cluster cache: {e}")
-            return [], []
-    return [], []
+            os.remove(CACHE_CLUSTERS)
+            os.remove(CACHE_CARDS)
+            st.info("🧹 Expired cluster cache cleared.")
+        except:
+            pass
+        return [], []
+    try:
+        with open(CACHE_CLUSTERS, "r", encoding="utf-8") as f1, open(CACHE_CARDS, "r", encoding="utf-8") as f2:
+            return json.load(f1), json.load(f2)
+    except Exception as e:
+        st.error(f"❌ Failed to load cluster cache: {e}")
+        return [], []
 
 def display_clustered_insight_cards(insights):
     if not insights:
