@@ -1,4 +1,4 @@
-# app.py — Final version with fixed multi-select logic and safe defaults
+# ✅ Final version of app.py — Offline-safe + merged enhancements
 
 import os
 import json
@@ -33,18 +33,21 @@ from components.enhanced_insight_view import render_insight_cards
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
+# Embed model (offline-safe)
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
     try:
         from sentence_transformers import SentenceTransformer
-        return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        return SentenceTransformer("models/all-MiniLM-L6-v2")
     except Exception as e:
-        st.warning(f"⚠️ Failed to load embedding model: {e}")
+        st.warning(f"\u26a0\ufe0f Failed to load embedding model: {e}")
         return None
 
-st.title("📡 SignalSynth: Collectibles Insight Engine")
-st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
+# App header
+st.title("\ud83d\udce1 SignalSynth: Collectibles Insight Engine")
+st.caption(f"\ud83d\udcc5 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
+# Hide sidebar
 st.markdown("""
     <style>
     [data-testid="collapsedControl"] { display: none }
@@ -56,19 +59,19 @@ if "show_intro" not in st.session_state:
     st.session_state.show_intro = True
 
 if st.session_state.show_intro:
-    with st.expander("🧠 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
+    with st.expander("\ud83e\udde0 Welcome to SignalSynth! What Can You Do Here?", expanded=True):
         st.markdown("""
         SignalSynth helps you transform user signals into strategic action.
 
-        **💥 Key Features:**
+        **\ud83d\udca5 Key Features:**
         - Filter by brand, persona, journey stage, topic, and sentiment
         - Generate PRD, BRD, PRFAQ, or JIRA ticket for any insight
         - Visualize trend shifts and brand sentiment
         - Bundle, clarify, and tag insights
         """)
-        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
+        st.button("\u2705 Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
-# Load and enrich insights safely
+# Load insights
 try:
     with open("precomputed_insights.json", "r", encoding="utf-8") as f:
         scraped_insights = json.load(f)
@@ -88,13 +91,13 @@ try:
         i["action_type"] = i.get("action_type", "Unclear")
         i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
 
-    st.success(f"✅ Loaded {len(scraped_insights)} insights")
+    st.success(f"\u2705 Loaded {len(scraped_insights)} insights")
 
 except Exception as e:
-    st.error(f"❌ Failed to load insights: {e}")
+    st.error(f"\u274c Failed to load insights: {e}")
     st.stop()
 
-# Filter config
+# Filter setup
 filter_fields = {
     "Persona": "persona",
     "Journey Stage": "journey_stage",
@@ -110,22 +113,19 @@ filter_fields = {
 
 def render_multiselect_filters(insights, filter_fields, key_prefix=""):
     filters = {}
-    with st.expander("🧰 Advanced Filters", expanded=True):
+    with st.expander("\ud83e\udde0 Advanced Filters", expanded=True):
         field_items = list(filter_fields.items())
         for i in range(0, len(field_items), 3):
             cols = st.columns(min(3, len(field_items[i:i+3])))
             for col, (label, key) in zip(cols, field_items[i:i+3]):
                 values = sorted({str(i.get(key, "Unknown")).strip() for i in insights})
                 options = ["All"] + values
-
-                # Default brand = eBay only if exists
                 default = ["All"]
                 if "brand" in key:
                     for v in options:
                         if v.strip().lower() == "ebay":
                             default = [v]
                             break
-
                 filters[key] = col.multiselect(label, options, default=default, key=f"{key_prefix}_filter_{key}")
     return filters
 
@@ -140,50 +140,42 @@ def match_multiselect_filters(insight, active_filters, filter_fields):
             return False
     return True
 
+# Tab layout
 tabs = st.tabs([
-    "📌 Insights",
-    "🗺 Journey Heatmap",
-    "🧱 Clusters",
-    "🔎 Explorer",
-    "📈 Trends",
-    "🔥 Emerging",
-    "🧠 Strategic Tools"
+    "\ud83d\udccc Insights", "\ud83d\udec9 Journey Heatmap", "\ud83e\uddf1 Clusters",
+    "\ud83d\udd0e Explorer", "\ud83d\udcc8 Trends", "\ud83d\udd25 Emerging", "\ud83e\udde0 Strategic Tools"
 ])
 
-# Tab 0 — Insights
 with tabs[0]:
-    st.header("📌 Individual Insights")
+    st.header("\ud83d\udccc Individual Insights")
     try:
         filters = render_multiselect_filters(scraped_insights, filter_fields, key_prefix="insights")
         filtered = [i for i in scraped_insights if match_multiselect_filters(i, filters, filter_fields)]
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
-        st.error(f"❌ Insights tab error: {e}")
+        st.error(f"\u274c Insights tab error: {e}")
 
-# Tab 1 — Journey Heatmap
 with tabs[1]:
-    st.header("🗺 Journey Heatmap")
+    st.header("\ud83d\udec9 Journey Heatmap")
     try:
         display_journey_heatmap(scraped_insights)
     except Exception as e:
-        st.error(f"❌ Journey Heatmap error: {e}")
+        st.error(f"\u274c Journey Heatmap error: {e}")
 
-# Tab 2 — Clusters
 with tabs[2]:
-    st.header("🧱 Clustered Insight Mode")
+    st.header("\ud83e\uddf1 Clustered Insight Mode")
     try:
         model = get_model()
         if model:
             display_clustered_insight_cards(scraped_insights)
         else:
-            st.warning("⚠️ Embedding model not available. Skipping clustering.")
+            st.warning("\u26a0\ufe0f Embedding model not available. Skipping clustering.")
     except Exception as e:
-        st.error(f"❌ Cluster view error: {e}")
+        st.error(f"\u274c Cluster view error: {e}")
 
-# Tab 3 — Explorer
 with tabs[3]:
-    st.header("🔎 Insight Explorer")
+    st.header("\ud83d\udd0e Insight Explorer")
     try:
         explorer_filters = render_multiselect_filters(scraped_insights, filter_fields, key_prefix="explorer")
         explorer_filtered = [i for i in scraped_insights if match_multiselect_filters(i, explorer_filters, filter_fields)]
@@ -192,28 +184,25 @@ with tabs[3]:
             model = get_model()
             render_insight_cards(results[:50], model, key_prefix="explorer")
     except Exception as e:
-        st.error(f"❌ Explorer tab error: {e}")
+        st.error(f"\u274c Explorer tab error: {e}")
 
-# Tab 4 — Trends
 with tabs[4]:
-    st.header("📈 Trends + Brand Summary")
+    st.header("\ud83d\udcc8 Trends + Brand Summary")
     try:
         display_insight_charts(scraped_insights)
         display_brand_dashboard(scraped_insights)
     except Exception as e:
-        st.error(f"❌ Trends tab error: {e}")
+        st.error(f"\u274c Trends tab error: {e}")
 
-# Tab 5 — Emerging
 with tabs[5]:
-    st.header("🔥 Emerging Topics")
+    st.header("\ud83d\udd25 Emerging Topics")
     try:
         render_emerging_topics(detect_emerging_topics(scraped_insights))
     except Exception as e:
-        st.error(f"❌ Emerging tab error: {e}")
+        st.error(f"\u274c Emerging tab error: {e}")
 
-# Tab 6 — Strategic Tools
 with tabs[6]:
-    st.header("🧠 Strategic Tools")
+    st.header("\ud83e\udde0 Strategic Tools")
     try:
         display_spark_suggestions(scraped_insights)
         display_signal_digest(scraped_insights)
@@ -222,4 +211,4 @@ with tabs[6]:
         display_brand_comparator(scraped_insights)
         display_prd_bundler(scraped_insights)
     except Exception as e:
-        st.error(f"❌ Strategic Tools tab error: {e}")
+        st.error(f"\u274c Strategic Tools tab error: {e}")
