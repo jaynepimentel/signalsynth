@@ -11,7 +11,6 @@ st.set_page_config(page_title="SignalSynth", layout="wide")
 # Component imports
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
-from components.insight_explorer import display_insight_explorer
 from components.cluster_view import display_clustered_insight_cards
 from components.emerging_trends import detect_emerging_topics, render_emerging_topics
 from components.journey_heatmap import display_journey_heatmap
