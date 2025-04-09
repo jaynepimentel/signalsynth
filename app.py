@@ -25,6 +25,7 @@ from components.strategic_tools import (
     display_prd_bundler, display_spark_suggestions
 )
 from components.enhanced_insight_view import render_insight_cards
+from components.floating_filters import render_floating_filters
 
 # Load env + OpenAI key
 load_dotenv()
@@ -39,6 +40,18 @@ def get_model():
     except Exception as e:
         st.warning(f"⚠️ Failed to load embedding model: {e}")
         return None
+
+# Utility to match filters
+def match_multiselect_filters(insight, active_filters, filter_fields):
+    for label, field in filter_fields.items():
+        selected = active_filters.get(field, [])
+        if not selected or "All" in selected:
+            continue
+        value = str(insight.get(field, "Unknown")).strip()
+        values = [v.strip() for v in value.split(",")] if "," in value else [value]
+        if not any(v in selected for v in values):
+            return False
+    return True
 
 # App header
 st.title("📡 SignalSynth: Collectibles Insight Engine")
@@ -107,8 +120,6 @@ filter_fields = {
     "Action Type": "action_type",
     "Opportunity Tag": "opportunity_tag"
 }
-
-from components.floating_filters import render_floating_filters
 
 # Tab layout
 tabs = st.tabs([
