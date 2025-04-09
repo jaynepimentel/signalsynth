@@ -109,7 +109,6 @@ filter_fields = {
 }
 
 from components.floating_filters import render_floating_filters
-from components.insight_explorer import match_multiselect_filters
 
 # Tab layout
 tabs = st.tabs([
