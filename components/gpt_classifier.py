@@ -13,6 +13,7 @@ Given the text, classify:
 2. persona (Buyer, Seller, Collector, Grader, Support Agent, Unknown)
 3. journey_stage (Discovery, Purchase, Fulfillment, Returns, Support, Unknown)
 4. opportunity_tag (Search, UI, Trust, Speed, Fees, Policy, Vault, Grading, Discovery, Post-Purchase, None)
+5. impact_score (1-5 based on GMV/conversion/trust impact)
 
 Respond in this format:
 Type: <type>
@@ -52,4 +53,7 @@ def enrich_with_gpt_tags(insight):
     except Exception as e:
         insight["classification_error"] = str(e)
 
+if line.startswith("Impact Score:"):
+    insight["impact_score"] = int(line.split(":")[1].strip())
+    
     return insight
