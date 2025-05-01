@@ -5,6 +5,58 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime
+import networkx as nx
+from datetime import timedelta
+
+# Add to imports
+import networkx as nx
+from datetime import timedelta
+
+# Add after existing imports
+TEMPORAL_WINDOW = timedelta(days=14)
+
+def build_temporal_graph(insights):
+    G = nx.DiGraph()
+    
+    # Create nodes with temporal metadata
+    for insight in insights:
+        G.add_node(insight['post_id'], 
+                   text=insight['text'],
+                   date=insight.get('_date', datetime.now()),
+                   tags=insight.get('type_subtags', []))
+    
+    # Create edges based on temporal proximity and semantic similarity
+    for i, source in enumerate(insights):
+        for j, target in enumerate(insights[i+1:i+6]):
+            time_diff = abs((source.get('_date') - target.get('_date')).days)
+            if time_diff <= TEMPORAL_WINDOW.days:
+                G.add_edge(source['post_id'], target['post_id'],
+                           weight=1 - (time_diff/14),
+                           relation_type="temporal")
+    
+    return G
+
+def visualize_temporal_graph(G):
+    plt.figure(figsize=(12, 8))
+    pos = nx.spring_layout(G)
+    
+    node_colors = []
+    for node in G.nodes(data=True):
+        tags = node[1].get('tags', [])
+        if 'Complaint' in tags:
+            node_colors.append('red')
+        elif 'Feature Request' in tags:
+            node_colors.append('green')
+        else:
+            node_colors.append('blue')
+    
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=50)
+    nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.3)
+    
+    plt.title("Temporal Signal Relationships")
+    plt.axis('off')
+    return plt.gcf()
+
 
 def display_insight_charts(insights):
     if not insights:
@@ -23,6 +75,10 @@ def display_insight_charts(insights):
 
         st.subheader("Insight Type Distribution")
         st.bar_chart(df['type_tag'].fillna("Unknown").value_counts().head(8))
+
+        st.subheader("🕰️ Temporal Signal Relationships")
+        temporal_graph = build_temporal_graph(insights)
+        st.pyplot(visualize_temporal_graph(temporal_graph))
 
         if 'topic_focus' in df.columns:
             st.subheader("Topic Focus Breakdown")
