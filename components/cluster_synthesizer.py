@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from itertools import combinations
 import hashlib
+import faiss
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
@@ -21,6 +23,22 @@ if os.path.exists(CACHE_PATH):
         CLUSTER_META_CACHE = json.load(f)
 else:
     CLUSTER_META_CACHE = {}
+
+vector_index = None  # Global FAISS index
+def initialize_vector_store(insights):
+    global vector_index
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    texts = [f"{i['text']} | {i.get('type_tag','')}" for i in insights]
+    embeddings = model.encode(texts)
+    vector_index = faiss.IndexFlatL2(embeddings.shape[1])
+    vector_index.add(embeddings)
+
+def rag_enhanced_summary(cluster):
+    cluster_embedding = model.encode(" ".join([i['text'] for i in cluster]))
+    _, similar_indices = vector_index.search(np.array([cluster_embedding]), 5)
+    context = "\n".join([insights[idx]['text'] for idx in similar_indices[0]])
+    prompt = f"Historical Context:\n{context}\nCurrent Cluster:\n{cluster[0]['text']}"
+    return call_gpt(prompt)
 
 model = None
 if os.getenv("RUNNING_IN_STREAMLIT") != "1":
