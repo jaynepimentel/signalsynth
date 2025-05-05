@@ -1,4 +1,4 @@
-# insight_explorer.py — Explorer Mode with styled card layout and GPT utilities
+# insight_explorer.py - Explorer Mode with styled card layout and GPT utilities
 import streamlit as st
 from slugify import slugify
 import os
@@ -93,31 +93,64 @@ def display_insight_explorer(insights):
 
                 if st.button("🏷️ Suggest Tags", key=f"tags_exp_{idx}"):
                     with st.spinner("Analyzing..."):
-                        tag_prompt = f"""Suggest 3–5 product tags or themes based on this user signal:\n\n{text}"""
+                        tag_prompt = f"Suggest 3–5 product tags or themes based on this user signal:\n\n{text}"
                         tag_output = generate_gpt_doc(tag_prompt, "You are tagging feedback into product themes.")
                         st.info("💡 Suggested Tags:")
                         st.markdown(f"`{tag_output}`")
 
-            doc_type = st.selectbox("Generate document", ["PRD", "BRD", "PRFAQ", "JIRA"], key=f"explorer_doc_type_{idx}")
-            if st.button(f"Generate {doc_type}", key=f"explorer_generate_{idx}"):
-                with st.spinner(f"Generating {doc_type}..."):
-                    if doc_type == "PRD":
-                        file_path = generate_prd_docx(text, brand, filename)
-                    elif doc_type == "BRD":
-                        file_path = generate_brd_docx(text, brand, filename)
-                    elif doc_type == "PRFAQ":
-                        file_path = generate_prfaq_docx(text, brand, filename)
-                    elif doc_type == "JIRA":
-                        file_content = generate_jira_bug_ticket(text, brand)
-                        st.download_button("⬇️ Download JIRA", file_content, file_name=f"jira-{filename}.md", mime="text/markdown", key=f"dl_jira_exp_{idx}")
-                        file_path = None
-
+            # Document generation buttons
+            doc_cols = st.columns(4)
+            
+            # PRD Button
+            if doc_cols[0].button("📝 PRD", key=f"prd_{idx}"):
+                with st.spinner("Generating PRD..."):
+                    file_path = generate_prd_docx(text, brand, filename)
                     if file_path and os.path.exists(file_path):
                         with open(file_path, "rb") as f:
-                            st.download_button(
-                                f"⬇️ Download {doc_type}",
+                            doc_cols[0].download_button(
+                                "⬇️ PRD",
                                 f,
                                 file_name=os.path.basename(file_path),
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_doc_exp_{idx}"
+                                key=f"dl_prd_{idx}"
                             )
+            
+            # BRD Button
+            if doc_cols[1].button("📋 BRD", key=f"brd_{idx}"):
+                with st.spinner("Generating BRD..."):
+                    file_path = generate_brd_docx(text, brand, filename)
+                    if file_path and os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            doc_cols[1].download_button(
+                                "⬇️ BRD",
+                                f,
+                                file_name=os.path.basename(file_path),
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_brd_{idx}"
+                            )
+            
+            # PRFAQ Button 
+            if doc_cols[2].button("❓ PRFAQ", key=f"prfaq_{idx}"):
+                with st.spinner("Generating PRFAQ..."):
+                    file_path = generate_prfaq_docx(text, brand, filename)
+                    if file_path and os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            doc_cols[2].download_button(
+                                "⬇️ PRFAQ",
+                                f,
+                                file_name=os.path.basename(file_path),
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_prfaq_{idx}"
+                            )
+            
+            # JIRA Button
+            if doc_cols[3].button("🐞 JIRA", key=f"jira_{idx}"):
+                with st.spinner("Generating JIRA..."):
+                    file_content = generate_jira_bug_ticket(text, brand)
+                    doc_cols[3].download_button(
+                        "⬇️ JIRA",
+                        file_content,
+                        file_name=f"jira-{filename}.md",
+                        mime="text/markdown",
+                        key=f"dl_jira_{idx}"
+                    )
