@@ -1,4 +1,4 @@
-# enhanced_insight_view.py — Final merged version with advanced fields, badges, dev visibility, and GPT tools
+# enhanced_insight_view.py - Final merged version with advanced fields, badges, dev visibility, and GPT tools
 
 import os
 import streamlit as st
@@ -52,46 +52,85 @@ def render_insight_cards(filtered, model, per_page=10, key_prefix="insight"):
 
     for idx, i in enumerate(paged, start=start):
         unique_id = f"{key_prefix}_{idx}"
-        st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
+        with st.container(border=True):
+            st.markdown(f"### 🧠 Insight: {i.get('title', i.get('text', '')[:60])}")
 
-        tags = [
-            badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
-            badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
-            badge(i.get("effort"), BADGE_COLORS.get(i.get("effort"), "#ccc")),
-            badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
-            badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
-        ]
-        if i.get("signal_intent"): tags.append(badge(i["signal_intent"], BADGE_COLORS.get(i["signal_intent"], "#ccc")))
-        if i.get("cohort"): tags.append(badge(i["cohort"], "#390099"))
-        if i.get("region") and i["region"] != "Unknown": tags.append(badge(i["region"], BADGE_COLORS.get(i["region"], "#ccc")))
-        if i.get("is_post_event_feedback"): tags.append(badge("Post-Event", BADGE_COLORS["Post-Event"]))
-        if i.get("is_dev_feedback"): tags.append(badge("Developer", BADGE_COLORS["Developer"]))
-
-        st.markdown(" ".join(tags), unsafe_allow_html=True)
-
-        st.caption(
-            f"Score: {i.get('score', 0)} | Intent: {i.get('signal_intent')} | Feature: {', '.join(i.get('feature_area', []))} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
-            f"({i.get('type_confidence')}%) | Persona: {i.get('persona')} | Cohort: {i.get('cohort')} | Region: {i.get('region')} | "
-            f"Post Date: {i.get('post_date') or i.get('_logged_date', 'N/A')}"
-        )
-
-        if i.get("url"):
-            st.markdown(f"[🔗 View Original Post]({i['url']})", unsafe_allow_html=True)
-
-        with st.expander("🧠 Full Insight"):
+            # Document Generation Buttons (Added)
+            doc_cols = st.columns(4)
             text = i.get("text", "")
             brand = i.get("target_brand", "eBay")
-            st.markdown("**User Quote:**")
-            st.markdown(f"> {text}")
+            summary = i.get("summary", text[:80])
+            filename = slugify(summary)[:64]
 
-            if OPENAI_KEY_PRESENT:
-                with st.spinner("💡 Generating PM Suggestions..."):
+            # PRD Button
+            if doc_cols[0].button("📝 PRD", key=f"prd_{unique_id}"):
+                with st.spinner("Generating PRD..."):
                     try:
-                        i["ideas"] = generate_pm_ideas(text, brand)
+                        file_path = generate_prd_docx(text, brand, filename)
+                        if file_path and os.path.exists(file_path):
+                            with open(file_path, "rb") as f:
+                                st.download_button(
+                                    "⬇️ PRD",
+                                    f,
+                                    file_name=os.path.basename(file_path),
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"dl_prd_{unique_id}"
+                                )
                     except Exception as e:
-                        i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
+                        st.error(f"PRD generation failed: {str(e)}")
 
-            if i.get("ideas"):
-                st.markdown("**💡 PM Suggestions:**")
-                for idea in i["ideas"]:
-                    st.markdown(f"- {idea}")
+            # JIRA Button
+            if doc_cols[3].button("🐞 JIRA", key=f"jira_{unique_id}"):
+                with st.spinner("Generating JIRA..."):
+                    try:
+                        file_content = generate_jira_bug_ticket(text, brand)
+                        st.download_button(
+                            "⬇️ JIRA",
+                            file_content,
+                            file_name=f"jira-{filename}.md",
+                            mime="text/markdown",
+                            key=f"dl_jira_{unique_id}"
+                        )
+                    except Exception as e:
+                        st.error(f"JIRA generation failed: {str(e)}")
+
+            # Existing metadata and badges
+            tags = [
+                badge(i.get("type_tag"), BADGE_COLORS.get(i.get("type_tag"), "#ccc")),
+                badge(i.get("brand_sentiment"), BADGE_COLORS.get(i.get("brand_sentiment"), "#ccc")),
+                badge(i.get("effort"), BADGE_COLORS.get(i.get("effort"), "#ccc")),
+                badge(i.get("journey_stage"), BADGE_COLORS.get(i.get("journey_stage"), "#ccc")),
+                badge(i.get("clarity"), BADGE_COLORS.get(i.get("clarity"), "#ccc"))
+            ]
+            if i.get("signal_intent"): tags.append(badge(i["signal_intent"], BADGE_COLORS.get(i["signal_intent"], "#ccc")))
+            if i.get("cohort"): tags.append(badge(i["cohort"], "#390099"))
+            if i.get("region") and i["region"] != "Unknown": tags.append(badge(i["region"], BADGE_COLORS.get(i["region"], "#ccc")))
+            if i.get("is_post_event_feedback"): tags.append(badge("Post-Event", BADGE_COLORS["Post-Event"]))
+            if i.get("is_dev_feedback"): tags.append(badge("Developer", BADGE_COLORS["Developer"]))
+
+            st.markdown(" ".join(tags), unsafe_allow_html=True)
+
+            st.caption(
+                f"Score: {i.get('score', 0)} | Intent: {i.get('signal_intent')} | Feature: {', '.join(i.get('feature_area', []))} | Type: {i.get('type_tag')} > {i.get('type_subtag', '')} "
+                f"({i.get('type_confidence')}%) | Persona: {i.get('persona')} | Cohort: {i.get('cohort')} | Region: {i.get('region')} | "
+                f"Post Date: {i.get('post_date') or i.get('_logged_date', 'N/A')}"
+            )
+
+            if i.get("url"):
+                st.markdown(f"[🔗 View Original Post]({i['url']})", unsafe_allow_html=True)
+
+            with st.expander("🧠 Full Insight"):
+                st.markdown("**User Quote:**")
+                st.markdown(f"> {text}")
+
+                if OPENAI_KEY_PRESENT:
+                    with st.spinner("💡 Generating PM Suggestions..."):
+                        try:
+                            i["ideas"] = generate_pm_ideas(text, brand)
+                        except Exception as e:
+                            i["ideas"] = [f"[❌ GPT error: {str(e)}]"]
+
+                if i.get("ideas"):
+                    st.markdown("**💡 PM Suggestions:**")
+                    for idea in i["ideas"]:
+                        st.markdown(f"- {idea}")
