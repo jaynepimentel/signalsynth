@@ -1,4 +1,4 @@
-# app.py — SignalSynth (enhanced UI: Payments/UPI/high-ASP, evidence KPIs, carrier/ISP filters)
+# app.py — SignalSynth (keeps Shipping/Auth + adds Payments/UPI/High-ASP, carriers, evidence KPIs)
 
 import os
 import json
@@ -40,12 +40,9 @@ OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 @st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
-    """
-    Prefer a local copy if you've saved it (fast/offline); fall back to hub name.
-    """
+    """Prefer local cache; fall back to hub name."""
     try:
         from sentence_transformers import SentenceTransformer
-        # try local first
         try:
             return SentenceTransformer("models/all-MiniLM-L6-v2")
         except Exception:
@@ -58,17 +55,22 @@ def get_model():
 # Helpers
 # ─────────────────────────────────────────────
 def coerce_bool(value):
-    if isinstance(value, bool):
-        return "Yes" if value else "No"
-    if str(value).lower() in {"true", "yes", "1"}:
-        return "Yes"
-    if str(value).lower() in {"false", "no", "0"}:
-        return "No"
+    if isinstance(value, bool): return "Yes" if value else "No"
+    s = str(value).lower()
+    if s in {"true","yes","1"}: return "Yes"
+    if s in {"false","no","0"}: return "No"
     return "Unknown"
+
+def normalize_topic_focus(raw):
+    if isinstance(raw, list):
+        return sorted({t for t in raw if isinstance(t, str) and t})
+    if isinstance(raw, str) and raw.strip():
+        return [raw.strip()]
+    return []
 
 def normalize_insight(i, suggestion_cache):
     i["ideas"] = suggestion_cache.get(i.get("text",""), [])
-    # Default fields
+    # Core safe defaults (preserves your existing tags)
     i["persona"] = i.get("persona", "Unknown")
     i["journey_stage"] = i.get("journey_stage", "Unknown")
     i["type_tag"] = i.get("type_tag", "Unclassified")
@@ -79,57 +81,58 @@ def normalize_insight(i, suggestion_cache):
     i["action_type"] = i.get("action_type", "Unclear")
     i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
 
-    # Topic focus safe-list
-    if isinstance(i.get("topic_focus"), list):
-        i["topic_focus_list"] = sorted({t for t in i["topic_focus"] if isinstance(t, str) and t})
-    elif isinstance(i.get("topic_focus"), str) and i["topic_focus"].strip():
-        i["topic_focus_list"] = [i["topic_focus"].strip()]
-    else:
-        i["topic_focus_list"] = []
+    # Topic Focus (keeps Authentication/AG, Search, Grading, Shipping-adjacent, etc.)
+    i["topic_focus_list"] = normalize_topic_focus(i.get("topic_focus"))
 
-    # Payments / UPI / High-ASP flags (as Yes/No strings for filtering)
+    # Money/ops flags (added, not replacing anything)
     i["_payment_issue_str"] = coerce_bool(i.get("_payment_issue", False))
     i["_upi_flag_str"] = coerce_bool(i.get("_upi_flag", False))
     i["_high_end_flag_str"] = coerce_bool(i.get("_high_end_flag", False))
 
-    # Carrier, program, customs
+    # Ops signals (carrier, ISP, customs)
     i["carrier"] = (i.get("carrier") or "Unknown").upper() if isinstance(i.get("carrier"), str) else "Unknown"
     i["intl_program"] = (i.get("intl_program") or "Unknown").upper() if isinstance(i.get("intl_program"), str) else "Unknown"
     i["customs_flag_str"] = coerce_bool(i.get("customs_flag", False))
 
-    # Evidence collapse & dates
+    # Evidence collapse & dates (from precompute step)
     i["evidence_count"] = i.get("evidence_count", 1)
     i["last_seen"] = i.get("last_seen") or i.get("_logged_date") or i.get("post_date") or "Unknown"
+
+    # Derived “speed risk” helper (so “slow shipping/grading/auth” can be toggled)
+    txt = (i.get("text") or "").lower()
+    speed_words = any(w in txt for w in ["slow", "delay", "delayed", "backlog", "turnaround", "weeks", "months"])
+    auth_focus = "Authenticity Guarantee" in i["topic_focus_list"]
+    grading_focus = "Grading" in i["topic_focus_list"]
+    shippingish = (i["journey_stage"] in {"Fulfillment","Post-Purchase"}) or ("shipping" in txt) or (i["carrier"] != "Unknown")
+    i["speed_risk_str"] = coerce_bool(speed_words and (auth_focus or grading_focus or shippingish))
     return i
 
 def get_field_values(insight, field):
-    """
-    Return a list of values for a given field to support multiselect filters across
-    scalars, lists, and comma-separated strings.
-    """
     val = insight.get(field, None)
-    if val is None:
-        return ["Unknown"]
-    if isinstance(val, list):
-        return [str(x).strip() for x in val if str(x).strip()]
+    if val is None: return ["Unknown"]
+    if isinstance(val, list): return [str(x).strip() for x in val if str(x).strip()]
     s = str(val)
-    if "," in s:
-        return [v.strip() for v in s.split(",") if v.strip()]
+    if "," in s: return [v.strip() for v in s.split(",") if v.strip()]
     return [s.strip() or "Unknown"]
 
 def match_multiselect_filters(insight, active_filters, filter_fields):
     for label, field in filter_fields.items():
         selected = active_filters.get(field, [])
-        if not selected or "All" in selected:
-            continue
+        if not selected or "All" in selected: continue
         values = get_field_values(insight, field)
-        if not any(v in selected for v in values):
-            return False
+        if not any(v in selected for v in values): return False
     return True
 
 def kpi_chip(label, value, help_text=None):
     with st.container():
         st.metric(label=label, value=value, help=help_text)
+
+def is_shipping(i):
+    t = (i.get("text") or "").lower()
+    return ("shipping" in t) or (i.get("journey_stage") in {"Fulfillment","Post-Purchase"}) or (i.get("carrier")!="Unknown")
+
+def is_auth(i):
+    return "Authenticity Guarantee" in (i.get("topic_focus_list") or [])
 
 # ─────────────────────────────────────────────
 # Header
@@ -152,10 +155,11 @@ if "show_intro" not in st.session_state:
 if st.session_state.show_intro:
     with st.expander("🧠 Welcome to SignalSynth! What’s here now?", expanded=True):
         st.markdown("""
-- **New tags & filters:** Payments, UPI, High-ASP, Carrier, International Program, Customs Flag.
+- **Nothing was removed:** Shipping, Authentication/AG, Grading, Returns, Search… all intact.
+- **Added signals:** Payments, UPI, High-ASP, Carrier, International Program, Customs Flag.
 - **Evidence collapse:** duplicates merged with `evidence_count` and `last_seen`.
-- **Decision Tiles in Clusters:** Each theme has the *Decision, Risk, and Suggested Owner*.
-- **Topic Focus** now supports multi-value list filtering.
+- **Decision Tiles in Clusters:** *Decision, Risk, Owner* per theme.
+- **Speed Risk toggle:** quickly isolate “slow shipping/grading/auth” chatter.
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
@@ -171,16 +175,17 @@ try:
     except Exception:
         cache = {}
 
-    # Normalize
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
 
-    # KPIs
+    # KPIs (keeps legacy categories visible)
     total = len(normalized)
     complaints = sum(1 for i in normalized if i.get("brand_sentiment") == "Complaint")
     payments = sum(1 for i in normalized if i.get("_payment_issue_str") == "Yes")
     upi = sum(1 for i in normalized if i.get("_upi_flag_str") == "Yes")
     high_asp = sum(1 for i in normalized if i.get("_high_end_flag_str") == "Yes")
-    collapsed_total = len(normalized)  # already post-dedupe from precompute
+    shipping_count = sum(1 for i in normalized if is_shipping(i))
+    auth_count = sum(1 for i in normalized if is_auth(i))
+    collapsed_total = len(normalized)
 
     st.success(f"✅ Loaded {total} insights")
 
@@ -188,18 +193,21 @@ except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# KPI Row
-c1, c2, c3, c4, c5 = st.columns(5)
+# KPI Row (keeps Shipping/Auth front-and-center)
+c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 with c1: kpi_chip("All Insights", f"{total:,}")
 with c2: kpi_chip("Complaints", f"{complaints:,}")
-with c3: kpi_chip("Payments Signals", f"{payments:,}", "Includes payment declines & wire/ACH friction")
-with c4: kpi_chip("UPI Mentions", f"{upi:,}", "Seller unpaid-item complaints")
-with c5: kpi_chip("High-ASP Flags", f"{high_asp:,}", "Mentions of $1k+, 5k, 10k, etc.")
+with c3: kpi_chip("Shipping-Related", f"{shipping_count:,}", "Fulfillment mentions, carriers, or shipping text")
+with c4: kpi_chip("Auth/AG Mentions", f"{auth_count:,}", "Authenticity Guarantee topics")
+with c5: kpi_chip("Payments Signals", f"{payments:,}", "Payment declined & wire/ACH friction")
+with c6: kpi_chip("UPI Mentions", f"{upi:,}", "Seller unpaid-item complaints")
+with c7: kpi_chip("High-ASP Flags", f"{high_asp:,}", "Mentions of $1k+, 5k, 10k, etc.")
 
 # ─────────────────────────────────────────────
-# Filters
+# Filters (old + new together)
 # ─────────────────────────────────────────────
 filter_fields = {
+    # Core
     "Target Brand": "target_brand",
     "Persona": "persona",
     "Journey Stage": "journey_stage",
@@ -207,39 +215,46 @@ filter_fields = {
     "Brand Sentiment": "brand_sentiment",
     "Clarity": "clarity",
     "Effort Estimate": "effort",
-    "Topic Focus": "topic_focus_list",        # list-aware
     "Action Type": "action_type",
     "Opportunity Tag": "opportunity_tag",
-    # new ops/compliance filters:
-    "Carrier": "carrier",                     # UPS/USPS/FEDEX/DPD/DHL/Unknown
-    "Intl Program": "intl_program",           # ISP/GSP/Unknown
-    "Customs Flag": "customs_flag_str",       # Yes/No/Unknown
-    # new money-risk filters:
-    "Payments Flag": "_payment_issue_str",    # Yes/No/Unknown
-    "UPI Flag": "_upi_flag_str",              # Yes/No/Unknown
-    "High-ASP Flag": "_high_end_flag_str",    # Yes/No/Unknown
+    # Topics (keeps Authentication/AG, Search, Grading, Case Break, etc.)
+    "Topic Focus": "topic_focus_list",
+    # Ops / Logistics
+    "Carrier": "carrier",               # UPS/USPS/FEDEX/DPD/DHL/Unknown
+    "Intl Program": "intl_program",     # ISP/GSP/Unknown (we store as ISP)
+    "Customs Flag": "customs_flag_str", # Yes/No/Unknown
+    # Money-risk flags (added)
+    "Payments Flag": "_payment_issue_str",
+    "UPI Flag": "_upi_flag_str",
+    "High-ASP Flag": "_high_end_flag_str",
+    # Speed risk (derived) — catches “slow authentication/grading/shipping”
+    "Speed Risk": "speed_risk_str",
 }
 
-# Quick toggles (pills) for exec speed
-qt1, qt2, qt3 = st.columns([1,1,1])
+# Quick toggles for fast slicing (don’t override your shipping/auth; they complement it)
+qt1, qt2, qt3, qt4 = st.columns([1,1,1,1])
 with qt1:
-    q_pay = st.toggle("💳 Payments only", value=False, help="Show payment declines & wire/ACH friction")
+    q_ship = st.toggle("📦 Shipping slice", value=False, help="Filter to shipping/fulfillment-adjacent items")
 with qt2:
-    q_upi = st.toggle("🚫 UPI only", value=False, help="Show seller unpaid-item complaints")
+    q_auth = st.toggle("✅ Auth/AG slice", value=False, help="Filter to authenticity guarantee/auth topics")
 with qt3:
-    q_high = st.toggle("💎 High-ASP only", value=False, help="Flagged as high-value context")
+    q_pay = st.toggle("💳 Payments only", value=False, help="Payment declines & wire/ACH friction")
+with qt4:
+    q_speed = st.toggle("⏱️ Speed Risk", value=False, help="Mentions of slow/backlog/turnaround")
 
-# Build quick-filtered base list
+# Build quick-filtered base list (non-destructive)
 quick_filtered = normalized
+if q_ship:
+    quick_filtered = [i for i in quick_filtered if is_shipping(i)]
+if q_auth:
+    quick_filtered = [i for i in quick_filtered if is_auth(i)]
 if q_pay:
     quick_filtered = [i for i in quick_filtered if i.get("_payment_issue_str") == "Yes"]
-if q_upi:
-    quick_filtered = [i for i in quick_filtered if i.get("_upi_flag_str") == "Yes"]
-if q_high:
-    quick_filtered = [i for i in quick_filtered if i.get("_high_end_flag_str") == "Yes"]
+if q_speed:
+    quick_filtered = [i for i in quick_filtered if i.get("speed_risk_str") == "Yes"]
 
 # ─────────────────────────────────────────────
-# Tabs
+# Tabs (Insights first so you can scan with new filters)
 # ─────────────────────────────────────────────
 tabs = st.tabs([
     "📌 Insights", "🧱 Clusters", "📈 Trends",
@@ -257,7 +272,7 @@ with tabs[0]:
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# 🧱 CLUSTERS (with Decision Tiles from component)
+# 🧱 CLUSTERS (Decision Tiles live in the component)
 with tabs[1]:
     st.header("🧱 Clustered Insight Mode")
     try:
