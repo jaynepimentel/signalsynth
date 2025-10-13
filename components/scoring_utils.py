@@ -1,133 +1,172 @@
-# scoring_utils.py — Enhanced scoring with GPT-powered enrichment, reasoning, caching, and normalization
-import os
-import json
-import hashlib
+# scoring_utils.py — expanded competitor tagging, payments/UPI/high-ASP detection, topic focus, and sentiment hardening
+
+import os, re, json, hashlib
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
+OPENAI_KEY=os.getenv("OPENAI_API_KEY")
+client=OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
-CACHE_PATH = "gpt_sentiment_cache.json"
+CACHE_PATH="gpt_sentiment_cache.json"
 
 def load_cache():
     if os.path.exists(CACHE_PATH):
-        with open(CACHE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try: return json.load(open(CACHE_PATH,"r",encoding="utf-8"))
+        except: return {}
     return {}
 
-def save_cache(cache):
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
-        json.dump(cache, f, indent=2)
-
+def save_cache(cache): json.dump(cache, open(CACHE_PATH,"w",encoding="utf-8"), indent=2)
 def clear_sentiment_cache():
-    global sentiment_cache
-    sentiment_cache = {}
+    global sentiment_cache; sentiment_cache={}
     if os.path.exists(CACHE_PATH):
-        os.remove(CACHE_PATH)
+        try: os.remove(CACHE_PATH)
+        except: pass
 
-sentiment_cache = load_cache()
-
-def estimate_severity(text):
-    lowered = text.lower()
-    if any(word in lowered for word in ["scam", "never received", "fraud", "fake", "authentication error", "vault locked"]):
-        return 90, "Contains fraud-related or high-risk terms"
-    if any(word in lowered for word in ["issue", "problem", "broken", "confused", "error", "glitch"]):
-        return 70, "Mentions confusion, bugs, or known issues"
-    if any(word in lowered for word in ["could be better", "wish", "suggest", "slow", "should", "would be great if"]):
-        return 50, "Mild complaint or enhancement request"
-    return 30, "Low-intensity or neutral language"
-
-def calculate_pm_priority(insight):
-    base = insight.get("score", 0)
-    severity = insight.get("severity_score", 0)
-    confidence = insight.get("type_confidence", 50)
-    sentiment_conf = insight.get("sentiment_confidence", 50)
-    return round((base * 0.2) + (severity * 0.4) + (confidence * 0.2) + (sentiment_conf * 0.2), 2)
-
-def normalize_priority_scores(insights):
-    scores = [i.get("pm_priority_score", 0) for i in insights]
-    if not scores:
-        return insights
-    min_score, max_score = min(scores), max(scores)
-    for i in insights:
-        raw = i.get("pm_priority_score", 0)
-        i["pm_priority_percentile"] = round(100 * (raw - min_score) / (max_score - min_score + 1e-5), 2)
-    return insights
+sentiment_cache=load_cache()
 
 def gpt_estimate_sentiment_subtag(text):
     if not client:
-        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1, "gpt_confidence": 0}
-
-    key = hashlib.md5(text.strip().encode()).hexdigest()
-    if key in sentiment_cache:
-        return sentiment_cache[key]
-
+        return {"sentiment":"Neutral","subtags":["General"],"summary":"","frustration":1,"impact":1,"gpt_confidence":0}
+    key=hashlib.md5((text or "").strip().encode()).hexdigest()
+    if key in sentiment_cache: return sentiment_cache[key]
     try:
-        prompt = f"""
-Classify the following user feedback:
-{text}
+        prompt=f"""Classify the feedback and return exactly these fields, one per line:
 
-Return the following:
 Sentiment: [Praise|Complaint|Neutral]
 Subtags: [comma-separated themes like Refund, Trust Issue, Search]
-Frustration: [1 (mild) to 5 (angry)]
-Impact: [1 (low) to 5 (critical business impact)]
-Summary: [One sentence summarizing the pain point]
+Frustration: [1-5]
+Impact: [1-5]
+Summary: [One concise sentence summarizing the issue or praise]
+
+---
+{text}
 """
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a product analyst identifying themes and risk."},
-                {"role": "user", "content": prompt.strip()}
-            ],
-            temperature=0,
-            max_tokens=200
-        )
-
-        content = response.choices[0].message.content.strip().lower()
-
-        sentiment = "Neutral"
-        subtags = ["General"]
-        frustration = 1
-        impact = 1
-        summary = ""
-
-        for line in content.split("\n"):
-            if "sentiment:" in line:
-                if "praise" in line:
-                    sentiment = "Praise"
-                elif "complaint" in line:
-                    sentiment = "Complaint"
-            elif "subtags:" in line:
-                subtags = [s.strip().title() for s in line.split(":", 1)[-1].strip("[] ").split(",") if s.strip()]
-            elif "frustration:" in line:
-                try:
-                    frustration = int(line.split(":", 1)[-1].strip())
-                except:
-                    frustration = 1
-            elif "impact:" in line:
-                try:
-                    impact = int(line.split(":", 1)[-1].strip())
-                except:
-                    impact = 1
-            elif "summary:" in line:
-                summary = line.split(":", 1)[-1].strip().capitalize()
-
-        result = {
-            "sentiment": sentiment.title(),
-            "subtags": subtags or ["General"],
-            "frustration": frustration,
-            "impact": impact,
-            "summary": summary,
-            "gpt_confidence": round(float(response.usage.total_tokens or 200) / 200 * 100, 2)
-        }
-        sentiment_cache[key] = result
-        save_cache(sentiment_cache)
-        return result
-
+        mdl=os.getenv("OPENAI_MODEL_SCREENER","gpt-4.1-mini")
+        rsp=client.chat.completions.create(
+            model=mdl,
+            messages=[{"role":"system","content":"You are a product analyst identifying themes and risk. Output must follow requested fields exactly."},
+                      {"role":"user","content":prompt.strip()}],
+            temperature=0,max_tokens=220)
+        raw=(rsp.choices[0].message.content or "").strip()
+        sentiment,subtags,frustration,impact,summary=("Neutral",["General"],1,1,"")
+        for line in raw.splitlines():
+            h,_,v=line.partition(":"); h=h.strip().lower(); v=v.strip()
+            if h=="sentiment": sentiment="Praise" if "praise" in v.lower() else "Complaint" if "complaint" in v.lower() else "Neutral"
+            elif h=="subtags": subtags=[s.strip().title() for s in v.strip("[] ").split(",") if s.strip()] or ["General"]
+            elif h=="frustration":
+                try: frustration=int(re.sub(r"[^0-9]","",v) or "1"); frustration=max(1,min(5,frustration))
+                except: pass
+            elif h=="impact":
+                try: impact=int(re.sub(r"[^0-9]","",v) or "1"); impact=max(1,min(5,impact))
+                except: pass
+            elif h=="summary": summary=v.strip().capitalize()
+        out={"sentiment":sentiment,"subtags":subtags,"frustration":frustration,"impact":impact,"summary":summary,"gpt_confidence":100.0}
+        sentiment_cache[key]=out; save_cache(sentiment_cache); return out
     except Exception as e:
         print("[GPT fallback error]", e)
-        print("[GPT raw output]", content)
-        return {"sentiment": "Neutral", "subtags": ["General"], "summary": "", "frustration": 1, "impact": 1, "gpt_confidence": 0}
+        return {"sentiment":"Neutral","subtags":["General"],"summary":"","frustration":1,"impact":1,"gpt_confidence":0}
+
+# Payments/UPI/High-ASP
+RE_HIGH_ASP_AMT=re.compile(r"\$\s?(\d{1,3}(?:[,\s]\d{3})+)|\b(\d{1,2})\s?k\b", re.I)
+RE_PAYMENT_DECLINED=re.compile(r"(payment (?:was )?declined|card (?:was )?declined|payment failed|charge failed|credit card (?:issue|problem|declined)|debit card (?:issue|problem|declined))", re.I)
+RE_WIRE=re.compile(r"(wire transfer|bank transfer|ACH|bank wire|bank details|bank instructions|wire instructions)", re.I)
+RE_UPI=re.compile(r"(unpaid item|UPI\b|did(?:\s*not|\s*n[’']?t)\s*pay|non[-\s]?paying bidder|buyer never paid|no payment received)", re.I)
+
+def detect_payments_upi_highasp(text:str):
+    t=text or ""; types=[]
+    if RE_PAYMENT_DECLINED.search(t): types.append("payment_declined")
+    if RE_WIRE.search(t): types.append("wire_or_bank_transfer")
+    if RE_UPI.search(t): types.append("unpaid_item_upi")
+    high_asp=bool(RE_HIGH_ASP_AMT.search(t) or any(k in (t.lower()) for k in ["high-end","high end","grail","expensive","six figures","five figures"]))
+    return {"_payment_issue":bool(types),"payment_issue_types":types,"_upi_flag":"unpaid_item_upi" in types,"_high_end_flag":high_asp,"topic_hint":"Payments" if types else None}
+
+def estimate_severity(text):
+    lo=(text or "").lower()
+    if any(w in lo for w in ["scam","never received","fraud","fake","authentication error","vault locked","chargeback"]):
+        return 90,"Contains fraud-related or high-risk terms"
+    if any(w in lo for w in ["issue","problem","broken","confused","error","glitch"]):
+        return 70,"Mentions confusion, bugs, or known issues"
+    if any(w in lo for w in ["could be better","wish","suggest","slow","should","would be great if"]):
+        return 50,"Mild complaint or enhancement request"
+    return 30,"Low-intensity or neutral language"
+
+def calculate_pm_priority(insight):
+    base=insight.get("score",0); sev=insight.get("severity_score",0)
+    conf=insight.get("type_confidence",50); senti=insight.get("sentiment_confidence",50)
+    return round((base*0.2)+(sev*0.4)+(conf*0.2)+(senti*0.2),2)
+
+def normalize_priority_scores(insights):
+    scores=[i.get("pm_priority_score",0) for i in insights]
+    if not scores: return insights
+    mn,mx=min(scores),max(scores)
+    for i in insights:
+        raw=i.get("pm_priority_score",0)
+        i["pm_priority_percentile"]=round(100*(raw-mn)/(mx-mn+1e-5),2)
+    return insights
+
+def infer_clarity(text):
+    t=(text or "").strip().lower()
+    return "Needs Clarification" if (len(t)<40 or "???" in t or "idk" in t or "confused" in t) else "Clear"
+
+def detect_competitor_and_partner_mentions(text):
+    lo=(text or "").lower()
+    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin"]
+    partners=["psa","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
+    market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold"]
+    return {
+        "competitors":sorted({c for c in competitors if c in lo}),
+        "partners":sorted({p for p in partners if p in lo}),
+        "market_terms":sorted({m for m in market_terms if m in lo}),
+    }
+
+def generate_insight_title(text):
+    t=(text or "").strip()
+    return t[:60].capitalize()+"..." if len(t)>60 else t.capitalize()
+
+def classify_opportunity_type(text):
+    lo=(text or "").lower()
+    if any(x in lo for x in ["payment","payment declined","card declined","wire transfer","bank transfer","ach","charge failed"]): return "Conversion Blocker"
+    if "upi" in lo or "unpaid item" in lo or "buyer never paid" in lo: return "Policy Risk"
+    if any(x in lo for x in ["policy","terms","blocked","suspended"]): return "Policy Risk"
+    if any(x in lo for x in ["conversion","checkout","didn’t buy","abandon","hesitated"]): return "Conversion Blocker"
+    if any(x in lo for x in ["leaving","quit","stop using","moved to","switched to"]): return "Retention Risk"
+    if any(x in lo for x in ["compared to","fanatics","whatnot","alt","loupe","tiktok"]): return "Competitor Signal"
+    if any(x in lo for x in ["trust","scam","fraud"]): return "Trust Erosion"
+    if any(x in lo for x in ["love","recommend","amazing","best"]): return "Referral Amplifier"
+    return "General Insight"
+
+def tag_topic_focus(text):
+    lo=(text or "").lower(); tags=[]
+    if any(t in lo for t in ["ebay live","fanatics live","live shopping","stream sale","claim sale","livestream","live stream"]): tags.append("Live Shopping")
+    if "vault" in lo: tags.append("Vault")
+    if "grading" in lo and any(x in lo for x in ["psa","bgs","sgc","pcgs","ngc"]): tags.append("Grading")
+    if any(x in lo for x in ["case break","box break","repack","mystery pack"]): tags.append("Case Break / Repack")
+    if "authentication" in lo or "authenticity guarantee" in lo: tags.append("Authenticity Guarantee")
+    if "population report" in lo or "pop report" in lo: tags.append("Pop Report")
+    if any(x in lo for x in ["search","filter","filters","relevancy"]): tags.append("Search/Relevancy")
+    if any(x in lo for x in ["fee","fees","final value fee","seller fee","buyer fee"]): tags.append("Fees/Pricing")
+    if any(x in lo for x in ["payout","payouts","payment hold","holds"]): tags.append("Payouts/Holds")
+    if any(x in lo for x in ["refund","return","returns","cancel","cancellation"]): tags.append("Returns/Policy")
+    if any(x in lo for x in ["consignment","auction house","goldin","heritage","pwcc","elite auction"]): tags.append("Consignment/Auctions")
+    if any(x in lo for x in ["bid cancel","bid retracted","cancelled bid","auction pulled","bidder flaked","pulled bid","shill"]): tags.append("Auction Integrity")
+    if "auction" in lo and "cancel" in lo: tags.append("Trust")
+    # NEW
+    if any(x in lo for x in ["payment","payment declined","card declined","wire transfer","bank transfer","ach","charge failed"]): tags.append("Payments")
+    if "upi" in lo or "unpaid item" in lo or "buyer never paid" in lo or "no payment received" in lo: tags.append("UPI")
+    return sorted(list(dict.fromkeys(tags)))
+
+def classify_action_type(text):
+    lo=(text or "").lower()
+    categories={
+        "UI":["filter","search","tooltip","label","navigation"],
+        "Feature":["add","introduce","enable","support","integration","combine"],
+        "Policy":["refund","suspend","blocked","authentication","return policy","upi","unpaid item"],
+        "Marketplace":["grading","shipping","vault","case break","stream","bid","auction","payment","wire transfer","bank transfer"],
+    }
+    for cat, terms in categories.items():
+        if any(t in lo for t in terms): return cat
+    return "Unclear"
+
+def calculate_cluster_ready_score(score, frustration, impact):
+    return round((score + frustration*5 + impact*5) / 3, 2)
