@@ -1,80 +1,66 @@
-# brand_recognizer.py — brand detection with semantic + fuzzy fallback and alias expansion
+# components/brand_recognizer.py — brand detection with env/local model + alias expansion
 
-import re
+import os, re
 from difflib import get_close_matches
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, util
 
-# 🔍 Known brands and aliases
+load_dotenv()
+
 BRAND_KEYWORDS = {
-    "eBay": [
-        "ebay", "ebay live", "ebay vault", "standard envelope",
-        "authenticity guarantee", "auth guarantee"
-    ],
-    "Fanatics Collect": [
-        "fanatics", "fanatics collect", "fanatics vault", "fanatics live"
-    ],
-    "WhatNot": [
-        "whatnot", "whatnot app", "whatnot live"
-    ],
-    "Alt": [
-        "alt", "alt marketplace"
-    ],
-    "Loupe": [
-        "loupe", "loupe app"
-    ],
-    "Goldin": [
-        "goldin", "goldin auctions", "goldin marketplace"
-    ],
-    "PSA": [
-        "psa", "grading psa", "psa grading", "psa integration"
-    ],
-    "COMC": [
-        "comc", "check out my cards", "check out cards"
-    ]
+    "eBay": ["ebay", "ebay live", "ebay vault", "standard envelope", "authenticity guarantee", "auth guarantee"],
+    "Fanatics Collect": ["fanatics", "fanatics collect", "fanatics vault", "fanatics live"],
+    "WhatNot": ["whatnot", "whatnot app", "whatnot live"],
+    "Alt": ["alt", "alt marketplace"],
+    "Loupe": ["loupe", "loupe app"],
+    "Goldin": ["goldin", "goldin auctions", "goldin marketplace"],
+    "PSA": ["psa", "grading psa", "psa grading", "psa integration"],
+    "COMC": ["comc", "check out my cards", "check out cards"]
 }
 
-# Flatten terms and generate semantic embeddings
-ALL_TERMS = [term for values in BRAND_KEYWORDS.values() for term in values]
-model = SentenceTransformer("all-MiniLM-L6-v2")
-term_embeddings = model.encode(ALL_TERMS)
+ALL_TERMS = [t for terms in BRAND_KEYWORDS.values() for t in terms]
 
-# 🔍 Main detection function
-def recognize_brand(text, debug=False):
-    text_lower = text.lower()
-
-    # 1. Direct match
-    for brand, terms in BRAND_KEYWORDS.items():
-        for term in terms:
-            if term in text_lower:
-                if debug:
-                    print(f"[BRAND] Direct match: '{term}' → {brand}")
-                return brand
-
-    # 2. Semantic similarity fallback
+def _load_embed():
+    name = os.getenv("SS_EMBED_MODEL", "intfloat/e5-base-v2")
     try:
-        embedding = model.encode(text_lower)
-        scores = util.cos_sim(embedding, term_embeddings)[0]
-        best_idx = scores.argmax().item()
-        matched_term = ALL_TERMS[best_idx]
+        local = f"models/{name.replace('/','_')}"
+        m = SentenceTransformer(local) if os.path.isdir(local) else SentenceTransformer(name)
+    except Exception:
+        m = SentenceTransformer("all-MiniLM-L6-v2")
+    m.max_seq_length = int(os.getenv("SS_MAX_SEQ_LEN", "384"))
+    return m
+
+_model = _load_embed()
+_term_emb = _model.encode(ALL_TERMS, normalize_embeddings=True)
+
+def recognize_brand(text: str, debug: bool=False) -> str:
+    tl = (text or "").lower()
+
+    # 1) Lexical
+    for brand, terms in BRAND_KEYWORDS.items():
+        if any(term in tl for term in terms):
+            if debug: print(f"[BRAND] Lexical → {brand}")
+            return brand
+
+    # 2) Semantic
+    try:
+        emb = _model.encode(tl, normalize_embeddings=True)
+        sims = util.cos_sim(emb, _term_emb)[0].cpu().numpy()
+        best = ALL_TERMS[int(sims.argmax())]
         for brand, terms in BRAND_KEYWORDS.items():
-            if matched_term in terms:
-                if debug:
-                    print(f"[BRAND] Semantic match: '{matched_term}' → {brand}")
+            if best in terms:
+                if debug: print(f"[BRAND] Semantic '{best}' → {brand}")
                 return brand
     except Exception as e:
-        if debug:
-            print(f"[BRAND] Semantic model error: {e}")
+        if debug: print("[BRAND] Semantic error:", e)
 
-    # 3. Fuzzy fallback
-    words = re.findall(r"\b\w+\b", text_lower)
-    fuzzy_match = get_close_matches(" ".join(words), ALL_TERMS, n=1, cutoff=0.85)
-    if fuzzy_match:
+    # 3) Fuzzy
+    fuzzy = get_close_matches(tl, ALL_TERMS, n=1, cutoff=0.88)
+    if fuzzy:
         for brand, terms in BRAND_KEYWORDS.items():
-            if fuzzy_match[0] in terms:
-                if debug:
-                    print(f"[BRAND] Fuzzy match: '{fuzzy_match[0]}' → {brand}")
+            if fuzzy[0] in terms:
+                if debug: print(f"[BRAND] Fuzzy '{fuzzy[0]}' → {brand}")
                 return brand
 
-    if debug:
-        print("[BRAND] No match found. Returning 'Unknown'.")
+    if debug: print("[BRAND] Unknown")
     return "Unknown"
