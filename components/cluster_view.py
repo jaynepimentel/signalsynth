@@ -1,16 +1,13 @@
-# cluster_view.py — now with automatic cluster cache cleanup if older than TTL
+# cluster_view.py — robust cluster view with atomic cache and mismatch guards
 
 import streamlit as st
 import json
 import os
 import hashlib
-from slugify import slugify
-from collections import Counter
 from datetime import datetime, timedelta
 from components.cluster_synthesizer import generate_synthesized_insights, cluster_insights
 from components.ai_suggester import (
-    generate_cluster_prd_docx, generate_cluster_prfaq_docx, generate_cluster_brd_docx,
-    generate_gpt_doc, generate_multi_signal_prd
+    generate_cluster_prd_docx, generate_cluster_prfaq_docx, generate_cluster_brd_docx
 )
 
 BADGE_COLORS = {
@@ -18,12 +15,10 @@ BADGE_COLORS = {
     "Discussion": "#118AB2", "Praise": "#8AC926", "Neutral": "#A9A9A9",
     "Low": "#B5E48C", "Medium": "#F9C74F", "High": "#F94144",
     "Clear": "#4CAF50", "Needs Clarification": "#FF9800",
-    "Live Shopping": "#BC6FF1", "Search": "#118AB2", "Fulfillment": "#8ECAE6",
-    "Returns": "#FFB703", "Discovery": "#90BE6D", "Unclear": "#888",
+    "Live Shopping": "#BC6FF1", "Search/Relevancy": "#118AB2", "Fulfillment": "#8ECAE6",
+    "Returns/Policy": "#FFB703", "Discovery": "#90BE6D", "Unclear": "#888",
     "UI": "#58A4B0", "Feature": "#C8553D", "Policy": "#A26769", "Marketplace": "#5FAD56",
-    "Buyer": "#38B000", "Seller": "#FF6700", "Collector": "#9D4EDD",
-    "Vault": "#5F0F40", "PSA": "#FFB703", "Live": "#1D3557", "Post-Event": "#264653",
-    "Canada": "#F72585", "Japan": "#7209B7", "Europe": "#3A0CA3"
+    "Vault": "#5F0F40", "Pop Report": "#636E72", "Payments": "#6C5CE7", "UPI": "#D63031",
 }
 
 def badge(label):
@@ -31,32 +26,50 @@ def badge(label):
     return f"<span style='background:{color}; padding:4px 8px; border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
 
 CACHE_DIR = ".cache"
-CACHE_CLUSTERS = os.path.join(CACHE_DIR, "clusters.json")
-CACHE_CARDS = os.path.join(CACHE_DIR, "cards.json")
+CACHE_FILE = os.path.join(CACHE_DIR, "clusters_cards.json")
 CLUSTER_CACHE_TTL_DAYS = int(os.getenv("CLUSTER_CACHE_TTL", "7"))
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-def is_expired(path, ttl_days):
+def _is_expired(path, ttl_days):
     if not os.path.exists(path): return True
     last_modified = datetime.fromtimestamp(os.path.getmtime(path))
     return (datetime.now() - last_modified) > timedelta(days=ttl_days)
 
-def load_cached_clusters():
-    expired = is_expired(CACHE_CLUSTERS, CLUSTER_CACHE_TTL_DAYS) or is_expired(CACHE_CARDS, CLUSTER_CACHE_TTL_DAYS)
-    if expired:
-        try:
-            os.remove(CACHE_CLUSTERS)
-            os.remove(CACHE_CARDS)
-            st.info("🧹 Expired cluster cache cleared.")
-        except:
-            pass
-        return [], []
+def _atomic_save(data, path):
+    tmp = f"{path}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+def _load_cache():
+    if not os.path.exists(CACHE_FILE): return None
     try:
-        with open(CACHE_CLUSTERS, "r", encoding="utf-8") as f1, open(CACHE_CARDS, "r", encoding="utf-8") as f2:
-            return json.load(f1), json.load(f2)
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception as e:
-        st.error(f"❌ Failed to load cluster cache: {e}")
-        return [], []
+        st.info(f"⚠️ Cache unreadable, will rebuild: {e}")
+        return None
+
+def _should_rebuild(payload):
+    if payload is None: return True
+    if _is_expired(CACHE_FILE, CLUSTER_CACHE_TTL_DAYS): return True
+    # Basic schema check
+    if not isinstance(payload, dict): return True
+    clusters = payload.get("clusters") or []
+    cards = payload.get("cards") or []
+    # Rebuild if lengths are zero or radically mismatched
+    if not clusters or not cards: return True
+    if abs(len(clusters) - len(cards)) > max(2, 0.25*max(len(clusters), len(cards))):
+        return True
+    return False
+
+def _rebuild_cache(insights):
+    # Compute both from the same input to keep them aligned
+    clusters = cluster_insights(insights)
+    cards = generate_synthesized_insights(insights)
+    data = {"clusters": clusters, "cards": cards, "built_at": datetime.now().isoformat()}
+    _atomic_save(data, CACHE_FILE)
+    return data
 
 def display_clustered_insight_cards(insights):
     if not insights:
@@ -65,37 +78,51 @@ def display_clustered_insight_cards(insights):
 
     st.subheader("🧱 Clustered Insight Mode")
 
-    if "clusters_ready" not in st.session_state:
-        st.session_state.clusters_ready = False
+    # Manual toggle to (re)build clusters
+    left, right = st.columns([1,1])
+    with left:
+        rebuild = st.button("🔄 Rebuild Clusters Now")
+    with right:
+        clear_cache = st.button("🧹 Clear Cluster Cache")
 
-    if not st.session_state.clusters_ready:
-        if st.button("🔍 Load Precomputed or Generate Clusters"):
-            st.session_state.clusters_ready = True
-        else:
-            st.info("Click the button above to view grouped insight themes.")
-            return
+    if clear_cache:
+        try:
+            if os.path.exists(CACHE_FILE):
+                os.remove(CACHE_FILE)
+                st.success("Cache cleared.")
+        except Exception as e:
+            st.error(f"Could not clear cache: {e}")
 
-    with st.spinner("🔄 Loading or generating cluster summaries..."):
-        clusters, cards = load_cached_clusters()
-        if not cards or not clusters:
-            clusters = cluster_insights(insights)
-            cards = generate_synthesized_insights(insights)
-            with open(CACHE_CLUSTERS, "w", encoding="utf-8") as f1:
-                json.dump(clusters, f1)
-            with open(CACHE_CARDS, "w", encoding="utf-8") as f2:
-                json.dump(cards, f2)
+    payload = _load_cache()
+    if rebuild or _should_rebuild(payload):
+        with st.spinner("Generating cluster groups…"):
+            payload = _rebuild_cache(insights)
+            st.success("Clusters generated.")
+
+    clusters = payload.get("clusters", []) if payload else []
+    cards = payload.get("cards", []) if payload else []
 
     if not cards or not clusters:
         st.warning("No cluster data available.")
         return
 
-    for idx, card in enumerate(cards[:10]):
+    # Iterate safely over both
+    n = min(len(cards), len(clusters))
+    st.caption(f"Showing {n} clusters (of cards={len(cards)}, groups={len(clusters)})")
+
+    for idx in range(n):
+        card = cards[idx]
         cluster = clusters[idx]
         with st.container():
-            st.markdown(f"### 📌 {card['title']} — {card['brand']} ({card.get('theme', 'Theme N/A')})")
+            st.markdown(f"### 📌 {card.get('title','Untitled')} — {card.get('brand','Unknown')} ({card.get('theme','N/A')})")
             st.markdown(f"**Problem:** {card.get('problem_statement', 'No summary available.')}")
-            st.markdown(f"**Persona(s):** {', '.join(card.get('personas', []))} | Effort: {', '.join(card.get('effort_levels', []))} | Sentiments: {', '.join(card.get('sentiments', []))}")
-            st.markdown(f"**Mentions:** {len(cluster)} | Score Range: {card.get('score_range', 'N/A')} | Avg Similarity: {card.get('avg_similarity', 'N/A')}")
+
+            personas = ", ".join(card.get('personas', []) or [])
+            efforts  = ", ".join(card.get('effort_levels', []) or [])
+            sents    = ", ".join(card.get('sentiments', []) or [])
+            st.markdown(f"**Persona(s):** {personas or '—'} | Effort: {efforts or '—'} | Sentiments: {sents or '—'}")
+
+            st.markdown(f"**Mentions:** {len(cluster)} | Score Range: {card.get('score_range','N/A')} | Avg Similarity: {card.get('avg_similarity','N/A')}")
             st.markdown(f"**Was Reclustered:** {'✅' if card.get('was_reclustered') else '❌'} | Coherent: {'✅' if card.get('coherent') else '❌'}")
 
             if card.get("opportunity_tags"):
@@ -103,27 +130,35 @@ def display_clustered_insight_cards(insights):
             if card.get("topic_focus_tags"):
                 st.markdown("**🔍 Topics:** " + ", ".join(card["topic_focus_tags"]))
 
-            st.markdown("**📣 Example Quotes:**")
-            for quote in card.get("quotes", [])[:3]:
-                st.markdown(quote)
+            quotes = card.get("quotes") or []
+            if quotes:
+                st.markdown("**📣 Example Quotes:**")
+                for quote in quotes[:3]:
+                    st.markdown(quote)
 
-            if card.get("top_ideas"):
+            ideas = card.get("top_ideas") or []
+            if ideas:
                 st.markdown("**💡 Top Suggestions:**")
-                for idea in card["top_ideas"]:
+                for idea in ideas:
                     st.markdown(f"- {idea}")
 
-            filename = slugify(card['title'])[:64]
-            doc_type = st.selectbox("Generate document for this cluster:", ["PRD", "BRD", "PRFAQ"], key=f"cluster_doc_type_{idx}")
+            doc_options = ["PRD", "BRD", "PRFAQ"]
+            doc_type = st.selectbox(
+                "Generate document for this cluster:",
+                doc_options,
+                key=f"cluster_doc_type_{idx}"
+            )
 
             if st.button(f"Generate {doc_type}", key=f"generate_cluster_doc_{idx}"):
                 with st.spinner(f"Generating {doc_type}..."):
-                    generate_fn = {
+                    fn = {
                         "PRD": generate_cluster_prd_docx,
                         "BRD": generate_cluster_brd_docx,
                         "PRFAQ": generate_cluster_prfaq_docx
                     }.get(doc_type)
-                    if generate_fn:
-                        file_path = generate_fn(card, filename)
+                    if fn:
+                        filename = (card.get('title') or 'cluster')[:64]
+                        file_path = fn(card, filename)
                         if file_path and os.path.exists(file_path):
                             with open(file_path, "rb") as f:
                                 st.download_button(
