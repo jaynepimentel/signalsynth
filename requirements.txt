@@ -7,9 +7,9 @@ beautifulsoup4==4.13.3
 
 # NLP + Embeddings
 sentence-transformers==2.6.1
-scikit-learn==1.4.2
-scipy==1.12.0
-numpy==1.26.4
+scikit-learn==1.5.1
+scipy==1.14.1
+numpy==2.1.3
 tqdm==4.66.2
 
 # AI Suggestions, Utilities, Docs
