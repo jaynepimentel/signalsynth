@@ -1,13 +1,13 @@
-# enhanced_insight_view.py - Insight cards with guaranteed GPT ideas and doc generators
+# enhanced_insight_view.py - Insight cards using precomputed GPT ideas (no GPT calls in UI)
 
 import os
 import textwrap
+from typing import List, Dict, Any
 
 import streamlit as st
 from slugify import slugify
 
 from components.ai_suggester import (
-    generate_pm_ideas,
     generate_prd_docx,
     generate_brd_docx,
     generate_prfaq_docx,
@@ -45,10 +45,8 @@ BADGE_COLORS = {
     "Europe": "#3A0CA3",
 }
 
-OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-
-def badge(label, color):
+def badge(label: str, color: str) -> str:
     return (
         f"<span style='background:{color}; padding:4px 8px; "
         f"border-radius:8px; color:white; font-size:0.85em'>{label}</span>"
@@ -62,41 +60,31 @@ def _truncate(text: str, max_chars: int = 220) -> str:
     return t[: max_chars - 3].rsplit(" ", 1)[0] + "..."
 
 
-def _ensure_ideas(i: dict) -> None:
+def _normalize_ideas(i: Dict[str, Any]) -> List[str]:
     """
-    Ensure this insight has GPT generated ideas.
-    If ideas already exist, we keep them.
-    Otherwise, if an OpenAI key is present, generate once and attach.
+    Normalize ideas coming from precompute_insights.
+    This never calls GPT, it just cleans up what is already stored.
     """
-    existing = i.get("ideas") or []
-    if isinstance(existing, str):
-        existing = [existing]
-    existing = [str(x).strip() for x in existing if str(x).strip()]
-    if existing:
-        i["ideas"] = existing
-        return
-
-    if not OPENAI_KEY_PRESENT:
-        i["ideas"] = []
-        return
-
-    text = i.get("text", "") or ""
-    brand = i.get("target_brand", "eBay")
-    if not text.strip():
-        i["ideas"] = []
-        return
-
-    try:
-        ideas = generate_pm_ideas(text, brand)
-        if isinstance(ideas, str):
-            ideas = [ideas]
-        ideas = [str(x).strip() for x in ideas if str(x).strip()]
-        i["ideas"] = ideas
-    except Exception as e:
-        i["ideas"] = [f"[GPT error while generating ideas: {str(e)}]"]
+    ideas = i.get("ideas") or []
+    if isinstance(ideas, str):
+        ideas = [ideas]
+    ideas = [str(x).strip() for x in ideas if str(x).strip()]
+    i["ideas"] = ideas
+    return ideas
 
 
-def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = "insight"):
+def render_insight_cards(
+    filtered: List[Dict[str, Any]],
+    model: Any,
+    per_page: int = 10,
+    key_prefix: str = "insight",
+) -> None:
+    """
+    Render one card per insight.
+
+    All PM suggestions are assumed to have been generated in precompute_insights.py.
+    This UI never calls OpenAI directly, so it can run safely in environments without a key.
+    """
     if not filtered:
         st.info("No matching insights.")
         return
@@ -126,11 +114,11 @@ def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = 
         summary = i.get("summary") or text[:80]
         filename = slugify(summary)[:64] or f"insight-{idx}"
 
-        # Ensure we have GPT ideas before rendering the card
-        _ensure_ideas(i)
+        # Normalize ideas from precompute
+        ideas = _normalize_ideas(i)
 
         with st.container(border=True):
-            # Title header
+            # Title
             title = i.get("title") or _truncate(text, max_chars=80)
             st.markdown(f"### 🧠 Insight: {title}")
 
@@ -148,7 +136,10 @@ def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = 
                                     "⬇️ PRD",
                                     f,
                                     file_name=os.path.basename(file_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    mime=(
+                                        "application/vnd.openxmlformats-officedocument."
+                                        "wordprocessingml.document"
+                                    ),
                                     key=f"dl_prd_{unique_id}",
                                 )
                         else:
@@ -167,7 +158,10 @@ def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = 
                                     "⬇️ BRD",
                                     f,
                                     file_name=os.path.basename(file_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    mime=(
+                                        "application/vnd.openxmlformats-officedocument."
+                                        "wordprocessingml.document"
+                                    ),
                                     key=f"dl_brd_{unique_id}",
                                 )
                         else:
@@ -186,7 +180,10 @@ def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = 
                                     "⬇️ PRFAQ",
                                     f,
                                     file_name=os.path.basename(file_path),
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    mime=(
+                                        "application/vnd.openxmlformats-officedocument."
+                                        "wordprocessingml.document"
+                                    ),
                                     key=f"dl_prfaq_{unique_id}",
                                 )
                         else:
@@ -269,19 +266,19 @@ def render_insight_cards(filtered, model, per_page: int = 10, key_prefix: str = 
             st.markdown("**📣 Example quote:**")
             st.markdown(f"> {_truncate(text)}")
 
-            ideas = i.get("ideas") or []
             if ideas:
                 st.markdown("**💡 Suggested PM actions:**")
                 for idea in ideas:
                     pretty = textwrap.shorten(str(idea), width=220, placeholder="...")
                     st.markdown(f"- {pretty}")
+            else:
+                st.warning(
+                    "No stored PM suggestions for this insight. "
+                    "They are generated in the precompute pipeline. "
+                    "Rerun precompute_insights.py with a valid OPENAI_API_KEY to populate them."
+                )
 
             # Full detail expander
             with st.expander("🔍 Full insight details"):
                 st.markdown("**Full user quote:**")
                 st.markdown(f"> {text}")
-
-                if not ideas and not OPENAI_KEY_PRESENT:
-                    st.warning(
-                        "No OpenAI key available. Cannot auto generate PM suggestions for this insight."
-                    )
