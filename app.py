@@ -1,6 +1,8 @@
 # app.py — SignalSynth (enhanced UI: Payments/UPI/high-ASP, evidence KPIs, carrier/ISP filters)
 
 import os
+os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
+
 import json
 import streamlit as st
 from dotenv import load_dotenv
