@@ -1,4 +1,4 @@
-# cluster_view.py - Cluster cards with guaranteed GPT ideas and unique quotes
+# cluster_view.py - Cluster cards using precomputed ideas (no GPT calls in UI)
 
 import os
 import json
@@ -15,13 +15,10 @@ from components.ai_suggester import (
     generate_cluster_prd_docx,
     generate_cluster_prfaq_docx,
     generate_cluster_brd_docx,
-    generate_pm_ideas,
 )
 
 RUNNING_IN_STREAMLIT = os.getenv("RUNNING_IN_STREAMLIT", "0") == "1"
-OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-# Cache and artifacts
 CACHE_DIR = os.getenv("SS_CACHE_DIR", os.path.join(tempfile.gettempdir(), ".cache"))
 os.makedirs(CACHE_DIR, exist_ok=True)
 CACHE_FILE = os.path.join(CACHE_DIR, "clusters_cards.json")
@@ -30,7 +27,7 @@ CLUSTER_CACHE_TTL_DAYS = int(os.getenv("CLUSTER_CACHE_TTL", "7"))
 CLUSTER_ARTIFACT = "precomputed_clusters.json"
 
 
-# ---------- Helper functions ----------
+# ---------- Helpers ----------
 
 def _is_expired(path: str, days: int) -> bool:
     if not os.path.exists(path):
@@ -99,7 +96,6 @@ def _load_precomputed() -> Optional[dict]:
             data = json.load(f)
         if isinstance(data, dict) and "clusters" in data and "cards" in data:
             return data
-        # older format where root is list of clusters
         if isinstance(data, list):
             return {"clusters": data, "cards": []}
         return None
@@ -108,7 +104,6 @@ def _load_precomputed() -> Optional[dict]:
 
 
 def _rebuild_from_insights(insights: List[Dict[str, Any]]) -> dict:
-    # Only for local dev (embeddings available)
     clusters = cluster_insights(insights)
     cards = generate_synthesized_insights(insights)
     data = {
@@ -120,73 +115,6 @@ def _rebuild_from_insights(insights: List[Dict[str, Any]]) -> dict:
     return data
 
 
-def _heuristic_clusters(insights: List[Dict[str, Any]], max_clusters: int = 12) -> dict:
-    """
-    Heuristic grouping, used as a last resort when no precomputed clusters exist.
-    Groups by (topic_focus[0], type_subtag, brand_sentiment).
-    """
-    from collections import defaultdict, Counter
-
-    buckets = defaultdict(list)
-    for i in insights:
-        t = i.get("type_subtag") or "General"
-        topics = i.get("topic_focus") or []
-        topic = topics[0] if topics else "General"
-        senti = i.get("brand_sentiment") or "Neutral"
-        key = (topic, t, senti)
-        buckets[key].append(i)
-
-    groups = sorted(buckets.items(), key=lambda kv: len(kv[1]), reverse=True)[:max_clusters]
-
-    clusters = []
-    cards = []
-    for (topic, subtag, senti), group in groups:
-        clusters.append({"insights": group, "theme": topic, "sentiment": senti})
-        text_samples = [g.get("text", "") for g in group[:3]]
-        quotes = [
-            f"- _{_truncate(s)}_"
-            for s in text_samples
-            if s
-        ]
-
-        brands = {g.get("target_brand", "Unknown") for g in group}
-        personas = list({g.get("persona", "General") for g in group})
-        efforts = list({g.get("effort", "Unknown") for g in group})
-        sents = list({g.get("brand_sentiment", "Neutral") for g in group})
-        topics_all = sorted({tt for g in group for tt in (g.get("topic_focus") or [])})
-
-        scores = [float(g.get("score", 0)) for g in group]
-        score_range = (
-            f"{round(min(scores), 2)}–{round(max(scores), 2)}" if scores else "N/A"
-        )
-
-        cards.append(
-            {
-                "title": f"{topic} / {subtag}",
-                "theme": topic,
-                "problem_statement": f"Grouped by {topic} · {subtag} · {senti} (heuristic cluster)",
-                "brand": "Multiple"
-                if len(brands) > 1
-                else next(iter(brands))
-                if brands
-                else "Unknown",
-                "personas": personas,
-                "effort_levels": efforts,
-                "sentiments": sents,
-                "topic_focus_tags": topics_all[:6],
-                "quotes": quotes,
-                "top_ideas": [],
-                "score_range": score_range,
-                "insight_count": len(group),
-                "coherent": True,
-                "was_reclustered": False,
-                "avg_similarity": "N/A (heuristic)",
-            }
-        )
-
-    return {"clusters": clusters, "cards": cards, "built_at": datetime.now().isoformat()}
-
-
 def _truncate(text: str, max_chars: int = 220) -> str:
     t = (text or "").strip().replace("\n", " ")
     if len(t) <= max_chars:
@@ -195,10 +123,6 @@ def _truncate(text: str, max_chars: int = 220) -> str:
 
 
 def _extract_cluster_insights(cluster: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """
-    Be flexible about cluster structure.
-    Prefer 'insights', then 'items', then 'examples', then treat cluster itself as list.
-    """
     if isinstance(cluster, dict):
         for key in ("insights", "items", "examples"):
             val = cluster.get(key)
@@ -251,57 +175,91 @@ def _aggregate_actions_from_insights(
     return actions
 
 
-def _ensure_cluster_ideas(
+def _normalize_cluster_ideas(
     card: Dict[str, Any],
     cluster_insights: List[Dict[str, Any]],
 ) -> List[str]:
     """
-    Guarantee that a cluster has GPT generated ideas.
-    Priority:
-    1. Use card['top_ideas'] if non empty.
-    2. Aggregate ideas from member insights (which are GPT generated in precompute/insight view).
-    3. If still empty and OpenAI key exists, call generate_pm_ideas on a cluster summary.
+    Use stored cluster ideas first, then aggregate from member insights.
+    No GPT calls here; everything should be precomputed.
     """
     ideas = card.get("top_ideas") or []
     if isinstance(ideas, str):
         ideas = [ideas]
     ideas = [str(x).strip() for x in ideas if str(x).strip()]
+
     if ideas:
         card["top_ideas"] = ideas
         return ideas
 
-    # Aggregate from member insights
     agg = _aggregate_actions_from_insights(cluster_insights)
-    if agg:
-        card["top_ideas"] = agg
-        return agg
+    card["top_ideas"] = agg
+    return agg
 
-    if not OPENAI_KEY_PRESENT:
-        card["top_ideas"] = []
-        return []
 
-    # Last resort: generate a few cluster-level suggestions from the theme and quotes
-    title = card.get("title") or card.get("theme") or "Cluster"
-    problem = card.get("problem_statement") or ""
-    quotes = _dedupe_quotes(cluster_insights, max_quotes=2)
+def _heuristic_clusters(insights: List[Dict[str, Any]], max_clusters: int = 12) -> dict:
+    """
+    Heuristic grouping, used only if you do not have precomputed clusters yet.
+    """
+    from collections import defaultdict
 
-    prompt_text = (
-        f"Cluster: {title}\n\n"
-        f"Problem summary: {problem}\n\n"
-        f"Example quotes:\n"
-        + "\n".join(f"- {q}" for q in quotes)
-    )
+    buckets = defaultdict(list)
+    for i in insights:
+        t = i.get("type_subtag") or "General"
+        topics = i.get("topic_focus") or []
+        topic = topics[0] if topics else "General"
+        senti = i.get("brand_sentiment") or "Neutral"
+        key = (topic, t, senti)
+        buckets[key].append(i)
 
-    try:
-        ideas = generate_pm_ideas(prompt_text, card.get("brand", "eBay"))
-        if isinstance(ideas, str):
-            ideas = [ideas]
-        ideas = [str(x).strip() for x in ideas if str(x).strip()]
-        card["top_ideas"] = ideas
-        return ideas
-    except Exception as e:
-        card["top_ideas"] = [f"[GPT error while generating cluster ideas: {str(e)}]"]
-        return card["top_ideas"]
+    groups = sorted(buckets.items(), key=lambda kv: len(kv[1]), reverse=True)[:max_clusters]
+
+    clusters = []
+    cards = []
+    for (topic, subtag, senti), group in groups:
+        clusters.append({"insights": group, "theme": topic, "sentiment": senti})
+        text_samples = [g.get("text", "") for g in group[:3]]
+        quotes = [
+            f"- _{_truncate(s)}_"
+            for s in text_samples
+            if s
+        ]
+
+        brands = {g.get("target_brand", "Unknown") for g in group}
+        personas = list({g.get("persona", "General") for g in group})
+        efforts = list({g.get("effort", "Unknown") for g in group})
+        sents = list({g.get("brand_sentiment", "Neutral") for g in group})
+        topics_all = sorted({tt for g in group for tt in (g.get("topic_focus") or [])})
+        scores = [float(g.get("score", 0)) for g in group]
+        score_range = (
+            f"{round(min(scores), 2)}–{round(max(scores), 2)}" if scores else "N/A"
+        )
+
+        cards.append(
+            {
+                "title": f"{topic} / {subtag}",
+                "theme": topic,
+                "problem_statement": f"Grouped by {topic} · {subtag} · {senti} (heuristic cluster)",
+                "brand": "Multiple"
+                if len(brands) > 1
+                else next(iter(brands))
+                if brands
+                else "Unknown",
+                "personas": personas,
+                "effort_levels": efforts,
+                "sentiments": sents,
+                "topic_focus_tags": topics_all[:6],
+                "quotes": quotes,
+                "top_ideas": [],
+                "score_range": score_range,
+                "insight_count": len(group),
+                "coherent": True,
+                "was_reclustered": False,
+                "avg_similarity": "N/A (heuristic)",
+            }
+        )
+
+    return {"clusters": clusters, "cards": cards, "built_at": datetime.now().isoformat()}
 
 
 # ---------- UI ----------
@@ -333,13 +291,10 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         except Exception as e:
             st.error(f"Could not clear cache: {e}")
 
-    # 1) Try cached payload
     payload = _load_cache()
     if not (payload and not _is_expired(CACHE_FILE, CLUSTER_CACHE_TTL_DAYS) and _valid(payload)):
-        # 2) Try precomputed artifact
         payload = _load_precomputed()
 
-    # 3) Fallbacks
     if not payload:
         if rebuild and not RUNNING_IN_STREAMLIT:
             with st.spinner("Generating clusters from current insights..."):
@@ -370,7 +325,6 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         cluster_insights = _extract_cluster_insights(cluster)
 
         with st.container():
-            # Header
             title = card.get("title") or card.get("theme") or f"Cluster {idx}"
             brand = card.get("brand", "Unknown")
             theme = card.get("theme", "N/A")
@@ -398,21 +352,23 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                 f"Coherent: {'✅' if card.get('coherent') else '❌'}"
             )
 
-            # Quotes: compute unique quotes from member insights so we avoid duplication
             quotes = _dedupe_quotes(cluster_insights, max_quotes=3)
             if quotes:
                 st.markdown("**📣 Example quotes:**")
                 for q in quotes:
                     st.markdown(f"> {q}")
 
-            # Actions: ensure we have GPT generated ideas at the cluster level
-            ideas = _ensure_cluster_ideas(card, cluster_insights)
+            ideas = _normalize_cluster_ideas(card, cluster_insights)
             if ideas:
                 st.markdown("**💡 Suggested PM actions for this cluster:**")
                 for idea in ideas:
                     st.markdown(f"- {idea}")
+            else:
+                st.warning(
+                    "No stored PM suggestions for this cluster. "
+                    "Cluster ideas should be generated in precompute_clusters / precompute_insights."
+                )
 
-            # Document generation
             doc_type = st.selectbox(
                 "Generate document for this cluster:",
                 ["PRD", "BRD", "PRFAQ"],
@@ -434,7 +390,10 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                                 f,
                                 file_name=os.path.basename(path),
                                 key=f"dl_{idx}",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                mime=(
+                                    "application/vnd.openxmlformats-officedocument."
+                                    "wordprocessingml.document"
+                                ),
                             )
                     else:
                         st.error("Document file was not created.")
