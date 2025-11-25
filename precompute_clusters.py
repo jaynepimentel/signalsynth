@@ -1,10 +1,11 @@
 # precompute_clusters.py — Cluster cache generator for SignalSynth
 #
-# - Reads from precomputed_insights.json (post-scraper + precompute_insights)
+# - Reads from precomputed_insights.json
 # - Re-promotes money-risk flags (Payments / UPI / High-ASP)
-# - Collectibles-first gate to stay on-craft
+# - Collectibles-first gate
 # - CLI filters: brand, persona, topic, since, min-score, max-items
-# - Writes a rich cache with cluster-level stats + metadata
+# - Uses cluster_by_subtag_then_embed + synthesize_cluster from cluster_synthesizer
+# - Saves clusters as dicts with stats and metadata, plus summary cards
 
 import os
 import json
@@ -13,8 +14,8 @@ from datetime import datetime, date
 from typing import List, Dict, Any, Optional
 
 from components.cluster_synthesizer import (
-    cluster_insights,
-    generate_synthesized_insights,
+    cluster_by_subtag_then_embed,
+    synthesize_cluster,
 )
 from components.scoring_utils import detect_payments_upi_highasp
 
@@ -38,7 +39,7 @@ def _parse_date(d: Optional[str]) -> Optional[date]:
 
 def _ensure_lists(i: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Normalize common list fields so downstream Cluster UI code can rely on them
+    Normalize common list fields so downstream code can rely on them
     being lists instead of sometimes strings / None.
     """
     for k in ("topic_focus", "type_subtags", "mentions_competitor", "mentions_ecosystem_partner"):
@@ -251,26 +252,64 @@ def main():
         print("[WARN] No insights after filters; aborting cluster generation.")
         return
 
-    # Cluster + synthesized cards
+    # Cluster + synthesized cards using cluster_by_subtag_then_embed
     print("[INFO] Generating cluster groups…")
-    clusters = cluster_insights(filtered)
-    cards = generate_synthesized_insights(filtered)
+    raw_cluster_tuples = cluster_by_subtag_then_embed(filtered)
+    if not raw_cluster_tuples:
+        print("[WARN] cluster_by_subtag_then_embed returned no clusters.")
+        data = {
+            "metadata": {
+                "generated_at": datetime.utcnow().isoformat() + "Z",
+                "filters": {
+                    "brand": args.brand,
+                    "persona": args.persona,
+                    "topic": args.topic,
+                    "since": args.since,
+                    "min_score": args.min_score,
+                    "max_items": args.max_items,
+                    "input_path": in_path,
+                },
+                "counts": {
+                    "input_insights": len(insights),
+                    "hydrated_collectibles": len(hydrated),
+                    "filtered_for_clustering": len(filtered),
+                    "cluster_count": 0,
+                },
+            },
+            "clusters": [],
+            "cards": [],
+        }
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"[✅ DONE] Saved empty clusters to {out_path}")
+        return
 
-    # Attach cluster-level stats
-    # Expect clusters to be list-like, each having an "insights" list or similar.
-    enriched_clusters = []
-    for idx, c in enumerate(clusters):
-        # Be permissive about structure
-        cluster_items = (
-            c.get("insights")
-            or c.get("items")
-            or c.get("examples")
-            or []
-        )
+    clusters: List[Dict[str, Any]] = []
+    cards: List[Dict[str, Any]] = []
+
+    for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
+        # cluster_items is a list of insight dicts
         stats = _cluster_stats(cluster_items)
-        c["cluster_id"] = c.get("cluster_id", idx)
-        c["stats"] = stats
-        enriched_clusters.append(c)
+
+        # synthesize summary card using existing logic
+        card = synthesize_cluster(cluster_items)
+        card["coherent"] = meta.get("coherent", True)
+        card["was_reclustered"] = meta.get("was_reclustered", False)
+        card["avg_similarity"] = f"{meta.get('avg_similarity', 0.0):.2f}"
+
+        cid = card.get("cluster_id", idx)
+
+        cluster_record = {
+            "cluster_id": cid,
+            "insights": cluster_items,
+            "stats": stats,
+            "coherent": card["coherent"],
+            "was_reclustered": card["was_reclustered"],
+            "avg_similarity": card["avg_similarity"],
+        }
+        clusters.append(cluster_record)
+        cards.append(card)
 
     # Metadata block for traceability
     metadata = {
@@ -288,13 +327,13 @@ def main():
             "input_insights": len(insights),
             "hydrated_collectibles": len(hydrated),
             "filtered_for_clustering": len(filtered),
-            "cluster_count": len(enriched_clusters),
+            "cluster_count": len(clusters),
         },
     }
 
     data = {
         "metadata": metadata,
-        "clusters": enriched_clusters,
+        "clusters": clusters,
         "cards": cards,
     }
 
@@ -302,8 +341,7 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    print(f"[✅ DONE] Saved clusters to {out_path}")
-    print(f"[INFO] Cluster count: {len(enriched_clusters)}")
+    print(f"[✅ DONE] Saved {len(clusters)} clusters to {out_path}")
 
 
 if __name__ == "__main__":
