@@ -42,12 +42,12 @@ Summary: [One concise sentence summarizing the issue or praise]
 ---
 {text}
 """
-        mdl=os.getenv("OPENAI_MODEL_SCREENER","gpt-4.1-mini")
+        mdl=os.getenv("OPENAI_MODEL_SCREENER","gpt-5.1-mini")
         rsp=client.chat.completions.create(
             model=mdl,
             messages=[{"role":"system","content":"You are a product analyst identifying themes and risk. Output must follow requested fields exactly."},
                       {"role":"user","content":prompt.strip()}],
-            temperature=0,max_tokens=220)
+            temperature=0,max_completion_tokens=220)
         raw=(rsp.choices[0].message.content or "").strip()
         sentiment,subtags,frustration,impact,summary=("Neutral",["General"],1,1,"")
         for line in raw.splitlines():
