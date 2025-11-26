@@ -1,4 +1,4 @@
-# components/ai_suggester.py — env-driven GPT, cache-safe doc builders, VP critique loop
+# components/ai_suggester.py - env-driven GPT, cache-safe doc builders, VP critique loop
 
 import os, json, hashlib, tempfile
 from dotenv import load_dotenv
@@ -9,9 +9,10 @@ from slugify import slugify
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
 
-MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-4.1")           # upgradeable
-MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-4.1-mini")  # fast assistant
+MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-5.1")
+MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-5.1-mini")
 CACHE_PATH = "gpt_suggestion_cache.json"
+
 
 def _load_cache():
     if os.path.exists(CACHE_PATH):
@@ -23,27 +24,34 @@ def _load_cache():
             return {}
     return {}
 
+
 _sugg_cache = _load_cache()
+
 
 def _save_cache():
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
         json.dump(_sugg_cache, f, indent=2)
+
 
 def cache_and_return(key, value):
     _sugg_cache[key] = value
     _save_cache()
     return value
 
+
 def clean_gpt_input(text, max_words=1000):
     return " ".join((text or "").strip().split()[:max_words])
+
 
 def should_fallback_to_signal_brief(text):
     t = (text or "").strip()
     return len(t) < 50 or len(t.split()) < 10
 
+
 def safe_file_path(base_name, prefix="insight"):
     filename = slugify(f"{prefix}-{base_name}")[:64] + ".docx"
     return os.path.join(tempfile.gettempdir(), filename)
+
 
 def write_docx(content, heading):
     doc = Document()
@@ -54,6 +62,7 @@ def write_docx(content, heading):
         else:
             doc.add_paragraph(line.strip())
     return doc
+
 
 def build_metadata_block(brand, trend_context=None, competitor_context=None, meta_fields=None):
     ctx = [
@@ -71,39 +80,65 @@ def build_metadata_block(brand, trend_context=None, competitor_context=None, met
             ctx.append(f"- {k}: {v}")
     return "\n".join(ctx)
 
+
 def generate_exec_summary():
     return (
         "\n\n---\n\n**Executive TL;DR**\n"
         "- What: [summary]\n- Why it matters: [impact]\n- What decision is needed: [action]"
     )
 
+
 # ------------------------------
 # Core chat helper (safe when no API key)
 # ------------------------------
-def _chat(model, system, user, max_tokens=2000, temperature=0.3):
-    # Offline / no-key fallback: return a stub so pipeline doesn’t break
+def _chat(model, system, user, max_completion_tokens=2000, temperature=0.3):
+    """
+    Wrapper around chat.completions.create that uses max_completion_tokens
+    so it works with newer models like gpt-5.1 and newer models.
+
+    """
     if client is None:
+        # Offline or no key: return a stub so the pipeline does not break
         return f"[LLM disabled] {system}\n\n{user[:800]}"
-    return client.chat.completions.create(
+    resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
         temperature=temperature,
-        max_tokens=max_tokens,
-    ).choices[0].message.content.strip()
+        max_completion_tokens=max_completion_tokens,
+    )
+    return (resp.choices[0].message.content or "").strip()
+
 
 def generate_gpt_doc(prompt, title):
     try:
-        draft = _chat(MODEL_MAIN, title, clean_gpt_input(prompt))
-        # If running in fallback/offline, skip critique loop
+        draft = _chat(
+            MODEL_MAIN,
+            title,
+            clean_gpt_input(prompt),
+            max_completion_tokens=2000,
+            temperature=0.3,
+        )
+        # If running in fallback or offline, skip critique loop
         if draft.startswith("[LLM disabled]"):
             return draft
+
         critique = (
             "Critique like a VP of Product. Tighten structure, remove fluff, improve specificity, and rewrite:\n\n"
             f"{draft}"
         )
-        return _chat(MODEL_MAIN, "You are a critical VP of Product.", clean_gpt_input(critique))
+        return _chat(
+            MODEL_MAIN,
+            "You are a critical VP of Product.",
+            clean_gpt_input(critique),
+            max_completion_tokens=2000,
+            temperature=0.3,
+        )
     except Exception as e:
         return f"⚠️ GPT Error: {e}"
+
 
 def generate_pm_ideas(text, brand="eBay"):
     key = hashlib.md5(f"{text}_{brand}".encode()).hexdigest()
@@ -120,7 +155,7 @@ def generate_pm_ideas(text, brand="eBay"):
             MODEL_MINI,
             "Generate actionable, concrete product improvement ideas.",
             prompt,
-            max_tokens=320,
+            max_completion_tokens=320,
             temperature=0.2,
         )
         # If offline stub, just return one idea with trimmed prompt context
@@ -131,6 +166,7 @@ def generate_pm_ideas(text, brand="eBay"):
         return cache_and_return(key, (lines[:3] or [ideas]))
     except Exception as e:
         return [f"[GPT error: {e}]"]
+
 
 # --- compat: simple batch wrapper so precompute_insights.py can import it ---
 def generate_pm_ideas_batch(texts, brand="eBay"):
@@ -146,6 +182,7 @@ def generate_pm_ideas_batch(texts, brand="eBay"):
             results.append([f"[GPT error: {e}]"])
     return results
 
+
 def _maybe_brief(text, brand, base_filename):
     prompt = (
         "Turn this brief signal into a 1-page internal summary for product leadership.\n\n"
@@ -157,6 +194,7 @@ def _maybe_brief(text, brand, base_filename):
     path = safe_file_path(base_filename, prefix="brief")
     doc.save(path)
     return path
+
 
 def generate_prd_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
@@ -192,6 +230,7 @@ Sections:
     doc.save(path)
     return path
 
+
 def generate_brd_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
         return _maybe_brief(text, brand, base_filename)
@@ -224,6 +263,7 @@ Include:
     doc.save(path)
     return path
 
+
 def generate_prfaq_docx(text, brand, base_filename, trend_context=None, competitor_context=None, meta_fields=None):
     if should_fallback_to_signal_brief(text):
         return _maybe_brief(text, brand, base_filename)
@@ -242,6 +282,7 @@ Include objection handling and GTM readiness checklist."""
     doc.save(path)
     return path
 
+
 def generate_jira_bug_ticket(text, brand="eBay"):
     prompt = (
         "Draft a JIRA bug ticket for this complaint:\n\n"
@@ -249,9 +290,11 @@ def generate_jira_bug_ticket(text, brand="eBay"):
     )
     return generate_gpt_doc(prompt, "You are a support lead drafting a JIRA bug ticket.")
 
+
 def generate_multi_signal_prd(text_list, filename, brand="eBay"):
     combined = "\n\n".join(text_list)
     return generate_prd_docx(combined, brand, filename)
+
 
 def _cluster_text_and_brand(cluster_or_card):
     if isinstance(cluster_or_card, dict) and "quotes" in cluster_or_card:
@@ -262,13 +305,16 @@ def _cluster_text_and_brand(cluster_or_card):
         brand = cluster_or_card[0].get("target_brand", "eBay")
     return text, brand
 
+
 def generate_cluster_prd_docx(cluster_or_card, filename):
     text, brand = _cluster_text_and_brand(cluster_or_card)
     return generate_prd_docx(text, brand, filename)
 
+
 def generate_cluster_brd_docx(cluster_or_card, filename):
     text, brand = _cluster_text_and_brand(cluster_or_card)
     return generate_brd_docx(text, brand, filename)
+
 
 def generate_cluster_prfaq_docx(cluster_or_card, filename):
     text, brand = _cluster_text_and_brand(cluster_or_card)
