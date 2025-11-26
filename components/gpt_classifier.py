@@ -1,48 +1,66 @@
-# components/gpt_classifier.py — env-driven classifier + fixed scope bug
-
+# brand_sentiment_classifier.py — Hybrid keyword + OpenAI classification for brand sentiment
+import re
 import os
-from openai import OpenAI
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
-MODEL_TAGGER = os.getenv("OPENAI_MODEL_TAGGER", "gpt-5.1-mini")
 
+# Keyword and pattern rules
+PRAISE_KEYWORDS = [
+    "love", "quick", "easy", "reliable", "awesome", "best", "great", "smooth", "affordable",
+    "impressed", "good deal", "recommend", "trustworthy", "shipped fast", "perfect"
+]
 
-SYSTEM_PROMPT = """You are a senior product strategist reviewing marketplace feedback.
-Classify:
-1) Type (Complaint, Praise, Confusion, Feature Request, Discussion)
-2) Persona (Buyer, Seller, Collector, Grader, Support Agent, Unknown)
-3) Journey (Discovery, Purchase, Fulfillment, Returns, Support, Unknown)
-4) Opportunity (Search, UI, Trust, Speed, Fees, Policy, Vault, Grading, Discovery, Post-Purchase, None)
-5) Impact Score (1-5)
+COMPLAINT_KEYWORDS = [
+    "slow", "broken", "problem", "issue", "delay", "scam", "waste", "frustrated", "glitch",
+    "too expensive", "doesn't work", "never received", "unacceptable", "refused", "fees", "cancelled"
+]
 
-Respond exactly:
-Type: <type>
-Persona: <persona>
-Journey: <stage>
-Opportunity: <tag>
-Impact Score: <1-5>"""
+PRAISE_PATTERNS = [
+    r"i (really )?(love|like|appreciate) .*?({brand})",
+    r"({brand}) .*? (is|was)? (so )?(easy|great|fast|awesome|smooth)"
+]
 
-def enrich_with_gpt_tags(insight: dict) -> dict:
-    if not client: return insight
-    text = (insight.get("text") or "").strip()
-    if not text: return insight
-    try:
-        out = client.chat.completions.create(
-            model=MODEL_TAGGER,
-            messages=[{"role":"system","content":SYSTEM_PROMPT},{"role":"user","content":text[:1200]}],
-            temperature=0.2, max_completion_tokens=220
+COMPLAINT_PATTERNS = [
+    r"({brand}) .*? (is|was|has been)? .*?(terrible|scam|problem|issue|broken|late|refused)",
+    r"(hate|avoid|can't stand) .*?({brand})"
+]
 
-        ).choices[0].message.content.strip().splitlines()
-        for line in out:
-            if line.startswith("Type:"):        insight["type_tag"] = line.split(":",1)[1].strip()
-            elif line.startswith("Persona:"):   insight["persona"] = line.split(":",1)[1].strip()
-            elif line.startswith("Journey:"):   insight["journey_stage"] = line.split(":",1)[1].strip()
-            elif line.startswith("Opportunity:"): insight["opportunity_tag"] = line.split(":",1)[1].strip()
-            elif line.startswith("Impact Score:"):
-                try: insight["impact"] = int(line.split(":",1)[1].strip())
-                except: pass
-    except Exception as e:
-        insight["classification_error"] = str(e)
-    return insight
+def classify_brand_sentiment(text, brand):
+    text_lower = text.lower()
+    brand_lower = brand.lower()
+
+    # Heuristic rules
+    if any(word in text_lower for word in PRAISE_KEYWORDS) and brand_lower in text_lower:
+        return "Praise"
+    if any(word in text_lower for word in COMPLAINT_KEYWORDS) and brand_lower in text_lower:
+        return "Complaint"
+
+    for pattern in PRAISE_PATTERNS:
+        if re.search(pattern.format(brand=re.escape(brand_lower)), text_lower):
+            return "Praise"
+    for pattern in COMPLAINT_PATTERNS:
+        if re.search(pattern.format(brand=re.escape(brand_lower)), text_lower):
+            return "Complaint"
+
+    # Fallback to AI sentiment classification
+    if client and len(text_lower) > 30:
+        try:
+            response = client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL_SENTIMENT", "gpt-5.1-mini"),
+                messages=[
+                    {"role": "system", "content": "Classify this customer's sentiment toward a brand as Praise, Complaint, or Neutral. Only return one of those words."},
+                    {"role": "user", "content": f"Customer text:\n{text}\n\nBrand: {brand}"}
+                ],
+                temperature=0.2,
+                max_completion_tokens=10
+            )
+            classification = response.choices[0].message.content.strip()
+            if classification in ["Praise", "Complaint", "Neutral"]:
+                return classification
+        except Exception as e:
+            print("[Sentiment Fallback Error]", e)
+
+    return "Neutral"
