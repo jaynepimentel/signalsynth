@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
-MODEL_TAGGER = os.getenv("OPENAI_MODEL_TAGGER", "gpt-4.1-mini")
+MODEL_TAGGER = os.getenv("OPENAI_MODEL_TAGGER", "gpt-5.1-mini")
+
 
 SYSTEM_PROMPT = """You are a senior product strategist reviewing marketplace feedback.
 Classify:
@@ -31,7 +32,8 @@ def enrich_with_gpt_tags(insight: dict) -> dict:
         out = client.chat.completions.create(
             model=MODEL_TAGGER,
             messages=[{"role":"system","content":SYSTEM_PROMPT},{"role":"user","content":text[:1200]}],
-            temperature=0.2, max_tokens=220
+            temperature=0.2, max_completion_tokens=220
+
         ).choices[0].message.content.strip().splitlines()
         for line in out:
             if line.startswith("Type:"):        insight["type_tag"] = line.split(":",1)[1].strip()
