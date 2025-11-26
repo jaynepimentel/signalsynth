@@ -1,0 +1,3895 @@
+{
+  "c636bbfa4cc94daf23212f8ff7aa490a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Trust Issue",
+      "Fraud Risk",
+      "Refund",
+      "Customer Support",
+      "Policy Confusion",
+      "High-Value Transaction"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Buyer reports a potentially fraudulent duplicate listing of a high-value card and is unable to obtain a full refund including the $1,000 charity portion despite authenticity concerns.",
+    "gpt_confidence": 100.0
+  },
+  "5c9609ed4a85105fa1b30ca974b62a36": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Community",
+      "Platform Experience",
+      "Competition",
+      "Engagement"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User laments the decline of engaging comic-related discussions on the site and promotes a facebook group as a better alternative.",
+    "gpt_confidence": 100.0
+  },
+  "c6fa0a8c5976f2a90d5c59ce60d80388": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Refund",
+      "Seller Protection",
+      "Platform Policy",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is upset that ebay refunded a buyer claiming non-receipt despite delivery confirmation and is worried about being out of pocket.",
+    "gpt_confidence": 100.0
+  },
+  "b7861fcd4a9506eca16ea3c83b76e356": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Seller Behavior",
+      "Trust Issue",
+      "Pricing",
+      "Policy Confusion"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer is upset that the ebay seller is demanding much higher shipping after purchase and suggesting an item not received claim for a refund, raising trust and policy concerns.",
+    "gpt_confidence": 100.0
+  },
+  "28454dc93ae9bb5874b7621132c89c33": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Inr/Not Received",
+      "Refund",
+      "Policy Confusion",
+      "Account Status Fear",
+      "Buyer Communication"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is worried that refunding a buyer in an inr case after poor buyer communication will cause defects or account suspension due to prior inr cases.",
+    "gpt_confidence": 100.0
+  },
+  "19300b01b59b315ac56e8c9dfa0740ee": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Fees",
+      "Listing Management",
+      "Pricing"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User is concerned about accumulating insertion fees on many low-priced sports card listings and is asking how to avoid or reduce these costs.",
+    "gpt_confidence": 100.0
+  },
+  "1aef0469133b55b966d75441b9391f29": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Returns",
+      "Policy Fairness",
+      "Customer Support",
+      "Communication",
+      "Trust Issue",
+      "Seller Protection"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller is upset that ebay refunded the buyer without returning the iphone due to a missed 4\u2011day response window and feels the process is unfair and biased against casual sellers.",
+    "gpt_confidence": 100.0
+  },
+  "abbf5007d3c6b66bde8d3f2f6124713e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Ai Features",
+      "Listing Quality",
+      "Search Experience",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "The user is frustrated that ebay\u2019s ai-generated item descriptions are generic, uninformative, and overused by sellers, reducing listing usefulness and trust.",
+    "gpt_confidence": 100.0
+  },
+  "79fe3b8d2dc58136d26065237284ee9f": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Marketplace Dynamics",
+      "Competition"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User describes how a niche collectible market on ebay became distorted by escalating listing prices far above historical norms.",
+    "gpt_confidence": 100.0
+  },
+  "e74caf1b7cb47499916f5986d64e00ad": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Billing",
+      "Unexpected Charge_Or_Credit",
+      "Account Confusion",
+      "Trust Issue"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is confused and concerned about unexplained small payouts from ebay labeled as \"billing collection credit sweep\" despite no recent sales or listings.",
+    "gpt_confidence": 100.0
+  },
+  "31a823c4712144f44cc3dba76eb0cd6f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Item Condition",
+      "Authentication",
+      "Refund",
+      "Customer Support",
+      "High-Value Purchase",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Buyer received a high-value collectible card in damaged condition, cannot get a refund due to the authenticity program, and feels ebay\u2019s authentication and support processes are untrustworthy.",
+    "gpt_confidence": 100.0
+  },
+  "16b84df928990ae1dc0aaba1e60e4109": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Ai Features",
+      "Listing Quality",
+      "Trust Issue",
+      "Buyer Experience"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller reports ebay\u2019s ai-generated description omitted a key dimension, causing buyer collection issues and concern about inaccurate measurements.",
+    "gpt_confidence": 100.0
+  },
+  "c54a25828133e918124558680f1c665b": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Delivery Issue",
+      "Tracking",
+      "Policy Confusion",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer is confused and concerned after ebay refunded them for a delayed package that ultimately arrived, creating uncertainty about fairly compensating the seller without causing double payment.",
+    "gpt_confidence": 100.0
+  },
+  "acd82c214e1283373c53fd84d374eca7": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Purchase Issue",
+      "Refund",
+      "Scam/Fraud",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer reports receiving a fake pok\u00e9mon card on ebay and now faces threats of legal action from the seller after returning it.",
+    "gpt_confidence": 100.0
+  },
+  "f5ec366a098548f187c3530f673256f7": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Refund",
+      "Customer Support",
+      "Trust Issue",
+      "Policy Confusion",
+      "Risk Of Chargeback"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Customer reports a stolen delivered package and is frustrated that ebay denied a refund based solely on tracking despite a long, trustworthy purchase history.",
+    "gpt_confidence": 100.0
+  },
+  "eaaf0c19104e9f8e335317420a15458c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Ux",
+      "Personalization",
+      "Content Controls",
+      "Addictive Design",
+      "Risk/Wellbeing"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "User wants a way to disable or hide the ebay live section because it encourages impulsive, high-spend behavior.",
+    "gpt_confidence": 100.0
+  },
+  "141d5e0a278ff6d5577cb844d11b6df1": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Selling Experience",
+      "Usability",
+      "Process Confusion",
+      "Third-Party Integration"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User is frustrated with the difficulty of reselling a psa-graded mlb card held in the psa vault that was originally purchased via ebay.",
+    "gpt_confidence": 100.0
+  },
+  "c58ffc964fe74ba7262b0571cd29ab23": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "First-Time Buyer",
+      "Usps",
+      "Delivery Delay"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "First-time ebay buyer is worried that their usps shipment is moving between distant locations and may not arrive on the expected delivery date.",
+    "gpt_confidence": 100.0
+  },
+  "591bf4901e8fa366f94273dc107d8d02": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Pricing",
+      "Trust Issue",
+      "Onboarding"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking how psa grading works, whether it is secure, and expressing concern about potentially high upfront grading costs.",
+    "gpt_confidence": 100.0
+  },
+  "2cc7d924ab121bf7c156f9e4dd7195b7": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Vault",
+      "Checkout",
+      "Account Configuration",
+      "International",
+      "Support Experience"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User cannot access or select the psa vault option on ebay despite using the us site and matching email accounts, leaving purchased cards unable to be vaulted.",
+    "gpt_confidence": 100.0
+  },
+  "76c34f49cc86272a23080f57fe25924c": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Question",
+      "Trust Issue",
+      "Risk/Protection"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking if sending graded card purchases directly to a psa vault address is safe and how issues or disputes would work without inspecting the item first.",
+    "gpt_confidence": 100.0
+  },
+  "b4f53218b94c27dd4d115a436e89b51a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Checkout",
+      "Vault",
+      "Purchase Flow",
+      "Confusing Ux"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User cannot find the option to keep an auction-won card in the vault during ebay checkout despite the listing indicating vault eligibility.",
+    "gpt_confidence": 100.0
+  },
+  "8a7dc699310a20ef676d40e56a5810bd": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Shipping",
+      "Processing Time"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking how long ebay vault takes to process items for listing and for withdrawal/shipping.",
+    "gpt_confidence": 100.0
+  },
+  "71cc86bfc2fae803203b258a3bff19a5": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Policy",
+      "Customer Support",
+      "Trust Issue",
+      "Seller Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller mistakenly listed a high-value vault card at $0.99, was unable to cancel due to ebay vault policies, and feels severely harmed with no protection or fair remedy.",
+    "gpt_confidence": 100.0
+  },
+  "291caf56b7204e587613e73512627dcb": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Account Access",
+      "Account Management",
+      "Customer Support",
+      "Security",
+      "Verification"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Long-time user cannot update their phone number due to verification and vault-related errors, leaving them effectively locked to mobile-only access despite repeated unhelpful support interactions.",
+    "gpt_confidence": 100.0
+  },
+  "e3b01d8b3e60c9bc15e244ef3b0fb239": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Clarity/Information",
+      "Policy",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is confused about what ebay vault covers when selling an item and is seeking clarification.",
+    "gpt_confidence": 100.0
+  },
+  "1631e33dcc7ca683e9f01527af333400": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Customer Support",
+      "Logistics/Shipping",
+      "Account Restriction",
+      "Process Confusion",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "The user is frustrated that ebay vault will not ship a sold item, causing an account restriction for missing tracking and difficulty reaching support to resolve it.",
+    "gpt_confidence": 100.0
+  },
+  "32f8c7874752127b8ab9171f03ef99a7": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authenticity",
+      "Trust Issue",
+      "Information Clarity",
+      "Verification",
+      "Buying Experience"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "User is concerned about how ebay vault verifies card authenticity and condition when they never physically see the card and feels the process is unclear.",
+    "gpt_confidence": 100.0
+  },
+  "6948b55fc9b5a6db89aa313c01996b43": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Account Restriction",
+      "Funds Hold",
+      "Customer Support",
+      "Program/Vault Issues",
+      "Trust Issue",
+      "Seller Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller with 100% feedback reports a sudden account restriction blocking access to vault items and funds, causing severe financial distress and requiring repeated, ineffective support interactions.",
+    "gpt_confidence": 100.0
+  },
+  "88501acc9dc23444f553fee372155c73": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "How-To",
+      "Onboarding",
+      "Trust/Safety",
+      "High-Value-Items"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User is seeking clear instructions on how to list and sell a high-value graded card they already own through the ebay vault after adding it to their collection.",
+    "gpt_confidence": 100.0
+  },
+  "a601acecdca0ed3919d8f19cc2493c2e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Returns",
+      "Buyer Behavior",
+      "Dispute Resolution",
+      "Reselling"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is concerned about a buyer opening a return request for one of two card holders over an allegedly crooked logo and wants to know their chances of winning the case.",
+    "gpt_confidence": 100.0
+  },
+  "3c3ecd23c5159454d96ca0673bace363": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Customer Support",
+      "Trust Issue",
+      "Third-Party Service"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "The user reports a card damaged during ebay authentication and wants to know how to receive credit for the original sale price.",
+    "gpt_confidence": 100.0
+  },
+  "80e520bf54394245040c48f1c1b1b6cf": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Feedback System",
+      "Policy/Process",
+      "Unfair Rating",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller is upset about receiving what they see as an unfair negative ebay feedback over a psa registry removal issue despite a smooth transaction.",
+    "gpt_confidence": 100.0
+  },
+  "91a17d2e254a4b630e6462ed816d598f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Counterfeit Item",
+      "Refund",
+      "Buyer Protection",
+      "Messaging",
+      "New User Confusion",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer suspects they purchased counterfeit pok\u00e9mon cards from a possibly compromised seller and is seeking guidance on how to document the issue and secure a refund.",
+    "gpt_confidence": 100.0
+  },
+  "86bc10113dba3918f49131d5eaddaa69": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Configuration",
+      "Variants",
+      "Ui/Ux",
+      "Listing Management"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is unable to correctly configure card condition attributes, resulting in too many auto-generated variations and no way to price each card individually.",
+    "gpt_confidence": 100.0
+  },
+  "d502ab8f3329d160b3a658516aee3236": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Guidance Request",
+      "Selling Process",
+      "Pricing Concern",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking advice on how to sell a valuable pok\u00e9mon card without being forced to accept a low auction price.",
+    "gpt_confidence": 100.0
+  },
+  "26402f94b5d3d0d6ac7645670906928f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "My Collection",
+      "Technical Bug",
+      "Data Accuracy",
+      "Customer Support",
+      "Card Collecting"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "User reports that ebay\u2019s my collection card prices and sales data disappeared, support is unresponsive, and they fear losing extensive cataloging work.",
+    "gpt_confidence": 100.0
+  },
+  "86d77d24005837b13da4aca855045387": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Customer Expectations",
+      "Refund"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Seller is frustrated that a low-value buyer is complaining about normal shipping times and considering whether to refund shipping to avoid further hassle.",
+    "gpt_confidence": 100.0
+  },
+  "dd140fb28f8c2845aee4675c6637f80d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Onboarding",
+      "Fees",
+      "Shipping",
+      "International Shipping",
+      "Ux-Listing",
+      "Seller Protection",
+      "Trust Issue",
+      "Policy Clarity"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "New seller is confused and frustrated by complex shipping setup, unclear and seemingly high business fees, and uncertainty about seller protection on ebay.",
+    "gpt_confidence": 100.0
+  },
+  "76113321fb84cf46a5f77d788da57aee": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Fees",
+      "How-To",
+      "Multi-Item Orders"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "Seller is asking if multiple separately purchased items can be combined into one shipment to avoid paying separate shipping label charges.",
+    "gpt_confidence": 100.0
+  },
+  "7014de81270277c2a5e5c7057d7d8eec": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Item Condition",
+      "Dispute Resolution",
+      "Trust Issue",
+      "High-Value Item"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is confused and concerned about responsibility after a high-value authenticated trading card arrived to the buyer with new damage not present in photos or caught by ebay authentication.",
+    "gpt_confidence": 100.0
+  },
+  "9bcc7011f45ee4876f6b749d4e44b8f0": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Payments",
+      "Policy Confusion",
+      "Trust Issue",
+      "Buyer Experience",
+      "Seller Experience",
+      "Security Concerns"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "User is angry that ebay forces paypal/venmo-style payment methods while no longer allowing paypal payouts, and finds the platform harder, less secure, and less effective for both buying and selling.",
+    "gpt_confidence": 100.0
+  },
+  "70bb97ff80b62207398ddb212763833b": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "New Seller Experience",
+      "Product Education"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking about how ebay standard envelope shipments are processed and why there are few tracking scans.",
+    "gpt_confidence": 100.0
+  },
+  "69e64c692621ad51528585178d12f9e8": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Responsiveness",
+      "Shipping",
+      "Digital Goods",
+      "Refund",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Buyer is frustrated that the seller has not responded or shipped a tcg card after several days, leaving them unsure whether to cancel and buy a similar listing instead.",
+    "gpt_confidence": 100.0
+  },
+  "56b278c2b844b80267c9426e39200825": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Customer Support",
+      "Policy Confusion",
+      "Seller Performance",
+      "Fees"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Seller is upset that unreliable ese label tracking is lowering their on-time tracking metric despite prior assurances from support, forcing a choice between higher shipping costs or risking seller status and fees.",
+    "gpt_confidence": 100.0
+  },
+  "3719bf320eef40fdc3055d09f90fa598": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Payouts",
+      "New Seller Experience",
+      "Account Linking",
+      "Customer Support"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "New seller cannot link any bank or card to receive a $130 payout that keeps bouncing, leaving funds stuck in ebay limbo despite repeated support calls.",
+    "gpt_confidence": 100.0
+  },
+  "025f351fd3aef364881e55da47d5fdf9": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Visibility",
+      "Search",
+      "Fees And Pricing",
+      "Trust Issue",
+      "Seller Experience"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Long-time casual seller reports new listings not appearing in search and suspects ebay is paywalling visibility behind promoted listings.",
+    "gpt_confidence": 100.0
+  },
+  "40398860646321abd8273a7ec289e5c5": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Wrong Item",
+      "Refund",
+      "Buyer Protection",
+      "International Shipping",
+      "Policy Clarity",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer received a different samsung watch model than advertised on ebay and is unsure if they can get a refund as an international buyer using a freight forwarder.",
+    "gpt_confidence": 100.0
+  },
+  "8af9e34c8c3362556b46a4c24e0b8f59": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Authentication",
+      "International Shipping",
+      "Information Request",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether cards over $300 purchased from europe to canada are still authenticated like domestic or us purchases.",
+    "gpt_confidence": 100.0
+  },
+  "6335ebfa72c486ec62369449d4639c8f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Low Sales",
+      "Listing Quality",
+      "Photos & Media",
+      "Seller Experience",
+      "Search & Discovery"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is frustrated that despite some improvement, ebay sales remain low and buyers frequently request extra photos for low-value pok\u00e9mon card listings.",
+    "gpt_confidence": 100.0
+  },
+  "201f22f108444b8ada786403ab12defa": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping Issue",
+      "Lost Package",
+      "Trust Issue",
+      "Customer Support",
+      "Policy"
+    ],
+    "frustration": 4,
+    "impact": 5,
+    "summary": "User reports a high-value usps package with signature confirmation went missing after kiosk dropoff, suspects internal theft, and is frustrated with usps\u2019s limited support and policy.",
+    "gpt_confidence": 100.0
+  },
+  "49c833de51d3771ab46110b09a5433d1": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Protection",
+      "Refund",
+      "Customer Support",
+      "Shipping Carrier Issue",
+      "Policy Confusion",
+      "Payment Hold"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller is upset that despite winning an appeal and being told they were covered by ebay seller protection after usps damaged an item, their funds remain on hold and ebay has not issued the promised payout.",
+    "gpt_confidence": 100.0
+  },
+  "c5a2a0fae700acf2a31ac905e27e4dd2": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Policy Confusion",
+      "Seller Experience",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller is confused and concerned about unreliable or expensive shipping options for low-value trading cards on ebay, especially around ebay standard envelope and lack of tracking.",
+    "gpt_confidence": 100.0
+  },
+  "bd48a3fffabfb5fd331e25a20a167266": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping Speed",
+      "Reviews/Feedback",
+      "Fairness",
+      "Policy/Process"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Seller is upset about receiving a neutral review for allegedly slow shipping despite meeting their stated handling time and using ebay standard envelope.",
+    "gpt_confidence": 100.0
+  },
+  "e030a28bee15717df38e1d3e7880c38d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Inr/Item Not Received",
+      "Customer Support",
+      "Top Rated Seller",
+      "Policy Confusion",
+      "Tracking"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller is confused and frustrated about handling their first inr claim and using ebay envelope insurance without harming their seller metrics.",
+    "gpt_confidence": 100.0
+  },
+  "fbade5d03565d507ebaca5d9991d7f4c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Shipping/Delivery",
+      "Customer Support",
+      "Policy/Process"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Buyer describes a delayed usps shipment and confusion about ebay\u2019s inr/refund process, ultimately receiving a refund after seller non-response.",
+    "gpt_confidence": 100.0
+  },
+  "5a1ce8972c768a3db1b9bc620295542c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "New Seller Confusion",
+      "Shipping",
+      "Tracking",
+      "Payment Hold",
+      "Policy Clarity"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "New seller is confused about how to get paid for both items after accidentally using two labels on one box and only one tracking shows as delivered.",
+    "gpt_confidence": 100.0
+  },
+  "412bce94adc5dd73df67ee553868f06e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Listing Quality",
+      "Language/Localization",
+      "Trust Issue",
+      "Returns",
+      "Buyer Education"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer received a non-english comic due to unclear listing language and is unsure if requesting a return via guarantee is fair.",
+    "gpt_confidence": 100.0
+  },
+  "d472d455eb55df176f6b1dfd98e7d9fc": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Fees/Pricing",
+      "Shipping/Delivery",
+      "Policy/Protections",
+      "Communication"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User shares ebay\u2019s update about optional simple delivery and reduced buyer fees as a positive, informative change for low-priced items.",
+    "gpt_confidence": 100.0
+  },
+  "e35e770d43c2a60cd71ce2874a0af039": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Checkout",
+      "Cart",
+      "Purchase Experience",
+      "Feature Request",
+      "Fairness"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer is frustrated that items sell to others while in their cart and wants a grace period to secure items during checkout.",
+    "gpt_confidence": 100.0
+  },
+  "d29b3fb158cae00a265ef6b62ec4f048": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Buyer Behavior",
+      "Trust Issue",
+      "Refund",
+      "Shipping/Insurance"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is anxious and uncertain due to an authenticator-reported defect, a silent buyer who accepted the flawed card, and unresolved insurance repayment after a delayed delivery.",
+    "gpt_confidence": 100.0
+  },
+  "1b1a5bb36423da849127a9c6ce56757f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Process Confusion",
+      "Policy Clarity",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is confused and concerned that ebay is requiring authentication for a lot of two graded cards when they believed the service only applied to single cards.",
+    "gpt_confidence": 100.0
+  },
+  "080a4c46d92cc9ea40c35a391bf416ad": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Integration Bug",
+      "Validation",
+      "Listings",
+      "Third-Party App",
+      "Configuration",
+      "Category/Taxonomy"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "User\u2019s new ebay au listings via shopify marketplace connect are being blocked by condition and return policy validation errors despite unchanged settings and previously working configurations.",
+    "gpt_confidence": 100.0
+  },
+  "f0f669fd4c121bed793b71bad8550362": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Configuration",
+      "Usability"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User cannot configure ebay shipping to automatically apply a new flat-rate envelope for every five trading cards purchased.",
+    "gpt_confidence": 100.0
+  },
+  "9601b147a3832b38fb3cc46e2a36fdbb": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Fraud",
+      "Trust Issue",
+      "Listing Quality",
+      "Reporting/Moderation"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User is concerned about multiple sellers using the same psa-graded card image and wants to know if and how to report potentially fraudulent listings.",
+    "gpt_confidence": 100.0
+  },
+  "a2a604f1811f56b35ab2b49c00b6e9f4": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Fees/Overcharge",
+      "Policy Clarity",
+      "Seller Communication",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer is upset that the seller charged separate shipping for multiple card purchases but shipped them together, feeling overcharged and unsure how to address it or avoid this in the future.",
+    "gpt_confidence": 100.0
+  },
+  "935bf00651b6ab99f717085169b4b00a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Quality",
+      "Refund",
+      "Trust Issue",
+      "Seller Behavior",
+      "Marketplace Policy"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer received a graded coin with a possibly tampered slab and is unsure whether to trust the seller\u2019s request to cancel the refund and reslab the coin.",
+    "gpt_confidence": 100.0
+  },
+  "63dc10a147ada4eec9096d79a9c93451": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Customer Support",
+      "Trust Issue",
+      "Third-Party Service",
+      "Payments"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer is concerned about a high-value card purchase with psa grading where the seller stopped communicating, tracking was never provided, and ebay\u2019s delayed inr process leaves them considering a credit card chargeback.",
+    "gpt_confidence": 100.0
+  },
+  "7abb023645a188db03b64f183debfd46": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Behavior",
+      "Off-Platform Payment Request",
+      "Fraud Risk",
+      "Trust Issue",
+      "Buyer Protection"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Buyer is concerned about a seller requesting off-platform payment to avoid fees and is worried the graded trading card may be fake or problematic.",
+    "gpt_confidence": 100.0
+  },
+  "e79e0066529750071e40e762e937c2fe": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Item Not As Described",
+      "Trust Issue",
+      "Communication",
+      "Used Goods"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer received an icloud-locked apple watch that was listed as working and is frustrated by the seller\u2019s lack of response and is considering opening an inad case.",
+    "gpt_confidence": 100.0
+  },
+  "8e26fd90d33cd69fe585957a992066ad": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Customer Support",
+      "Shipping",
+      "Refund",
+      "Dispute Resolution",
+      "Trust Issue",
+      "Fees/Charges"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "After a stressful lost-package dispute and initial unfair refund/charge, the user ultimately praises ebay\u2019s facebook support for resolving the case and refunding both parties.",
+    "gpt_confidence": 100.0
+  },
+  "f8acd708a736bdc70a5cb65b9bf42da8": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Billing",
+      "Technical Bug",
+      "Customer Support",
+      "Refund",
+      "Communication"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User reports a technical billing bug causing unexpected insertion fees but praises customer service for quickly issuing a credit and warns others to check their charges.",
+    "gpt_confidence": 100.0
+  },
+  "94f5675294aba8ee24a8c38b64833ac6": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Communication",
+      "Expectation Mismatch",
+      "Listing Accuracy",
+      "Trust Issue"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Buyer is upset that the seller did not provide pre-shipping card photos as promised in the listing and wants to know if this justifies a complaint.",
+    "gpt_confidence": 100.0
+  },
+  "c31b9c704bf02c9cceb3a163b95422ec": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Cross-Border Shipping",
+      "Authenticity Guarantee",
+      "Policy Inconsistency",
+      "Customer Support",
+      "Program Eligibility",
+      "Fees/Duties",
+      "Refund"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Canadian trading card seller is frustrated they must opt out of a ddp advertising program because authenticity guarantee shipments don\u2019t support ddp, risking duties, refunds, and strikes while support cannot resolve or escalate the issue.",
+    "gpt_confidence": 100.0
+  },
+  "804d43d81c29d144ac74e213525df775": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Buyer Behavior",
+      "Returns",
+      "Customer Support",
+      "Policy Clarity",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller describes dealing with an abusive reseller buyer opening a false inad return but praises ebay for applying seller protection and releasing the funds.",
+    "gpt_confidence": 100.0
+  },
+  "ba641ca2c6bde1fa118fa67afe79738b": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Behavior",
+      "Trust Issue",
+      "Fraud/Scam",
+      "Policy Enforcement"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User reports suspected shill bidding by a seller and frustration at the lack of a clear way to report this fraudulent behavior.",
+    "gpt_confidence": 100.0
+  },
+  "3d5a7c1ee8ac7e039b29246316e63742": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Refund",
+      "Customer Support",
+      "Policy Issue",
+      "Trust Issue",
+      "Third-Party Vendor"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Buyer received a fake pokemon card incorrectly authenticated under ebay\u2019s guarantee and is being denied a refund or recourse due to ebay\u2019s reliance on psa\u2019s decision.",
+    "gpt_confidence": 100.0
+  },
+  "f80d9235b6036f12acc7daacbcd2e99d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Seller Behavior",
+      "Trust Issue",
+      "Pricing",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer is concerned a seller is delaying shipment to cancel and relist a now more valuable card and wants to know what options are available.",
+    "gpt_confidence": 100.0
+  },
+  "bc35d69e382280a26a97df25500d8d2a": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Fees/Charges",
+      "International Shipping"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for information about import taxes and duties for a high-value trading card purchase shipped from australia to india.",
+    "gpt_confidence": 100.0
+  },
+  "1cf4e5dca0d3151efebac1c34e8add43": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Returns",
+      "Policy Clarity",
+      "Buyer Behavior",
+      "Authentication",
+      "Trust Issue",
+      "High-Value Item"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller is frustrated that a buyer is requesting a return over authentication concerns despite a no-returns policy and clear disclosure that no certificate of authenticity was included.",
+    "gpt_confidence": 100.0
+  },
+  "264a70595834263816d25084796b58bc": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Refund",
+      "Customer Support",
+      "Policy",
+      "Trust Issue",
+      "Third-Party Payment"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Customer reports ebay authenticated a fake card but is refusing help beyond the 30-day guarantee, seeking ways via paypal to recover their payment.",
+    "gpt_confidence": 100.0
+  },
+  "f74730e2e32cb31bba949e7c76bad7f8": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Notifications",
+      "Search",
+      "Relevance",
+      "User Controls"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User is frustrated that irrelevant repeat notifications for the same listing dominate their alerts and wants a way to exclude that item or seller.",
+    "gpt_confidence": 100.0
+  },
+  "9c026fdd253b8abde4cdeb177266ff96": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Customer Support",
+      "Trust Issue",
+      "Shipping & Handling",
+      "Resolution Time"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Customer reports damaged shoes during authentication, feels misled and disrespected by ebay support, and plans to stop using the platform due to perceived internal error and poor resolution.",
+    "gpt_confidence": 100.0
+  },
+  "aaccbb3aa5a444ba4301021f7f519359": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Item Not Received",
+      "Damage",
+      "Trust Issue",
+      "Seller Protection",
+      "Customer Support"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller reports ebay\u2019s authentication process damaged and lost a high-value sports card from a two-card sale and is seeking recourse.",
+    "gpt_confidence": 100.0
+  },
+  "4f7766eba31c1c452a953692da90bced": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Insurance",
+      "Coverage Limits",
+      "Liability",
+      "Trust Issue",
+      "Shipping"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "The user is concerned that ebay\u2019s authenticity guarantee shipping only covers \u00a3750 on a \u00a36500 watch and wants clarity on who is liable if it\u2019s lost in transit.",
+    "gpt_confidence": 100.0
+  },
+  "f331a537721b611ad4895d433a9a6a0d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Item Not As Described",
+      "Shipping Damage",
+      "Missing Item",
+      "Trust Issue",
+      "Support Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller reports a card damaged during authentication and then the main valuable card missing when returned, seeking help on how to report and claim the issue.",
+    "gpt_confidence": 100.0
+  },
+  "4e526811ef94881f3c10e0159889ee2c": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Trust Issue",
+      "International",
+      "Policy Clarity",
+      "Risk Concern"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User is asking whether ebay\u2019s international shipping program is safe and scam-proof for sending a rare, high-value collectible overseas.",
+    "gpt_confidence": 100.0
+  },
+  "1ca61e8f3131ce7bb7e931a6b4fecbf5": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Experience",
+      "Live Shopping",
+      "Buyer Experience",
+      "Marketplace Strategy"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is skeptical about ebay\u2019s new focus on live shopping, questioning its value for buyers compared to traditional price-searching.",
+    "gpt_confidence": 100.0
+  },
+  "dca20ba1fe9baf11b937686dfe0835fe": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Customer Support",
+      "Shipping Issue",
+      "Policy Confusion",
+      "Third-Party Seller"
+    ],
+    "frustration": 5,
+    "impact": 3,
+    "summary": "Customer is extremely frustrated that ebay and the seller will not issue a refund for a misdelivered usps package despite usps admitting fault.",
+    "gpt_confidence": 100.0
+  },
+  "2d7457249e11c0777d96cbe9dbff8d6b": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Account Access",
+      "Technical Bug",
+      "Messaging",
+      "Trust Issue",
+      "Customer Support",
+      "Payments/Refunds",
+      "Selling Restrictions"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Longtime seller\u2019s account is severely glitched and restricted, blocking logins, messaging, refunds, and sales while support provides no effective resolution.",
+    "gpt_confidence": 100.0
+  },
+  "5528ca73bfcb0a2b42c605afa4cbdc56": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shill Bidding",
+      "Trust Issue",
+      "Buyer Quality",
+      "Auctions",
+      "Policy/Enforcement",
+      "Risk Of Non-Payment"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller suspects shill bidding from new zero-feedback accounts inflating their auction and is unsure how to handle payment, shipping, and preventing this in the future.",
+    "gpt_confidence": 100.0
+  },
+  "25cd0e12f26653999286f765bec0a409": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Buyer is concerned that a headset supposedly shipped via usps has no tracking and is not showing up in any delivery systems despite the seller claiming it was sent.",
+    "gpt_confidence": 100.0
+  },
+  "7fde0c7598c090163752f63c8d9fbb59": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Selling Experience",
+      "Pricing",
+      "Auctions",
+      "Buyer Behavior",
+      "Strategy Question"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "Seller is questioning whether using reserve prices on certain high-end or rare auction items is a good strategy due to recurring buyer pushback and complaints.",
+    "gpt_confidence": 100.0
+  },
+  "1444ece70f85b656c83b3806a14c1c13": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Information",
+      "Search",
+      "Valuation"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for help identifying and valuing a rare 1993 tribe \u201cthe intro\u201d card they cannot find listed anywhere.",
+    "gpt_confidence": 100.0
+  },
+  "7dc2aa7d2361fb5fdf00df94fae545ea": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping Issue",
+      "Usps",
+      "Customer Support",
+      "Refund",
+      "Policy Dispute",
+      "Tracking",
+      "Seller Performance Risk"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Multiple usps shipping failures and supervisor refusal to resolve or compensate are risking the seller\u2019s 100% approval rating and causing significant stress.",
+    "gpt_confidence": 100.0
+  },
+  "c44b1c0491f5bc5318cbc6fc0fc31955": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Misleading Listing",
+      "Product Quality",
+      "Expectations Mismatch",
+      "Third-Party Fulfillment",
+      "Trust Issue",
+      "Pricing"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Buyer feels misled that pricey \u201cvintage\u201d postcards were actually modern reprints from a third-party printer despite partially disclosed details in the listing.",
+    "gpt_confidence": 100.0
+  },
+  "401be40026e26434e8cdb4065c692b58": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Buyer Fraud",
+      "Dispute/Chargeback",
+      "Trust Issue",
+      "High-Value Item",
+      "Support Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller reports a high-value local pickup sale where the buyer allegedly committed return fraud and filed a chargeback, leaving the seller stressed despite ebay ultimately releasing the funds.",
+    "gpt_confidence": 100.0
+  },
+  "616f9250682852fa4a518275a0fb006e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Buyer Behavior",
+      "Returns",
+      "Partial Refund Request",
+      "Local Pickup",
+      "High-Value Item",
+      "Policy Uncertainty"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is frustrated that a local pickup buyer of expensive lab equipment is demanding a partial refund for a later-discovered cable issue after inspection and acceptance.",
+    "gpt_confidence": 100.0
+  },
+  "22bbc945887f04cb43bf96428e513031": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Shipping",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Customer reports two packages marked as delivered but not received and is unsure whether to contact sellers or ebay since the issue appears to be a postal error.",
+    "gpt_confidence": 100.0
+  },
+  "bbe64573bafe5db90bd4a930d39b03d6": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Bulk Upload",
+      "Listing Tools",
+      "Usability",
+      "How-To"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User is asking how to add multiple topic values via ebay bulk draft file upload instead of editing each listing manually.",
+    "gpt_confidence": 100.0
+  },
+  "6bb6efb6e7e211e844a8550ea4293644": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Costs",
+      "Third-Party Sellers",
+      "Logistics"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is struggling to find affordable, readily available large boxes and padding materials, making it uneconomical to ship bulky items.",
+    "gpt_confidence": 100.0
+  },
+  "e4ce7ba2e8fafc4b626ed7f0df51e1de": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Technical Issue",
+      "Bug",
+      "Listing",
+      "Mobile App",
+      "Website"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User reports being unable to relist items due to platform bugs affecting item specifics and pricing across both app and browser.",
+    "gpt_confidence": 100.0
+  },
+  "a759ede7a55c7fe2da5f5c4e3d83649c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Fees",
+      "Trust Issue",
+      "Ui Bug",
+      "Regional/Market Issue",
+      "Policy Change"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "User reports inconsistent and seemingly inflated item prices on the uk site after the introduction of buyer protection fees, raising trust and legality concerns.",
+    "gpt_confidence": 100.0
+  },
+  "8c07a5179a76e91fda2fd733edacef3e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Theft/Loss",
+      "High-Value Item",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 5,
+    "summary": "Buyer\u2019s $850 item was delivered early via a different carrier without prompt tracking or signature and was stolen, and they are unsure how to proceed or who is responsible.",
+    "gpt_confidence": 100.0
+  },
+  "2f4782a139cfb2b6d10f9c0fcc4050c9": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Fees",
+      "Pricing",
+      "Guidance Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "The user is asking for advice on whether different promotion rates are worthwhile given the impact of ad fees on their profit from selling high-end items.",
+    "gpt_confidence": 100.0
+  },
+  "662511f41267af839eeaee94499cbc19": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Customer Support",
+      "Third-Party Integration",
+      "Refund"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Ebay/canada post/usps label data appears mismatched to usps\u2019s electronic address, causing a lost shipment, buyer refund, and extensive unresolved effort by the seller.",
+    "gpt_confidence": 100.0
+  },
+  "f6e4cf4f6b9b2ed4df5f30d8ec4b4718": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Feature Request",
+      "Third-Party Access",
+      "Api/Integration",
+      "Competitive Benchmark"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking if third parties can implement a qr-based product listing prefill feature similar to certilogo\u2019s ebay integration.",
+    "gpt_confidence": 100.0
+  },
+  "911392ab444f4392c9b4d43258b58262": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Selling Strategy",
+      "Pricing",
+      "Shipping",
+      "Listing Optimization"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User describes their current ebay reselling process and asks for advice on improving profit and sales speed.",
+    "gpt_confidence": 100.0
+  },
+  "383ece4ed9ad0b33105d028347630bc7": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Policy Clarity",
+      "Seller Experience",
+      "Customer Service Load"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "Seller finds ebay standard envelope generally useful but is concerned about missing delivery scans, resulting refunds, and increased buyer messages on low-margin orders.",
+    "gpt_confidence": 100.0
+  },
+  "0d5216616aab7cd48da53a96b80e17e2": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Customer Support",
+      "Fraud",
+      "Trust Issue",
+      "Refund",
+      "Buyer Protection",
+      "Policy Enforcement"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer reports repeated experiences with suspected scam sellers and unhelpful customer support that delays refunds and action against fraudulent accounts.",
+    "gpt_confidence": 100.0
+  },
+  "5adf7b9c1c55d86ee1e6ce797f226fe9": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Marketplace",
+      "Shipping",
+      "Trust Issue",
+      "Fraud Risk",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer is concerned the ebay watch seller may be fraudulent due to misleading location, lack of shipping progress, and reused images from another source.",
+    "gpt_confidence": 100.0
+  },
+  "786cdbf96caf6fcefd5e504942774ee9": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Delivery Issue",
+      "Third-Party Carrier",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User reports repeated usps tracking/address mismatches on ebay purchases, leading to undelivered trading card packages and concern about possible misdelivery or fraud.",
+    "gpt_confidence": 100.0
+  },
+  "5aaa5afae838333908aaad63ad5a3cfb": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Delivery Issue",
+      "Buyer Support"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is unsure how to handle a buyer report that usps tracking shows delivered but the package was not received.",
+    "gpt_confidence": 100.0
+  },
+  "5f9b83c8e611412bb0566fbaa7770f11": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Images",
+      "Third-Party Integration",
+      "Bug",
+      "Listing Creation"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "The user\u2019s previously working imgur-hosted images in auction descriptions are now all broken links, preventing them from finalizing their comic sale listings.",
+    "gpt_confidence": 100.0
+  },
+  "90157ec08624e74748869d0cc84c8ba3": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping/Logistics",
+      "Tracking",
+      "Fraud Risk",
+      "Platform Policy",
+      "Customer Support"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "Seller reports a suspicious shipping/label mix-up on a low-value ebay sale, suspects possible fraud or usps error, and is unsure whether to pursue a claim.",
+    "gpt_confidence": 100.0
+  },
+  "f4d64240f2ab9f3bc17debf3f336e206": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Refund",
+      "Tracking",
+      "Policy Confusion",
+      "Risk Of Loss"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is worried about losing $200 after usps tracking stalled at \u201cawaiting delivery scan\u201d and the buyer requested a refund despite the item being shipped.",
+    "gpt_confidence": 100.0
+  },
+  "71b4d4fa637533f5ff327b56acf11aee": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Billing",
+      "Customer Support",
+      "Third-Party Carrier",
+      "Refund"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "User reports being overcharged for fedex labels through ebay, with both fedex and ebay deflecting responsibility and support requests going unresolved.",
+    "gpt_confidence": 100.0
+  },
+  "913bc974e1285b0467039762009d0a1c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "International",
+      "Customs",
+      "Billing & Pricing",
+      "Ux"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller reports that ebay\u2019s bulk shipping/customs form is auto-filling an incorrect (understated) customs value on international labels.",
+    "gpt_confidence": 100.0
+  },
+  "623539c333b4a15b079db975fe6a41b9": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Payments",
+      "Account Verification",
+      "Fees/Pricing",
+      "App Experience",
+      "Trust Issue",
+      "Onboarding/First-Time Seller"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "User is angry about being forced to use the app, required to add a bank or pay extra fees for debit payout, and experiencing multiple holds and verifications that make selling on ebay feel costly, insecure, and overly complicated.",
+    "gpt_confidence": 100.0
+  },
+  "aed0ea096dc8307ea08c601c20abb489": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Refund",
+      "Customer Support",
+      "Third-Party Carrier",
+      "Policy Clarity"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller is frustrated that a high-value camera shipment is severely delayed by usps and wants to know how to refund the buyer and file a claim without losing both the $1400 and the camera.",
+    "gpt_confidence": 100.0
+  },
+  "94d7ecc26b4a4fa716f1187b77359c77": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Payouts",
+      "Process Confusion",
+      "In-Person Pickup",
+      "Technical Issue"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "Seller is confused about how to use the qr/number code to confirm local pickup so their payment on hold can be released.",
+    "gpt_confidence": 100.0
+  },
+  "3fb8f2a95fd969f50f07eecaefd6fdee": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Idea",
+      "Feature Request",
+      "Small Business",
+      "Logistics"
+    ],
+    "frustration": 1,
+    "impact": 3,
+    "summary": "User positively describes their shipping-management app, its current value, and potential future features and integrations for small ecommerce businesses.",
+    "gpt_confidence": 100.0
+  },
+  "9909d089f0ba9c677903148190f01107": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Misleading Listing",
+      "Seller Unresponsive",
+      "Customer Support",
+      "Delivery Issue",
+      "Trust Issue",
+      "High-Value Purchase"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Buyer reports a misleading macbook listing, unresponsive seller, conflicting delivery/tracking information, and inability to get timely help from the platform.",
+    "gpt_confidence": 100.0
+  },
+  "2ab697cd7052f2eeacf9b17b7dbdf391": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authentication",
+      "Trust Issue",
+      "Customer Service",
+      "Refund"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Buyer reports that ebay\u2019s authentication process damaged the qr/serial card and that the \u201cbrand new\u201d limited sneakers were already registered to someone else, with poor support and unresolved accountability.",
+    "gpt_confidence": 100.0
+  },
+  "c94845eef4f1f1eb5df278cbd055bc97": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Authentication",
+      "Buyer Behavior",
+      "Claims/Disputes",
+      "High-Value Item"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is concerned about a buyer claim for a high-value authenticated card that fedex attempted to deliver but was never picked up, and is unsure of liability and next steps.",
+    "gpt_confidence": 100.0
+  },
+  "7c53b0d9aea1ace7330b96e886e3e4f8": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Delivery Issue",
+      "Customer Support",
+      "Trust Issue",
+      "Ai Dissatisfaction",
+      "Churn Risk"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Customer is angry that ebay denied a refund for a misdelivered fedex package despite proof and vows to stop using the platform.",
+    "gpt_confidence": 100.0
+  },
+  "ec508f3986e3380160032e37a7721018": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Buyer Fraud",
+      "Refund",
+      "Dispute Resolution",
+      "Customer Support",
+      "Policy Fairness",
+      "Delivery Issue"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller reports repeated stolen-package disputes where ebay and the buyer\u2019s bank refunded the buyer and ebay support gave inconsistent, unfulfilled assurances with no seller protection.",
+    "gpt_confidence": 100.0
+  },
+  "3f70ebc098e80af5bd3a882f5851001c": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Customer Support",
+      "Shipping",
+      "Feedback System",
+      "Platform Policy"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "Seller describes a delayed-scan shipping scare and negative feedback that ebay quickly removed, expressing satisfaction with the resolution.",
+    "gpt_confidence": 100.0
+  },
+  "686cf8e6ffdc6e4d166eb548faa2a100": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Identity Verification",
+      "Kyc/Compliance",
+      "Customer Support",
+      "Process Confusion",
+      "Documentation Upload",
+      "Payment Hold",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 3,
+    "summary": "The user is repeatedly unable to pass ebay\u2019s identity verification despite multiple document submissions and inconsistent support guidance, leaving their sale funds withheld and causing significant distress.",
+    "gpt_confidence": 100.0
+  },
+  "ce40646d14681710d78cb6f42b640ef2": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Refund",
+      "Customer Support",
+      "Trust Issue",
+      "Fees",
+      "Dispute Resolution"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller is upset that ebay refunded the buyer and kept fees despite ups-confirmed delivery and is unable to reach support or successfully appeal.",
+    "gpt_confidence": 100.0
+  },
+  "42f988e58a529bd511a819f854f55c57": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Tracking",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller reports a mis-delivery where tracking shows delivered but the buyer received a different parcel and needs help resolving the situation.",
+    "gpt_confidence": 100.0
+  },
+  "6f06077c963159a36316263893d77e49": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Listing Error",
+      "Seller Anxiety",
+      "Policy/Support",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller is anxious after mistakenly stating two items in the description while only listing and shipping a single sealed pok\u00e9mon tcg pack and is unsure whether to proactively contact the buyer or wait.",
+    "gpt_confidence": 100.0
+  },
+  "10bbec7ba166b9bb601c6b2ead970fb1": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Buyer Dispute",
+      "Tracking",
+      "High-Value Item",
+      "Platform Support"
+    ],
+    "frustration": 4,
+    "impact": 5,
+    "summary": "Seller is disputing an ebay \"item not received\" claim after usps tracking shows a $1,000 phone was delivered and signed for, but the buyer claims non-receipt and ebay support is unhelpful.",
+    "gpt_confidence": 100.0
+  },
+  "016e5e30af634e2e6740516e44fdc54f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Listing Setup",
+      "Guidance/Help"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is unable to find the calculated worldwide shipping option and is confused about how to set location-based postage costs on ebay uk.",
+    "gpt_confidence": 100.0
+  },
+  "22db9eccabc59e79aaf9cb82341b7a1c": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "How-To",
+      "Listing Configuration",
+      "Multi-Item Listing"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking how to create a single listing with a dropdown for multiple items that have different prices.",
+    "gpt_confidence": 100.0
+  },
+  "c5cef8b48be6d82ea0d2fc9944c6488a": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Shipping",
+      "Seller Tools",
+      "Education",
+      "International Shipping",
+      "Trust Issue"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "Detailed, positive guide sharing tips and best practices for canadian ebay sellers on how to price and manage shipping domestically and internationally.",
+    "gpt_confidence": 100.0
+  },
+  "1d2d1459bd7a6be2b01db4425f1e1023": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Feature Discovery",
+      "Search",
+      "Usability"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking how to access and use ebay\u2019s new trading card price guide feature.",
+    "gpt_confidence": 100.0
+  },
+  "a84e158710f1fa0895e4e37cc9fcb17e": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Idea",
+      "Data Integration",
+      "Third-Party Data",
+      "Technical Question"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking how to pull and display ebay sold listing data on their own price guide website and app.",
+    "gpt_confidence": 100.0
+  },
+  "c7cfe6c05e6edcf6fa2c368e7f9ad3a9": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "New Seller Experience",
+      "Listing Management",
+      "Offers/Bidding",
+      "Usability"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "New seller is asking how to contact bidders or watchers and send offers after a reserve-price auction ended without meeting the reserve.",
+    "gpt_confidence": 100.0
+  },
+  "581da4502e761c158f422007209e65b4": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Search",
+      "Scams/Fraud",
+      "Trust Issue",
+      "Ui/Ux",
+      "Seller Quality"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "User is frustrated that search results hide seller feedback, making it hard to avoid numerous apparent scam iphone listings.",
+    "gpt_confidence": 100.0
+  },
+  "d845d6d4cfd15fe11bc439e8b21007eb": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Advertising",
+      "Pricing",
+      "Sales Performance",
+      "Cost Concerns"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Seller is evaluating the effectiveness and cost of different ebay and external ppc strategies versus lowering prices for used iphone listings.",
+    "gpt_confidence": 100.0
+  },
+  "728e4361d6452deac33b720340c7d999": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Trust Issue",
+      "Buyer Risk",
+      "Account Age"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "The seller is concerned about shipping expensive custom wheels to a brand-new buyer account with no feedback and is seeking advice on risk.",
+    "gpt_confidence": 100.0
+  },
+  "f4572dbe976675c3ea9cf41033edb065": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Search",
+      "Catalog Coverage",
+      "Information Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User cannot find any listing or information for a specific rare \"93 tribe the intro\" card they own.",
+    "gpt_confidence": 100.0
+  },
+  "68aa8f4dc892d3ddc12dd3365af64fca": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Fees/Pricing",
+      "Trust Issue",
+      "Seller Behavior",
+      "Warning To Others"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer reports a seller attempting to charge nearly $100 shipping for $36 worth of comics and is warning others about this behavior.",
+    "gpt_confidence": 100.0
+  },
+  "f517d9c6b2d51ab790807c0fbd0e5dee": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Community",
+      "Engagement",
+      "Competition"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User feels ebay has degraded its once-vibrant comics discussion community and is moving conversation to facebook instead.",
+    "gpt_confidence": 100.0
+  },
+  "9c5b228c3e9500b1658e158c6122cf9d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Sales",
+      "Demand",
+      "Marketplace Changes",
+      "Inventory Management"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "Seller reports a sharp decline in sales of long-unsold items, especially golden age comics, over the past year and is seeking reasons or solutions.",
+    "gpt_confidence": 100.0
+  },
+  "1db106026bc1ed84be186c4924131bb3": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Search",
+      "Discovery",
+      "Catalog Coverage"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User cannot find a listing for a specific 1993 tribe the intro card they own.",
+    "gpt_confidence": 100.0
+  },
+  "067478067ca41770c20ace48b126fd84": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Community",
+      "Sharing",
+      "Gifting"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is generously offering specific \u201cdate\u201d cards from an update to others for free.",
+    "gpt_confidence": 100.0
+  },
+  "3cee4902903ee88704495d20be2a2dd1": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Returns",
+      "Customer Service",
+      "Listing Accuracy",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 3,
+    "summary": "Seller is upset that a graded card sale was reversed for alleged inaccuracy and feels customer service was unhelpful.",
+    "gpt_confidence": 100.0
+  },
+  "6f675f35ecda3fc0b8f75221dc7d5eab": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Community Guidelines",
+      "Moderation",
+      "Trust Issue",
+      "Trading"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "Describes subreddit rules emphasizing respectful behavior, sales guidelines, and limited responsibility for failed trades.",
+    "gpt_confidence": 100.0
+  },
+  "af9ebfbb15c55e803fb1a1736062d696": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Listing Clarity",
+      "Discovery",
+      "Trading"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is offering to trade bulk 90s\u20132000s cards for one or two cards and inviting interested users to message them.",
+    "gpt_confidence": 100.0
+  },
+  "089b5aaa1b3e7d351e03794f1c354237": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Buying/Selling",
+      "Pricing"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is seeking a trade for specific baseball autograph cards matching the value of their tv cards.",
+    "gpt_confidence": 100.0
+  },
+  "7c036af2f39451967b73e52a972d4f6a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Returns",
+      "Scam/Fraud",
+      "Trust Issue",
+      "Buyer Behavior",
+      "Marketplace Policy"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Seller suspects a scam after a buyer returned only an empty card case following a closed ebay return request and account closure.",
+    "gpt_confidence": 100.0
+  },
+  "7a459900031e43410042223287e432f5": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping/Handling",
+      "Customer Support",
+      "Process Issue",
+      "High-Value Item",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Customer\u2019s high-value damaged cards sent to topps\u2019 fulfillment center were never picked up and were ultimately disposed of by usps.",
+    "gpt_confidence": 100.0
+  },
+  "9fea754c7ee580a1810c31ab002f3a1a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Payments/Funds Hold",
+      "Authentication",
+      "Transparency",
+      "Trust Issue",
+      "Policy",
+      "Legal/Compliance"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Seller believes ebay\u2019s trading card authentication and lowered price threshold are being used to unjustly hold funds and misrepresented as anti-fraud measures.",
+    "gpt_confidence": 100.0
+  },
+  "29ee5a7f4a84864c32b551b8ed5de9a5": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Trust Issue",
+      "Product Design",
+      "Scam Concern",
+      "Expectations Mismatch"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User is criticizing multi-product player breaks as a deceptive setup where differing checklists reduce the real chances of getting expected cards.",
+    "gpt_confidence": 100.0
+  },
+  "74af617b30638746ae656dc045766371": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Refund",
+      "Trust Issue",
+      "Marketplace Experience",
+      "Pricing/Value"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer suspects a seller never shipped a valuable card despite marking it as shipped, resulting in a delayed order, refund, and lost collecting/trading opportunity.",
+    "gpt_confidence": 100.0
+  },
+  "4e25ef1b3bedfe219686f6c8c5394a52": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Market Risk",
+      "Trust Issue",
+      "Gambling/Scandal",
+      "Player Value"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User is concerned that a betting scandal indictment may tank a player\u2019s card values and wonders if they should sell now.",
+    "gpt_confidence": 100.0
+  },
+  "bf5b20ddf9aa574c741e5da6d266f76d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Buyer Fraud/Scam",
+      "Policy Fairness",
+      "Returns",
+      "Feedback System",
+      "Customer Support",
+      "Trust Issue",
+      "Marketplace Integrity"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Seller reports a suspected buyer scam exploiting ebay\u2019s inad/return policies and feedback system to flip the card for profit or return it after the window.",
+    "gpt_confidence": 100.0
+  },
+  "c127d48e38c9a0c9b1c4b7f72e3e46a9": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Misleading Listing",
+      "Scam Risk",
+      "Trust Issue",
+      "Fees And Pricing",
+      "User Error"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User is upset about sellers listing digital cards as physical items, including charging shipping, which led them to mistakenly bid on a digital card.",
+    "gpt_confidence": 100.0
+  },
+  "9c8425a0297b064732c6dfa76e1cee11": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Scam/Fraud",
+      "Trust Issue",
+      "Messaging",
+      "Auctions"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User reports receiving an obvious scam message about their auction and expresses frustration while noting they reported it.",
+    "gpt_confidence": 100.0
+  },
+  "13ca5972321cf3e5dee7134792d2009d": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Trust Issue",
+      "Brand Perception",
+      "Education"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User explains that while many think psa is a scam, they view it as a co-creator of a product rather than just a grading service.",
+    "gpt_confidence": 100.0
+  },
+  "2d0a125854d6d5bdf4a8f16a0b8e87bf": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Scam/Fraud",
+      "Trust Issue",
+      "Customer Support",
+      "Policy/Enforcement"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User reports fake ebay listings of their card and is frustrated that repeated reports have not led to the scam listings being removed.",
+    "gpt_confidence": 100.0
+  },
+  "1d71f6adee52b0ebfa94b8503b112f61": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery",
+      "Refund",
+      "Customer Service",
+      "Trust Issue",
+      "Shipping Carrier"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Customer is upset that a long-awaited topps card shipment is delayed or lost, with no tracking and only store credit offered as a refund.",
+    "gpt_confidence": 100.0
+  },
+  "661a1a98a3af7fed395d71f2e1e08f53": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Item Quality",
+      "Seller Honesty",
+      "Listing Accuracy",
+      "Refund",
+      "Authentication",
+      "Trust Issue"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer received two expensive rookie cards with undisclosed damage, leading to a refund on one and loss of trust in buying raw cards on ebay.",
+    "gpt_confidence": 100.0
+  },
+  "e0104fd084601e574b8bfeaa7c113e84": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Refund",
+      "Policy Confusion",
+      "Risk Of Loss"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "New ebay seller is unsure how to handle delayed shipments and a refund request when tracking and inr policy timelines create risk of losing both cards and money.",
+    "gpt_confidence": 100.0
+  },
+  "74da960e40373349ff3ac669243d3377": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Ethics",
+      "Trust Issue",
+      "Listing Practices"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether it is ethical to list the same graded card twice on ebay, once as psa 9 and once as raw, and fulfill whichever sells first.",
+    "gpt_confidence": 100.0
+  },
+  "1a095421fb6a55696f01fd9c9a7795e0": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Customer Service",
+      "Refund",
+      "Seller Experience",
+      "Trust"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "Buyer praises an ebay seller for promptly refunding a missing low-value card and later sending a thoughtful package, demonstrating exceptional class and customer service.",
+    "gpt_confidence": 100.0
+  },
+  "50193633c0c576cb39a6f6d4f6a8e910": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping/Turnaround Time",
+      "Refund",
+      "Service Quality",
+      "Expectation Mismatch",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Customer is upset that an expedited grading order is several business days late and is considering seeking a refund, credits, or a credit card dispute.",
+    "gpt_confidence": 100.0
+  },
+  "5699be3d2e5407a8936efd19c7a74b8c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Trust Issue",
+      "Fraud Concern",
+      "Transparency",
+      "Product Odds"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User questions whether topps\u2019 stated odds and quantities of special insert cards are accurate and audited, raising concerns about potential fraudulent misrepresentation.",
+    "gpt_confidence": 100.0
+  },
+  "ddf31fa33739ff68b7612f079e73b2f7": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Authenticity",
+      "Trust Issue",
+      "Risk Concern"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "The user is concerned that a card in their 1972 topps set may be counterfeit due to unusual surface and cardstock differences.",
+    "gpt_confidence": 100.0
+  },
+  "83e9343e8d6b026e1f0a55674a0cc93e": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Purchase Experience",
+      "Price Value"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User describes a positive outcome after initially being stood up on a facebook marketplace card purchase, ultimately getting a better deal.",
+    "gpt_confidence": 100.0
+  },
+  "e81a1008ca8afe92d126c567b6700e01": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Search",
+      "Information Gap",
+      "Product Clarity",
+      "Comparison Shopping"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is struggling to find comparable values for a specific card and is confused by differing card backs between platforms.",
+    "gpt_confidence": 100.0
+  },
+  "59835ccc4a24a45835780fe9acc4a026": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Search",
+      "Discovery",
+      "Information Gap"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is struggling to find comparable values or pricing information for a specific card.",
+    "gpt_confidence": 100.0
+  },
+  "67f26b2a40645c3e366e52e13e983588": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Question",
+      "Valuation",
+      "Guidance Request"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for advice on whether to grade a low-population buyback autograph card and how to determine its value.",
+    "gpt_confidence": 100.0
+  },
+  "4aabcd62537e3fd8ae919bccaa6dc6e7": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Content Sharing",
+      "Trust Issue"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is sharing a video of someone opening an obviously fake product box, pack, and card for others\u2019 awareness or entertainment.",
+    "gpt_confidence": 100.0
+  },
+  "f4fc1050da3c1b726d342bd4b2267af1": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Satisfaction",
+      "Value",
+      "Collectibles"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "Customer is pleased with the affordable case break purchase that yielded a desirable bobby card for their collection.",
+    "gpt_confidence": 100.0
+  },
+  "b249b71dbde508cce4fc8837b85e4b4e": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Experience",
+      "Engagement"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User had a positive first experience using fanatics credits on card breaks and is now hooked.",
+    "gpt_confidence": 100.0
+  },
+  "7a7cdc31ff6460fb2ce8da7d13dbf5dd": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Fairness",
+      "Trust Issue",
+      "Rigging/Scripting Concern",
+      "Gambling Odds",
+      "Platform Comparison"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "User suspects fanatics live breaks have unfairly higher hit rates than other platforms, raising serious trust and fairness concerns.",
+    "gpt_confidence": 100.0
+  },
+  "014bd1a1b0a3ab422a54ef2540e8be72": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Sales Performance",
+      "Auctions",
+      "Non-Payment",
+      "Trust Issue"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is struggling to sell a valuable card on ebay at a discounted price and is hesitant to auction it due to past non-payment issues.",
+    "gpt_confidence": 100.0
+  },
+  "6d313da3f712de99fc937a74bf0ed0eb": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Availability",
+      "Business Practices",
+      "Accessibility",
+      "Middlemen/Breakers",
+      "Customer Fairness"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "Customer complains that fanatics\u2019 rapid, high-priced product release schedule favors breakers and middlemen, making the hobby unaffordable and inaccessible for average collectors.",
+    "gpt_confidence": 100.0
+  },
+  "0ed4820b12c749385acb7955c21ef9ce": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Pricing",
+      "Product Satisfaction",
+      "Gambling/Risk"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is pleased with a rare positive experience in a card break but still believes breaks are usually overpriced and poor value.",
+    "gpt_confidence": 100.0
+  },
+  "772293cdde905d36c322d24747134b9a": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Suggestion",
+      "Pricing",
+      "Experience",
+      "Discovery"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User dislikes current breaking formats and proposes a fixed-price, randomized team allocation model for hobby box breaks, asking if such a product exists.",
+    "gpt_confidence": 100.0
+  },
+  "1a9375ff9a51d18071e14b0e370c54d9": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Purchase Decision",
+      "Investment Advice",
+      "Product Outcome"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "The user is asking whether to hold or sell a card they pulled from a fanatics repack case break as a potential investment.",
+    "gpt_confidence": 100.0
+  },
+  "925c81689a9967b6313297b329b8077f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Customer Service",
+      "Harassment",
+      "Community Behavior",
+      "Trust Issue",
+      "Onboarding Experience"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "New female user feels mistreated and labeled a troll by breakers and mods on whatnot when asking planning questions, and is seeking more welcoming breakers.",
+    "gpt_confidence": 100.0
+  },
+  "9ea0ca77da671de156210a324fdd5683": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Community",
+      "Trading",
+      "Collection Management"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User expresses enthusiasm for trading bobby abreu cards and invites others to trade with them.",
+    "gpt_confidence": 100.0
+  },
+  "5aa1c6c32dae0a55dd508cb2c69f56c8": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Purchase Interest",
+      "Content Discovery"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is expressing interest in trading for or buying specific cards shown in reference images.",
+    "gpt_confidence": 100.0
+  },
+  "a104e7888b2b07517dcee6a222ec5ced": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Experience",
+      "Nostalgia",
+      "Collectibles"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "The user fondly describes discovering old, visually appealing trading cards from their family\u2019s former shop, valuing them for nostalgia rather than monetary worth.",
+    "gpt_confidence": 100.0
+  },
+  "9fad8f5c4947ff2f3acf04329ea9de59": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Listing Clarity",
+      "Pricing",
+      "Payment Terms",
+      "Trade Terms"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is posting a detailed buy/sell/trade listing with pricing, payment, and trade preferences for cards.",
+    "gpt_confidence": 100.0
+  },
+  "98018dea155d4127a62e3efb90c90c97": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Shipping"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is sharing pricing and shipping details for turkey red and rookie medallion cards.",
+    "gpt_confidence": 100.0
+  },
+  "32096b2a76eca33daafc8edd76d8c232": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Misrepresentation",
+      "Seller Responsiveness",
+      "Trust Issue",
+      "Reporting/Support"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer received a mislabeled dwarf tree, the seller is unresponsive, and they are unable to find how to report the issue to ebay.",
+    "gpt_confidence": 100.0
+  },
+  "7668208eacda5ff24a9618592c125fb6": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Returns",
+      "Ux",
+      "Policy Confusion",
+      "Trust Issue",
+      "Buyer Protection"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Buyer mis-selected a return reason, can\u2019t reopen a proper ebay return, and feels unsafe using an off-platform return label without ebay protection.",
+    "gpt_confidence": 100.0
+  },
+  "c57a3d5b7a3fa96cd1589514575de66f": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Insurance",
+      "Policy Clarity",
+      "Usps"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "The seller is confused about whether ebay or usps provides the additional shipping insurance and how to file a claim for a lost package.",
+    "gpt_confidence": 100.0
+  },
+  "8dbc231ff2873cb9287deee50d365b2a": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Idea",
+      "Discovery",
+      "Valuation",
+      "Collection Management",
+      "Trading"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is proposing an app concept for scanning and valuing collectible cards and is seeking feedback on desired features.",
+    "gpt_confidence": 100.0
+  },
+  "00b74bbb8e4de8594cecd90ca8c624ac": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Visibility",
+      "Search",
+      "Listing Quality",
+      "International Shipping",
+      "Trust Issue"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User is concerned their highly sought-after ebay card listing is getting almost no views and may not be visible in major international markets.",
+    "gpt_confidence": 100.0
+  },
+  "403140a51e56543c18c4a459ca708c0c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Value",
+      "Market Speculation",
+      "Investment Concern",
+      "Supply Concerns"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User believes prismatic evolutions is overprinted and over-hoarded, making it a poor long-term investment compared to other pok\u00e9mon sets.",
+    "gpt_confidence": 100.0
+  },
+  "81dab9165957d7fa240aa933f22c6eeb": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Marketplace Availability",
+      "Pricing",
+      "Collectibles"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking advice on where and how to sell their non-sport trading card collection in germany for a reasonable price.",
+    "gpt_confidence": 100.0
+  },
+  "93c3a0de26982cb7ab93371194a2dec6": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Discovery",
+      "Information Request",
+      "Content Discovery",
+      "Shopping Experience"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking advice and resources for starting an nba card collection, including where to research sets, buy boxes, and learn best practices.",
+    "gpt_confidence": 100.0
+  },
+  "dd9ab61403b7932b43bd868ddba0b718": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Market Standards",
+      "Information Request"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking whether beckett is still a standard for card price evaluation or if ebay sales have replaced it.",
+    "gpt_confidence": 100.0
+  },
+  "1c23226e61f46060fc9456955ca9fa6b": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Sales Post",
+      "Pricing",
+      "Shipping",
+      "Payment"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is posting a detailed sales listing for cryptozoic dc trading card lots with pricing, shipping, and payment terms.",
+    "gpt_confidence": 100.0
+  },
+  "20bee82c21dfa369bb2b396ff5cca07b": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Valuation",
+      "Marketplace Fairness",
+      "Auctions"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is frustrated that card prices are based on low-visibility auction results, which can undervalue cards compared to typical sale ranges.",
+    "gpt_confidence": 100.0
+  },
+  "06f6055450d727b1c4d9b193e18d14c3": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Product Value",
+      "Accessibility",
+      "Market Health",
+      "Community"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "The user argues that rapidly rising box prices are pricing out average collectors and risking long-term damage to the trading card hobby.",
+    "gpt_confidence": 100.0
+  },
+  "8b8a3daa2e59fc6ab0bc3cd5b4258f9a": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Experience",
+      "Recommendation",
+      "Marketing"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User enthusiastically describes and recommends the farfantasy nft trading card game and the broader farcaster ecosystem.",
+    "gpt_confidence": 100.0
+  },
+  "888507e3fcd9aff29e888a0eab80142b": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Advice Request",
+      "Valuation"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for advice on how to value and potentially sell an ungraded rookie jokic nba card.",
+    "gpt_confidence": 100.0
+  },
+  "51e1315f8ac9492832c73a47770daf04": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Inquiry",
+      "Pricing"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for help estimating the value of two specific trading cards they pulled from a box.",
+    "gpt_confidence": 100.0
+  },
+  "597abe8f44ba6dc4ca15617a6d1ac18b": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Selling",
+      "Usability",
+      "Guidance Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking advice on the most practical way to sell a large bulk lot of yu-gi-oh cards without individually valuing and listing them.",
+    "gpt_confidence": 100.0
+  },
+  "08cf77163deefbcc16786e56d5459aef": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Purchase Decision",
+      "Collectibles"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether they overpaid for a high-grade jayson tatum rookie patch auto card they purchased for $1.8k.",
+    "gpt_confidence": 100.0
+  },
+  "562cdc4a2e1f34eba4bf909641d3cde4": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Question",
+      "Valuation",
+      "Collectibles",
+      "Third-Party Service"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking if a potentially misprinted nolan ryan card should be graded by psa and whether it has added value.",
+    "gpt_confidence": 100.0
+  },
+  "f9cb9e8d8144bd8d0d45d6a1eea19703": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Content",
+      "Community"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is sharing a description of a trading card subreddit and related communities without expressing a clear issue or praise.",
+    "gpt_confidence": 100.0
+  },
+  "969a5e4e512c4b013922e02743bf04ba": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Education",
+      "Pricing",
+      "Expectations",
+      "Gambling Risk",
+      "New User Confusion"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is confused about how non-sports topps hobby boxes work, why they\u2019re expensive without guaranteed hits, and whether these cards can gain value.",
+    "gpt_confidence": 100.0
+  },
+  "1570f6a8acab1eb9d1b40b96f8cf6067": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Listing",
+      "Product Description",
+      "Marketplace"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is listing a rare 1/1 topps holiday buyback card for sale and providing a description of what it is.",
+    "gpt_confidence": 100.0
+  },
+  "0f4b36b8115409066acfde1d97eb2c08": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "New User Guidance",
+      "Valuation"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking how to determine the value of a 1/1 card as a new collector.",
+    "gpt_confidence": 100.0
+  },
+  "b94002011829e35d61209ce7ab7d46b8": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Guidance Request",
+      "Resale",
+      "New User"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is seeking advice on whether to sell a special dodgers luffy card online or in person and how to avoid damaging its value.",
+    "gpt_confidence": 100.0
+  },
+  "b615b7afa324f5061456dbdeeb6a4927": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Quality",
+      "Consistency",
+      "Visual Design"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "User is frustrated that digital scans of gold mega cards vary in brightness and detail, leading to inconsistent visual quality across sites.",
+    "gpt_confidence": 100.0
+  },
+  "885e95a2c64f3f3b56f788d86561c87c": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Onboarding",
+      "Account Setup",
+      "Policy Clarity"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether they need an ebay business account or can use a personal account to start selling pok\u00e9mon cards from their collection.",
+    "gpt_confidence": 100.0
+  },
+  "307765c059ee6aeedad9b0d320df0e08": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping Cost",
+      "International Buyers",
+      "Policy Question",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether ebay international shipping refunds excess shipping charges after a u.s. buyer questioned the high cost.",
+    "gpt_confidence": 100.0
+  },
+  "8a948e02501555d02cf19a6849cf5edb": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Sales",
+      "Shipping",
+      "Third-Party Services",
+      "Pricing",
+      "Policy/External Factors"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "Seller reports significantly reduced sales they attribute to a postal strike and is frustrated with limited, more expensive shipping alternatives and lower prices on other platforms.",
+    "gpt_confidence": 100.0
+  },
+  "44d94ed1de603fd2de2e04ec38517044": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Experience",
+      "Customer Service",
+      "Communication Delay",
+      "Trust Issue",
+      "Order Issue",
+      "Platform Support"
+    ],
+    "frustration": 5,
+    "impact": 3,
+    "summary": "Buyer is extremely frustrated that a slow-responding seller listed promised collectible items publicly instead of via a private auction, resulting in someone else purchasing them and leaving the buyer without recourse or fast support options.",
+    "gpt_confidence": 100.0
+  },
+  "c1792a5324d9309550b2461b2a535a33": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Satisfaction",
+      "Brand Preference",
+      "Resale Value",
+      "Community Engagement"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User expresses strong satisfaction with psa-graded 1/1 cards and shares plans to auction their collection while engaging the community for auction house feedback.",
+    "gpt_confidence": 100.0
+  },
+  "f9495c2288d1895c0f25d2994d9a8a1c": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Seller Promotion",
+      "Trust",
+      "Marketplace"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "A highly rated whatnot seller is promoting their consignment-style service to help others sell and ship their cards.",
+    "gpt_confidence": 100.0
+  },
+  "8cc7934a034ded262d972bd99559ad69": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Fees",
+      "Comparison",
+      "Information Request"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking for information and opinions on psa consignment fees versus ebay, including whether shipping is charged and if the service is worth it.",
+    "gpt_confidence": 100.0
+  },
+  "103dab000f5237967c832561a0869cfd": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Ethics Concern",
+      "Trust Issue",
+      "Resale"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User describes consigning sports cards to hide proceeds from an ex during a divorce and mentions using pricing tools for valuation.",
+    "gpt_confidence": 100.0
+  },
+  "6c45848a8a9dc4503f7685574588856d": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Selling Experience",
+      "Fees/Pricing",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether using an ebay consignment service like dc is a good option for selling their cards.",
+    "gpt_confidence": 100.0
+  },
+  "30b7614616eb7ca243b69c23418e1f4f": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Discovery",
+      "Search",
+      "Product Information"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for recommendations on the best place or website to sell garbage pail kids cards directly to collectors.",
+    "gpt_confidence": 100.0
+  },
+  "2f0ebb8e20738131726411dc0f931c2f": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Spam/Promotion",
+      "Content Quality"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is promoting their own tcg auction page and inviting others to visit it.",
+    "gpt_confidence": 100.0
+  },
+  "131e394a8d0792b09b696fbc81b4927e": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Onboarding",
+      "Guidance Request",
+      "Selling Process"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for guidance on how to start an ebay account to sell mid- and lower-end cards for the first time.",
+    "gpt_confidence": 100.0
+  },
+  "5bc55d69433c68f40d45b4c18c279f27": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Inquiry",
+      "Vendor Support",
+      "Information Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking recommendations for card vending machines and reliable distributors after getting little help from companies they contacted.",
+    "gpt_confidence": 100.0
+  },
+  "63207071d1f24c9db53709044ef624e8": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Technical Issue",
+      "Usability",
+      "Third-Party Integration"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User likes the ludex app for selling tcg cards but is blocked from using it due to persistent 401 errors with no apparent workaround.",
+    "gpt_confidence": 100.0
+  },
+  "30559bea411980489d2231e8715ee79f": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Usefulness",
+      "Discovery",
+      "International Expansion"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User positively describes their card deal-finding site, noting its usefulness and planned expansion while inviting further feedback.",
+    "gpt_confidence": 100.0
+  },
+  "dacae834869f1ba5b18ca6eaf2665728": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Sales Process"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is offering to sell a lot of cards at a set price and inviting direct messages for questions.",
+    "gpt_confidence": 100.0
+  },
+  "ab2ab99aea7a09f6bd00efe567bf3c4c": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Enjoyment",
+      "Collecting",
+      "Resale",
+      "Marketplace Guidance"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is excited about pulling a valuable god pack of cards and is seeking advice and offers on where and how to sell them.",
+    "gpt_confidence": 100.0
+  },
+  "adee4951b090e8c9ea53063bc61717cd": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Discovery",
+      "Browsing Experience",
+      "Content Volume"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is positively announcing a growing collection of pok\u00e9mon cards that will be added to the platform over the coming weeks.",
+    "gpt_confidence": 100.0
+  },
+  "7c97b8e34bcaba381d2bc3ce549e8afd": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Usage",
+      "Logistics",
+      "Information Request",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking information on local, in-person card grading options in the phoenix area due to reluctance to mail their valuable card.",
+    "gpt_confidence": 100.0
+  },
+  "0b9189f43553d0d1ae656d2f9f6d0d5d": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Discovery",
+      "Search",
+      "Buying/Selling"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for recommendations on the best subreddit communities to sell their well-preserved rare trading cards.",
+    "gpt_confidence": 100.0
+  },
+  "bb5cda3c4cba6bd03f3209f530260a65": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Discovery",
+      "Information Request"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for recommendations on where to buy sports card boxes with numbered cards and which brands are best.",
+    "gpt_confidence": 100.0
+  },
+  "08b919cd91f71b9ca3cec9584fda70ae": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Valuation",
+      "Collectibles"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for a rough value estimate of a favorite 1/1 stranger things trading card.",
+    "gpt_confidence": 100.0
+  },
+  "39fddfc9c473fed1b724d905ff59d68e": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Value",
+      "Information Request",
+      "Collectibles"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for help estimating the market value of a rare lamine yamal 1/1 adrenalyn platinum card they pulled.",
+    "gpt_confidence": 100.0
+  },
+  "b4c6d21912cc7a862d2271a6e068a435": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Marketplace Experience"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is unsure how to price a listed item on ebay and is seeking guidance on its value.",
+    "gpt_confidence": 100.0
+  },
+  "25d8980133966384b62fe6d3ff75d953": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Quality",
+      "Collation",
+      "Customer Support",
+      "Community Help",
+      "Trading"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Customer reports severe collation/duplication issues across two hobby boxes and seeks guidance on reporting to panini and trading duplicates.",
+    "gpt_confidence": 100.0
+  },
+  "c7509d8915b05e53fe339a01d4e7d2fb": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Product Value",
+      "Guidance Needed"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for advice on the value and grading worthiness of their old yu-gi-oh cards and recommendations for local shops in ireland.",
+    "gpt_confidence": 100.0
+  },
+  "4d53022a6263075e5b22a3144269361a": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Redemption",
+      "Refund",
+      "Trust Issue",
+      "Customer Support",
+      "Value For Money"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Customer feels scammed after panini refused to honor an expired high-value ronaldo redemption card and offered far lower-value reward points instead.",
+    "gpt_confidence": 100.0
+  },
+  "5984e162a33581726c2ba5ca059481d7": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Inquiry",
+      "Purchase Decision",
+      "Recommendations"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for recommendations on which sports card packs or boxes to buy before christmas for a fun holiday ripping experience.",
+    "gpt_confidence": 100.0
+  },
+  "afe8aba5e405713992fa1cd1e3d71bd1": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Experience",
+      "Recommendation"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is very pleased with the card display website and highly recommends it to collectors.",
+    "gpt_confidence": 100.0
+  },
+  "998535a92bd0c9aa0e43a55611dce7de": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Product Quality",
+      "Expectations Gap",
+      "Value For Money",
+      "Collectibles"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Customer is very disappointed with the batman metal universe hobby box due to poor card quality and excessive duplicates, questioning the value of opening remaining boxes.",
+    "gpt_confidence": 100.0
+  },
+  "193fb10261b82f852b741dacac94d8c3": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Trust Issue",
+      "Fraud Concern",
+      "Refund",
+      "Customer Support",
+      "Policy Confusion",
+      "High-Value Transaction"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Buyer reports a potentially fraudulent duplicate listing of a high-value psa card and is unable to obtain a full refund including a $1,000 charity portion despite authenticity concerns.",
+    "gpt_confidence": 100.0
+  },
+  "760343fab1daff915c963e4b702cf5da": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Issue",
+      "Fees And Pricing",
+      "Trust Issue",
+      "Shipping"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User reports a seller attempting to charge excessively high shipping fees for comics and warns others about this behavior.",
+    "gpt_confidence": 100.0
+  },
+  "36adde842445470c79d0d43e51752f8d": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Community",
+      "Engagement",
+      "Platform Change"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "The user feels ebay has degraded the once-stimulating comics discussion community and is moving conversation to facebook instead.",
+    "gpt_confidence": 100.0
+  },
+  "eb688471e254d75ce03d834fe198ba78": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Account Setup",
+      "Policy/Rules",
+      "New Seller"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether they need an ebay business account or can use a personal account to start selling pok\u00e9mon cards from their collection.",
+    "gpt_confidence": 100.0
+  },
+  "abafbc2194b5c7d1500b6208ab865032": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "International",
+      "Fees",
+      "Policy Clarity",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether ebay international shipping will refund excess shipping charges and if a buyer\u2019s concern about high shipping is a red flag.",
+    "gpt_confidence": 100.0
+  },
+  "78e0b7cdb79ca75a8ba3807d4deedf96": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Ai Features",
+      "Listing Quality",
+      "Search Experience",
+      "Trust Issue",
+      "Conversion Impact"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "The user is frustrated that ebay\u2019s built-in ai description tool produces generic, uninformative text that harms listing quality and buyer usefulness.",
+    "gpt_confidence": 100.0
+  },
+  "9885de8b98beadc7939ce8dc512910d6": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Marketplace Dynamics",
+      "Competition",
+      "Discovery"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "The user describes how a few overly high listings on ebay appear to have inflated prices for a niche collectible, potentially breaking the market for that item.",
+    "gpt_confidence": 100.0
+  },
+  "eecbd7410d1eed3d20dce9090fecab23": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Item Condition",
+      "Authentication",
+      "Refund",
+      "Customer Support",
+      "High-Value Purchase",
+      "Trust Issue",
+      "Seller Communication"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Buyer received a high-value card with severe damage despite nm/mint listing and ebay authentication, cannot get a refund or response from the seller, and feels the process is untrustworthy.",
+    "gpt_confidence": 100.0
+  },
+  "c99f0bf1279ded9af64c635b17517501": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Refund",
+      "Policy Confusion",
+      "Delivery Issue",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer is confused and concerned after ebay refunded them despite eventual delivery and is unsure how to fairly compensate the seller without causing double payment.",
+    "gpt_confidence": 100.0
+  },
+  "9b0cca91bb67bc5c754abeeafcc209df": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Buyer Protection",
+      "Refund",
+      "Scam/Fraud",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Buyer reports receiving a fake pok\u00e9mon card on ebay, returned it via ebay\u2019s process, and now faces threats and non-receipt claims from the seller.",
+    "gpt_confidence": 100.0
+  },
+  "0d953cf8067b5e1674016bb16e4dbd97": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Refund",
+      "Customer Support",
+      "Trust Issue",
+      "Policy Confusion"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "Customer reports a stolen package marked as delivered and is frustrated that ebay denied a refund despite a long, trustworthy purchase history.",
+    "gpt_confidence": 100.0
+  },
+  "32962af6bbf4824990bbe30df86813ed": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Ux",
+      "Personalization",
+      "Content Controls",
+      "Addictive Design",
+      "Risk/Wellbeing"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "User wants a way to disable or hide ebay live on the home screen to avoid impulsive auction spending.",
+    "gpt_confidence": 100.0
+  },
+  "cf0a116e797909b900ee18018e74c08e": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Resale Difficulty",
+      "Platform Usability",
+      "Process Confusion",
+      "Customer Support Needed"
+    ],
+    "frustration": 4,
+    "impact": 3,
+    "summary": "User is frustrated that reselling a psa-vaulted mlb card originally bought via ebay/psa is unexpectedly difficult and confusing.",
+    "gpt_confidence": 100.0
+  },
+  "241828764aaa0c439e1970203b8a0a25": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "First-Time Buyer",
+      "Anxiety"
+    ],
+    "frustration": 3,
+    "impact": 2,
+    "summary": "First-time ebay buyer is worried about a usps shipment that appears to be routed far from their area and is unsure whether to contact usps or just wait.",
+    "gpt_confidence": 100.0
+  },
+  "6424c776dfa7e955e4284648cc236958": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Onboarding",
+      "Pricing",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking clear information and reassurance about how psa grading works, its security, and total costs before sending in valuable sports cards.",
+    "gpt_confidence": 100.0
+  },
+  "029eb86662e5834ba69ddcae146dbb75": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Psa Vault",
+      "Checkout",
+      "Account Linking",
+      "International",
+      "Support Experience"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "User cannot access or select psa vault for ebay card purchases on a canadian account despite seeing an empty vault and matching email accounts.",
+    "gpt_confidence": 100.0
+  },
+  "884dce96078b8957df52456f87972f65": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Shipping",
+      "Trust Issue",
+      "Policy Clarity",
+      "Risk Concern"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking whether using their psa vault address as the shipping address on ebay is safe and what happens if there are order issues since they can\u2019t inspect items first.",
+    "gpt_confidence": 100.0
+  },
+  "b348b4f3d1d7489cce7479a66a189a14": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Vault",
+      "Checkout",
+      "Purchase Flow",
+      "Confusing Ux"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Buyer cannot find the option to keep an auction-won card in the vault during ebay checkout despite the listing indicating vault eligibility.",
+    "gpt_confidence": 100.0
+  },
+  "963c5a9a7d6ce26526d5922a5903286a": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Shipping",
+      "Processing Time"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking how long ebay vault processing and withdrawal typically take before items are available or shipped.",
+    "gpt_confidence": 100.0
+  },
+  "9aef5b6a1bd03cf0f598750cc6507220": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Pricing",
+      "Policy",
+      "Platform Limitations",
+      "Seller Experience",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller mistakenly listed a high-value card at $0.99 via ebay vault, cannot cancel due to policy, and feels severely harmed by being forced to honor the sale.",
+    "gpt_confidence": 100.0
+  },
+  "32439dbf2fc612e477cdc34c4f676999": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Clarity",
+      "Policy",
+      "Trust Issue"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User finds ebay vault coverage confusing when selling an item and is seeking clearer information.",
+    "gpt_confidence": 100.0
+  },
+  "f33c8a6c990f125e1d538e97a0e7bda3": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Customer Support",
+      "Logistics/Shipping",
+      "Account Restriction",
+      "Process Confusion",
+      "Trust Issue"
+    ],
+    "frustration": 5,
+    "impact": 4,
+    "summary": "The user is upset that ebay vault will not ship a sold item, causing an account restriction for missing tracking and making it very hard to reach anyone who can resolve the issue.",
+    "gpt_confidence": 100.0
+  },
+  "a546e46cd5144fd789c6b85f60e002ea": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Authenticity",
+      "Trust Issue",
+      "Information Clarity",
+      "Product Experience"
+    ],
+    "frustration": 3,
+    "impact": 4,
+    "summary": "User is concerned about how ebay vault verifies card authenticity and condition when they never physically see the card and feels the process is unclear.",
+    "gpt_confidence": 100.0
+  },
+  "eb76acb309cc2afb5b6f5ba3a52c7d7f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Account Restriction",
+      "Funds Hold",
+      "Customer Support",
+      "Program/Vault Issues",
+      "Trust Issue",
+      "Seller Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller with 100% feedback had their ebay account randomly restricted, locking vault items and funds and causing severe financial distress amid poor customer support.",
+    "gpt_confidence": 100.0
+  },
+  "039e86d093c67c241b9c8cf6d246ca8f": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "How-To/Usability",
+      "Selling Flow",
+      "Vault"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User is unsure how to list a high-value graded trading card they own for sale through the ebay vault after adding it to their collection.",
+    "gpt_confidence": 100.0
+  },
+  "76e6cbd1f07bc6142adc2bf1c5fb46f1": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Update",
+      "Fees/Pricing",
+      "Shipping/Delivery",
+      "Communication"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User shares an ebay uk email outlining changes to simple delivery and reduced buyer protection fees for low-priced items without expressing clear opinion.",
+    "gpt_confidence": 100.0
+  },
+  "cfac0fb10d08440f6968ea7b229e4a66": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping Issue",
+      "Usps Partner Issue",
+      "Tracking",
+      "Refund",
+      "Customer Support",
+      "Policy Dispute",
+      "Seller Performance Risk"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Multiple usps handling and tracking failures plus refusal of refunds or escalation are jeopardizing the seller\u2019s ebay performance and causing severe frustration.",
+    "gpt_confidence": 100.0
+  },
+  "15eaaf47445e8b207d3fc9cd57b1ea44": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Chargeback",
+      "Buyer Fraud",
+      "Dispute Resolution",
+      "High-Value Item",
+      "Trust Issue",
+      "Support Experience"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Seller describes a highly stressful fraud and chargeback dispute over a high-value local pickup item, eventually resolved in their favor but still causing concern and effort.",
+    "gpt_confidence": 100.0
+  },
+  "5667b80652216b6733a2c8585aa68e59": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Sales",
+      "Shipping",
+      "Third-Party Services",
+      "Pricing",
+      "Platform Alternatives"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "The user reports significantly reduced sales during the strike, higher shipping complexity and costs, and lower prices on alternative platforms despite trying multiple pivots.",
+    "gpt_confidence": 100.0
+  },
+  "723c1e2ea54459611bd72b8c1dd3d20f": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Delivery Issue",
+      "Shipping",
+      "Trust Issue",
+      "Customer Support"
+    ],
+    "frustration": 3,
+    "impact": 3,
+    "summary": "Buyer reports two packages marked as delivered but not received and is unsure whether to contact sellers or ebay about the apparent postal misdelivery.",
+    "gpt_confidence": 100.0
+  },
+  "dab19c58510d54054a624e4f0d06a8a2": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Bulk Listing",
+      "Listing Tools",
+      "Usability",
+      "Missing Feature"
+    ],
+    "frustration": 2,
+    "impact": 3,
+    "summary": "User wants a way to add multiple topic values via bulk draft file upload instead of editing each ebay listing manually.",
+    "gpt_confidence": 100.0
+  },
+  "caaa6a6cd898889bac9551de85c9ba15": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Costs",
+      "Logistics",
+      "Inventory Constraints",
+      "Seller Experience"
+    ],
+    "frustration": 4,
+    "impact": 4,
+    "summary": "Seller is struggling to find affordable, space-efficient packaging and padding for large heavy items, making some ebay sales uneconomical.",
+    "gpt_confidence": 100.0
+  },
+  "170e5f0d3681409a387e8dba97be3868": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Shipping",
+      "Tracking",
+      "Seller Communication",
+      "Trust Issue",
+      "High-Value Item",
+      "Theft/Loss",
+      "Policy/Process"
+    ],
+    "frustration": 4,
+    "impact": 5,
+    "summary": "Buyer\u2019s $850 item was stolen after early ups delivery with no prompt tracking, wrong carrier, and no signature, and they want recourse and seller responsibility.",
+    "gpt_confidence": 100.0
+  },
+  "123df5172cb5019e41920226383826c1": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Fees",
+      "Seller Tools",
+      "Guidance Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "The user is asking for advice on whether using different promotion rates on ebay is worthwhile given the impact of ad fees on their profits.",
+    "gpt_confidence": 100.0
+  },
+  "37551e03e5f1fe7a2a236159ccb90d91": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Seller Communication",
+      "Customer Service",
+      "Trust Issue",
+      "Order Issue",
+      "Availability"
+    ],
+    "frustration": 5,
+    "impact": 3,
+    "summary": "Buyer is angry that a slow-responding seller publicly listed promised items as a \u201cprivate auction,\u201d which were then bought by someone else and is now unresponsive.",
+    "gpt_confidence": 100.0
+  },
+  "f5a0dd4b6d9526444929cb126caa2ff3": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Promotion",
+      "Seller Reputation",
+      "Trust"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "Seller positively promotes their strong sales record and offers to help others sell their cards.",
+    "gpt_confidence": 100.0
+  },
+  "7dbebc790a14cb818be8fc948f5c9d37": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Fees",
+      "Comparison",
+      "Information Request"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for information comparing psa consignment fees and shipping costs versus ebay\u2019s higher fee structure.",
+    "gpt_confidence": 100.0
+  },
+  "8405816f940572e37b4512f57726b56e": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Selling Experience",
+      "Fees",
+      "Platform Choice"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking whether using ebay consignment (e.g., dc) is worthwhile for selling their cards.",
+    "gpt_confidence": 100.0
+  },
+  "8ee08362de7a5ecbbee9afd35ef28c3d": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Advice",
+      "Valuation",
+      "New User"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is asking for advice on how to value and potentially sell an ungraded rookie jokic card.",
+    "gpt_confidence": 100.0
+  },
+  "8626e692fb4d7e4e1ebc0320cc0e4001": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Onboarding",
+      "Selling",
+      "Guidance Request"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking for guidance on how to start their first ebay account to sell mid- and lower-end cards.",
+    "gpt_confidence": 100.0
+  },
+  "3a718237c0979ec4e22c57590cb72e04": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Valuation",
+      "Collectibles"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking opinions on whether they overpaid for a high-grade jayson tatum rookie patch auto card they are happy to own long term.",
+    "gpt_confidence": 100.0
+  },
+  "70f20c304ac58f9d6345d179ff05e6fd": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Inquiry",
+      "Vendor Support",
+      "Information Request"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "User is seeking recommendations for card vending machines and distributors after getting little help from companies they contacted.",
+    "gpt_confidence": 100.0
+  },
+  "b0360d0bda746ea2d95a7fdeb6841297": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Question",
+      "Valuation",
+      "Collectibles"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is asking if their potentially double-printed nolan ryan card should be graded by psa and whether it has added value.",
+    "gpt_confidence": 100.0
+  },
+  "7019be766a2c443719392a045376a3ea": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Discovery",
+      "Feature Request",
+      "International Expansion"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User describes a deal-finder site for underpriced trading cards and requests general feedback and suggestions for expansion.",
+    "gpt_confidence": 100.0
+  },
+  "4edab4ae3c3b28364d3caaa23d745758": {
+    "sentiment": "Praise",
+    "subtags": [
+      "Product Enjoyment",
+      "Collecting",
+      "Resale",
+      "Discovery"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User happily describes pulling a valuable god pack and is looking for advice and buyers to sell the cards.",
+    "gpt_confidence": 100.0
+  },
+  "ecc318601587383c23b7b3dad7054529": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Product Idea",
+      "Feature Request",
+      "Valuation",
+      "Collection Management",
+      "Trading"
+    ],
+    "frustration": 1,
+    "impact": 2,
+    "summary": "User is proposing a smartcollect app for scanning, valuing, and managing collectible cards and is asking for feedback and desired features.",
+    "gpt_confidence": 100.0
+  },
+  "76162de958bf368b593939111420c5e0": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Pricing",
+      "Marketplace Experience"
+    ],
+    "frustration": 2,
+    "impact": 2,
+    "summary": "The user is unsure how to price a numbered card on ebay and is seeking guidance on its value.",
+    "gpt_confidence": 100.0
+  },
+  "d010d1d930e14799cf9bfd91b48a9748": {
+    "sentiment": "Neutral",
+    "subtags": [
+      "Information Request",
+      "Valuation",
+      "Onboarding"
+    ],
+    "frustration": 1,
+    "impact": 1,
+    "summary": "User is asking for guidance on the value and grading worthiness of their old yu-gi-oh cards and recommendations for local shops in ireland.",
+    "gpt_confidence": 100.0
+  },
+  "ab4e2d704973b97231c46647fe4acc6c": {
+    "sentiment": "Complaint",
+    "subtags": [
+      "Redemption",
+      "Refund",
+      "Trust Issue",
+      "Customer Support",
+      "Compensation"
+    ],
+    "frustration": 5,
+    "impact": 5,
+    "summary": "Customer feels scammed after panini refused an expired high-value ronaldo redemption and offered significantly lower-value reward points instead.",
+    "gpt_confidence": 100.0
+  }
+}
