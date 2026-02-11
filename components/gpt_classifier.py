@@ -64,3 +64,29 @@ def classify_brand_sentiment(text, brand):
             print("[Sentiment Fallback Error]", e)
 
     return "Neutral"
+
+
+def enrich_with_gpt_tags(insight: dict) -> dict:
+    """Lightweight enrich function used by signal_scorer.
+
+    Ensures brand_sentiment is populated using classify_brand_sentiment
+    when we have both text and a target brand. Otherwise returns the
+    insight unchanged so upstream pipelines remain stable even if
+    advanced tagging is not available here.
+    """
+    if not isinstance(insight, dict):
+        return insight
+
+    text = insight.get("text", "") or ""
+    brand = insight.get("target_brand") or insight.get("brand") or "eBay"
+
+    if text.strip():
+        try:
+            sentiment = classify_brand_sentiment(text, brand)
+            if sentiment and not insight.get("brand_sentiment"):
+                insight["brand_sentiment"] = sentiment
+        except Exception:
+            # Best-effort enrichment; ignore failures silently
+            pass
+
+    return insight
