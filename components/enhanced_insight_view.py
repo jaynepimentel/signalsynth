@@ -266,17 +266,13 @@ def render_insight_cards(
             st.markdown("**📣 Example quote:**")
             st.markdown(f"> {_truncate(text)}")
 
-            if ideas:
+            # Show PM suggestions if available (skip warning if empty - not critical)
+            if ideas and any(idea.strip() for idea in ideas if isinstance(idea, str)):
                 st.markdown("**💡 Suggested PM actions:**")
                 for idea in ideas:
-                    pretty = textwrap.shorten(str(idea), width=220, placeholder="...")
-                    st.markdown(f"- {pretty}")
-            else:
-                st.warning(
-                    "No stored PM suggestions for this insight. "
-                    "They are generated in the precompute pipeline. "
-                    "Rerun precompute_insights.py with a valid OPENAI_API_KEY to populate them."
-                )
+                    if isinstance(idea, str) and idea.strip() and not idea.startswith("[LLM disabled]"):
+                        pretty = textwrap.shorten(str(idea), width=220, placeholder="...")
+                        st.markdown(f"- {pretty}")
 
             # Full detail expander
             with st.expander("🔍 Full insight details"):
