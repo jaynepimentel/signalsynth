@@ -359,15 +359,12 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                     st.markdown(f"> {q}")
 
             ideas = _normalize_cluster_ideas(card, cluster_insights)
-            if ideas:
+            # Show PM suggestions if available (skip warning if empty - not critical)
+            valid_ideas = [idea for idea in ideas if isinstance(idea, str) and idea.strip() and not idea.startswith("[LLM disabled]")]
+            if valid_ideas:
                 st.markdown("**💡 Suggested PM actions for this cluster:**")
-                for idea in ideas:
+                for idea in valid_ideas:
                     st.markdown(f"- {idea}")
-            else:
-                st.warning(
-                    "No stored PM suggestions for this cluster. "
-                    "Cluster ideas should be generated in precompute_clusters / precompute_insights."
-                )
 
             doc_type = st.selectbox(
                 "Generate document for this cluster:",
