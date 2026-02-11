@@ -9,8 +9,8 @@ from slugify import slugify
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
 
-MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-5.1")
-MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-5.1-mini")
+MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-4o")
+MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
 CACHE_PATH = "gpt_suggestion_cache.json"
 
 
