@@ -14,27 +14,38 @@ __pycache__/
 *.toml
 *.log
 .precomputed_cache/
-precomputed_insights.json
+
+# Large data/cache files (keep locally, don't deploy)
+precomputed_clusters.json
+gpt_sentiment_cache.json
+trend_log.jsonl
+data/
 
 # Scraper outputs
 scraped_*.txt
 *.csv
+scrapers/
 
 # Dev scripts
 precompute_insights.py
-scrape_*.py
 run_scraper*.sh
 
-# Model files & large downloads
+# Model files & large downloads (downloaded at runtime)
+models/
 *.bin
 *.pt
 *.onnx
 *.model
+*.safetensors
 *.cache/
 
-# Notebooks (if you don't want them in version control)
+# Notebooks
 *.ipynb
 
 # VS Code
 .vscode/
+
+# Unused legacy folders
 twitterScrape/
+signalsynth/backend/
+signalsynth/frontend/

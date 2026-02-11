@@ -1,1 +1,0 @@
-// TrendForecast component
