@@ -28,7 +28,23 @@ NOISE_PHRASES = set(
 )
 REQUIRED_KEYWORDS = set(
     (os.getenv("SS_REQUIRED_KEYWORDS",
-     "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace"))
+     "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace,"
+     "bgs,cgc,sgc,hga,csg,payment,wire,transfer,funds,upi,unpaid,dispute,counterfeit,fake,fraud,fees,seller,"
+<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible,"
+     "sneaker,comic,vintage,auction,card,pokemon,sports card,lego,coin,hot wheels,memorabilia,"
+     "resell,flip,grail,rare,limited edition,price guide,authenticity,certified,slab,wax,hobby box"))
+=======
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
+=======
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
+=======
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
     .lower().split(",")
 )
 
@@ -94,8 +110,10 @@ def _is_high_signal(text: str) -> (bool, str):
 def _infer_source_from_path(path: str) -> str:
     p = (path or "").lower()
     if "reddit" in p: return "Reddit"
-    if "twitter" in p or "x" in p: return "Twitter"
-    if "community" in p or "ebay" in p: return "eBay Forums"
+    if "twitter" in p or "x" in p: return "Twitter/X"
+    if "bluesky" in p or "bsky" in p: return "Bluesky"
+    if "community" in p or "ebay" in p or "forum" in p: return "eBay Forums"
+    if "all_scraped" in p: return "Multi-Source"
     return "Unknown"
 
 def _best_date(item: Dict[str, Any]) -> str:
