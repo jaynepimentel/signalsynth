@@ -348,7 +348,7 @@ quick_filtered = normalized
 # Tabs (simplified to essential views)
 # ─────────────────────────────────────────────
 tabs = st.tabs([
-    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "🤝 Strategic Partners", "📈 Trends"
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "🤝 Partners", "📈 Trends"
 ])
 
 # 🧱 CLUSTERS - Strategic epics (first tab now)
@@ -701,117 +701,57 @@ with tabs[4]:
     st.markdown("""
     <div style="background: #e0f2fe; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #0284c7;">
         <strong>🤝 Partner Intelligence</strong><br/>
-        <span style="color: #64748b;">Track user feedback on eBay's strategic partners: PSA services (Grading, Vault, Consignment, Sell on eBay, Offers) and ComC.</span>
+        <span style="color: #64748b;">Track user feedback on eBay's strategic partners: PSA services and ComC.</span>
     </div>
     """, unsafe_allow_html=True)
     
-    # Define strategic partners
     STRATEGIC_PARTNERS = {
-        "PSA Vault": {
-            "icon": "🏦",
-            "description": "PSA's secure storage and eBay selling integration",
-            "keywords": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
-        },
-        "PSA Grading": {
-            "icon": "🎯",
-            "description": "PSA card grading and authentication services",
-            "keywords": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
-        },
-        "PSA Consignment": {
-            "icon": "📦",
-            "description": "PSA's consignment selling service",
-            "keywords": ["psa consignment", "psa consign", "consignment psa"],
-        },
-        "PSA Sell on eBay": {
-            "icon": "🛒",
-            "description": "Direct selling through PSA to eBay",
-            "keywords": ["psa sell ebay", "psa ebay", "sell through psa", "psa auction ebay"],
-        },
-        "PSA Offers": {
-            "icon": "�",
-            "description": "PSA's instant offer/buyback program",
-            "keywords": ["psa offer", "psa buyback", "psa buy back", "psa instant offer"],
-        },
-        "ComC": {
-            "icon": "📋",
-            "description": "Check Out My Cards - consignment and marketplace partner",
-            "keywords": ["comc", "check out my cards", "checklist", "comc consignment", "comc selling"],
-        },
+        "PSA Vault": {"icon": "🏦", "keywords": ["psa vault", "vault storage", "vault sell", "vault auction"]},
+        "PSA Grading": {"icon": "🎯", "keywords": ["psa grading", "psa grade", "psa turnaround", "psa 10", "psa 9"]},
+        "PSA Consignment": {"icon": "�", "keywords": ["psa consignment", "psa consign"]},
+        "PSA Sell on eBay": {"icon": "🛒", "keywords": ["psa sell ebay", "psa ebay", "sell through psa"]},
+        "PSA Offers": {"icon": "💰", "keywords": ["psa offer", "psa buyback", "psa buy back"]},
+        "ComC": {"icon": "📋", "keywords": ["comc", "check out my cards", "comc consignment"]},
     }
     
     try:
-        # Load partner-related posts from insights
         partner_posts = {name: [] for name in STRATEGIC_PARTNERS.keys()}
-        
         for insight in normalized:
             text = (insight.get("title", "") + " " + insight.get("text", "")).lower()
             for partner_name, config in STRATEGIC_PARTNERS.items():
                 if any(kw in text for kw in config["keywords"]):
                     partner_posts[partner_name].append(insight)
         
-        # Summary metrics
         col1, col2, col3 = st.columns(3)
-        total_partner_posts = sum(len(posts) for posts in partner_posts.values())
+        total_partner = sum(len(posts) for posts in partner_posts.values())
         with col1:
-            st.metric("Total Partner Signals", total_partner_posts)
+            st.metric("Total Partner Signals", total_partner)
         with col2:
             psa_total = sum(len(posts) for name, posts in partner_posts.items() if name.startswith("PSA"))
             st.metric("PSA Signals", psa_total)
         with col3:
             st.metric("ComC Signals", len(partner_posts.get("ComC", [])))
         
-        # Partner selector
-        selected_partner = st.selectbox(
-            "Select Partner", 
-            ["All Partners"] + list(STRATEGIC_PARTNERS.keys()),
-            key="partner_select"
-        )
-        
-        # Display posts for selected partner
-        partners_to_show = STRATEGIC_PARTNERS.keys() if selected_partner == "All Partners" else [selected_partner]
+        selected_partner = st.selectbox("Select Partner", ["All"] + list(STRATEGIC_PARTNERS.keys()), key="partner_sel")
+        partners_to_show = STRATEGIC_PARTNERS.keys() if selected_partner == "All" else [selected_partner]
         
         for partner_name in partners_to_show:
             posts = partner_posts.get(partner_name, [])
             config = STRATEGIC_PARTNERS[partner_name]
-            
-            if posts or selected_partner != "All Partners":
+            if posts or selected_partner != "All":
                 with st.container(border=True):
                     st.subheader(f"{config['icon']} {partner_name} ({len(posts)} signals)")
-                    st.caption(config["description"])
-                    
                     if posts:
-                        sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
-                        show_all_key = f"show_all_partner_{partner_name}"
-                        posts_to_show = len(sorted_posts) if st.session_state.get(show_all_key) else 5
-                        
-                        for idx, post in enumerate(sorted_posts[:posts_to_show]):
-                            title = post.get("title", "")[:80] or post.get("text", "")[:80]
-                            score = post.get("score", 0)
-                            date = post.get("post_date", "")
-                            url = post.get("url", "")
-                            sentiment = post.get("brand_sentiment", "Neutral")
-                            
-                            sentiment_color = {"Negative": "🔴", "Positive": "🟢", "Neutral": "⚪"}.get(sentiment, "⚪")
-                            
-                            with st.expander(f"{sentiment_color} {title[:60]}... | 👍 {score} | {date}"):
-                                st.markdown(post.get("text", "")[:500])
-                                if url:
-                                    st.markdown(f"[🔗 View Original]({url})")
-                        
-                        if len(sorted_posts) > 5:
-                            if st.session_state.get(show_all_key):
-                                if st.button(f"📤 Show Less", key=f"less_partner_{partner_name}"):
-                                    st.session_state[show_all_key] = False
-                                    st.rerun()
-                            else:
-                                if st.button(f"📥 Load {len(posts) - 5} More", key=f"more_partner_{partner_name}"):
-                                    st.session_state[show_all_key] = True
-                                    st.rerun()
+                        for idx, post in enumerate(sorted(posts, key=lambda x: x.get("score", 0), reverse=True)[:5]):
+                            title = post.get("title", "")[:60] or post.get("text", "")[:60]
+                            with st.expander(f"{title}... | 👍 {post.get('score', 0)}"):
+                                st.markdown(post.get("text", "")[:400])
+                                if post.get("url"):
+                                    st.markdown(f"[🔗 View Original]({post.get('url')})")
                     else:
-                        st.info(f"No {partner_name} signals found. Run the scraper to collect partner feedback.")
-    
+                        st.info(f"No {partner_name} signals found.")
     except Exception as e:
-        st.error(f"❌ Strategic Partners tab error: {e}")
+        st.error(f"❌ Partners tab error: {e}")
 
 # �📈 TRENDS - Charts and summary
 with tabs[5]:
