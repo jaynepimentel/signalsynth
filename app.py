@@ -298,7 +298,7 @@ try:
     hours_saved = round((total_posts_analyzed * 2) / 60, 1)
 
     # Calculate date range from insights
-    dates = [i.get("post_date", "") for i in normalized if i.get("post_date")]
+    dates = [i.get("post_date", "") for i in scraped_insights if i.get("post_date")]
     date_range = ""
     if dates:
         valid_dates = sorted([d for d in dates if d and len(d) >= 10])
@@ -316,17 +316,21 @@ try:
     if date_range:
         st.caption(f"📅 **Data Range:** {date_range} | 🔄 **Last Processed:** {datetime.now().strftime('%b %d, %Y')}")
 
+# KPI Row - More impressive metrics
+    col1, col2, col3, col4, col5 = st.columns(5)
+    total_posts = raw_posts_count + competitor_posts_count
+    signal_ratio = round(total/total_posts*100, 1) if total_posts > 0 else 0
+    complaint_ratio = round(complaints/total*100) if total > 0 else 0
+
+    with col1: kpi_chip("📥 Posts Scraped", f"{total_posts:,}", "Reddit, Bluesky, Competitors")
+    with col2: kpi_chip("🎯 Insights", f"{total:,}", f"{signal_ratio}% signal-to-noise")
+    with col3: kpi_chip("😠 Complaints", f"{complaints:,}", f"{complaint_ratio}% of insights")
+    with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
+    with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
+
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
-
-# KPI Row - More impressive metrics
-col1, col2, col3, col4, col5 = st.columns(5)
-with col1: kpi_chip("📥 Posts Scraped", f"{raw_posts_count + competitor_posts_count:,}", "Reddit, Bluesky, Competitors")
-with col2: kpi_chip("🎯 Insights", f"{total:,}", f"{round(total/(raw_posts_count+competitor_posts_count)*100, 1)}% signal-to-noise")
-with col3: kpi_chip("😠 Complaints", f"{complaints:,}", f"{round(complaints/total*100)}% of insights")
-with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
-with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
 
 # ─────────────────────────────────────────────
 # Filters
