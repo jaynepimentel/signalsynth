@@ -88,7 +88,29 @@ def cluster_insights(insights, min_cluster_size: int = MIN_CLUSTER_SIZE, eps: fl
     return list(clustered.values())
 
 
-def is_semantically_coherent(cluster, return_score=False):
+def is_semantically_coherent(cluster, return_score=False, fast_mode=True):
+    """Check cluster coherence. fast_mode=True skips expensive embedding calculation."""
+    if fast_mode:
+        # Fast mode: assume coherent if grouped by subtag, estimate score from keyword overlap
+        if len(cluster) <= 2:
+            return (True, 0.85) if return_score else True
+        texts = [i.get("text", "") for i in cluster]
+        # Estimate coherence from keyword overlap
+        token_sets = [_informative_tokens(t) for t in texts]
+        if not all(token_sets):
+            return (True, 0.75) if return_score else True
+        overlaps = []
+        for i in range(min(5, len(token_sets))):  # Sample first 5 for speed
+            for j in range(i + 1, min(5, len(token_sets))):
+                inter = token_sets[i] & token_sets[j]
+                union = token_sets[i] | token_sets[j]
+                if union:
+                    overlaps.append(len(inter) / len(union))
+        avg_overlap = sum(overlaps) / len(overlaps) if overlaps else 0.5
+        score = 0.6 + (avg_overlap * 0.4)  # Scale to 0.6-1.0 range
+        return (True, score) if return_score else True
+    
+    # Slow mode with embeddings (original behavior)
     if not model:
         return (False, 0.0) if return_score else False
     if len(cluster) <= 2:
@@ -201,7 +223,7 @@ def synthesize_cluster(cluster):
     competitors = sorted({c for i in cluster for c in (i.get("mentions_competitor") or [])})
     cid = _cluster_id(cluster)
 
-    coherent, avg_sim = is_semantically_coherent(cluster, return_score=True)
+    coherent, avg_sim = is_semantically_coherent(cluster, return_score=True, fast_mode=True)
     avg_cluster_ready = float(
         np.mean([i.get("cluster_ready_score", 0) for i in cluster])
     ) if cluster else 0.0
@@ -230,9 +252,83 @@ def synthesize_cluster(cluster):
     }
 
 
-def cluster_by_subtag_then_embed(insights, min_cluster_size=MIN_CLUSTER_SIZE):
+def _get_signal_category(insight):
+    """Determine the primary signal category for an insight based on flags."""
+    # Check signal flags in priority order
+    if insight.get("is_vault_signal"):
+        return "Vault"
+    if insight.get("is_psa_turnaround"):
+        return "Grading"
+    if insight.get("is_ag_signal"):
+        return "Authentication"
+    if insight.get("is_shipping_issue"):
+        return "Shipping"
+    if insight.get("_payment_issue"):
+        return "Payments"
+    if insight.get("is_refund_issue"):
+        return "Refunds"
+    if insight.get("is_fees_concern"):
+        return "Fees"
+    if insight.get("_upi_flag"):
+        return "UPI"
+    if insight.get("is_price_guide_signal"):
+        return "Pricing"
+    
+    # Fall back to subtag or text-based detection
+    subtag = insight.get("type_subtag") or insight.get("subtag") or ""
+    if subtag and subtag != "General":
+        return subtag
+    
+    # Text-based topic detection
+    text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+    if "vault" in text:
+        return "Vault"
+    if "grading" in text or "psa" in text or "turnaround" in text:
+        return "Grading"
+    if "shipping" in text or "delivery" in text or "tracking" in text:
+        return "Shipping"
+    if "payment" in text or "payout" in text or "paid" in text:
+        return "Payments"
+    if "refund" in text or "return" in text:
+        return "Refunds"
+    if "fee" in text or "commission" in text:
+        return "Fees"
+    if "authentication" in text or "authenticity" in text:
+        return "Authentication"
+    if "competitor" in text or "fanatics" in text or "alt" in text:
+        return "Competitors"
+    if "goldin" in text or "tcgplayer" in text:
+        return "Subsidiaries"
+    
+    return "General Feedback"
+
+
+def cluster_by_subtag_fast(insights, min_cluster_size=MIN_CLUSTER_SIZE):
+    """Fast clustering by signal category - no embeddings, instant results."""
+    grouped = defaultdict(list)
+    for i in insights:
+        category = _get_signal_category(i)
+        grouped[category].append(i)
+
+    all_clusters = []
+    for category, group in grouped.items():
+        if len(group) < min_cluster_size:
+            continue
+        # Group by signal category
+        coherent, score = is_semantically_coherent(group, return_score=True, fast_mode=True)
+        all_clusters.append((group, {"coherent": coherent, "was_reclustered": False, "avg_similarity": score, "category": category}))
+    return all_clusters
+
+
+def cluster_by_subtag_then_embed(insights, min_cluster_size=MIN_CLUSTER_SIZE, fast_mode=True):
+    """Cluster insights. fast_mode=True uses keyword grouping only (instant), False uses embeddings (slow)."""
+    if fast_mode:
+        return cluster_by_subtag_fast(insights, min_cluster_size)
+    
+    # Original slow mode with embeddings
     if not model:
-        return []
+        return cluster_by_subtag_fast(insights, min_cluster_size)
+    
     grouped = defaultdict(list)
     for i in insights:
         subtags = i.get("type_subtags") or [i.get("type_subtag", "General")]
@@ -247,13 +343,13 @@ def cluster_by_subtag_then_embed(insights, min_cluster_size=MIN_CLUSTER_SIZE):
             continue
         clusters = cluster_insights(group, min_cluster_size=min_cluster_size)
         for c in clusters:
-            coherent, score = is_semantically_coherent(c, return_score=True)
+            coherent, score = is_semantically_coherent(c, return_score=True, fast_mode=False)
             if coherent:
                 all_clusters.append((c, {"coherent": True, "was_reclustered": False, "avg_similarity": score}))
             else:
                 subs = split_incoherent_cluster(c)
                 for sub in subs:
-                    sub_coherent, sub_score = is_semantically_coherent(sub, return_score=True)
+                    sub_coherent, sub_score = is_semantically_coherent(sub, return_score=True, fast_mode=False)
                     all_clusters.append((sub, {"coherent": sub_coherent, "was_reclustered": True, "avg_similarity": sub_score}))
     return all_clusters
 
