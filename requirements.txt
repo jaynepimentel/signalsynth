@@ -18,3 +18,5 @@ python-slugify==8.0.4
 # Visualization
 seaborn==0.13.2
 matplotlib==3.10.1
+altair==5.2.0
+networkx==3.2.1
