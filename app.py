@@ -27,20 +27,21 @@ from components.floating_filters import render_floating_filters, filter_by_time
 load_dotenv()
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
-@st.cache_resource(show_spinner="Loading embedding model...")
 def get_model():
     """
-    Prefer a local copy if you've saved it (fast/offline); fall back to hub name.
+    Lazy-load embedding model only when needed. Returns None if not available.
+    For Streamlit Cloud, we skip this to avoid slow torch loading.
     """
+    # Skip on Streamlit Cloud to avoid 10+ minute boot times
+    if os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("IS_STREAMLIT_CLOUD"):
+        return None
     try:
         from sentence_transformers import SentenceTransformer
-        # try local first
         try:
             return SentenceTransformer("models/all-MiniLM-L6-v2")
         except Exception:
             return SentenceTransformer("all-MiniLM-L6-v2")
-    except Exception as e:
-        st.warning(f"⚠️ Failed to load embedding model: {e}")
+    except Exception:
         return None
 
 # ─────────────────────────────────────────────
