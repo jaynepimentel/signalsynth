@@ -1,6 +1,7 @@
 # cluster_view.py - Simple cluster display using precomputed clusters
 
 import os
+import tempfile
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
