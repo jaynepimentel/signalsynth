@@ -17,22 +17,9 @@ st.set_page_config(page_title="SignalSynth", layout="wide")
 # ─────────────────────────────────────────────
 from components.brand_trend_dashboard import display_brand_dashboard
 from components.insight_visualizer import display_insight_charts
-from components.cluster_view import display_clustered_insight_cards
-from components.emerging_trends import detect_emerging_topics, render_emerging_topics
-from components.journey_heatmap import display_journey_heatmap
-from components.insight_explorer import display_insight_explorer
-from components.ai_suggester import (
-    generate_pm_ideas, generate_prd_docx, generate_brd_docx,
-    generate_prfaq_docx, generate_jira_bug_ticket, generate_gpt_doc,
-    generate_multi_signal_prd
-)
-from components.strategic_tools import (
-    display_signal_digest, display_journey_breakdown,
-    display_brand_comparator, display_impact_heatmap,
-    display_prd_bundler, display_spark_suggestions
-)
+from components.cluster_view_simple import display_clustered_insight_cards
 from components.enhanced_insight_view import render_insight_cards
-from components.floating_filters import render_floating_filters
+from components.floating_filters import render_floating_filters, filter_by_time
 
 # ─────────────────────────────────────────────
 # Env & model
@@ -80,6 +67,16 @@ def normalize_insight(i, suggestion_cache):
     i["target_brand"] = i.get("target_brand", "Unknown")
     i["action_type"] = i.get("action_type", "Unclear")
     i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
+    
+    # Subtag (primary category) - derive from topic_focus if missing
+    if not i.get("subtag"):
+        tf = i.get("topic_focus_list") or i.get("topic_focus") or []
+        if isinstance(tf, list) and tf:
+            i["subtag"] = tf[0]
+        elif isinstance(tf, str) and tf.strip():
+            i["subtag"] = tf.strip()
+        else:
+            i["subtag"] = "General"
 
     # Topic focus safe-list
     if isinstance(i.get("topic_focus"), list):
@@ -141,9 +138,67 @@ st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
 
 st.markdown("""
     <style>
+      /* Hide sidebar */
       [data-testid="collapsedControl"] { display: none }
       section[data-testid="stSidebar"] { width: 0px !important; display: none }
       .kpi-row { margin-bottom: 0.5rem; }
+      
+      /* Mobile-responsive styles */
+      @media (max-width: 768px) {
+        /* Make title smaller on mobile */
+        h1 { font-size: 1.5rem !important; }
+        h2 { font-size: 1.25rem !important; }
+        h3 { font-size: 1.1rem !important; }
+        
+        /* Stack columns vertically on mobile */
+        [data-testid="column"] {
+          width: 100% !important;
+          flex: 1 1 100% !important;
+          min-width: 100% !important;
+        }
+        
+        /* Make metrics more compact */
+        [data-testid="stMetricValue"] {
+          font-size: 1.5rem !important;
+        }
+        
+        /* Improve button touch targets */
+        .stButton > button {
+          min-height: 44px !important;
+          font-size: 0.9rem !important;
+        }
+        
+        /* Make expanders easier to tap */
+        .streamlit-expanderHeader {
+          padding: 12px 8px !important;
+        }
+        
+        /* Compact tables on mobile */
+        table {
+          font-size: 0.85rem !important;
+        }
+        
+        /* Make tabs scrollable */
+        .stTabs [data-baseweb="tab-list"] {
+          overflow-x: auto !important;
+          flex-wrap: nowrap !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+          white-space: nowrap !important;
+          padding: 8px 12px !important;
+        }
+      }
+      
+      /* Improve touch targets for all devices */
+      .stButton > button {
+        min-height: 40px;
+      }
+      
+      /* Better spacing for containers */
+      [data-testid="stVerticalBlock"] > div {
+        padding-bottom: 0.5rem;
+      }
     </style>
 """, unsafe_allow_html=True)
 
@@ -152,12 +207,45 @@ if "show_intro" not in st.session_state:
     st.session_state.show_intro = True
 
 if st.session_state.show_intro:
-    with st.expander("🧠 Welcome to SignalSynth! What’s here now?", expanded=True):
+    with st.container(border=True):
+        st.markdown("### 🧠 Welcome to SignalSynth!")
         st.markdown("""
-- **New tags & filters:** Payments, UPI, High-ASP, Carrier, International Program, Customs Flag.
-- **Evidence collapse:** duplicates merged with `evidence_count` and `last_seen`.
-- **Decision Tiles in Clusters:** Each theme has the *Decision, Risk, and Suggested Owner*.
-- **Topic Focus** now supports multi-value list filtering.
+**SignalSynth** is your AI-powered insight engine for eBay Collectibles — transforming thousands of community discussions into actionable product intelligence.
+
+---
+
+**📊 What's Inside:**
+
+| Source | Coverage |
+|--------|----------|
+| 📍 **Reddit** | 33 collectibles subreddits + targeted searches |
+| 🏢 **Competitors** | Fanatics Collect, Fanatics Live, Heritage Auctions, Alt |
+| 🏪 **Your Subsidiaries** | Goldin, TCGPlayer (you manage these!) |
+
+---
+
+**🗂️ Five Tabs to Explore:**
+
+| Tab | Purpose | Key Action |
+|-----|---------|------------|
+| **🧱 Clusters** | Strategic epics grouped by theme | Generate PRDs, BRDs, Jira tickets |
+| **📌 Insights** | Individual signals with filters | Filter by topic, type, sentiment |
+| **🏢 Competitors** | What users say about rivals | ⚔️ **War Games** — competitive strategy |
+| **🏪 Subsidiaries** | Goldin & TCGPlayer feedback | 🔧 **Action Plan** — improvement roadmap |
+| **📈 Trends** | Sentiment & topic over time | Spot emerging issues |
+
+---
+
+**⚡ AI-Powered Document Generation (in Clusters):**
+- 🤖 **Executive Summary** — Problem, impact, root cause, recommendation
+- 📄 **PRD** — User stories, requirements, success metrics
+- 💼 **BRD** — Business case for stakeholders
+- 📰 **PRFAQ** — Amazon-style press release + FAQ
+- 🎫 **Jira Tickets** — Sprint-ready with acceptance criteria
+
+---
+
+**🏷️ Auto-detected Signals:** 💳 Payments · 🛡️ Trust · 📦 Shipping · ✅ AG · 🏦 Vault · ⚠️ UPI · 🎯 Grading
         """)
         st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
 
@@ -173,151 +261,443 @@ try:
     except Exception:
         cache = {}
 
+    # Load raw data counts for impressive stats
+    raw_posts_count = 0
+    try:
+        with open("data/all_scraped_posts.json", "r", encoding="utf-8") as f:
+            raw_posts_count = len(json.load(f))
+    except:
+        pass
+    
+    competitor_posts_count = 0
+    try:
+        with open("data/scraped_competitor_posts.json", "r", encoding="utf-8") as f:
+            competitor_posts_count = len(json.load(f))
+    except:
+        pass
+    
+    clusters_count = 0
+    try:
+        with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
+            clusters_data = json.load(f)
+            clusters_count = len(clusters_data.get("clusters", []))
+    except:
+        pass
+
     # Normalize
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
 
-    # KPIs
+    # KPIs - dynamic counts
     total = len(normalized)
-    complaints = sum(1 for i in normalized if i.get("brand_sentiment") == "Complaint")
-    payments = sum(1 for i in normalized if i.get("_payment_issue_str") == "Yes")
-    upi = sum(1 for i in normalized if i.get("_upi_flag_str") == "Yes")
-    high_asp = sum(1 for i in normalized if i.get("_high_end_flag_str") == "Yes")
-    collapsed_total = len(normalized)  # already post-dedupe from precompute
+    complaints = sum(1 for i in normalized if i.get("type_tag") == "Complaint" or i.get("brand_sentiment") == "Negative")
+    payments = sum(1 for i in normalized if i.get("_payment_issue"))
+    upi = sum(1 for i in normalized if i.get("_upi_flag"))
+    
+    # Calculate hours saved (conservative estimate: 2 min per post to read, analyze, categorize)
+    total_posts_analyzed = raw_posts_count + competitor_posts_count
+    hours_saved = round((total_posts_analyzed * 2) / 60, 1)
 
-    st.success(f"✅ Loaded {total} insights")
+    # Calculate date range from insights
+    dates = [i.get("post_date", "") for i in normalized if i.get("post_date")]
+    date_range = ""
+    if dates:
+        valid_dates = sorted([d for d in dates if d and len(d) >= 10])
+        if valid_dates:
+            date_range = f"{valid_dates[0]} to {valid_dates[-1]}"
+    
+    # Executive stats banner
+    st.success(f"""
+    📊 **Analysis Complete** | 🕐 **~{hours_saved} hours of manual research saved**
+    
+    **{total_posts_analyzed:,}** social posts scraped → **{total:,}** actionable insights → **{clusters_count}** strategic epics
+    """)
+    
+    # Data freshness indicator
+    if date_range:
+        st.caption(f"📅 **Data Range:** {date_range} | 🔄 **Last Processed:** {datetime.now().strftime('%b %d, %Y')}")
 
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
     st.stop()
 
-# KPI Row
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1: kpi_chip("All Insights", f"{total:,}")
-with c2: kpi_chip("Complaints", f"{complaints:,}")
-with c3: kpi_chip("Payments Signals", f"{payments:,}", "Includes payment declines & wire/ACH friction")
-with c4: kpi_chip("UPI Mentions", f"{upi:,}", "Seller unpaid-item complaints")
-with c5: kpi_chip("High-ASP Flags", f"{high_asp:,}", "Mentions of $1k+, 5k, 10k, etc.")
+# KPI Row - More impressive metrics
+col1, col2, col3, col4, col5 = st.columns(5)
+with col1: kpi_chip("📥 Posts Scraped", f"{raw_posts_count + competitor_posts_count:,}", "Reddit, Bluesky, Competitors")
+with col2: kpi_chip("🎯 Insights", f"{total:,}", f"{round(total/(raw_posts_count+competitor_posts_count)*100, 1)}% signal-to-noise")
+with col3: kpi_chip("😠 Complaints", f"{complaints:,}", f"{round(complaints/total*100)}% of insights")
+with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
+with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
 
 # ─────────────────────────────────────────────
 # Filters
 # ─────────────────────────────────────────────
 filter_fields = {
-    "Target Brand": "target_brand",
-    "Persona": "persona",
-    "Journey Stage": "journey_stage",
-    "Insight Type": "type_tag",
-    "Brand Sentiment": "brand_sentiment",
-    "Clarity": "clarity",
-    "Effort Estimate": "effort",
-    "Topic Focus": "topic_focus_list",        # list-aware
-    "Action Type": "action_type",
-    "Opportunity Tag": "opportunity_tag",
-    # new ops/compliance filters:
-    "Carrier": "carrier",                     # UPS/USPS/FEDEX/DPD/DHL/Unknown
-    "Intl Program": "intl_program",           # ISP/GSP/Unknown
-    "Customs Flag": "customs_flag_str",       # Yes/No/Unknown
-    # new money-risk filters:
-    "Payments Flag": "_payment_issue_str",    # Yes/No/Unknown
-    "UPI Flag": "_upi_flag_str",              # Yes/No/Unknown
-    "High-ASP Flag": "_high_end_flag_str",    # Yes/No/Unknown
+    "Topic": "subtag",
+    "Type": "type_tag",
 }
 
-# Quick toggles (pills) for exec speed
-qt1, qt2, qt3 = st.columns([1,1,1])
-with qt1:
-    q_pay = st.toggle("💳 Payments only", value=False, help="Show payment declines & wire/ACH friction")
-with qt2:
-    q_upi = st.toggle("🚫 UPI only", value=False, help="Show seller unpaid-item complaints")
-with qt3:
-    q_high = st.toggle("💎 High-ASP only", value=False, help="Flagged as high-value context")
-
-# Build quick-filtered base list
+# Build filtered base list
 quick_filtered = normalized
-if q_pay:
-    quick_filtered = [i for i in quick_filtered if i.get("_payment_issue_str") == "Yes"]
-if q_upi:
-    quick_filtered = [i for i in quick_filtered if i.get("_upi_flag_str") == "Yes"]
-if q_high:
-    quick_filtered = [i for i in quick_filtered if i.get("_high_end_flag_str") == "Yes"]
 
 # ─────────────────────────────────────────────
-# Tabs
+# Tabs (simplified to essential views)
 # ─────────────────────────────────────────────
 tabs = st.tabs([
-    "📌 Insights", "🧱 Clusters", "📈 Trends",
-    "📺 Journey Heatmap", "🔎 Explorer", "🔥 Emerging", "🧠 Strategic Tools"
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
 ])
 
-# 📌 INSIGHTS
+# 🧱 CLUSTERS - Strategic epics (first tab now)
 with tabs[0]:
+    st.header("🧱 Strategic Epics")
+    try:
+        display_clustered_insight_cards(quick_filtered)
+    except Exception as e:
+        st.error(f"❌ Cluster view error: {e}")
+
+# 📌 INSIGHTS - Individual view with filters
+with tabs[1]:
     st.header("📌 Individual Insights")
     try:
         filters = render_floating_filters(quick_filtered, filter_fields, key_prefix="insights")
         filtered = [i for i in quick_filtered if match_multiselect_filters(i, filters, filter_fields)]
+        # Apply time filter
+        time_range = filters.get("_time_range", "All Time")
+        filtered = filter_by_time(filtered, time_range)
+        st.caption(f"Showing {len(filtered)} of {len(quick_filtered)} insights")
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="insights")
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# 🧱 CLUSTERS (with Decision Tiles from component)
-with tabs[1]:
-    st.header("🧱 Clustered Insight Mode")
-    try:
-        model = get_model()
-        if model:
-            display_clustered_insight_cards(quick_filtered)
-        else:
-            st.warning("⚠️ Embedding model not available. Skipping clustering.")
-    except Exception as e:
-        st.error(f"❌ Cluster view error: {e}")
-
-# 📈 TRENDS
+# 🏢 COMPETITORS - Competitor insights only
 with tabs[2]:
-    st.header("📈 Trends + Brand Summary")
+    st.header("🏢 Competitors")
+    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+    
+    # War Games LLM function for competitors
+    def generate_war_games(competitor: str, post_text: str, post_title: str) -> str:
+        """Generate competitive war games strategy."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return "LLM not available. Please configure OpenAI API key."
+        
+        prompt = f"""You are a Senior Product Strategist at eBay running a competitive war games exercise.
+
+COMPETITOR: {competitor}
+USER FEEDBACK:
+Title: {post_title}
+Content: {post_text}
+
+Analyze this competitive signal and generate a WAR GAMES STRATEGY BRIEF:
+
+1. **SIGNAL TYPE**: Is this a competitive threat, competitive advantage they have, or user pain point with {competitor}?
+
+2. **THREAT LEVEL**: Low / Medium / High — and why?
+
+3. **USER SENTIMENT**: What does the community actually want? What are they praising or complaining about?
+
+4. **eBay RESPONSE OPTIONS** (pick 2-3):
+   - **Defend**: How could eBay protect its collectibles position?
+   - **Attack**: How could eBay win users from {competitor}?
+   - **Differentiate**: What unique value can eBay offer that {competitor} can't?
+   - **Exploit Weakness**: If users are complaining about {competitor}, how can eBay capitalize?
+
+5. **RECOMMENDED PLAY**: One specific action for the eBay Collectibles PM team.
+
+Be direct, strategic, and actionable. Think like a competitive strategist."""
+
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are an expert competitive strategist who writes crisp, actionable war games briefs.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.5
+            )
+        except Exception as e:
+            return f"War games generation failed: {e}"
+    
+    # Subsidiary improvement LLM function
+    def generate_subsidiary_action(subsidiary: str, post_text: str, post_title: str) -> str:
+        """Generate improvement action plan for eBay subsidiary."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return "LLM not available. Please configure OpenAI API key."
+        
+        prompt = f"""You are a Senior Product Manager at eBay responsible for improving {subsidiary} (an eBay-owned subsidiary).
+
+SUBSIDIARY: {subsidiary} (owned by eBay)
+USER FEEDBACK:
+Title: {post_title}
+Content: {post_text}
+
+Analyze this user feedback and generate an IMPROVEMENT ACTION PLAN:
+
+1. **FEEDBACK TYPE**: Is this a bug/issue, feature request, UX complaint, or positive feedback?
+
+2. **SEVERITY/PRIORITY**: P0 (critical) / P1 (high) / P2 (medium) / P3 (low) — and why?
+
+3. **USER PAIN POINT**: What specific problem is the user experiencing? Be concrete.
+
+4. **ROOT CAUSE HYPOTHESIS**: What's likely causing this issue or gap?
+
+5. **RECOMMENDED FIXES** (pick 1-2):
+   - **Quick Win**: What can be fixed in the next sprint?
+   - **Strategic Investment**: What longer-term improvement would address this?
+   - **Cross-Platform Synergy**: How could eBay marketplace integration help?
+
+6. **SUCCESS METRIC**: How would we measure if this fix worked?
+
+Be specific and actionable. Think like a PM who owns {subsidiary}."""
+
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are an expert product manager who writes clear, actionable improvement plans.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.4
+            )
+        except Exception as e:
+            return f"Action plan generation failed: {e}"
+    
+    try:
+        # Load competitor data
+        competitor_posts = []
+        try:
+            with open("data/scraped_competitor_posts.json", "r", encoding="utf-8") as f:
+                competitor_posts = json.load(f)
+        except:
+            st.warning("No competitor data found. Run `python utils/scrape_competitors.py` to scrape.")
+        
+        if competitor_posts:
+            # Separate competitors from subsidiaries
+            from collections import defaultdict
+            comp_groups = defaultdict(list)
+            sub_groups = defaultdict(list)
+            for p in competitor_posts:
+                comp = p.get("competitor", "Unknown")
+                if p.get("competitor_type") == "ebay_subsidiary":
+                    sub_groups[comp].append(p)
+                else:
+                    comp_groups[comp].append(p)
+            
+            # Competitor filter (competitors only)
+            all_comps = sorted(comp_groups.keys())
+            if all_comps:
+                selected_comp = st.selectbox("Select Competitor", ["All"] + all_comps, key="comp_select")
+                
+                # Metrics for competitors only
+                total_comp = sum(len(v) for v in comp_groups.values())
+                st.metric("Total Competitor Posts", total_comp)
+                
+                st.markdown("---")
+                
+                # Show competitor posts
+                for comp_name in (all_comps if selected_comp == "All" else [selected_comp]):
+                    posts = comp_groups.get(comp_name, [])
+                    if not posts:
+                        continue
+                    
+                    with st.container(border=True):
+                        st.subheader(f"🏢 {comp_name} ({len(posts)} posts)")
+                        
+                        sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
+                        
+                        # Determine how many posts to show
+                        show_all_key = f"show_all_comp_{comp_name}"
+                        posts_to_show = len(sorted_posts) if st.session_state.get(show_all_key) else 10
+                        
+                        for idx, post in enumerate(sorted_posts[:posts_to_show], 1):
+                            title = post.get("title", "")[:80] or post.get("text", "")[:80]
+                            score = post.get("score", 0)
+                            date = post.get("post_date", "")
+                            url = post.get("url", "")
+                            post_id = post.get("post_id", f"{comp_name}_{idx}")
+                            
+                            with st.expander(f"{idx}. {title}... (⬆️ {score})"):
+                                st.markdown(f"> {post.get('text', '')[:500]}")
+                                st.caption(f"**Date:** {date} | **Subreddit:** r/{post.get('subreddit', '')} | [View Original]({url})")
+                                
+                                # War Games button
+                                wargames_key = f"wargames_{post_id}"
+                                if st.button("⚔️ War Games", key=f"btn_{wargames_key}", help="Generate competitive strategy"):
+                                    st.session_state[wargames_key] = True
+                                    st.rerun()
+                                
+                                if st.session_state.get(wargames_key):
+                                    with st.spinner("Generating war games strategy..."):
+                                        strategy = generate_war_games(comp_name, post.get("text", ""), post.get("title", ""))
+                                    st.info(strategy)
+                                    if st.button("❌ Close", key=f"close_{wargames_key}"):
+                                        st.session_state[wargames_key] = False
+                                        st.rerun()
+                        
+                        # Load more / Show less button
+                        if len(posts) > 10:
+                            if st.session_state.get(show_all_key):
+                                if st.button(f"📤 Show Less", key=f"less_{comp_name}"):
+                                    st.session_state[show_all_key] = False
+                                    st.rerun()
+                            else:
+                                if st.button(f"📥 Load {len(posts) - 10} More Posts", key=f"more_{comp_name}"):
+                                    st.session_state[show_all_key] = True
+                                    st.rerun()
+            else:
+                st.info("No competitor posts found.")
+            
+    except Exception as e:
+        st.error(f"❌ Competitors tab error: {e}")
+
+# 🏪 SUBSIDIARIES - Goldin & TCGPlayer (separate tab)
+with tabs[3]:
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+    
+    # Subsidiary improvement LLM function (defined here for this tab)
+    def generate_subsidiary_action_tab(subsidiary: str, post_text: str, post_title: str) -> str:
+        """Generate improvement action plan for eBay subsidiary."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return "LLM not available. Please configure OpenAI API key."
+        
+        prompt = f"""You are a Senior Product Manager at eBay responsible for improving {subsidiary} (an eBay-owned subsidiary).
+
+SUBSIDIARY: {subsidiary} (owned by eBay)
+USER FEEDBACK:
+Title: {post_title}
+Content: {post_text}
+
+Analyze this user feedback and generate an IMPROVEMENT ACTION PLAN:
+
+1. **FEEDBACK TYPE**: Is this a bug/issue, feature request, UX complaint, or positive feedback?
+
+2. **SEVERITY/PRIORITY**: P0 (critical) / P1 (high) / P2 (medium) / P3 (low) — and why?
+
+3. **USER PAIN POINT**: What specific problem is the user experiencing? Be concrete.
+
+4. **ROOT CAUSE HYPOTHESIS**: What's likely causing this issue or gap?
+
+5. **RECOMMENDED FIXES** (pick 1-2):
+   - **Quick Win**: What can be fixed in the next sprint?
+   - **Strategic Investment**: What longer-term improvement would address this?
+   - **Cross-Platform Synergy**: How could eBay marketplace integration help?
+
+6. **SUCCESS METRIC**: How would we measure if this fix worked?
+
+Be specific and actionable. Think like a PM who owns {subsidiary}."""
+
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are an expert product manager who writes clear, actionable improvement plans.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.4
+            )
+        except Exception as e:
+            return f"Action plan generation failed: {e}"
+    
+    try:
+        # Load subsidiary data
+        sub_posts = []
+        try:
+            with open("data/scraped_competitor_posts.json", "r", encoding="utf-8") as f:
+                all_comp_data = json.load(f)
+                sub_posts = [p for p in all_comp_data if p.get("competitor_type") == "ebay_subsidiary"]
+        except:
+            st.warning("No subsidiary data found. Run `python utils/scrape_competitors.py` to scrape.")
+        
+        if sub_posts:
+            # Group by subsidiary
+            from collections import defaultdict
+            sub_groups = defaultdict(list)
+            for p in sub_posts:
+                sub = p.get("competitor", "Unknown")
+                sub_groups[sub].append(p)
+            
+            all_subs = sorted(sub_groups.keys())
+            selected_sub = st.selectbox("Select Subsidiary", ["All"] + all_subs, key="sub_select_tab")
+            
+            # Metrics
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Posts", len(sub_posts))
+            with col2:
+                goldin_count = len([p for p in sub_posts if p.get("competitor") == "Goldin"])
+                st.metric("Goldin", goldin_count)
+            with col3:
+                tcg_count = len([p for p in sub_posts if p.get("competitor") == "TCGPlayer"])
+                st.metric("TCGPlayer", tcg_count)
+            
+            st.markdown("---")
+            
+            # Show subsidiary posts
+            for sub_name in (all_subs if selected_sub == "All" else [selected_sub]):
+                posts = sub_groups.get(sub_name, [])
+                if not posts:
+                    continue
+                
+                with st.container(border=True):
+                    st.subheader(f"🏪 {sub_name} ({len(posts)} posts)")
+                    
+                    sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
+                    
+                    # Determine how many posts to show
+                    show_all_key = f"show_all_sub_{sub_name}"
+                    posts_to_show = len(sorted_posts) if st.session_state.get(show_all_key) else 10
+                    
+                    for idx, post in enumerate(sorted_posts[:posts_to_show], 1):
+                        title = post.get("title", "")[:80] or post.get("text", "")[:80]
+                        score = post.get("score", 0)
+                        date = post.get("post_date", "")
+                        url = post.get("url", "")
+                        post_id = post.get("post_id", f"{sub_name}_sub_{idx}")
+                        
+                        with st.expander(f"{idx}. {title}... (⬆️ {score})"):
+                            st.markdown(f"> {post.get('text', '')[:500]}")
+                            st.caption(f"**Date:** {date} | **Subreddit:** r/{post.get('subreddit', '')} | [View Original]({url})")
+                            
+                            # Action Plan button
+                            action_key = f"action_sub_{post_id}"
+                            if st.button("🔧 Action Plan", key=f"btn_{action_key}", help="Generate improvement action plan"):
+                                st.session_state[action_key] = True
+                                st.rerun()
+                            
+                            if st.session_state.get(action_key):
+                                with st.spinner("Generating action plan..."):
+                                    plan = generate_subsidiary_action_tab(sub_name, post.get("text", ""), post.get("title", ""))
+                                st.success(plan)
+                                if st.button("❌ Close", key=f"close_{action_key}"):
+                                    st.session_state[action_key] = False
+                                    st.rerun()
+                    
+                    # Load more / Show less button
+                    if len(posts) > 10:
+                        if st.session_state.get(show_all_key):
+                            if st.button(f"📤 Show Less", key=f"less_sub_{sub_name}"):
+                                st.session_state[show_all_key] = False
+                                st.rerun()
+                        else:
+                            if st.button(f"📥 Load {len(posts) - 10} More Posts", key=f"more_sub_{sub_name}"):
+                                st.session_state[show_all_key] = True
+                                st.rerun()
+        else:
+            st.info("No subsidiary posts found.")
+    except Exception as e:
+        st.error(f"❌ Subsidiaries tab error: {e}")
+
+# 📈 TRENDS - Charts and summary
+with tabs[4]:
+    st.header("📈 Trends & Summary")
     try:
         display_insight_charts(quick_filtered)
+    except Exception as e:
+        st.error(f"❌ Charts error: {e}")
+    try:
         display_brand_dashboard(quick_filtered)
     except Exception as e:
-        st.error(f"❌ Trends tab error: {e}")
-
-# 📺 HEATMAP
-with tabs[3]:
-    st.header("📺 Journey Heatmap")
-    try:
-        display_journey_heatmap(quick_filtered)
-    except Exception as e:
-        st.error(f"❌ Journey Heatmap error: {e}")
-
-# 🔎 EXPLORER
-with tabs[4]:
-    st.header("🔎 Insight Explorer")
-    try:
-        explorer_filters = render_floating_filters(quick_filtered, filter_fields, key_prefix="explorer")
-        explorer_filtered = [i for i in quick_filtered if match_multiselect_filters(i, explorer_filters, filter_fields)]
-        results = display_insight_explorer(explorer_filtered)
-        if results:
-            model = get_model()
-            render_insight_cards(results[:50], model, key_prefix="explorer")
-    except Exception as e:
-        st.error(f"❌ Explorer tab error: {e}")
-
-# 🔥 EMERGING
-with tabs[5]:
-    st.header("🔥 Emerging Topics")
-    try:
-        render_emerging_topics(detect_emerging_topics(quick_filtered))
-    except Exception as e:
-        st.error(f"❌ Emerging tab error: {e}")
-
-# 🧠 STRATEGIC
-with tabs[6]:
-    st.header("🧠 Strategic Tools")
-    try:
-        display_spark_suggestions(quick_filtered)
-        display_signal_digest(quick_filtered)
-        display_impact_heatmap(quick_filtered)
-        display_journey_breakdown(quick_filtered)
-        display_brand_comparator(quick_filtered)
-        display_prd_bundler(quick_filtered)
-    except Exception as e:
-        st.error(f"❌ Strategic Tools tab error: {e}")
+        st.error(f"❌ Dashboard error: {e}")

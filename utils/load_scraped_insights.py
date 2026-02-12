@@ -28,7 +28,9 @@ NOISE_PHRASES = set(
 )
 REQUIRED_KEYWORDS = set(
     (os.getenv("SS_REQUIRED_KEYWORDS",
-     "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace"))
+     "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace,"
+     "bgs,cgc,sgc,hga,csg,payment,wire,transfer,funds,upi,unpaid,dispute,counterfeit,fake,fraud,fees,seller,"
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
     .lower().split(",")
 )
 
@@ -94,8 +96,10 @@ def _is_high_signal(text: str) -> (bool, str):
 def _infer_source_from_path(path: str) -> str:
     p = (path or "").lower()
     if "reddit" in p: return "Reddit"
-    if "twitter" in p or "x" in p: return "Twitter"
-    if "community" in p or "ebay" in p: return "eBay Forums"
+    if "twitter" in p or "x" in p: return "Twitter/X"
+    if "bluesky" in p or "bsky" in p: return "Bluesky"
+    if "community" in p or "ebay" in p or "forum" in p: return "eBay Forums"
+    if "all_scraped" in p: return "Multi-Source"
     return "Unknown"
 
 def _best_date(item: Dict[str, Any]) -> str:
