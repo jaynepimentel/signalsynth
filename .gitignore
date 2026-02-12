@@ -10,8 +10,6 @@ __pycache__/
 .env
 
 # Streamlit & cache
-.streamlit/config.toml
-*.toml
 *.log
 .precomputed_cache/
 
