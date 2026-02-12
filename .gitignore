@@ -8,6 +8,7 @@ __pycache__/
 
 # API Keys & config
 .env
+.streamlit/secrets.toml
 
 # Streamlit & cache
 *.log
