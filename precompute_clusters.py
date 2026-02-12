@@ -163,13 +163,30 @@ def _cluster_stats(cluster_items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {
             "size": 0,
             "complaints": 0,
+            "feature_requests": 0,
+            "negative": 0,
+            "positive": 0,
             "payments_flags": 0,
             "upi_flags": 0,
             "high_asp_flags": 0,
             "avg_score": 0.0,
         }
 
-    complaints = sum(1 for x in cluster_items if x.get("brand_sentiment") == "Complaint")
+    # Count complaints - check both "Complaint" and "Negative" sentiment values
+    complaints = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Complaint", "Negative"))
+    
+    # Count feature requests - check type_tag or text content
+    feature_requests = sum(1 for x in cluster_items if 
+        x.get("type_tag") == "Feature Request" or 
+        "feature" in (x.get("text", "") + x.get("title", "")).lower() or
+        "wish" in (x.get("text", "") + x.get("title", "")).lower() or
+        "should" in (x.get("text", "") + x.get("title", "")).lower()
+    )
+    
+    # Count sentiment
+    negative = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Complaint", "Negative"))
+    positive = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Praise", "Positive"))
+    
     payments_flags = sum(1 for x in cluster_items if x.get("_payment_issue"))
     upi_flags = sum(1 for x in cluster_items if x.get("_upi_flag"))
     high_asp_flags = sum(1 for x in cluster_items if x.get("_high_end_flag"))
@@ -178,6 +195,9 @@ def _cluster_stats(cluster_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "size": n,
         "complaints": complaints,
+        "feature_requests": feature_requests,
+        "negative": negative,
+        "positive": positive,
         "payments_flags": payments_flags,
         "upi_flags": upi_flags,
         "high_asp_flags": high_asp_flags,
