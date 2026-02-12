@@ -16,10 +16,19 @@ __pycache__/
 .precomputed_cache/
 
 # Large data/cache files (keep locally, don't deploy)
-precomputed_clusters.json
 gpt_sentiment_cache.json
 trend_log.jsonl
-data/
+data/*
+
+# But DO track precomputed cache (weekly job output) and scraped data
+!precomputed_clusters.json
+!precomputed_insights.json
+!data/all_scraped_posts.json
+!data/scraped_reddit_posts.json
+!data/scraped_bluesky_posts.json
+!data/scraped_competitor_posts.json
+!data/scraped_twitter_posts.json
+!data/scraped_community_posts.json
 
 # Scraper outputs
 scraped_*.txt
