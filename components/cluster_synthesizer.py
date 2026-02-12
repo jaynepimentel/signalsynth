@@ -8,18 +8,19 @@ import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Embeddings / clustering - lazy load to avoid slow boot on Streamlit Cloud
+# Embeddings / clustering
 from sklearn.cluster import DBSCAN
 
-# Skip sentence-transformers on Streamlit Cloud
-IS_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("IS_STREAMLIT_CLOUD")
+# sentence-transformers is optional - only used for local clustering
+# Dashboard uses precomputed clusters so this is not needed at runtime
 SentenceTransformer = None
 util = None
-if not IS_CLOUD:
-    try:
-        from sentence_transformers import SentenceTransformer, util
-    except ImportError:
-        pass
+try:
+    from sentence_transformers import SentenceTransformer as ST, util as st_util
+    SentenceTransformer = ST
+    util = st_util
+except ImportError:
+    pass  # Expected on Streamlit Cloud - we use precomputed clusters
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
@@ -44,9 +45,9 @@ STOPWORDS = {
     "does"
 }
 
-# Only load embedding model if not on cloud
+# Only load embedding model if sentence-transformers is available
 model = None
-if not IS_CLOUD and SentenceTransformer is not None:
+if SentenceTransformer is not None:
     try:
         model = SentenceTransformer(EMBED_MODEL)
     except Exception:
