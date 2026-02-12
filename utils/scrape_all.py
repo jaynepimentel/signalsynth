@@ -26,6 +26,11 @@ try:
 except ImportError:
     from scrape_competitors import run_competitor_scraper
 
+try:
+    from utils.scrape_twitter import run_twitter_scraper
+except ImportError:
+    from scrape_twitter import run_twitter_scraper
+
 CONSOLIDATED_PATH = "data/all_scraped_posts.json"
 
 
@@ -94,6 +99,7 @@ def run_all_scrapers(
     include_bluesky: bool = True,
     include_ebay_forums: bool = True,
     include_competitors: bool = True,
+    include_twitter: bool = True,
 ) -> List[Dict[str, Any]]:
     """Run all scrapers and consolidate results."""
     
@@ -157,6 +163,19 @@ def run_all_scrapers(
             print(f"❌ Competitor scraper failed: {e}")
             source_counts["Competitors"] = 0
     
+    # Twitter/X
+    if include_twitter:
+        print("\n" + "=" * 40)
+        print("📍 TWITTER/X")
+        print("=" * 40)
+        try:
+            posts = run_twitter_scraper()
+            all_posts.extend(posts)
+            source_counts["Twitter/X"] = len(posts)
+        except Exception as e:
+            print(f"❌ Twitter scraper failed: {e}")
+            source_counts["Twitter/X"] = 0
+
     # Consolidate and deduplicate
     print("\n" + "=" * 40)
     print("📊 CONSOLIDATING RESULTS")
@@ -205,6 +224,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-reddit", action="store_true", help="Skip Reddit scraping")
     parser.add_argument("--no-bluesky", action="store_true", help="Skip Bluesky scraping")
     parser.add_argument("--no-ebay", action="store_true", help="Skip eBay Forums scraping")
+    parser.add_argument("--no-twitter", action="store_true", help="Skip Twitter/X scraping")
     
     args = parser.parse_args()
     
@@ -212,4 +232,5 @@ if __name__ == "__main__":
         include_reddit=not args.no_reddit,
         include_bluesky=not args.no_bluesky,
         include_ebay_forums=not args.no_ebay,
+        include_twitter=not args.no_twitter,
     )
