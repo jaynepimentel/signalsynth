@@ -8,9 +8,18 @@ import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Embeddings / clustering
+# Embeddings / clustering - lazy load to avoid slow boot on Streamlit Cloud
 from sklearn.cluster import DBSCAN
-from sentence_transformers import SentenceTransformer, util
+
+# Skip sentence-transformers on Streamlit Cloud
+IS_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("IS_STREAMLIT_CLOUD")
+SentenceTransformer = None
+util = None
+if not IS_CLOUD:
+    try:
+        from sentence_transformers import SentenceTransformer, util
+    except ImportError:
+        pass
 
 load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
@@ -18,7 +27,7 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 # === Tunables ===
 EMBED_MODEL = os.getenv("SS_CLUSTER_EMBED_MODEL", "intfloat/e5-base-v2")
-COHERENCE_THRESHOLD = float(os.getenv("SS_CLUSTER_COHERENCE", "0.78"))  # was about 0.68
+COHERENCE_THRESHOLD = float(os.getenv("SS_CLUSTER_COHERENCE", "0.78"))
 RECLUSTER_EPS = float(os.getenv("SS_CLUSTER_RECLUSTER_EPS", "0.30"))
 DBSCAN_EPS = float(os.getenv("SS_CLUSTER_EPS", "0.38"))
 MIN_CLUSTER_SIZE = int(os.getenv("SS_CLUSTER_MIN", "3"))
@@ -35,10 +44,13 @@ STOPWORDS = {
     "does"
 }
 
-try:
-    model = SentenceTransformer(EMBED_MODEL)
-except Exception:
-    model = None
+# Only load embedding model if not on cloud
+model = None
+if not IS_CLOUD and SentenceTransformer is not None:
+    try:
+        model = SentenceTransformer(EMBED_MODEL)
+    except Exception:
+        model = None
 
 
 def _informative_tokens(text: str) -> set:
