@@ -1,21 +1,11 @@
-# cluster_view.py - Cluster cards using precomputed ideas (no GPT calls in UI)
+# cluster_view.py - Simple cluster display using precomputed clusters
 
 import os
 import json
-import tempfile
-import textwrap
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 import streamlit as st
-
-from components.cluster_synthesizer import cluster_insights, generate_synthesized_insights
-from components.ai_suggester import (
-    generate_cluster_prd_docx,
-    generate_cluster_prfaq_docx,
-    generate_cluster_brd_docx,
-)
 
 RUNNING_IN_STREAMLIT = os.getenv("RUNNING_IN_STREAMLIT", "0") == "1"
 
@@ -66,24 +56,14 @@ def _load_cache() -> Optional[dict]:
 
 
 def _find_artifact(name: str) -> Optional[str]:
-    p = Path(name)
-    if p.exists():
-        return str(p)
-
-    alt = Path("signalsynth") / name
-    if alt.exists():
-        return str(alt)
-
     here = Path(__file__).resolve().parent
-    root = here
-    for _ in range(3):
-        cand = root / name
-        if cand.exists():
-            return str(cand)
-        cand2 = root / "signalsynth" / name
-        if cand2.exists():
-            return str(cand2)
-        root = root.parent
+    project_root = here.parent
+    cand = project_root / name
+    if cand.exists():
+        return str(cand)
+    cand2 = project_root / "signalsynth" / name
+    if cand2.exists():
+        return str(cand2)
     return None
 
 
@@ -117,6 +97,8 @@ def _rebuild_from_insights(insights: List[Dict[str, Any]]) -> dict:
 
 def _truncate(text: str, max_chars: int = 220) -> str:
     t = (text or "").strip().replace("\n", " ")
+    if t.lower().startswith("my subreddits"):
+        t = t[13:].lstrip()
     if len(t) <= max_chars:
         return t
     return t[: max_chars - 3].rsplit(" ", 1)[0] + "..."
@@ -208,16 +190,17 @@ def _heuristic_clusters(insights: List[Dict[str, Any]], max_clusters: int = 12) 
         t = i.get("type_subtag") or "General"
         topics = i.get("topic_focus") or []
         topic = topics[0] if topics else "General"
-        senti = i.get("brand_sentiment") or "Neutral"
-        key = (topic, t, senti)
+        key = (topic, t)
         buckets[key].append(i)
 
     groups = sorted(buckets.items(), key=lambda kv: len(kv[1]), reverse=True)[:max_clusters]
 
     clusters = []
     cards = []
-    for (topic, subtag, senti), group in groups:
-        clusters.append({"insights": group, "theme": topic, "sentiment": senti})
+    for (topic, subtag), group in groups:
+        sents = list({g.get("brand_sentiment", "Neutral") for g in group})
+        dominant_senti = sents[0] if len(sents) == 1 else "Mixed"
+        clusters.append({"insights": group, "theme": topic, "sentiment": dominant_senti})
         text_samples = [g.get("text", "") for g in group[:3]]
         quotes = [
             f"- _{_truncate(s)}_"
@@ -239,7 +222,7 @@ def _heuristic_clusters(insights: List[Dict[str, Any]], max_clusters: int = 12) 
             {
                 "title": f"{topic} / {subtag}",
                 "theme": topic,
-                "problem_statement": f"Grouped by {topic} · {subtag} · {senti} (heuristic cluster)",
+                "problem_statement": f"Grouped by {topic} · {subtag} · {dominant_senti} (heuristic cluster)",
                 "brand": "Multiple"
                 if len(brands) > 1
                 else next(iter(brands))

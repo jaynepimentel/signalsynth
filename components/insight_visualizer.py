@@ -44,46 +44,51 @@ def visualize_temporal_graph(G):
 
 def display_insight_charts(insights):
     if not insights:
-        st.warning("No insights available to visualize."); return
-    df = pd.DataFrame(insights)
-    # best-effort date
-    df['_date'] = pd.to_datetime(df.get('_logged_date') or df.get('post_date') or datetime.today(), errors='coerce')
+        st.warning("No insights available to visualize.")
+        return
+    
+    try:
+        df = pd.DataFrame(insights)
+        
+        # Safe date parsing
+        df['_date'] = pd.NaT
+        if 'post_date' in df.columns:
+            df['_date'] = pd.to_datetime(df['post_date'], errors='coerce')
+        elif '_logged_date' in df.columns:
+            df['_date'] = pd.to_datetime(df['_logged_date'], errors='coerce')
 
-    with st.expander("📈 Insight Trends & Distribution", expanded=False):
-        st.subheader("Sentiment Distribution"); st.bar_chart(df['brand_sentiment'].value_counts())
-        st.subheader("Top Mentioned Brands");  st.bar_chart(df['target_brand'].fillna("Unknown").value_counts().head(8))
-        st.subheader("Insight Type Distribution"); st.bar_chart(df['type_tag'].fillna("Unknown").value_counts().head(8))
-        st.subheader("🕰️ Temporal Signal Relationships"); st.pyplot(visualize_temporal_graph(build_temporal_graph(insights)))
-
-        if 'topic_focus' in df.columns:
-            st.subheader("Topic Focus Breakdown")
-            flat = [t for sub in df['topic_focus'].dropna() for t in (sub if isinstance(sub, list) else [])]
-            if flat: st.bar_chart(pd.Series(flat).value_counts().head(10))
-
-        if 'pm_priority_score' in df.columns:
-            st.subheader("📊 PM Priority Score Trend (7-day Avg)")
-            trend = df.set_index('_date').resample('7D')['pm_priority_score'].mean().dropna()
-            if not trend.empty: st.line_chart(trend, use_container_width=True)
-
-        if 'brand_sentiment' in df.columns:
-            st.subheader("📊 Complaint vs Praise Over Time")
-            sent = df.groupby([pd.Grouper(key='_date', freq='W'), 'brand_sentiment']).size().unstack(fill_value=0)
-            if not sent.empty: st.area_chart(sent, use_container_width=True)
-
-        if '_trend_keywords' in df.columns:
-            st.subheader("🔥 Top Emerging Keywords")
-            kw = df.explode('_trend_keywords')['_trend_keywords'].value_counts().head(10)
-            if not kw.empty: st.bar_chart(kw)
-
-        if 'effort' in df.columns:
-            st.subheader("💼 Effort Breakdown"); st.bar_chart(df['effort'].value_counts())
-
-        if 'persona' in df.columns and 'journey_stage' in df.columns:
-            st.subheader("🧩 Persona × Journey Stage (Avg PM Priority)")
-            if 'pm_priority_score' not in df.columns: df['pm_priority_score'] = 50
-            hm = df.pivot_table(index='persona', columns='journey_stage', values='pm_priority_score', aggfunc='mean').fillna(0)
-            if hm.empty: st.info("Not enough data to render heatmap.")
-            else:
-                fig, ax = plt.subplots(figsize=(10,4))
-                sns.heatmap(hm, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=0.5)
-                st.pyplot(fig)
+        with st.expander("📈 Insight Trends & Distribution", expanded=True):
+            # Topic Distribution (simple bar chart)
+            if 'subtag' in df.columns:
+                st.subheader("📊 Topic Distribution")
+                st.bar_chart(df['subtag'].fillna("General").value_counts().head(10))
+            
+            # Sentiment Distribution
+            if 'brand_sentiment' in df.columns:
+                st.subheader("😊 Sentiment Distribution")
+                st.bar_chart(df['brand_sentiment'].fillna("Unknown").value_counts())
+            
+            # Insight Type Distribution
+            if 'type_tag' in df.columns:
+                st.subheader("📋 Insight Type Distribution")
+                st.bar_chart(df['type_tag'].fillna("Unknown").value_counts().head(8))
+            
+            # Topic trend over time (exclude eBay Marketplace to show other topics)
+            if '_date' in df.columns and df['_date'].notna().any():
+                st.subheader("📈 Topic Trend Over Time")
+                st.caption("Excludes 'eBay Marketplace' to highlight specific topics")
+                try:
+                    df_dated = df[df['_date'].notna()].copy()
+                    # Exclude eBay Marketplace and General to show specific topics
+                    df_dated = df_dated[~df_dated['subtag'].isin(['eBay Marketplace', 'General', 'Unknown'])]
+                    if 'subtag' in df_dated.columns and len(df_dated) > 0:
+                        topic_trend = df_dated.groupby([pd.Grouper(key='_date', freq='W'), 'subtag']).size().unstack(fill_value=0)
+                        if len(topic_trend) > 0:
+                            st.line_chart(topic_trend, use_container_width=True)
+                        else:
+                            st.info("Not enough data for trend chart.")
+                except Exception as e:
+                    st.info(f"Trend chart unavailable: {e}")
+            
+    except Exception as e:
+        st.error(f"Chart error: {e}")

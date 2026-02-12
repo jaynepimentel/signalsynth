@@ -78,10 +78,12 @@ def _apply_payment_flags(i:dict)->dict:
 
     pit=set(i.get("payment_issue_types") or [])
     if "payment_declined" in pit and "Payment Declined" not in sub: sub.append("Payment Declined")
+    if "insufficient_funds" in pit and "Insufficient Funds" not in sub: sub.append("Insufficient Funds")
     if "wire_or_bank_transfer" in pit and "Wire/Bank Transfer" not in sub: sub.append("Wire/Bank Transfer")
+    if "payment_hold" in pit and "Payment Hold" not in sub: sub.append("Payment Hold")
     if i.get("_upi_flag") and "UPI" not in sub: sub.append("UPI")
 
-    if {"payment_declined","wire_or_bank_transfer"} & pit and not i.get("opportunity_tag"):
+    if {"payment_declined","wire_or_bank_transfer","insufficient_funds","payment_hold"} & pit and not i.get("opportunity_tag"):
         i["opportunity_tag"]="Conversion Blocker"
     if i.get("_upi_flag") and (not i.get("opportunity_tag") or i["opportunity_tag"]=="General Insight"):
         i["opportunity_tag"]="Policy Risk"

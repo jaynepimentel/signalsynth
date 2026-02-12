@@ -52,9 +52,17 @@ def detect_subtags(text):
         "vault": "Vault Friction", "fake": "Counterfeit Concern", "pop report": "Comps/Valuation",
         "turnaround": "Speed Issue", "verification": "Trust Issue"
     }
+    VALUATION_PHRASES = ["what is it worth", "what's it worth", "how much is", "how much are",
+        "worth anything", "good deal", "got fleeced", "overpaid", "fair price", "market value",
+        "price check", "value check", "pricing advice", "did i overpay", "worth grading"]
     found = set()
+    lo = text.lower()
+    if any(p in lo for p in VALUATION_PHRASES):
+        found.add("Valuation Question")
     for key, label in SUBTAG_MAP.items():
         if re.search(rf"\b{re.escape(key)}\b", text):
+            if label == "Grading Complaint" and "Valuation Question" in found:
+                continue
             found.add(label)
     return list(found) if found else ["General"]
 

@@ -90,21 +90,30 @@ def render_insight_cards(
         return
 
     total_pages = max(1, (len(filtered) + per_page - 1) // per_page)
-    page_key = f"{key_prefix}_page"
+    
+    # Initialize session state for page
+    page_key = f"{key_prefix}_current_page"
     if page_key not in st.session_state:
-        st.session_state[page_key] = 1
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
-        if st.button("⬅️ Previous", key=f"{key_prefix}_prev"):
-            st.session_state[page_key] = max(1, st.session_state[page_key] - 1)
-    with col2:
-        st.markdown(f"**Page {st.session_state[page_key]} of {total_pages}**")
-    with col3:
-        if st.button("Next ➡️", key=f"{key_prefix}_next"):
-            st.session_state[page_key] = min(total_pages, st.session_state[page_key] + 1)
-
-    start = (st.session_state[page_key] - 1) * per_page
+        st.session_state[page_key] = 0  # index-based
+    
+    # Clamp to valid range
+    st.session_state[page_key] = min(st.session_state[page_key], total_pages - 1)
+    
+    # Navigation buttons
+    if total_pages > 1:
+        col1, col2, col3 = st.columns([1, 3, 1])
+        with col1:
+            if st.button("◀ Prev", key=f"{key_prefix}_prev", disabled=st.session_state[page_key] == 0):
+                st.session_state[page_key] -= 1
+                st.rerun()
+        with col2:
+            st.markdown(f"**Page {st.session_state[page_key] + 1} of {total_pages}**")
+        with col3:
+            if st.button("Next ▶", key=f"{key_prefix}_next", disabled=st.session_state[page_key] >= total_pages - 1):
+                st.session_state[page_key] += 1
+                st.rerun()
+    
+    start = st.session_state[page_key] * per_page
     paged = filtered[start : start + per_page]
 
     for idx, i in enumerate(paged, start=start):
@@ -129,7 +138,7 @@ def render_insight_cards(
             if doc_cols[0].button("📝 PRD", key=f"prd_{unique_id}"):
                 with st.spinner("Generating PRD..."):
                     try:
-                        file_path = generate_prd_docx(text, brand, filename)
+                        file_path = generate_prd_docx(text, brand, filename, insight=i)
                         if file_path and os.path.exists(file_path):
                             with open(file_path, "rb") as f:
                                 st.download_button(
@@ -151,7 +160,7 @@ def render_insight_cards(
             if doc_cols[1].button("📊 BRD", key=f"brd_{unique_id}"):
                 with st.spinner("Generating BRD..."):
                     try:
-                        file_path = generate_brd_docx(text, brand, filename)
+                        file_path = generate_brd_docx(text, brand, filename, insight=i)
                         if file_path and os.path.exists(file_path):
                             with open(file_path, "rb") as f:
                                 st.download_button(
@@ -173,7 +182,7 @@ def render_insight_cards(
             if doc_cols[2].button("📰 PRFAQ", key=f"prfaq_{unique_id}"):
                 with st.spinner("Generating PRFAQ..."):
                     try:
-                        file_path = generate_prfaq_docx(text, brand, filename)
+                        file_path = generate_prfaq_docx(text, brand, filename, insight=i)
                         if file_path and os.path.exists(file_path):
                             with open(file_path, "rb") as f:
                                 st.download_button(
@@ -195,68 +204,50 @@ def render_insight_cards(
             if doc_cols[3].button("🐞 JIRA", key=f"jira_{unique_id}"):
                 with st.spinner("Generating JIRA..."):
                     try:
-                        file_content = generate_jira_bug_ticket(text, brand)
-                        st.download_button(
-                            "⬇️ JIRA",
-                            file_content,
-                            file_name=f"jira-{filename}.md",
-                            mime="text/markdown",
-                            key=f"dl_jira_{unique_id}",
-                        )
+                        file_content = generate_jira_bug_ticket(text, brand, insight=i)
+                        if file_content:
+                            st.download_button(
+                                "⬇️ JIRA",
+                                file_content,
+                                file_name=f"jira-{filename}.md",
+                                mime="text/markdown",
+                                key=f"dl_jira_{unique_id}",
+                            )
+                        else:
+                            st.error("JIRA generation returned empty content.")
                     except Exception as e:
                         st.error(f"JIRA generation failed: {str(e)}")
 
-            # Badges
+            # Badges - only show meaningful ones
             tags = []
-            type_tag = i.get("type_tag") or "Insight"
-            tags.append(badge(type_tag, BADGE_COLORS.get(type_tag, "#ccc")))
-
+            
+            # Type badge (always show)
+            type_tag = i.get("type_tag") or "Feedback"
+            tags.append(badge(type_tag, BADGE_COLORS.get(type_tag, "#118AB2")))
+            
+            # Sentiment badge (always show)
             sentiment = i.get("brand_sentiment") or "Neutral"
-            tags.append(badge(sentiment, BADGE_COLORS.get(sentiment, "#ccc")))
-
-            effort = i.get("effort") or "Unknown"
-            tags.append(badge(effort, BADGE_COLORS.get(effort, "#ccc")))
-
-            stage = i.get("journey_stage") or "Unknown"
-            tags.append(badge(stage, BADGE_COLORS.get(stage, "#ccc")))
-
-            clarity = i.get("clarity") or "Unknown"
-            tags.append(badge(clarity, BADGE_COLORS.get(clarity, "#ccc")))
-
-            if i.get("signal_intent"):
-                tags.append(
-                    badge(
-                        i["signal_intent"],
-                        BADGE_COLORS.get(i["signal_intent"], "#ccc"),
-                    )
-                )
-            if i.get("cohort"):
-                tags.append(badge(i["cohort"], "#390099"))
-            if i.get("region") and i["region"] != "Unknown":
-                tags.append(
-                    badge(
-                        i["region"],
-                        BADGE_COLORS.get(i["region"], "#ccc"),
-                    )
-                )
-            if i.get("is_post_event_feedback"):
-                tags.append(badge("Post-Event", BADGE_COLORS["Post-Event"]))
-            if i.get("is_dev_feedback"):
-                tags.append(badge("Developer", BADGE_COLORS["Developer"]))
+            tags.append(badge(sentiment, BADGE_COLORS.get(sentiment, "#A9A9A9")))
+            
+            # Subtag/Topic badge if meaningful
+            subtag = i.get("subtag", "")
+            if subtag and subtag.lower() not in ("general", "unknown", ""):
+                tags.append(badge(subtag, BADGE_COLORS.get(subtag, "#5F0F40")))
+            
+            # High-value flag
+            if i.get("_high_end_flag"):
+                tags.append(badge("💎 High-Value", "#FFB703"))
+            
+            # Payment flag
+            if i.get("_payment_issue"):
+                tags.append(badge("💳 Payment", "#E63946"))
 
             st.markdown(" ".join(tags), unsafe_allow_html=True)
 
-            # Meta caption
-            feature_area = i.get("feature_area") or []
-            if isinstance(feature_area, str):
-                feature_area = [feature_area]
-
+            # Simplified caption
             st.caption(
-                f"Score: {i.get('score', 0)} | Intent: {i.get('signal_intent','Unknown')} | "
-                f"Feature: {', '.join(feature_area) or 'N/A'} | Type: {i.get('type_tag')} > {i.get('type_subtag','')} "
-                f"({i.get('type_confidence','N/A')}%) | Persona: {i.get('persona','Unknown')} | "
-                f"Cohort: {i.get('cohort','Unknown')} | Region: {i.get('region','Unknown')} | "
-                f"Post Date: {i.get('post_date') or i.get('_logged_date', 'N/A')}"
+                f"Source: {i.get('source', 'Reddit')} | "
+                f"Posted: {i.get('post_date') or 'Unknown'}"
             )
 
             if i.get("url"):
