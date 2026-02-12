@@ -26,13 +26,57 @@ def categorize_entity(text):
     
     return "eBay Core"
 
+def detect_brand_from_text(text):
+    """Detect brand/entity from text content."""
+    text_lower = (text or "").lower()
+    
+    # Partners
+    if "psa vault" in text_lower:
+        return "PSA Vault"
+    if "psa" in text_lower and ("grading" in text_lower or "grade" in text_lower or "turnaround" in text_lower):
+        return "PSA Grading"
+    if "psa" in text_lower:
+        return "PSA"
+    if "comc" in text_lower or "check out my cards" in text_lower:
+        return "ComC"
+    if "bgs" in text_lower or "beckett" in text_lower:
+        return "BGS"
+    if "cgc" in text_lower:
+        return "CGC"
+    if "sgc" in text_lower:
+        return "SGC"
+    
+    # Competitors
+    if "fanatics" in text_lower:
+        return "Fanatics"
+    if "heritage" in text_lower and "auction" in text_lower:
+        return "Heritage Auctions"
+    if "alt.xyz" in text_lower or "alt marketplace" in text_lower:
+        return "Alt"
+    if "pwcc" in text_lower:
+        return "PWCC"
+    
+    # Subsidiaries
+    if "goldin" in text_lower:
+        return "Goldin"
+    if "tcgplayer" in text_lower:
+        return "TCGPlayer"
+    
+    # eBay
+    if "ebay" in text_lower:
+        return "eBay"
+    
+    return "Other"
+
+
 def summarize_brand_insights(insights):
     rows = []
     for i in insights:
-        brand = i.get("target_brand", "Unknown")
+        text = i.get("text", "") + " " + i.get("title", "")
+        # Detect brand from text instead of relying on target_brand field
+        brand = detect_brand_from_text(text)
         sentiment = i.get("brand_sentiment", "Neutral")
         logged_at = i.get("_logged_at") or i.get("post_date")
-        text = i.get("text", "") + " " + i.get("title", "")
         entity_type = categorize_entity(text)
         rows.append((brand, sentiment, logged_at, entity_type))
 
