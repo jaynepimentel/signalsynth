@@ -325,46 +325,32 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         
         # Epic card using container (no expander)
         with st.container(border=True):
-            st.subheader(f"{label} — {size} signals")
+            # Header row
+            st.markdown(f"### {label}")
+            st.caption(f"{size} signals | {product_opp}" if product_opp else f"{size} signals")
             
-            # Product opportunity header
-            if product_opp:
-                st.markdown(f"**🎯 Product Opportunity:** {product_opp}")
+            # Description
             if description:
-                st.caption(description)
+                st.markdown(f"_{description}_")
             
-            # Metrics row with color coding
-            cols = st.columns(4)
-            with cols[0]:
-                st.metric("Total Signals", signal_counts.get("total", size))
-            with cols[1]:
-                complaints = signal_counts.get("complaints", 0)
-                complaint_pct = round(complaints / max(size, 1) * 100)
-                st.metric("Complaints", f"{complaints} ({complaint_pct}%)")
-            with cols[2]:
-                st.metric("Feature Requests", signal_counts.get("feature_requests", 0))
-            with cols[3]:
-                negative = signal_counts.get("negative", 0)
-                positive = signal_counts.get("positive", 0)
-                if negative > positive:
-                    sentiment_label = f"(-) {negative} neg / {positive} pos"
-                elif positive > negative:
-                    sentiment_label = f"(+) {positive} pos / {negative} neg"
-                else:
-                    sentiment_label = f"(=) {negative} neg / {positive} pos"
-                st.metric("Sentiment", sentiment_label)
+            st.divider()
             
-            # Sample quote for context
-            if cluster_insights:
-                sample = cluster_insights[0]
-                sample_text = (sample.get("text", "") or sample.get("title", ""))[:200]
-                if sample_text:
-                    st.markdown(f"📝 *\"{sample_text}...\"*")
+            # Clean metrics row
+            negative = signal_counts.get("negative", 0)
+            positive = signal_counts.get("positive", 0)
+            complaints = signal_counts.get("complaints", 0)
+            features = signal_counts.get("feature_requests", 0)
             
-            # Top themes
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Signals", size)
+            col2.metric("Complaints", complaints)
+            col3.metric("Features", features)
+            col4.metric("Neg / Pos", f"{negative} / {positive}")
+            
+            # Top themes as pills
             themes = _extract_top_themes(cluster_insights)
             if themes:
-                st.markdown("**🏷️ Top Themes:** " + " • ".join([f"`{t}`" for t in themes]))
+                st.markdown(" ".join([f"`{t}`" for t in themes]))
             
             # Two-column action layout
             action_col1, action_col2 = st.columns([1, 2])
