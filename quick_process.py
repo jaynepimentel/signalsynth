@@ -140,6 +140,7 @@ SCRAPED_FILES = [
     "data/scraped_competitor_posts.json",  # Competitor & subsidiary data
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
+    "data/scraped_twitter_posts.json",  # Twitter/X (syndication API)
 ]
 
 

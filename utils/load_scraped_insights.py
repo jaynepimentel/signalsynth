@@ -30,7 +30,9 @@ REQUIRED_KEYWORDS = set(
     (os.getenv("SS_REQUIRED_KEYWORDS",
      "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace,"
      "bgs,cgc,sgc,hga,csg,payment,wire,transfer,funds,upi,unpaid,dispute,counterfeit,fake,fraud,fees,seller,"
-     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
+     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible,"
+     "sneaker,comic,vintage,auction,card,pokemon,sports card,lego,coin,hot wheels,memorabilia,"
+     "resell,flip,grail,rare,limited edition,price guide,authenticity,certified,slab,wax,hobby box"))
     .lower().split(",")
 )
 
