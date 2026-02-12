@@ -289,10 +289,28 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
     clusters = _load_clusters()
     
     if not clusters:
-        st.info("No clusters available. Run `python create_clusters_by_subtag.py` to generate.")
+        st.info("No clusters available. Run `python precompute_clusters.py` to generate.")
         return
     
-    st.caption(f"📊 {len(clusters)} Strategic Epics")
+    # Header with sorting
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.caption(f"📊 {len(clusters)} Strategic Epics")
+    with col2:
+        sort_by = st.selectbox(
+            "Sort by",
+            ["Signals (High→Low)", "Complaints (High→Low)", "Alphabetical"],
+            key="cluster_sort",
+            label_visibility="collapsed"
+        )
+    
+    # Sort clusters
+    if sort_by == "Signals (High→Low)":
+        clusters = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
+    elif sort_by == "Complaints (High→Low)":
+        clusters = sorted(clusters, key=lambda x: x.get("signal_counts", {}).get("complaints", 0), reverse=True)
+    else:
+        clusters = sorted(clusters, key=lambda x: x.get("title", ""))
     
     for cluster in clusters:
         epic_name = cluster.get("title", "Unknown")
@@ -314,19 +332,33 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
             if description:
                 st.caption(description)
             
-            # Metrics row
+            # Metrics row with color coding
             cols = st.columns(4)
             with cols[0]:
                 st.metric("Total Signals", signal_counts.get("total", size))
             with cols[1]:
-                st.metric("Complaints", signal_counts.get("complaints", 0))
+                complaints = signal_counts.get("complaints", 0)
+                complaint_pct = round(complaints / max(size, 1) * 100)
+                st.metric("Complaints", f"{complaints} ({complaint_pct}%)")
             with cols[2]:
                 st.metric("Feature Requests", signal_counts.get("feature_requests", 0))
             with cols[3]:
                 negative = signal_counts.get("negative", 0)
                 positive = signal_counts.get("positive", 0)
-                sentiment_ratio = f"{negative}↓ / {positive}↑"
-                st.metric("Sentiment", sentiment_ratio)
+                if negative > positive:
+                    sentiment_label = f"🔴 {negative}↓ / {positive}↑"
+                elif positive > negative:
+                    sentiment_label = f"🟢 {negative}↓ / {positive}↑"
+                else:
+                    sentiment_label = f"⚪ {negative}↓ / {positive}↑"
+                st.metric("Sentiment", sentiment_label)
+            
+            # Sample quote for context
+            if cluster_insights:
+                sample = cluster_insights[0]
+                sample_text = (sample.get("text", "") or sample.get("title", ""))[:200]
+                if sample_text:
+                    st.markdown(f"📝 *\"{sample_text}...\"*")
             
             # Top themes
             themes = _extract_top_themes(cluster_insights)
