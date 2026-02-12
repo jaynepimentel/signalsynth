@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2026-02-12T07:46:34.247107Z",
+    "generated_at": "2026-02-12T07:51:39.383553Z",
     "filters": {
       "brand": null,
       "persona": null,
@@ -1918,7 +1918,10 @@
       ],
       "stats": {
         "size": 47,
-        "complaints": 0,
+        "complaints": 24,
+        "feature_requests": 11,
+        "negative": 24,
+        "positive": 12,
         "payments_flags": 2,
         "upi_flags": 2,
         "high_asp_flags": 21,
@@ -4706,7 +4709,10 @@
       ],
       "stats": {
         "size": 70,
-        "complaints": 0,
+        "complaints": 17,
+        "feature_requests": 26,
+        "negative": 17,
+        "positive": 30,
         "payments_flags": 0,
         "upi_flags": 0,
         "high_asp_flags": 29,
@@ -5437,7 +5443,10 @@
       ],
       "stats": {
         "size": 17,
-        "complaints": 0,
+        "complaints": 8,
+        "feature_requests": 4,
+        "negative": 8,
+        "positive": 6,
         "payments_flags": 0,
         "upi_flags": 17,
         "high_asp_flags": 5,
@@ -7595,7 +7604,10 @@
       ],
       "stats": {
         "size": 53,
-        "complaints": 0,
+        "complaints": 27,
+        "feature_requests": 14,
+        "negative": 27,
+        "positive": 8,
         "payments_flags": 41,
         "upi_flags": 3,
         "high_asp_flags": 14,
@@ -8929,7 +8941,10 @@
       ],
       "stats": {
         "size": 32,
-        "complaints": 0,
+        "complaints": 14,
+        "feature_requests": 6,
+        "negative": 14,
+        "positive": 9,
         "payments_flags": 1,
         "upi_flags": 0,
         "high_asp_flags": 13,
@@ -9794,7 +9809,10 @@
       ],
       "stats": {
         "size": 21,
-        "complaints": 0,
+        "complaints": 10,
+        "feature_requests": 8,
+        "negative": 10,
+        "positive": 5,
         "payments_flags": 0,
         "upi_flags": 1,
         "high_asp_flags": 9,
@@ -11762,7 +11780,10 @@
       ],
       "stats": {
         "size": 49,
-        "complaints": 0,
+        "complaints": 18,
+        "feature_requests": 13,
+        "negative": 18,
+        "positive": 12,
         "payments_flags": 1,
         "upi_flags": 0,
         "high_asp_flags": 21,
@@ -12892,7 +12913,10 @@
       ],
       "stats": {
         "size": 28,
-        "complaints": 0,
+        "complaints": 4,
+        "feature_requests": 8,
+        "negative": 4,
+        "positive": 17,
         "payments_flags": 0,
         "upi_flags": 0,
         "high_asp_flags": 13,
@@ -13307,7 +13331,10 @@
       ],
       "stats": {
         "size": 10,
-        "complaints": 0,
+        "complaints": 2,
+        "feature_requests": 3,
+        "negative": 2,
+        "positive": 7,
         "payments_flags": 0,
         "upi_flags": 0,
         "high_asp_flags": 3,
@@ -18003,7 +18030,10 @@
       ],
       "stats": {
         "size": 113,
-        "complaints": 0,
+        "complaints": 41,
+        "feature_requests": 35,
+        "negative": 41,
+        "positive": 29,
         "payments_flags": 16,
         "upi_flags": 5,
         "high_asp_flags": 37,
@@ -18218,6 +18248,9 @@
       "stats": {
         "size": 5,
         "complaints": 0,
+        "feature_requests": 0,
+        "negative": 0,
+        "positive": 1,
         "payments_flags": 0,
         "upi_flags": 0,
         "high_asp_flags": 1,
@@ -18232,14 +18265,14 @@
     {
       "title": "Seller Risks and Shipping Challenges on eBay",
       "theme": "Seller Protection",
-      "problem_statement": "eBay sellers face significant risks when shipping items, including potential loss of funds and inventory due to buyer claims of non-delivery or empty packages. Current protections are inadequate, leaving sellers vulnerable to fraudulent claims, which can result in financial losses and decreased seller performance ratings. Additionally, sellers are seeking clearer guidelines on shipping processes, especially when expanding to international markets, and are concerned about the implications of misrepresenting item locations for competitive advantage.",
+      "problem_statement": "eBay sellers face significant risks due to inadequate protection against buyer claims of non-delivery, leading to financial losses and discouragement from selling. Additionally, sellers are struggling with shipping logistics, including setting up cross-border shipping and managing delivery issues, which complicates their ability to maintain seller performance standards.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18276,16 +18309,16 @@
       "was_reclustered": false
     },
     {
-      "title": "Issues with eBay Purchases and Auction Transparency",
-      "theme": "User Experience",
-      "problem_statement": "Users are experiencing confusion and dissatisfaction with the quality and authenticity of items purchased on eBay, as well as challenges in navigating the platform for international shipping and understanding auction practices, leading to concerns about potential scams and lack of transparency in transactions.",
+      "title": "Concerns Over eBay Transactions and Auction Integrity",
+      "theme": "User Trust and Experience",
+      "problem_statement": "Users are experiencing issues with the integrity of eBay transactions, including receiving damaged items, deceptive seller practices, and difficulties in navigating the platform for purchases, particularly from international locations. Additionally, there are concerns regarding the legitimacy and transparency of local auction houses, which may affect user trust in these buying channels.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18319,16 +18352,16 @@
       "was_reclustered": false
     },
     {
-      "title": "Seller Misconduct and Buyer Protection Issues",
-      "theme": "User Safety",
-      "problem_statement": "Users report that sellers are exploiting feedback tools to retaliate against negative reviews by disclosing personal information and using abusive language, while eBay's response to reports of such behavior has been inadequate, leading to concerns about buyer safety and seller accountability on the platform.",
+      "title": "Seller Misconduct and Account Suspension Issues",
+      "theme": "User Trust and Safety",
+      "problem_statement": "Users are experiencing significant issues with seller misconduct, including harassment and the sharing of personal information in feedback comments, as well as unfair account suspensions and payment holds by eBay. This undermines trust in the platform and raises concerns about the effectiveness of eBay's policies in protecting users from retaliation and ensuring fair treatment in disputes.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18365,7 +18398,7 @@
     {
       "title": "Confusion Over Fees and Payment Issues on eBay",
       "theme": "Payment and Fees",
-      "problem_statement": "Users are experiencing a lack of transparency and clarity regarding sales tax and fees on eBay transactions, leading to confusion and frustration. Additionally, there are recurring issues with bank verifications and payment errors that result in unauthorized charges, impacting user trust and satisfaction.",
+      "problem_statement": "Users are experiencing a lack of clarity regarding sales tax and additional fees on eBay purchases, leading to frustration and confusion. Additionally, there are issues with bank verification for payouts and payment errors where users are charged despite receiving error messages during transactions. This creates a negative user experience and raises concerns about the reliability of eBay's payment processing system.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
@@ -18410,7 +18443,7 @@
     {
       "title": "Issues with eBay Authenticity Guarantee Process",
       "theme": "Authentication Challenges",
-      "problem_statement": "Sellers are experiencing significant delays, miscommunication, and lack of support regarding items stuck in the eBay Authenticity Guarantee process, leading to financial losses and unresolved disputes over missing or damaged items. Additionally, there is a lack of clear communication regarding the handling of lawful accessories during authentication, resulting in unexpected losses for sellers.",
+      "problem_statement": "Users are experiencing significant delays, miscommunication, and lack of support regarding the eBay Authenticity Guarantee process, leading to lost items, unresolved disputes, and unexpected discarding of lawful accessories without consent.",
       "brand": "eBay",
       "type": "Feedback",
       "personas": [
@@ -18455,14 +18488,14 @@
     {
       "title": "Concerns Over eBay Transactions and Buyer Safety",
       "theme": "User Safety and Transaction Issues",
-      "problem_statement": "Users are experiencing anxiety and uncertainty regarding the safety and legitimacy of transactions on eBay, including concerns about buyer threats, product authenticity, and handling returns, which can lead to financial loss and emotional distress.",
+      "problem_statement": "Users are experiencing anxiety and confusion regarding the safety and legitimacy of transactions on eBay, including concerns about potential fraud, buyer threats, and the implications of returns and refunds. There is a need for clearer guidelines and support mechanisms to address these issues effectively.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18499,16 +18532,16 @@
       "was_reclustered": false
     },
     {
-      "title": "Selling Limits and Feedback Impact on Sellers",
-      "theme": "Seller Limitations",
-      "problem_statement": "Users are facing restrictive selling limits on eBay due to past negative feedback, which hinders their ability to sell effectively. They seek clarity on the requirements needed to increase their selling limits after previously having higher thresholds.",
+      "title": "Selling Limit Restrictions and Requirements",
+      "theme": "User Experience",
+      "problem_statement": "Users are frustrated with low selling limits imposed by eBay due to past unfulfilled orders, and they lack clear guidance on the requirements needed to increase these limits, hindering their ability to sell effectively.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18547,15 +18580,15 @@
     },
     {
       "title": "Challenges in Selling and Valuing Collectibles",
-      "theme": "Seller Support",
-      "problem_statement": "Users are struggling with the complexities of selling collectibles internationally, including documentation requirements, pricing strategies, and understanding market values, leading to confusion and potential financial loss.",
+      "theme": "User Experience",
+      "problem_statement": "Users face difficulties in understanding the selling process and accurately valuing their collectibles, leading to confusion and potential financial loss. There is a need for clearer guidance on documentation for international shipping, pricing strategies for collectibles, and tools to automate price comparisons for better decision-making.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18592,14 +18625,14 @@
     {
       "title": "Mercury Bank's Policy Changes Impact Startups' Banking Options",
       "theme": "Banking Compliance",
-      "problem_statement": "Startups in affected regions are struggling to find reliable banking alternatives due to Mercury Bank's recent policy changes, which have resulted in account closures for businesses in multiple countries, including Ukraine and Nigeria, citing compliance challenges.",
+      "problem_statement": "Startups in affected regions are struggling to find reliable banking alternatives due to Mercury Bank's recent account closure policies stemming from compliance challenges, which limits their operational capabilities and financial stability.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18635,14 +18668,14 @@
     {
       "title": "Selling Strategies for Graded Memorabilia",
       "theme": "Marketplace Optimization",
-      "problem_statement": "Users are uncertain about the best platforms and strategies for selling graded memorabilia, particularly regarding the use of PSA Vault versus eBay, and are seeking guidance on maximizing their profits while minimizing fees.",
+      "problem_statement": "Users are uncertain about the best platforms and strategies for selling graded memorabilia, particularly regarding the use of PSA Vault versus eBay, and are seeking guidance on maximizing returns while minimizing fees.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
         "General",
         "Seller",
-        "Buyer",
-        "Collector"
+        "Collector",
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
@@ -18686,7 +18719,7 @@
     {
       "title": "Card Collection Strategies and Marketplace Concerns",
       "theme": "User Experience",
-      "problem_statement": "Users are seeking clarity on the effectiveness of bulk purchases for completing card sets and are frustrated by the lack of reliable resources for card valuation, alongside concerns about seller quality and marketplace integrity.",
+      "problem_statement": "Users are seeking clarity on the effectiveness of bulk purchases for completing card sets and are frustrated by the lack of reliable resources for card valuation, as well as the inconsistent quality of service from sellers in the trading card marketplace.",
       "brand": "eBay",
       "type": "Feedback",
       "personas": [
