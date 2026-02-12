@@ -30,21 +30,7 @@ REQUIRED_KEYWORDS = set(
     (os.getenv("SS_REQUIRED_KEYWORDS",
      "ebay,grading,vault,shipping,return,refund,authentication,delay,scam,psa,whatnot,fanatics,alt marketplace,"
      "bgs,cgc,sgc,hga,csg,payment,wire,transfer,funds,upi,unpaid,dispute,counterfeit,fake,fraud,fees,seller,"
-<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
-<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
-<<<<<<< C:/Users/jayne/repo/signalsynth/utils/load_scraped_insights.py
-     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible,"
-     "sneaker,comic,vintage,auction,card,pokemon,sports card,lego,coin,hot wheels,memorabilia,"
-     "resell,flip,grail,rare,limited edition,price guide,authenticity,certified,slab,wax,hobby box"))
-=======
      "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
->>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
-=======
-     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
->>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
-=======
-     "buyer,support,customer service,damage,lost,tracking,marketplace,funko,trading card,collectible"))
->>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/utils/load_scraped_insights.py
     .lower().split(",")
 )
 

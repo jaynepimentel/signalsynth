@@ -151,6 +151,17 @@ def is_relevant(text, subreddit=""):
     text_lower = text.lower()
     subreddit_lower = subreddit.lower()
     
+    # Twitter/X posts from curated accounts: these accounts were hand-picked
+    # for relevance, so apply a lighter filter (just min length + not pure noise)
+    source = subreddit  # repurposed param; caller may pass source string
+    if "twitter" in source.lower():
+        if len(text_lower.strip()) < 30:
+            return False
+        noise_count = sum(1 for phrase in NOISE_PHRASES if phrase in text_lower)
+        if noise_count >= 2:
+            return False
+        return True
+
     # Exclude trading/sales posts (not user feedback)
     sales_patterns = [
         "[h]", "[w]", "[fs]", "[ft]", "[wts]", "[wtb]", "[wtt]",
@@ -441,7 +452,7 @@ def main():
     relevant_posts = []
     for post in posts:
         text = f"{post.get('title', '')} {post.get('text', '')}"
-        subreddit = post.get("subreddit", "")
+        subreddit = post.get("subreddit", "") or post.get("source", "")
         if is_relevant(text, subreddit):
             relevant_posts.append(post)
     
