@@ -700,12 +700,51 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 # 🤝 STRATEGIC PARTNERS - PSA, ComC integration partners
 with tabs[4]:
     st.header("🤝 Strategic Partners")
-    st.markdown("""
-    <div style="background: #e0f2fe; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #0284c7;">
-        <strong>🤝 Partner Intelligence</strong><br/>
-        <span style="color: #64748b;">Track user feedback on eBay's strategic partners: PSA services (Vault, Grading, Consignment, Offers) and ComC.</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("Track user feedback on eBay's strategic partners. Use **📋 Partner Strategy** to generate partnership insights and recommendations.")
+    
+    # Partner Strategy LLM function
+    def generate_partner_strategy(partner: str, post_text: str, post_title: str) -> str:
+        """Generate partner strategy brief."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return "LLM not available. Please configure OpenAI API key."
+        
+        prompt = f"""You are a Senior Partnerships Manager at eBay analyzing partner feedback.
+
+PARTNER: {partner}
+USER FEEDBACK:
+Title: {post_title}
+Content: {post_text}
+
+Analyze this partner signal and generate a PARTNER STRATEGY BRIEF:
+
+1. **SIGNAL TYPE**: Is this a partner service issue, integration problem, user experience gap, or positive feedback about {partner}?
+
+2. **IMPACT ON EBAY**: How does this feedback affect eBay sellers/buyers using {partner} services?
+
+3. **ROOT CAUSE**: What's likely causing this issue? Is it on the partner side, eBay integration side, or user education gap?
+
+4. **RECOMMENDED ACTION**: What should eBay's partnerships team do?
+   - Escalate to partner account team?
+   - Improve integration/documentation?
+   - Add feature to address gap?
+   - No action needed?
+
+5. **PARTNERSHIP HEALTH**: Rate the signal (🟢 Positive / 🟡 Neutral / 🔴 Concerning)
+
+Be specific and actionable. Write for a partnerships manager."""
+        
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are an expert partnerships strategist who writes crisp, actionable partner strategy briefs.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.5
+            )
+        except Exception as e:
+            return f"Partner strategy generation failed: {e}"
     
     STRATEGIC_PARTNERS = {
         "PSA Vault": {"icon": "🏦", "desc": "Secure storage and eBay selling", "keywords": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"]},
@@ -749,13 +788,14 @@ with tabs[4]:
                     st.caption(config["desc"])
                     
                     if posts:
-                        # Document generation buttons
+                        # Aggregate document generation buttons
+                        st.markdown("**📊 Aggregate Documents** (based on all signals)")
                         doc_cols = st.columns(4)
                         with doc_cols[0]:
                             if st.button(f"📄 PRD", key=f"prd_{partner_name}", use_container_width=True):
                                 st.session_state[f"gen_doc_{partner_name}"] = "PRD"
                         with doc_cols[1]:
-                            if st.button(f"� BRD", key=f"brd_{partner_name}", use_container_width=True):
+                            if st.button(f"💼 BRD", key=f"brd_{partner_name}", use_container_width=True):
                                 st.session_state[f"gen_doc_{partner_name}"] = "BRD"
                         with doc_cols[2]:
                             if st.button(f"🤖 Summary", key=f"sum_{partner_name}", use_container_width=True):
@@ -780,24 +820,48 @@ with tabs[4]:
                                     doc = _chat(MODEL_MAIN, f"You write excellent {doc_type}s.", prompt, max_completion_tokens=1200, temperature=0.4)
                                     st.markdown(f"### Generated {doc_type}")
                                     st.markdown(doc)
-                                    st.session_state[f"gen_doc_{partner_name}"] = None
+                                    if st.button("❌ Close", key=f"close_doc_{partner_name}"):
+                                        st.session_state[f"gen_doc_{partner_name}"] = None
+                                        st.rerun()
                                 except Exception as e:
                                     st.error(f"Generation failed: {e}")
                                     st.session_state[f"gen_doc_{partner_name}"] = None
                         
-                        # Show posts
+                        st.markdown("---")
+                        st.markdown("**📝 Individual Signals** (click 📋 Partner Strategy for per-signal analysis)")
+                        
+                        # Show posts with per-post Partner Strategy button
                         sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
                         show_key = f"show_all_{partner_name}"
                         display_count = len(sorted_posts) if st.session_state.get(show_key) else 5
                         
                         for idx, post in enumerate(sorted_posts[:display_count]):
-                            title = post.get("title", "")[:60] or post.get("text", "")[:60]
+                            post_id = post.get("fingerprint", f"{partner_name}_{idx}")
+                            title = post.get("title", "")[:80] or post.get("text", "")[:80]
                             sentiment = post.get("brand_sentiment", "Neutral")
                             sent_icon = {"Negative": "🔴", "Positive": "🟢"}.get(sentiment, "⚪")
-                            with st.expander(f"{sent_icon} {title}... | 👍 {post.get('score', 0)}"):
-                                st.markdown(post.get("text", "")[:500])
-                                if post.get("url"):
-                                    st.markdown(f"[🔗 View Original]({post.get('url')})")
+                            score = post.get("score", 0)
+                            date = post.get("post_date", "")
+                            url = post.get("url", "")
+                            
+                            with st.container(border=True):
+                                st.markdown(f"**{sent_icon} {title}**")
+                                st.markdown(f"> {post.get('text', '')[:500]}")
+                                st.caption(f"**Score:** 👍 {score} | **Date:** {date} | [🔗 View Original]({url})" if url else f"**Score:** 👍 {score} | **Date:** {date}")
+                                
+                                # Partner Strategy button (like War Games)
+                                strategy_key = f"partner_strategy_{post_id}"
+                                if st.button("📋 Partner Strategy", key=f"btn_{strategy_key}", help="Generate partnership strategy brief"):
+                                    st.session_state[strategy_key] = True
+                                    st.rerun()
+                                
+                                if st.session_state.get(strategy_key):
+                                    with st.spinner("Generating partner strategy..."):
+                                        strategy = generate_partner_strategy(partner_name, post.get("text", ""), post.get("title", ""))
+                                    st.info(strategy)
+                                    if st.button("❌ Close", key=f"close_{strategy_key}"):
+                                        st.session_state[strategy_key] = False
+                                        st.rerun()
                         
                         if len(sorted_posts) > 5:
                             if st.session_state.get(show_key):
@@ -814,7 +878,7 @@ with tabs[4]:
     except Exception as e:
         st.error(f"❌ Partners tab error: {e}")
 
-# �📈 TRENDS - Charts and summary
+# �� TRENDS - Charts and summary
 with tabs[5]:
     st.header("📈 Trends & Summary")
     try:
