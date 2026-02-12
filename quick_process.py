@@ -117,7 +117,7 @@ NOISE_PHRASES = [
 
 # Pain point indicators (must have at least one for actionable insight)
 # Using regex patterns for word boundaries
-RE_PAIN = re.compile(r"\b(problem|issue|broken|damaged|lost|missing|wrong|frustrated|annoying|terrible|horrible|worst|awful|can.?t|won.?t|doesn.?t work|not working|failed|error|help me|question|how do i|how can i|why is|why does|anyone else|is this normal|should i|what should|complaint|disappointed|upset|angry|ridiculous|waiting|still waiting|been waiting|no response|no update|overcharged|extra fee|hidden fee|too expensive|slow|delay|delayed|late|took forever|taking forever|scam|scammed|fake|counterfeit|not authentic|refund|return|money back|chargeback|dispute|unpaid|didn.?t pay|won.?t pay|non.?paying|case opened)\b", re.I)
+RE_PAIN = re.compile(r"\b(problem|issue|broken|damaged|lost|missing|wrong|frustrated|annoying|terrible|horrible|worst|awful|can.?t|won.?t|doesn.?t work|not working|failed|error|help me|question|how do i|how can i|why is|why does|anyone else|is this normal|should i|what should|complaint|disappointed|upset|angry|ridiculous|waiting|still waiting|been waiting|no response|no update|overcharged|extra fee|hidden fee|too expensive|slow|delay|delayed|late|took forever|taking forever|scam|scammed|fake|counterfeit|not authentic|refund|return|money back|chargeback|dispute|unpaid|didn.?t pay|won.?t pay|non.?paying|case opened|charge me|want to charge|sent to vault|stuck|hassle|nightmare|don.?t think)\b", re.I)
 
 # Collectibles-specific terms (REQUIRED - this is the eBay Collectibles product)
 RE_COLLECTIBLES = re.compile(r"\b(trading card|sports card|baseball card|basketball card|football card|hockey card|pokemon|pokémon|tcg|psa|bgs|sgc|cgc|csg|beckett|graded|grading|slab|slabbed|raw card|gem mint|pop report|population|registry|crossover|regrade|vault|authentication|authenticity guarantee|ag |price guide|scan to price|comps|comp sales|wax|hobby box|blaster|case break|whatnot|goldin|pwcc|comc|alt marketplace|fanatics|topps|panini|upper deck|fleer|bowman|prizm|select|optic|mosaic|chrome|refractor|auto|autograph|patch|relic|rookie|rc |1st edition|charizard|pikachu|holo|holographic|insert|parallel|numbered|/99|/10|one of one|1/1|coin|bullion|silver|gold|numismatic|comic|cgc comic|funko|pop vinyl|collectible|memorabilia)\b", re.I)
@@ -164,7 +164,7 @@ def is_relevant(text, subreddit=""):
     # Exclude non-collectibles categories (use word boundaries to avoid false positives like "car" in "card")
     non_collectibles = [
         "shoes", "sneakers", "louboutin", "jordan shoe", "nike shoe", "adidas", "yeezy",
-        "clothing", "clothes", "shirt", "pants", "dress", "jacket", "jeans",
+        "clothing", "clothes", "shirt", "pants", " dress ", "jacket", "jeans",
         "thrift", "goodwill", "salvation army", "mystery box",
         "laptop", "computer", "phone", "iphone", "electronics", "ram stick", "cpu",
         "furniture", "appliance", " car ", "vehicle", "motorcycle",
@@ -199,8 +199,13 @@ def is_relevant(text, subreddit=""):
     
     # Non-eBay subreddits - need eBay mention OR PSA Vault (sells on eBay)
     has_ebay = "ebay" in text_lower
-    has_psa_vault = "psa vault" in text_lower or "vault" in text_lower and "psa" in text_lower
-    if has_ebay or has_psa_vault:
+    has_psa_vault = "psa vault" in text_lower or ("vault" in text_lower and "psa" in text_lower)
+    
+    # PSA grading subreddit with vault mention is highly relevant
+    is_psa_subreddit = subreddit_lower in ["psagrading", "psacard"]
+    has_vault = "vault" in text_lower
+    
+    if has_ebay or has_psa_vault or (is_psa_subreddit and has_vault):
         return True
     
     return False

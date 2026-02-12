@@ -443,6 +443,11 @@ def run_reddit_scraper(include_comments: bool = False, include_search: bool = Tr
         "https://www.reddit.com/r/Flipping/comments/1b5k3xm/ebay_vs_mercari_for_collectibles/",
         "https://www.reddit.com/r/pokemontcg/comments/1c4r8wn/selling_on_ebay_tips/",
         "https://www.reddit.com/r/baseballcards/comments/1d7m2xk/ebay_selling_strategies/",
+        # PSA Vault high-value discussions
+        "https://www.reddit.com/r/psagrading/comments/1qm4iej/psa_vault_isnt_trust_worthy_anymore/",
+        "https://www.reddit.com/r/psagrading/comments/1qtic9j/psa_vault_ebay_auction/",
+        "https://www.reddit.com/r/sportscards/comments/1qvvudo/psa_vault_is_officially_broken/",
+        "https://www.reddit.com/r/psagrading/comments/1qvpbsg/items_sent_to_vault_instead_of_to_me/",
     ]
     
     print(f"\n💬 Scraping comments from {len(high_value_posts)} high-value posts...")

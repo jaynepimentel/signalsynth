@@ -272,6 +272,18 @@ st.markdown("""
         padding-bottom: 0.5rem;
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -287,6 +299,10 @@ if "show_intro" not in st.session_state:
 
 if st.session_state.show_intro:
     with st.container(border=True):
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
@@ -319,6 +335,22 @@ if st.session_state.show_intro:
 =======
         st.markdown("### 🧠 Welcome to SignalSynth!")
         st.markdown("""
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
         st.markdown("### 🧠 Welcome to SignalSynth!")
         st.markdown("""
@@ -426,6 +458,10 @@ try:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     # Hero stats banner - impactful executive summary
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; padding: 1.5rem 2rem; margin: 1rem 0; color: white;">
@@ -499,6 +535,14 @@ try:
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     # Executive stats banner
     st.success(f"""
     📊 **Analysis Complete** | 🕐 **~{hours_saved} hours of manual research saved**
@@ -523,6 +567,18 @@ try:
     with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -544,11 +600,31 @@ filter_fields = {
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 # Apply signal filter if active
 if st.session_state.get("signal_filter"):
     quick_filtered = [i for i in normalized if i.get(st.session_state.signal_filter)]
 else:
     quick_filtered = normalized
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 # Build filtered base list
 quick_filtered = normalized
@@ -570,7 +646,23 @@ tabs = st.tabs([
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     "🧱 Strategic Epics", "📌 All Insights", "⚔️ Competitors", "🏪 Subsidiaries", "📈 Trends"
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -587,6 +679,10 @@ with tabs[0]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="margin-bottom: 1rem;">
         <p style="color: #64748b; margin: 0;">AI-clustered themes from community feedback. Click any epic to generate PRDs, BRDs, or Jira tickets.</p>
@@ -595,6 +691,14 @@ with tabs[0]:
     try:
         display_clustered_insight_cards(quick_filtered)
 =======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
@@ -624,6 +728,10 @@ with tabs[1]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 # 📌 INSIGHTS - Individual view with filters
 with tabs[1]:
     st.markdown("Filter and explore individual signals from the community.")
@@ -650,6 +758,29 @@ with tabs[2]:
 =======
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+# 🏢 COMPETITORS - Competitor insights only
+with tabs[2]:
+    st.header("🏢 Competitors")
+    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+# 🏢 COMPETITORS - Competitor insights only
+with tabs[2]:
+    st.header("🏢 Competitors")
+    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 # 🏢 COMPETITORS - Competitor insights only
 with tabs[2]:
     st.header("🏢 Competitors")
@@ -659,10 +790,8 @@ with tabs[2]:
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
-# 🏢 COMPETITORS - Competitor insights only
-with tabs[2]:
-    st.header("🏢 Competitors")
-    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     
     # War Games LLM function for competitors
@@ -847,12 +976,32 @@ with tabs[3]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="background: #dcfce7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #22c55e;">
         <strong>🏪 Your Subsidiaries</strong><br/>
         <span style="color: #64748b;">Goldin & TCGPlayer feedback. Generate <strong>Action Plans</strong> to improve these eBay-owned platforms.</span>
     </div>
     """, unsafe_allow_html=True)
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     st.header("🏪 eBay Subsidiaries")
     st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
@@ -1005,7 +1154,23 @@ with tabs[4]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("Visualize patterns in sentiment, topics, and signal volume over time.")
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     st.header("📈 Trends & Summary")
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
