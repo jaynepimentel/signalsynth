@@ -77,7 +77,7 @@ def display_insight_charts(insights):
             # Signal trend over time - use signal flags for categorization
             if '_date' in df.columns and df['_date'].notna().any():
                 st.subheader("📈 Signal Trend Over Time")
-                st.caption("Hover over a line to highlight it. Shows all signal categories.")
+                st.caption("Hover over a line to highlight it. Excludes 'General' signals for clarity.")
                 try:
                     df_dated = df[df['_date'].notna()].copy()
                     
@@ -95,11 +95,19 @@ def display_insight_charts(insights):
                     
                     df_dated['signal_category'] = df_dated.apply(get_signal_category, axis=1)
                     
+                    # Exclude General to reduce clutter
+                    df_dated = df_dated[df_dated['signal_category'] != 'General']
+                    
+                    # Limit date range to last 90 days to avoid smooshed chart
+                    max_date = df_dated['_date'].max()
+                    min_date = max_date - pd.Timedelta(days=90)
+                    df_dated = df_dated[df_dated['_date'] >= min_date]
+                    
                     # Aggregate by week and signal category
                     df_dated['week'] = df_dated['_date'].dt.to_period('W').dt.start_time
                     trend_data = df_dated.groupby(['week', 'signal_category']).size().reset_index(name='count')
                     
-                    # Show all categories with data (not just top 8)
+                    # Show all categories with data
                     categories_with_data = trend_data.groupby('signal_category')['count'].sum()
                     categories_with_data = categories_with_data[categories_with_data > 0].index.tolist()
                     trend_data = trend_data[trend_data['signal_category'].isin(categories_with_data)]
