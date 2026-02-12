@@ -1,22 +1,23 @@
-# Core Frameworks
-streamlit==1.44.0
-python-dotenv==1.1.0
-requests==2.32.3
-pandas==2.2.3
-beautifulsoup4==4.13.3
+# Core Frameworks (no version pins for cloud compatibility)
+streamlit
+python-dotenv
+requests
+pandas
+beautifulsoup4
 
-# Data Processing (lightweight)
-scikit-learn==1.5.1
-numpy==2.1.3
+# Data Processing
+scikit-learn
+numpy
 
-# AI Suggestions, Utilities, Docs
-openai==1.70.0
-fuzzywuzzy==0.18.0
-python-docx==1.1.2
-python-slugify==8.0.4
+# AI & Utilities
+openai
+fuzzywuzzy
+python-Levenshtein
+python-docx
+python-slugify
 
 # Visualization
-seaborn==0.13.2
-matplotlib==3.10.1
-altair==5.2.0
-networkx==3.2.1
+seaborn
+matplotlib
+altair
+networkx
