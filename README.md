@@ -147,4 +147,4 @@ MIT License — See [LICENSE](LICENSE) for details.
 
 ---
 
-Built with ❤️ for eBay Collectibles
+Built with ❤️
