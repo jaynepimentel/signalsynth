@@ -260,7 +260,17 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         st.info("No clusters available. Run `python create_clusters_by_subtag.py` to generate.")
         return
     
-    st.caption(f"📊 {len(clusters)} Strategic Epics")
+    # Summary stats for all epics
+    total_signals = sum(c.get("size", 0) for c in clusters)
+    total_complaints = sum(c.get("signal_counts", {}).get("complaints", 0) for c in clusters)
+    
+    st.markdown(f"""
+    <div style="display: flex; gap: 2rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 8px;">
+        <div><strong>{len(clusters)}</strong> <span style="color: #64748b;">epics</span></div>
+        <div><strong>{total_signals:,}</strong> <span style="color: #64748b;">signals</span></div>
+        <div><strong>{total_complaints:,}</strong> <span style="color: #64748b;">complaints</span></div>
+    </div>
+    """, unsafe_allow_html=True)
     
     for cluster in clusters:
         epic_name = cluster.get("title", "Unknown")
@@ -271,14 +281,24 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         signal_counts = cluster.get("signal_counts", {})
         cluster_insights = cluster.get("insights", [])
         cluster_id = cluster.get("cluster_id", epic_name)
+        complaints = signal_counts.get("complaints", 0)
+        
+        # Priority indicator based on complaints
+        priority_color = "#ef4444" if complaints > 10 else "#f59e0b" if complaints > 5 else "#22c55e"
+        priority_label = "🔴 High" if complaints > 10 else "🟡 Medium" if complaints > 5 else "🟢 Low"
         
         # Epic card using container (no expander)
         with st.container(border=True):
-            st.subheader(f"{label} — {size} signals")
+            # Header with priority badge
+            header_col, priority_col = st.columns([5, 1])
+            with header_col:
+                st.markdown(f"### {label}")
+            with priority_col:
+                st.markdown(f"<span style='background: {priority_color}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;'>{priority_label}</span>", unsafe_allow_html=True)
             
-            # Product opportunity header
+            # Product opportunity - prominent
             if product_opp:
-                st.markdown(f"**🎯 Product Opportunity:** {product_opp}")
+                st.markdown(f"**🎯 {product_opp}**")
             if description:
                 st.caption(description)
             
