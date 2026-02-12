@@ -167,10 +167,15 @@ def display_brand_dashboard(insights):
     
     # Competitor vs Partner Trend Over Time
     st.subheader("📉 Entity Trends Over Time")
-    st.caption("Hover to highlight. Compare signal volume across competitors, partners, and eBay core.")
+    st.caption("Hover to highlight. Last 60 days only for readability.")
     
     df_dated = df[df["Date"].notna()].copy()
     if len(df_dated) > 0:
+        # Limit to last 60 days for readability
+        max_date = df_dated["Date"].max()
+        min_date = max_date - pd.Timedelta(days=60)
+        df_dated = df_dated[df_dated["Date"] >= min_date]
+        
         df_dated["Week"] = df_dated["Date"].dt.to_period("W").dt.start_time
         trend_data = df_dated.groupby(["Week", "EntityType"]).size().reset_index(name="Count")
         
@@ -223,9 +228,16 @@ def display_brand_dashboard(insights):
 
         # Brand trend chart
         if len(filtered_df) > 0 and filtered_df["Date"].notna().any():
-            st.markdown("**📈 Brand Volume Over Time**")
+            st.markdown("**📈 Brand Volume Over Time** (last 60 days)")
+            
+            # Limit to last 60 days
+            brand_df = filtered_df[filtered_df["Date"].notna()].copy()
+            max_date = brand_df["Date"].max()
+            min_date = max_date - pd.Timedelta(days=60)
+            brand_df = brand_df[brand_df["Date"] >= min_date]
+            
             daily_counts = (
-                filtered_df[filtered_df["Date"].notna()]
+                brand_df
                 .groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
                 .size()
                 .reset_index(name="Mentions")
