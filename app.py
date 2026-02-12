@@ -271,6 +271,9 @@ st.markdown("""
       [data-testid="stVerticalBlock"] > div {
         padding-bottom: 0.5rem;
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -284,6 +287,7 @@ if "show_intro" not in st.session_state:
 
 if st.session_state.show_intro:
     with st.container(border=True):
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
         col_intro, col_dismiss = st.columns([6, 1])
@@ -315,6 +319,10 @@ if st.session_state.show_intro:
 =======
         st.markdown("### 🧠 Welcome to SignalSynth!")
         st.markdown("""
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
         st.markdown("### 🧠 Welcome to SignalSynth!")
         st.markdown("""
@@ -417,6 +425,7 @@ try:
     
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     # Hero stats banner - impactful executive summary
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; padding: 1.5rem 2rem; margin: 1rem 0; color: white;">
@@ -488,6 +497,8 @@ try:
 =======
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     # Executive stats banner
     st.success(f"""
     📊 **Analysis Complete** | 🕐 **~{hours_saved} hours of manual research saved**
@@ -511,6 +522,9 @@ try:
     with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
     with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -529,11 +543,16 @@ filter_fields = {
 
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 # Apply signal filter if active
 if st.session_state.get("signal_filter"):
     quick_filtered = [i for i in normalized if i.get(st.session_state.signal_filter)]
 else:
     quick_filtered = normalized
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 # Build filtered base list
 quick_filtered = normalized
@@ -550,7 +569,11 @@ quick_filtered = normalized
 tabs = st.tabs([
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     "🧱 Strategic Epics", "📌 All Insights", "⚔️ Competitors", "🏪 Subsidiaries", "📈 Trends"
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
@@ -563,6 +586,7 @@ tabs = st.tabs([
 with tabs[0]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="margin-bottom: 1rem;">
         <p style="color: #64748b; margin: 0;">AI-clustered themes from community feedback. Click any epic to generate PRDs, BRDs, or Jira tickets.</p>
@@ -571,6 +595,8 @@ with tabs[0]:
     try:
         display_clustered_insight_cards(quick_filtered)
 =======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     st.header("🧱 Strategic Epics")
@@ -595,6 +621,7 @@ with tabs[1]:
     except Exception as e:
         st.error(f"❌ Cluster view error: {e}")
 
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 # 📌 INSIGHTS - Individual view with filters
@@ -630,6 +657,12 @@ with tabs[2]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+# 🏢 COMPETITORS - Competitor insights only
+with tabs[2]:
+    st.header("🏢 Competitors")
+    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     
     # War Games LLM function for competitors
@@ -813,12 +846,17 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 with tabs[3]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="background: #dcfce7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #22c55e;">
         <strong>🏪 Your Subsidiaries</strong><br/>
         <span style="color: #64748b;">Goldin & TCGPlayer feedback. Generate <strong>Action Plans</strong> to improve these eBay-owned platforms.</span>
     </div>
     """, unsafe_allow_html=True)
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     st.header("🏪 eBay Subsidiaries")
     st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
@@ -966,7 +1004,11 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 with tabs[4]:
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 <<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("Visualize patterns in sentiment, topics, and signal volume over time.")
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 =======
     st.header("📈 Trends & Summary")
 >>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py

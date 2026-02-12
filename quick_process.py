@@ -161,13 +161,13 @@ def is_relevant(text, subreddit=""):
     if any(sp in text_lower for sp in sales_patterns):
         return False
     
-    # Exclude non-collectibles categories
+    # Exclude non-collectibles categories (use word boundaries to avoid false positives like "car" in "card")
     non_collectibles = [
-        "shoes", "sneakers", "louboutin", "jordan", "nike", "adidas", "yeezy",
+        "shoes", "sneakers", "louboutin", "jordan shoe", "nike shoe", "adidas", "yeezy",
         "clothing", "clothes", "shirt", "pants", "dress", "jacket", "jeans",
         "thrift", "goodwill", "salvation army", "mystery box",
-        "laptop", "computer", "phone", "iphone", "electronics", "ram", "cpu",
-        "furniture", "appliance", "car", "vehicle", "motorcycle",
+        "laptop", "computer", "phone", "iphone", "electronics", "ram stick", "cpu",
+        "furniture", "appliance", " car ", "vehicle", "motorcycle",
         # Woodworking/tools (not collectibles)
         "woodworking", "hand tool", "power tool", "cabinet", "workbench", "dovetail",
         "plywood", "lumber", "sawdust", "chisel", "plane ", "jointer", "router",
@@ -197,9 +197,10 @@ def is_relevant(text, subreddit=""):
     if is_ebay_subreddit:
         return True
     
-    # Non-eBay subreddits - need eBay mention
+    # Non-eBay subreddits - need eBay mention OR PSA Vault (sells on eBay)
     has_ebay = "ebay" in text_lower
-    if has_ebay:
+    has_psa_vault = "psa vault" in text_lower or "vault" in text_lower and "psa" in text_lower
+    if has_ebay or has_psa_vault:
         return True
     
     return False
