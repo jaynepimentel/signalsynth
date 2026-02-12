@@ -96,18 +96,6 @@ SEARCH_QUERIES = [
     "selling cards ebay",
     "buying cards ebay",
     "graded card ebay",
-    # ComC (Check Out My Cards) - Strategic Partner
-    "comc cards",
-    "comc selling",
-    "comc consignment",
-    "comc fees",
-    "comc vs ebay",
-    "check out my cards",
-    # PSA Services
-    "psa consignment",
-    "psa offers",
-    "psa buyback",
-    "psa sell on ebay",
 ]
 
 SAVE_PATH = "data/scraped_reddit_posts.json"

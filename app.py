@@ -222,10 +222,11 @@ if st.session_state.show_intro:
 | 📍 **Reddit** | 33 collectibles subreddits + targeted searches |
 | 🏢 **Competitors** | Fanatics Collect, Fanatics Live, Heritage Auctions, Alt |
 | 🏪 **Your Subsidiaries** | Goldin, TCGPlayer (you manage these!) |
+| 🤝 **Strategic Partners** | PSA (Vault, Grading, Consignment, Offers), ComC |
 
 ---
 
-**🗂️ Five Tabs to Explore:**
+**🗂️ Six Tabs to Explore:**
 
 | Tab | Purpose | Key Action |
 |-----|---------|------------|
@@ -233,6 +234,7 @@ if st.session_state.show_intro:
 | **📌 Insights** | Individual signals with filters | Filter by topic, type, sentiment |
 | **🏢 Competitors** | What users say about rivals | ⚔️ **War Games** — competitive strategy |
 | **🏪 Subsidiaries** | Goldin & TCGPlayer feedback | 🔧 **Action Plan** — improvement roadmap |
+| **🤝 Partners** | PSA & ComC partner intelligence | 📋 **Partner Docs** — strategy & insights |
 | **📈 Trends** | Sentiment & topic over time | Spot emerging issues |
 
 ---
@@ -701,17 +703,17 @@ with tabs[4]:
     st.markdown("""
     <div style="background: #e0f2fe; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #0284c7;">
         <strong>🤝 Partner Intelligence</strong><br/>
-        <span style="color: #64748b;">Track user feedback on eBay's strategic partners: PSA services and ComC.</span>
+        <span style="color: #64748b;">Track user feedback on eBay's strategic partners: PSA services (Vault, Grading, Consignment, Offers) and ComC.</span>
     </div>
     """, unsafe_allow_html=True)
     
     STRATEGIC_PARTNERS = {
-        "PSA Vault": {"icon": "🏦", "keywords": ["psa vault", "vault storage", "vault sell", "vault auction"]},
-        "PSA Grading": {"icon": "🎯", "keywords": ["psa grading", "psa grade", "psa turnaround", "psa 10", "psa 9"]},
-        "PSA Consignment": {"icon": "�", "keywords": ["psa consignment", "psa consign"]},
-        "PSA Sell on eBay": {"icon": "🛒", "keywords": ["psa sell ebay", "psa ebay", "sell through psa"]},
-        "PSA Offers": {"icon": "💰", "keywords": ["psa offer", "psa buyback", "psa buy back"]},
-        "ComC": {"icon": "📋", "keywords": ["comc", "check out my cards", "comc consignment"]},
+        "PSA Vault": {"icon": "🏦", "desc": "Secure storage and eBay selling", "keywords": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"]},
+        "PSA Grading": {"icon": "🎯", "desc": "Card grading and authentication", "keywords": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"]},
+        "PSA Consignment": {"icon": "📦", "desc": "Consignment selling service", "keywords": ["psa consignment", "psa consign", "consignment psa"]},
+        "PSA Sell on eBay": {"icon": "🛒", "desc": "Direct selling through PSA", "keywords": ["psa sell ebay", "psa ebay", "sell through psa", "psa auction"]},
+        "PSA Offers": {"icon": "💰", "desc": "Instant offer/buyback program", "keywords": ["psa offer", "psa buyback", "psa buy back", "psa instant"]},
+        "ComC": {"icon": "📋", "desc": "Check Out My Cards - consignment partner", "keywords": ["comc", "check out my cards", "comc consignment", "comc selling"]},
     }
     
     try:
@@ -722,6 +724,7 @@ with tabs[4]:
                 if any(kw in text for kw in config["keywords"]):
                     partner_posts[partner_name].append(insight)
         
+        # Metrics row
         col1, col2, col3 = st.columns(3)
         total_partner = sum(len(posts) for posts in partner_posts.values())
         with col1:
@@ -732,24 +735,82 @@ with tabs[4]:
         with col3:
             st.metric("ComC Signals", len(partner_posts.get("ComC", [])))
         
-        selected_partner = st.selectbox("Select Partner", ["All"] + list(STRATEGIC_PARTNERS.keys()), key="partner_sel")
-        partners_to_show = STRATEGIC_PARTNERS.keys() if selected_partner == "All" else [selected_partner]
+        # Partner selector
+        selected_partner = st.selectbox("Select Partner", ["All Partners"] + list(STRATEGIC_PARTNERS.keys()), key="partner_sel")
+        partners_to_show = STRATEGIC_PARTNERS.keys() if selected_partner == "All Partners" else [selected_partner]
         
         for partner_name in partners_to_show:
             posts = partner_posts.get(partner_name, [])
             config = STRATEGIC_PARTNERS[partner_name]
-            if posts or selected_partner != "All":
+            
+            if posts or selected_partner != "All Partners":
                 with st.container(border=True):
                     st.subheader(f"{config['icon']} {partner_name} ({len(posts)} signals)")
+                    st.caption(config["desc"])
+                    
                     if posts:
-                        for idx, post in enumerate(sorted(posts, key=lambda x: x.get("score", 0), reverse=True)[:5]):
+                        # Document generation buttons
+                        doc_cols = st.columns(4)
+                        with doc_cols[0]:
+                            if st.button(f"📄 PRD", key=f"prd_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "PRD"
+                        with doc_cols[1]:
+                            if st.button(f"� BRD", key=f"brd_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "BRD"
+                        with doc_cols[2]:
+                            if st.button(f"🤖 Summary", key=f"sum_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "SUMMARY"
+                        with doc_cols[3]:
+                            if st.button(f"🎫 Jira", key=f"jira_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "JIRA"
+                        
+                        # Show generated document if any
+                        if st.session_state.get(f"gen_doc_{partner_name}"):
+                            doc_type = st.session_state[f"gen_doc_{partner_name}"]
+                            with st.spinner(f"Generating {doc_type}..."):
+                                context = "\n---\n".join([f"[{p.get('type_tag', 'Feedback')}] {p.get('text', '')[:300]}" for p in posts[:10]])
+                                try:
+                                    from components.ai_suggester import _chat, MODEL_MAIN
+                                    if doc_type == "SUMMARY":
+                                        prompt = f"Write an executive summary for {partner_name} based on {len(posts)} user signals:\n{context}"
+                                    elif doc_type == "JIRA":
+                                        prompt = f"Create 3 Jira tickets for {partner_name} issues based on:\n{context}"
+                                    else:
+                                        prompt = f"Write a {doc_type} for {partner_name} improvements based on:\n{context}"
+                                    doc = _chat(MODEL_MAIN, f"You write excellent {doc_type}s.", prompt, max_completion_tokens=1200, temperature=0.4)
+                                    st.markdown(f"### Generated {doc_type}")
+                                    st.markdown(doc)
+                                    st.session_state[f"gen_doc_{partner_name}"] = None
+                                except Exception as e:
+                                    st.error(f"Generation failed: {e}")
+                                    st.session_state[f"gen_doc_{partner_name}"] = None
+                        
+                        # Show posts
+                        sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
+                        show_key = f"show_all_{partner_name}"
+                        display_count = len(sorted_posts) if st.session_state.get(show_key) else 5
+                        
+                        for idx, post in enumerate(sorted_posts[:display_count]):
                             title = post.get("title", "")[:60] or post.get("text", "")[:60]
-                            with st.expander(f"{title}... | 👍 {post.get('score', 0)}"):
-                                st.markdown(post.get("text", "")[:400])
+                            sentiment = post.get("brand_sentiment", "Neutral")
+                            sent_icon = {"Negative": "🔴", "Positive": "🟢"}.get(sentiment, "⚪")
+                            with st.expander(f"{sent_icon} {title}... | 👍 {post.get('score', 0)}"):
+                                st.markdown(post.get("text", "")[:500])
                                 if post.get("url"):
                                     st.markdown(f"[🔗 View Original]({post.get('url')})")
+                        
+                        if len(sorted_posts) > 5:
+                            if st.session_state.get(show_key):
+                                if st.button("📤 Show Less", key=f"less_{partner_name}"):
+                                    st.session_state[show_key] = False
+                                    st.rerun()
+                            else:
+                                if st.button(f"📥 Load {len(posts) - 5} More", key=f"more_{partner_name}"):
+                                    st.session_state[show_key] = True
+                                    st.rerun()
                     else:
-                        st.info(f"No {partner_name} signals found.")
+                        st.info(f"No {partner_name} signals found. Run scraper to collect partner feedback.")
+    
     except Exception as e:
         st.error(f"❌ Partners tab error: {e}")
 
