@@ -22,6 +22,7 @@ SUBREDDITS = [
     "yugioh",
     # Grading & Authentication
     "PSAcard",
+    "psagrading",
     "gradedcoins",
     # Collectibles
     "funkopop",
@@ -66,11 +67,16 @@ SEARCH_QUERIES = [
     "card value ebay",
     "pokemon card value ebay",
     "sports card value ebay",
-    # Vault
+    # Vault (eBay Vault AND PSA Vault - both relevant)
     "ebay vault",
     "ebay vault review",
     "ebay vault withdraw",
     "ebay vault shipping",
+    "psa vault",
+    "psa vault ebay",
+    "psa vault auction",
+    "psa vault sell",
+    "psa vault trust",
     # Authentication
     "ebay authentication",
     "ebay authenticity guarantee",
