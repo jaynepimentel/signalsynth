@@ -87,8 +87,8 @@ RE_PSA = re.compile(r"(psa|bgs|sgc|csg|cgc).{0,20}(turnaround|wait|days|weeks|mo
 RE_AG = re.compile(r"(authenticity guarantee|ebay.{0,10}authenticat|authenticat.{0,10}ebay|\bAG\b.{0,10}ebay|ebay.{0,10}\bAG\b|authentication.{0,10}(card|sneaker|watch|collectible|handbag|jersey)|verified.{0,10}authentic|counterfeit.{0,10}ebay|ebay.{0,10}counterfeit|fake.{0,10}ebay|ebay.{0,10}fake|trust.{0,10}authenticity|authenticity.{0,10}(check|service|program|failed|passed|pending))", re.I)
 # Price Guide - eBay's specific feature (tighter regex to avoid false positives)
 RE_PRICE_GUIDE = re.compile(r"(ebay.{0,10}price guide|price guide.{0,10}ebay|scan.?to.?price|ebay.{0,10}suggested price|ebay.{0,10}market value|tcgplayer price|what.?s.?my.?card.?worth|card.?value.?ebay|ebay.{0,10}pricing tool)", re.I)
-# Vault - eBay's specific Vault service (tighter regex)
-RE_VAULT = re.compile(r"(ebay.{0,10}vault|vault.{0,10}ebay|ebay vault|vault storage|vault.{0,10}withdraw|withdraw.{0,10}vault|vault.{0,10}card|card.{0,10}vault|vault.{0,10}collectible|store.{0,10}vault|vault.{0,10}service)", re.I)
+# Vault - eBay's Vault service AND PSA Vault (both are relevant for collectibles)
+RE_VAULT = re.compile(r"(ebay.{0,10}vault|vault.{0,10}ebay|ebay vault|psa.{0,10}vault|vault.{0,10}psa|psa vault|vault storage|vault.{0,10}withdraw|withdraw.{0,10}vault|vault.{0,10}card|card.{0,10}vault|vault.{0,10}collectible|store.{0,10}vault|vault.{0,10}service|vault.{0,10}auction|auction.{0,10}vault|vault.{0,10}sell|sell.{0,10}vault|vault.{0,10}list|list.{0,10}vault|vault isn.?t|vault trust)", re.I)
 RE_SHIPPING = re.compile(r"(shipping|ship|delivery|deliver|package|parcel|usps|ups|fedex).{0,15}(lost|damage|delay|late|missing|broken|never|issue|problem)", re.I)
 RE_REFUND = re.compile(r"(refund|return|money back|chargeback|dispute|case).{0,15}(denied|reject|wait|pending|won|lost|issue|problem)", re.I)
 RE_FEES = re.compile(r"(fee|commission|final value|fvf|cost|charge).{0,15}(high|increase|too much|expensive|ridiculous|outrageous)", re.I)
@@ -140,7 +140,6 @@ SCRAPED_FILES = [
     "data/scraped_competitor_posts.json",  # Competitor & subsidiary data
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
-    "data/scraped_twitter_posts.json",  # Twitter/X (syndication API)
 ]
 
 
@@ -152,17 +151,6 @@ def is_relevant(text, subreddit=""):
     text_lower = text.lower()
     subreddit_lower = subreddit.lower()
     
-    # Twitter/X posts from curated accounts: these accounts were hand-picked
-    # for relevance, so apply a lighter filter (just min length + not pure noise)
-    source = subreddit  # repurposed param; caller may pass source string
-    if "twitter" in source.lower():
-        if len(text_lower.strip()) < 30:
-            return False
-        noise_count = sum(1 for phrase in NOISE_PHRASES if phrase in text_lower)
-        if noise_count >= 2:
-            return False
-        return True
-
     # Exclude trading/sales posts (not user feedback)
     sales_patterns = [
         "[h]", "[w]", "[fs]", "[ft]", "[wts]", "[wtb]", "[wtt]",
@@ -453,7 +441,7 @@ def main():
     relevant_posts = []
     for post in posts:
         text = f"{post.get('title', '')} {post.get('text', '')}"
-        subreddit = post.get("subreddit", "") or post.get("source", "")
+        subreddit = post.get("subreddit", "")
         if is_relevant(text, subreddit):
             relevant_posts.append(post)
     

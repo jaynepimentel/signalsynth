@@ -152,6 +152,7 @@ st.markdown("""
       /* Hide sidebar */
       [data-testid="collapsedControl"] { display: none }
       section[data-testid="stSidebar"] { width: 0px !important; display: none }
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
       
       /* Executive-grade styling */
       .hero-stat {
@@ -211,6 +212,68 @@ st.markdown("""
         .stButton > button { min-height: 44px !important; }
         .stTabs [data-baseweb="tab-list"] { overflow-x: auto !important; flex-wrap: nowrap !important; }
         .stTabs [data-baseweb="tab"] { white-space: nowrap !important; padding: 8px 12px !important; }
+=======
+      .kpi-row { margin-bottom: 0.5rem; }
+      
+      /* Mobile-responsive styles */
+      @media (max-width: 768px) {
+        /* Make title smaller on mobile */
+        h1 { font-size: 1.5rem !important; }
+        h2 { font-size: 1.25rem !important; }
+        h3 { font-size: 1.1rem !important; }
+        
+        /* Stack columns vertically on mobile */
+        [data-testid="column"] {
+          width: 100% !important;
+          flex: 1 1 100% !important;
+          min-width: 100% !important;
+        }
+        
+        /* Make metrics more compact */
+        [data-testid="stMetricValue"] {
+          font-size: 1.5rem !important;
+        }
+        
+        /* Improve button touch targets */
+        .stButton > button {
+          min-height: 44px !important;
+          font-size: 0.9rem !important;
+        }
+        
+        /* Make expanders easier to tap */
+        .streamlit-expanderHeader {
+          padding: 12px 8px !important;
+        }
+        
+        /* Compact tables on mobile */
+        table {
+          font-size: 0.85rem !important;
+        }
+        
+        /* Make tabs scrollable */
+        .stTabs [data-baseweb="tab-list"] {
+          overflow-x: auto !important;
+          flex-wrap: nowrap !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+          white-space: nowrap !important;
+          padding: 8px 12px !important;
+        }
+      }
+      
+      /* Improve touch targets for all devices */
+      .stButton > button {
+        min-height: 40px;
+      }
+      
+      /* Better spacing for containers */
+      [data-testid="stVerticalBlock"] > div {
+        padding-bottom: 0.5rem;
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
       }
     </style>
 """, unsafe_allow_html=True)
@@ -221,6 +284,8 @@ if "show_intro" not in st.session_state:
 
 if st.session_state.show_intro:
     with st.container(border=True):
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
         col_intro, col_dismiss = st.columns([6, 1])
         with col_intro:
             st.markdown("### 🚀 Quick Start Guide")
@@ -247,6 +312,52 @@ if st.session_state.show_intro:
 
 **🏷️ Auto-detected signals:** Payments · Authentication · Shipping · Vault · Grading · UPI
         """, unsafe_allow_html=True)
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+=======
+        st.markdown("### 🧠 Welcome to SignalSynth!")
+        st.markdown("""
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+**SignalSynth** is your AI-powered insight engine for eBay Collectibles — transforming thousands of community discussions into actionable product intelligence.
+
+---
+
+**📊 What's Inside:**
+
+| Source | Coverage |
+|--------|----------|
+| 📍 **Reddit** | 33 collectibles subreddits + targeted searches |
+| 🏢 **Competitors** | Fanatics Collect, Fanatics Live, Heritage Auctions, Alt |
+| 🏪 **Your Subsidiaries** | Goldin, TCGPlayer (you manage these!) |
+
+---
+
+**🗂️ Five Tabs to Explore:**
+
+| Tab | Purpose | Key Action |
+|-----|---------|------------|
+| **🧱 Clusters** | Strategic epics grouped by theme | Generate PRDs, BRDs, Jira tickets |
+| **📌 Insights** | Individual signals with filters | Filter by topic, type, sentiment |
+| **🏢 Competitors** | What users say about rivals | ⚔️ **War Games** — competitive strategy |
+| **🏪 Subsidiaries** | Goldin & TCGPlayer feedback | 🔧 **Action Plan** — improvement roadmap |
+| **📈 Trends** | Sentiment & topic over time | Spot emerging issues |
+
+---
+
+**⚡ AI-Powered Document Generation (in Clusters):**
+- 🤖 **Executive Summary** — Problem, impact, root cause, recommendation
+- 📄 **PRD** — User stories, requirements, success metrics
+- 💼 **BRD** — Business case for stakeholders
+- 📰 **PRFAQ** — Amazon-style press release + FAQ
+- 🎫 **Jira Tickets** — Sprint-ready with acceptance criteria
+
+---
+
+**🏷️ Auto-detected Signals:** 💳 Payments · 🛡️ Trust · 📦 Shipping · ✅ AG · 🏦 Vault · ⚠️ UPI · 🎯 Grading
+        """)
+        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 
 # ─────────────────────────────────────────────
 # Data load
@@ -304,6 +415,8 @@ try:
         if valid_dates:
             date_range = f"{valid_dates[0]} to {valid_dates[-1]}"
     
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     # Hero stats banner - impactful executive summary
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; padding: 1.5rem 2rem; margin: 1rem 0; color: white;">
@@ -337,16 +450,70 @@ try:
     signal_ratio = round(total/total_posts*100, 1) if total_posts > 0 else 0
     complaint_ratio = round(complaints/total*100) if total > 0 else 0
     
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: 
-        st.metric("� Complaints", f"{complaints:,}", f"{complaint_ratio}% of insights", delta_color="inverse")
-    with col2: 
-        st.metric("💳 Payment Issues", f"{payments:,}", help="Payment flow problems")
-    with col3: 
-        st.metric("🚫 Unpaid Items", f"{upi:,}", help="UPI/non-paying buyer issues")
-    with col4:
-        vault_count = sum(1 for i in normalized if i.get("is_vault_signal"))
-        st.metric("🏦 Vault Signals", f"{vault_count:,}", help="Vault-related feedback")
+    # Calculate all signal counts
+    vault_count = sum(1 for i in normalized if i.get("is_vault_signal"))
+    shipping_count = sum(1 for i in normalized if i.get("is_shipping_issue"))
+    ag_count = sum(1 for i in normalized if i.get("is_ag_signal"))
+    grading_count = sum(1 for i in normalized if i.get("is_psa_turnaround"))
+    
+    # Signal type quick filters - clickable badges
+    st.markdown("#### 🏷️ Quick Filters")
+    st.markdown("Click a signal type to filter insights:")
+    
+    # Initialize signal filter in session state
+    if "signal_filter" not in st.session_state:
+        st.session_state.signal_filter = None
+    
+    # Signal filter buttons in a row
+    sig_cols = st.columns(7)
+    signal_types = [
+        ("All", "�", len(normalized), None),
+        ("Payments", "💳", payments, "_payment_issue"),
+        ("Shipping", "📦", shipping_count, "is_shipping_issue"),
+        ("Auth/AG", "✅", ag_count, "is_ag_signal"),
+        ("Vault", "🏦", vault_count, "is_vault_signal"),
+        ("UPI", "⚠️", upi, "_upi_flag"),
+        ("Grading", "🎯", grading_count, "is_psa_turnaround"),
+    ]
+    
+    for idx, (label, icon, count, filter_key) in enumerate(signal_types):
+        with sig_cols[idx]:
+            is_active = st.session_state.signal_filter == filter_key
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(f"{icon} {label}\n({count})", key=f"sig_{label}", type=btn_type, use_container_width=True):
+                st.session_state.signal_filter = filter_key
+                st.rerun()
+    
+    st.markdown("---")
+=======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+    # Executive stats banner
+    st.success(f"""
+    📊 **Analysis Complete** | 🕐 **~{hours_saved} hours of manual research saved**
+    
+    **{total_posts_analyzed:,}** social posts scraped → **{total:,}** actionable insights → **{clusters_count}** strategic epics
+    """)
+    
+    # Data freshness indicator
+    if date_range:
+        st.caption(f"📅 **Data Range:** {date_range} | 🔄 **Last Processed:** {datetime.now().strftime('%b %d, %Y')}")
+
+# KPI Row - More impressive metrics
+    col1, col2, col3, col4, col5 = st.columns(5)
+    total_posts = raw_posts_count + competitor_posts_count
+    signal_ratio = round(total/total_posts*100, 1) if total_posts > 0 else 0
+    complaint_ratio = round(complaints/total*100) if total > 0 else 0
+
+    with col1: kpi_chip("📥 Posts Scraped", f"{total_posts:,}", "Reddit, Bluesky, Competitors")
+    with col2: kpi_chip("🎯 Insights", f"{total:,}", f"{signal_ratio}% signal-to-noise")
+    with col3: kpi_chip("😠 Complaints", f"{complaints:,}", f"{complaint_ratio}% of insights")
+    with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
+    with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
@@ -360,19 +527,42 @@ filter_fields = {
     "Type": "type_tag",
 }
 
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+# Apply signal filter if active
+if st.session_state.get("signal_filter"):
+    quick_filtered = [i for i in normalized if i.get(st.session_state.signal_filter)]
+else:
+    quick_filtered = normalized
+=======
 # Build filtered base list
 quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+# Build filtered base list
+quick_filtered = normalized
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 
 # ─────────────────────────────────────────────
 # Tabs (simplified to essential views)
 # ─────────────────────────────────────────────
 # Tabs with cleaner labels
 tabs = st.tabs([
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     "🧱 Strategic Epics", "📌 All Insights", "⚔️ Competitors", "🏪 Subsidiaries", "📈 Trends"
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
 ])
 
 # 🧱 CLUSTERS - Strategic epics (first tab now)
 with tabs[0]:
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="margin-bottom: 1rem;">
         <p style="color: #64748b; margin: 0;">AI-clustered themes from community feedback. Click any epic to generate PRDs, BRDs, or Jira tickets.</p>
@@ -380,9 +570,33 @@ with tabs[0]:
     """, unsafe_allow_html=True)
     try:
         display_clustered_insight_cards(quick_filtered)
+=======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+    st.header("🧱 Strategic Epics")
+    try:
+        display_clustered_insight_cards(quick_filtered)
     except Exception as e:
         st.error(f"❌ Cluster view error: {e}")
 
+# 📌 INSIGHTS - Individual view with filters
+with tabs[1]:
+    st.header("📌 Individual Insights")
+    try:
+        filters = render_floating_filters(quick_filtered, filter_fields, key_prefix="insights")
+        filtered = [i for i in quick_filtered if match_multiselect_filters(i, filters, filter_fields)]
+        # Apply time filter
+        time_range = filters.get("_time_range", "All Time")
+        filtered = filter_by_time(filtered, time_range)
+        st.caption(f"Showing {len(filtered)} of {len(quick_filtered)} insights")
+        model = get_model()
+        render_insight_cards(filtered, model, key_prefix="insights")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+    except Exception as e:
+        st.error(f"❌ Cluster view error: {e}")
+
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
 # 📌 INSIGHTS - Individual view with filters
 with tabs[1]:
     st.markdown("Filter and explore individual signals from the community.")
@@ -406,6 +620,17 @@ with tabs[2]:
         <span style="color: #64748b;">See what collectors say about Fanatics, Heritage, and Alt. Use <strong>War Games</strong> to generate strategic responses.</span>
     </div>
     """, unsafe_allow_html=True)
+=======
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+# 🏢 COMPETITORS - Competitor insights only
+with tabs[2]:
+    st.header("🏢 Competitors")
+    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     
     # War Games LLM function for competitors
     def generate_war_games(competitor: str, post_text: str, post_title: str) -> str:
@@ -586,12 +811,22 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 
 # 🏪 SUBSIDIARIES - Goldin & TCGPlayer (separate tab)
 with tabs[3]:
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("""
     <div style="background: #dcfce7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #22c55e;">
         <strong>🏪 Your Subsidiaries</strong><br/>
         <span style="color: #64748b;">Goldin & TCGPlayer feedback. Generate <strong>Action Plans</strong> to improve these eBay-owned platforms.</span>
     </div>
     """, unsafe_allow_html=True)
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("🏪 eBay Subsidiaries")
+    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     
     # Subsidiary improvement LLM function (defined here for this tab)
     def generate_subsidiary_action_tab(subsidiary: str, post_text: str, post_title: str) -> str:
@@ -729,7 +964,15 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 
 # 📈 TRENDS - Charts and summary
 with tabs[4]:
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
+<<<<<<< C:/Users/jayne/repo/signalsynth/app.py
     st.markdown("Visualize patterns in sentiment, topics, and signal volume over time.")
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
+=======
+    st.header("📈 Trends & Summary")
+>>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/app.py
     try:
         display_insight_charts(quick_filtered)
     except Exception as e:
