@@ -27,20 +27,24 @@ def categorize_entity(text):
     return "eBay Core"
 
 def detect_brand_from_text(text):
-    """Detect brand/entity from text content."""
+    """Detect brand/entity from text content. Returns primary brand + signal type."""
     text_lower = (text or "").lower()
     
-    # Partners
-    if "psa vault" in text_lower:
+    # Partners - PSA services
+    if "psa vault" in text_lower or ("vault" in text_lower and "psa" in text_lower):
         return "PSA Vault"
-    if "psa" in text_lower and ("grading" in text_lower or "grade" in text_lower or "turnaround" in text_lower):
+    if "psa" in text_lower and ("grading" in text_lower or "grade" in text_lower or "turnaround" in text_lower or "submission" in text_lower):
         return "PSA Grading"
+    if "psa" in text_lower and ("consignment" in text_lower or "consign" in text_lower):
+        return "PSA Consignment"
+    if "psa" in text_lower and ("offer" in text_lower or "buyback" in text_lower):
+        return "PSA Offers"
     if "psa" in text_lower:
         return "PSA"
     if "comc" in text_lower or "check out my cards" in text_lower:
         return "ComC"
     if "bgs" in text_lower or "beckett" in text_lower:
-        return "BGS"
+        return "BGS/Beckett"
     if "cgc" in text_lower:
         return "CGC"
     if "sgc" in text_lower:
@@ -49,22 +53,48 @@ def detect_brand_from_text(text):
     # Competitors
     if "fanatics" in text_lower:
         return "Fanatics"
-    if "heritage" in text_lower and "auction" in text_lower:
-        return "Heritage Auctions"
-    if "alt.xyz" in text_lower or "alt marketplace" in text_lower:
+    if "heritage" in text_lower:
+        return "Heritage"
+    if "alt.xyz" in text_lower or "alt marketplace" in text_lower or "alt vault" in text_lower:
         return "Alt"
     if "pwcc" in text_lower:
         return "PWCC"
+    if "myslabs" in text_lower:
+        return "MySlabs"
     
     # Subsidiaries
     if "goldin" in text_lower:
         return "Goldin"
-    if "tcgplayer" in text_lower:
+    if "tcgplayer" in text_lower or "tcg player" in text_lower:
         return "TCGPlayer"
     
-    # eBay
+    # eBay specific features/issues
+    if "vault" in text_lower and "ebay" in text_lower:
+        return "eBay Vault"
+    if "authenticity guarantee" in text_lower or " ag " in text_lower or "authentication" in text_lower:
+        return "eBay AG"
+    if "managed payments" in text_lower or "payout" in text_lower or "payment processing" in text_lower:
+        return "eBay Payments"
+    if "shipping" in text_lower and "ebay" in text_lower:
+        return "eBay Shipping"
+    if "fees" in text_lower and "ebay" in text_lower:
+        return "eBay Fees"
+    if "refund" in text_lower or "return" in text_lower:
+        return "eBay Returns"
+    
+    # General eBay
     if "ebay" in text_lower:
         return "eBay"
+    
+    # Collectibles categories
+    if "pokemon" in text_lower or "pokémon" in text_lower:
+        return "Pokemon"
+    if "sports card" in text_lower or "baseball card" in text_lower or "football card" in text_lower:
+        return "Sports Cards"
+    if "magic" in text_lower and ("gathering" in text_lower or "mtg" in text_lower or "card" in text_lower):
+        return "MTG"
+    if "yugioh" in text_lower or "yu-gi-oh" in text_lower:
+        return "Yu-Gi-Oh"
     
     return "Other"
 
