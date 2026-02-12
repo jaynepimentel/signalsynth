@@ -42,7 +42,7 @@ Summary: [One concise sentence summarizing the issue or praise]
 ---
 {text}
 """
-        mdl=os.getenv("OPENAI_MODEL_SCREENER","gpt-5.1-mini")
+        mdl=os.getenv("OPENAI_MODEL_SCREENER","gpt-4o-mini")
         rsp=client.chat.completions.create(
             model=mdl,
             messages=[{"role":"system","content":"You are a product analyst identifying themes and risk. Output must follow requested fields exactly."},

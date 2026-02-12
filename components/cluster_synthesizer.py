@@ -169,7 +169,7 @@ def generate_cluster_metadata(cluster):
     )
     try:
         response = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL_CLUSTER_META", "gpt-5.1-mini"),
+            model=os.getenv("OPENAI_MODEL_CLUSTER_META", "gpt-4o-mini"),
             messages=[
                 {"role": "system", "content": "You are a senior product strategist."},
                 {"role": "user", "content": prompt},

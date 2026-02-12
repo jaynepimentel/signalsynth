@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2026-02-12T07:31:25.234084Z",
+    "generated_at": "2026-02-12T07:46:34.247107Z",
     "filters": {
       "brand": null,
       "persona": null,
@@ -18230,23 +18230,23 @@
   ],
   "cards": [
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Seller Risks and Shipping Challenges on eBay",
+      "theme": "Seller Protection",
+      "problem_statement": "eBay sellers face significant risks when shipping items, including potential loss of funds and inventory due to buyer claims of non-delivery or empty packages. Current protections are inadequate, leaving sellers vulnerable to fraudulent claims, which can result in financial losses and decreased seller performance ratings. Additionally, sellers are seeking clearer guidelines on shipping processes, especially when expanding to international markets, and are concerned about the implications of misrepresenting item locations for competitive advantage.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18276,23 +18276,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Issues with eBay Purchases and Auction Transparency",
+      "theme": "User Experience",
+      "problem_statement": "Users are experiencing confusion and dissatisfaction with the quality and authenticity of items purchased on eBay, as well as challenges in navigating the platform for international shipping and understanding auction practices, leading to concerns about potential scams and lack of transparency in transactions.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18319,23 +18319,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Seller Misconduct and Buyer Protection Issues",
+      "theme": "User Safety",
+      "problem_statement": "Users report that sellers are exploiting feedback tools to retaliate against negative reviews by disclosing personal information and using abusive language, while eBay's response to reports of such behavior has been inadequate, leading to concerns about buyer safety and seller accountability on the platform.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18363,22 +18363,22 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Confusion Over Fees and Payment Issues on eBay",
+      "theme": "Payment and Fees",
+      "problem_statement": "Users are experiencing a lack of transparency and clarity regarding sales tax and fees on eBay transactions, leading to confusion and frustration. Additionally, there are recurring issues with bank verifications and payment errors that result in unauthorized charges, impacting user trust and satisfaction.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
+        "General",
         "Seller",
-        "Buyer",
-        "General"
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18408,22 +18408,22 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Issues with eBay Authenticity Guarantee Process",
+      "theme": "Authentication Challenges",
+      "problem_statement": "Sellers are experiencing significant delays, miscommunication, and lack of support regarding items stuck in the eBay Authenticity Guarantee process, leading to financial losses and unresolved disputes over missing or damaged items. Additionally, there is a lack of clear communication regarding the handling of lawful accessories during authentication, resulting in unexpected losses for sellers.",
       "brand": "eBay",
       "type": "Feedback",
       "personas": [
+        "General",
         "Seller",
-        "Buyer",
-        "General"
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18453,23 +18453,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Concerns Over eBay Transactions and Buyer Safety",
+      "theme": "User Safety and Transaction Issues",
+      "problem_statement": "Users are experiencing anxiety and uncertainty regarding the safety and legitimacy of transactions on eBay, including concerns about buyer threats, product authenticity, and handling returns, which can lead to financial loss and emotional distress.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18499,23 +18499,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Selling Limits and Feedback Impact on Sellers",
+      "theme": "Seller Limitations",
+      "problem_statement": "Users are facing restrictive selling limits on eBay due to past negative feedback, which hinders their ability to sell effectively. They seek clarity on the requirements needed to increase their selling limits after previously having higher thresholds.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18546,23 +18546,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Challenges in Selling and Valuing Collectibles",
+      "theme": "Seller Support",
+      "problem_statement": "Users are struggling with the complexities of selling collectibles internationally, including documentation requirements, pricing strategies, and understanding market values, leading to confusion and potential financial loss.",
       "brand": "eBay",
       "type": "Question",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18590,23 +18590,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Mercury Bank's Policy Changes Impact Startups' Banking Options",
+      "theme": "Banking Compliance",
+      "problem_statement": "Startups in affected regions are struggling to find reliable banking alternatives due to Mercury Bank's recent policy changes, which have resulted in account closures for businesses in multiple countries, including Ukraine and Nigeria, citing compliance challenges.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
-        "Collector",
-        "Buyer",
+        "General",
         "Seller",
-        "General"
+        "Buyer",
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18633,23 +18633,23 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Selling Strategies for Graded Memorabilia",
+      "theme": "Marketplace Optimization",
+      "problem_statement": "Users are uncertain about the best platforms and strategies for selling graded memorabilia, particularly regarding the use of PSA Vault versus eBay, and are seeking guidance on maximizing their profits while minimizing fees.",
       "brand": "eBay",
       "type": "Complaint",
       "personas": [
+        "General",
         "Seller",
         "Buyer",
-        "Collector",
-        "General"
+        "Collector"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
         "Neutral",
+        "Positive",
         "Negative"
       ],
       "opportunity_tags": [
@@ -18684,22 +18684,22 @@
       "was_reclustered": false
     },
     {
-      "title": "(GPT Error)",
-      "theme": "Unknown",
-      "problem_statement": "Error code: 404 - {'error': {'message': 'The model `gpt-5.1-mini` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+      "title": "Card Collection Strategies and Marketplace Concerns",
+      "theme": "User Experience",
+      "problem_statement": "Users are seeking clarity on the effectiveness of bulk purchases for completing card sets and are frustrated by the lack of reliable resources for card valuation, alongside concerns about seller quality and marketplace integrity.",
       "brand": "eBay",
       "type": "Feedback",
       "personas": [
+        "General",
         "Seller",
-        "Buyer",
-        "General"
+        "Buyer"
       ],
       "effort_levels": [
         "Unknown"
       ],
       "sentiments": [
-        "Positive",
-        "Neutral"
+        "Neutral",
+        "Positive"
       ],
       "opportunity_tags": [
         "General Insight"
