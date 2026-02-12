@@ -86,6 +86,27 @@ COMPETITORS = {
         "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG"],
         "required_keywords": ["tcgplayer", "tcg player", "card", "pokemon", "magic", "yugioh", "marketplace", "price"],
     },
+    # Strategic Partners
+    "ComC": {
+        "type": "strategic_partner",
+        "search_terms": [
+            "comc cards", "comc selling", "comc consignment",
+            "check out my cards", "comc fees", "comc vs ebay",
+            "comc shipping", "comc grading", "comc experience"
+        ],
+        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "hockeycards"],
+        "required_keywords": ["comc", "check out my cards", "consignment", "selling", "fees", "shipping"],
+    },
+    "PSA": {
+        "type": "strategic_partner",
+        "search_terms": [
+            "psa vault ebay", "psa grading ebay", "psa consignment",
+            "psa sell ebay", "psa offers", "psa buyback",
+            "psa vault auction", "psa vault sell", "psa payment"
+        ],
+        "subreddits": ["psagrading", "PSAcard", "sportscards", "pokemontcg"],
+        "required_keywords": ["psa vault", "psa grading", "psa ebay", "psa consignment", "psa offer", "psa sell"],
+    },
 }
 
 
