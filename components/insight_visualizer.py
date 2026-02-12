@@ -6,6 +6,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import networkx as nx
+import altair as alt
 from datetime import datetime, timedelta
 
 TEMPORAL_WINDOW = timedelta(days=14)
@@ -76,15 +77,61 @@ def display_insight_charts(insights):
             # Topic trend over time (exclude eBay Marketplace to show other topics)
             if '_date' in df.columns and df['_date'].notna().any():
                 st.subheader("📈 Topic Trend Over Time")
-                st.caption("Excludes 'eBay Marketplace' to highlight specific topics")
+                st.caption("Hover over a line to highlight it. Other lines fade to background.")
                 try:
                     df_dated = df[df['_date'].notna()].copy()
                     # Exclude eBay Marketplace and General to show specific topics
                     df_dated = df_dated[~df_dated['subtag'].isin(['eBay Marketplace', 'General', 'Unknown'])]
                     if 'subtag' in df_dated.columns and len(df_dated) > 0:
-                        topic_trend = df_dated.groupby([pd.Grouper(key='_date', freq='W'), 'subtag']).size().unstack(fill_value=0)
-                        if len(topic_trend) > 0:
-                            st.line_chart(topic_trend, use_container_width=True)
+                        # Aggregate by week and topic
+                        df_dated['week'] = df_dated['_date'].dt.to_period('W').dt.start_time
+                        trend_data = df_dated.groupby(['week', 'subtag']).size().reset_index(name='count')
+                        
+                        # Get top topics only
+                        top_topics = trend_data.groupby('subtag')['count'].sum().nlargest(8).index.tolist()
+                        trend_data = trend_data[trend_data['subtag'].isin(top_topics)]
+                        
+                        if len(trend_data) > 0:
+                            # Create interactive Altair chart with hover highlight
+                            highlight = alt.selection_point(
+                                on='mouseover',
+                                fields=['subtag'],
+                                nearest=True
+                            )
+                            
+                            base = alt.Chart(trend_data).encode(
+                                x=alt.X('week:T', title='Week', axis=alt.Axis(format='%b %d')),
+                                y=alt.Y('count:Q', title='Signal Count'),
+                                color=alt.Color('subtag:N', title='Topic', legend=alt.Legend(orient='bottom', columns=4)),
+                                tooltip=[
+                                    alt.Tooltip('subtag:N', title='Topic'),
+                                    alt.Tooltip('week:T', title='Week', format='%b %d, %Y'),
+                                    alt.Tooltip('count:Q', title='Signals')
+                                ]
+                            )
+                            
+                            # Lines - fade non-highlighted
+                            lines = base.mark_line(strokeWidth=3).encode(
+                                opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
+                                strokeWidth=alt.condition(highlight, alt.value(4), alt.value(1.5))
+                            ).add_params(highlight)
+                            
+                            # Points - show on hover
+                            points = base.mark_circle(size=80).encode(
+                                opacity=alt.condition(highlight, alt.value(1), alt.value(0))
+                            )
+                            
+                            chart = (lines + points).properties(
+                                height=400
+                            ).configure_axis(
+                                labelFontSize=12,
+                                titleFontSize=14
+                            ).configure_legend(
+                                labelFontSize=11,
+                                titleFontSize=12
+                            )
+                            
+                            st.altair_chart(chart, use_container_width=True)
                         else:
                             st.info("Not enough data for trend chart.")
                 except Exception as e:
