@@ -1,4 +1,4 @@
-# app.py — SignalSynth (enhanced UI: Payments/UPI/high-ASP, evidence KPIs, carrier/ISP filters)
+# app.py — SignalSynth: AI-Powered Collectibles Intelligence Platform
 
 import os
 os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
@@ -10,7 +10,12 @@ from datetime import datetime
 from slugify import slugify
 
 # 🔧 MUST BE FIRST STREAMLIT CALL
-st.set_page_config(page_title="SignalSynth", layout="wide")
+st.set_page_config(
+    page_title="SignalSynth | Collectibles Intelligence",
+    page_icon="📡",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # ─────────────────────────────────────────────
 # Component imports
@@ -134,71 +139,78 @@ def kpi_chip(label, value, help_text=None):
 # ─────────────────────────────────────────────
 # Header
 # ─────────────────────────────────────────────
-st.title("📡 SignalSynth: Collectibles Insight Engine")
-st.caption(f"📅 Last Updated: {datetime.now().strftime('%b %d, %Y %H:%M')}")
+# Clean header with subtle branding
+st.markdown("""
+<div style="margin-bottom: 0.5rem;">
+    <h1 style="margin-bottom: 0; font-size: 2.2rem;">📡 SignalSynth</h1>
+    <p style="color: #6b7280; font-size: 1rem; margin-top: 0.25rem;">AI-Powered Collectibles Intelligence Platform</p>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
     <style>
       /* Hide sidebar */
       [data-testid="collapsedControl"] { display: none }
       section[data-testid="stSidebar"] { width: 0px !important; display: none }
-      .kpi-row { margin-bottom: 0.5rem; }
       
-      /* Mobile-responsive styles */
+      /* Executive-grade styling */
+      .hero-stat {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        text-align: center;
+        margin-bottom: 1rem;
+      }
+      .hero-stat h1 { color: white; margin: 0; font-size: 2.5rem; }
+      .hero-stat p { color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1rem; }
+      
+      .stat-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+      }
+      .stat-card .number { font-size: 1.8rem; font-weight: 700; color: #1e293b; }
+      .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+      
+      /* Cleaner metrics */
+      [data-testid="stMetricValue"] { font-size: 1.6rem !important; font-weight: 600; }
+      [data-testid="stMetricLabel"] { font-size: 0.9rem !important; }
+      
+      /* Better tab styling */
+      .stTabs [data-baseweb="tab-list"] { gap: 0.5rem; border-bottom: 2px solid #e2e8f0; }
+      .stTabs [data-baseweb="tab"] { 
+        font-weight: 500; 
+        padding: 0.75rem 1.25rem !important;
+        border-radius: 8px 8px 0 0;
+      }
+      
+      /* Card containers */
+      .stContainer { border-radius: 12px !important; }
+      
+      /* Better buttons */
+      .stButton > button {
+        min-height: 42px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      .stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+      
+      /* Cleaner expanders */
+      .streamlit-expanderHeader { font-weight: 500; }
+      
+      /* Mobile-responsive */
       @media (max-width: 768px) {
-        /* Make title smaller on mobile */
         h1 { font-size: 1.5rem !important; }
         h2 { font-size: 1.25rem !important; }
-        h3 { font-size: 1.1rem !important; }
-        
-        /* Stack columns vertically on mobile */
-        [data-testid="column"] {
-          width: 100% !important;
-          flex: 1 1 100% !important;
-          min-width: 100% !important;
-        }
-        
-        /* Make metrics more compact */
-        [data-testid="stMetricValue"] {
-          font-size: 1.5rem !important;
-        }
-        
-        /* Improve button touch targets */
-        .stButton > button {
-          min-height: 44px !important;
-          font-size: 0.9rem !important;
-        }
-        
-        /* Make expanders easier to tap */
-        .streamlit-expanderHeader {
-          padding: 12px 8px !important;
-        }
-        
-        /* Compact tables on mobile */
-        table {
-          font-size: 0.85rem !important;
-        }
-        
-        /* Make tabs scrollable */
-        .stTabs [data-baseweb="tab-list"] {
-          overflow-x: auto !important;
-          flex-wrap: nowrap !important;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-          white-space: nowrap !important;
-          padding: 8px 12px !important;
-        }
-      }
-      
-      /* Improve touch targets for all devices */
-      .stButton > button {
-        min-height: 40px;
-      }
-      
-      /* Better spacing for containers */
-      [data-testid="stVerticalBlock"] > div {
-        padding-bottom: 0.5rem;
+        [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
+        [data-testid="stMetricValue"] { font-size: 1.3rem !important; }
+        .stButton > button { min-height: 44px !important; }
+        .stTabs [data-baseweb="tab-list"] { overflow-x: auto !important; flex-wrap: nowrap !important; }
+        .stTabs [data-baseweb="tab"] { white-space: nowrap !important; padding: 8px 12px !important; }
       }
     </style>
 """, unsafe_allow_html=True)
@@ -209,46 +221,32 @@ if "show_intro" not in st.session_state:
 
 if st.session_state.show_intro:
     with st.container(border=True):
-        st.markdown("### 🧠 Welcome to SignalSynth!")
+        col_intro, col_dismiss = st.columns([6, 1])
+        with col_intro:
+            st.markdown("### 🚀 Quick Start Guide")
+        with col_dismiss:
+            st.button("✖️ Close", on_click=lambda: st.session_state.update({"show_intro": False}), type="secondary")
+        
         st.markdown("""
-**SignalSynth** is your AI-powered insight engine for eBay Collectibles — transforming thousands of community discussions into actionable product intelligence.
+**Transform community discussions into product decisions.** SignalSynth monitors Reddit, X/Twitter, and competitor channels to surface what collectors are saying about your products.
 
----
+<div style="display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;">
+    <div style="flex: 1; min-width: 200px; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+        <strong>🧱 Clusters</strong><br/>
+        <span style="color: #64748b; font-size: 0.9rem;">Strategic epics with AI-generated PRDs, BRDs, and Jira tickets</span>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 1rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+        <strong>⚔️ Competitors</strong><br/>
+        <span style="color: #64748b; font-size: 0.9rem;">War Games analysis for Fanatics, Heritage, Alt</span>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 1rem; background: #dcfce7; border-radius: 8px; border-left: 4px solid #22c55e;">
+        <strong>🏪 Subsidiaries</strong><br/>
+        <span style="color: #64748b; font-size: 0.9rem;">Action plans for Goldin & TCGPlayer improvement</span>
+    </div>
+</div>
 
-**📊 What's Inside:**
-
-| Source | Coverage |
-|--------|----------|
-| 📍 **Reddit** | 33 collectibles subreddits + targeted searches |
-| 🏢 **Competitors** | Fanatics Collect, Fanatics Live, Heritage Auctions, Alt |
-| 🏪 **Your Subsidiaries** | Goldin, TCGPlayer (you manage these!) |
-
----
-
-**🗂️ Five Tabs to Explore:**
-
-| Tab | Purpose | Key Action |
-|-----|---------|------------|
-| **🧱 Clusters** | Strategic epics grouped by theme | Generate PRDs, BRDs, Jira tickets |
-| **📌 Insights** | Individual signals with filters | Filter by topic, type, sentiment |
-| **🏢 Competitors** | What users say about rivals | ⚔️ **War Games** — competitive strategy |
-| **🏪 Subsidiaries** | Goldin & TCGPlayer feedback | 🔧 **Action Plan** — improvement roadmap |
-| **📈 Trends** | Sentiment & topic over time | Spot emerging issues |
-
----
-
-**⚡ AI-Powered Document Generation (in Clusters):**
-- 🤖 **Executive Summary** — Problem, impact, root cause, recommendation
-- 📄 **PRD** — User stories, requirements, success metrics
-- 💼 **BRD** — Business case for stakeholders
-- 📰 **PRFAQ** — Amazon-style press release + FAQ
-- 🎫 **Jira Tickets** — Sprint-ready with acceptance criteria
-
----
-
-**🏷️ Auto-detected Signals:** 💳 Payments · 🛡️ Trust · 📦 Shipping · ✅ AG · 🏦 Vault · ⚠️ UPI · 🎯 Grading
-        """)
-        st.button("✅ Got it — Hide this guide", on_click=lambda: st.session_state.update({"show_intro": False}))
+**🏷️ Auto-detected signals:** Payments · Authentication · Shipping · Vault · Grading · UPI
+        """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # Data load
@@ -306,28 +304,49 @@ try:
         if valid_dates:
             date_range = f"{valid_dates[0]} to {valid_dates[-1]}"
     
-    # Executive stats banner
-    st.success(f"""
-    📊 **Analysis Complete** | 🕐 **~{hours_saved} hours of manual research saved**
+    # Hero stats banner - impactful executive summary
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; padding: 1.5rem 2rem; margin: 1rem 0; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700;">{hours_saved}<span style="font-size: 1.2rem; font-weight: 400;"> hrs saved</span></div>
+                <div style="opacity: 0.85; font-size: 0.95rem;">vs. manual research</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 600;">{total_posts_analyzed:,}</div>
+                <div style="opacity: 0.85; font-size: 0.9rem;">posts analyzed</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 600;">{total:,}</div>
+                <div style="opacity: 0.85; font-size: 0.9rem;">actionable insights</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 600;">{clusters_count}</div>
+                <div style="opacity: 0.85; font-size: 0.9rem;">strategic epics</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    **{total_posts_analyzed:,}** social posts scraped → **{total:,}** actionable insights → **{clusters_count}** strategic epics
-    """)
-    
-    # Data freshness indicator
-    if date_range:
-        st.caption(f"📅 **Data Range:** {date_range} | 🔄 **Last Processed:** {datetime.now().strftime('%b %d, %Y')}")
+    # Data freshness - subtle but visible
+    freshness_text = f"📅 {date_range}" if date_range else ""
+    st.caption(f"{freshness_text}  ·  Last updated: {datetime.now().strftime('%b %d, %Y at %H:%M')}")
 
-# KPI Row - More impressive metrics
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # KPI Row - cleaner, more scannable
     total_posts = raw_posts_count + competitor_posts_count
     signal_ratio = round(total/total_posts*100, 1) if total_posts > 0 else 0
     complaint_ratio = round(complaints/total*100) if total > 0 else 0
-
-    with col1: kpi_chip("📥 Posts Scraped", f"{total_posts:,}", "Reddit, Bluesky, Competitors")
-    with col2: kpi_chip("🎯 Insights", f"{total:,}", f"{signal_ratio}% signal-to-noise")
-    with col3: kpi_chip("😠 Complaints", f"{complaints:,}", f"{complaint_ratio}% of insights")
-    with col4: kpi_chip("💳 Payments", f"{payments:,}", "Payment flow issues")
-    with col5: kpi_chip("🚫 UPI", f"{upi:,}", "Unpaid item issues")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1: 
+        st.metric("� Complaints", f"{complaints:,}", f"{complaint_ratio}% of insights", delta_color="inverse")
+    with col2: 
+        st.metric("💳 Payment Issues", f"{payments:,}", help="Payment flow problems")
+    with col3: 
+        st.metric("🚫 Unpaid Items", f"{upi:,}", help="UPI/non-paying buyer issues")
+    with col4:
+        vault_count = sum(1 for i in normalized if i.get("is_vault_signal"))
+        st.metric("🏦 Vault Signals", f"{vault_count:,}", help="Vault-related feedback")
 
 except Exception as e:
     st.error(f"❌ Failed to load insights: {e}")
@@ -347,13 +366,18 @@ quick_filtered = normalized
 # ─────────────────────────────────────────────
 # Tabs (simplified to essential views)
 # ─────────────────────────────────────────────
+# Tabs with cleaner labels
 tabs = st.tabs([
-    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+    "🧱 Strategic Epics", "📌 All Insights", "⚔️ Competitors", "🏪 Subsidiaries", "📈 Trends"
 ])
 
 # 🧱 CLUSTERS - Strategic epics (first tab now)
 with tabs[0]:
-    st.header("🧱 Strategic Epics")
+    st.markdown("""
+    <div style="margin-bottom: 1rem;">
+        <p style="color: #64748b; margin: 0;">AI-clustered themes from community feedback. Click any epic to generate PRDs, BRDs, or Jira tickets.</p>
+    </div>
+    """, unsafe_allow_html=True)
     try:
         display_clustered_insight_cards(quick_filtered)
     except Exception as e:
@@ -361,7 +385,7 @@ with tabs[0]:
 
 # 📌 INSIGHTS - Individual view with filters
 with tabs[1]:
-    st.header("📌 Individual Insights")
+    st.markdown("Filter and explore individual signals from the community.")
     try:
         filters = render_floating_filters(quick_filtered, filter_fields, key_prefix="insights")
         filtered = [i for i in quick_filtered if match_multiselect_filters(i, filters, filter_fields)]
@@ -374,10 +398,14 @@ with tabs[1]:
     except Exception as e:
         st.error(f"❌ Insights tab error: {e}")
 
-# 🏢 COMPETITORS - Competitor insights only
+# ⚔️ COMPETITORS - Competitor insights only
 with tabs[2]:
-    st.header("🏢 Competitors")
-    st.markdown("Track what users are saying about competitors. Use **⚔️ War Games** to generate competitive response strategies.")
+    st.markdown("""
+    <div style="background: #fef3c7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #f59e0b;">
+        <strong>⚔️ Competitive Intelligence</strong><br/>
+        <span style="color: #64748b;">See what collectors say about Fanatics, Heritage, and Alt. Use <strong>War Games</strong> to generate strategic responses.</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # War Games LLM function for competitors
     def generate_war_games(competitor: str, post_text: str, post_title: str) -> str:
@@ -558,8 +586,12 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 
 # 🏪 SUBSIDIARIES - Goldin & TCGPlayer (separate tab)
 with tabs[3]:
-    st.header("🏪 eBay Subsidiaries")
-    st.info("**You manage these!** Track user feedback for Goldin & TCGPlayer and generate improvement action plans.")
+    st.markdown("""
+    <div style="background: #dcfce7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #22c55e;">
+        <strong>🏪 Your Subsidiaries</strong><br/>
+        <span style="color: #64748b;">Goldin & TCGPlayer feedback. Generate <strong>Action Plans</strong> to improve these eBay-owned platforms.</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Subsidiary improvement LLM function (defined here for this tab)
     def generate_subsidiary_action_tab(subsidiary: str, post_text: str, post_title: str) -> str:
@@ -697,7 +729,7 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
 
 # 📈 TRENDS - Charts and summary
 with tabs[4]:
-    st.header("📈 Trends & Summary")
+    st.markdown("Visualize patterns in sentiment, topics, and signal volume over time.")
     try:
         display_insight_charts(quick_filtered)
     except Exception as e:
