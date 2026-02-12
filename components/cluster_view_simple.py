@@ -160,14 +160,46 @@ def _generate_document(doc_type: str, cluster: Dict[str, Any], selected_insights
 
 
 def _load_clusters() -> List[Dict[str, Any]]:
-    """Load precomputed clusters from JSON file."""
+    """Load precomputed clusters from JSON file, merging cards with cluster insights."""
     path = Path(__file__).parent.parent / "precomputed_clusters.json"
     if not path.exists():
         return []
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("clusters", [])
+        
+        # Use cards for display data, merge with cluster insights
+        cards = data.get("cards", [])
+        clusters_raw = data.get("clusters", [])
+        
+        # Create lookup for cluster insights by cluster_id
+        insights_by_id = {c.get("cluster_id"): c.get("insights", []) for c in clusters_raw}
+        stats_by_id = {c.get("cluster_id"): c.get("stats", {}) for c in clusters_raw}
+        
+        result = []
+        for card in cards:
+            cid = card.get("cluster_id")
+            cluster = {
+                "title": card.get("title", "Unknown"),
+                "label": card.get("title", "Unknown"),
+                "size": card.get("insight_count", 0),
+                "description": card.get("problem_statement", ""),
+                "product_opportunity": card.get("theme", ""),
+                "cluster_id": cid,
+                "insights": insights_by_id.get(cid, []),
+                "signal_counts": {
+                    "total": card.get("insight_count", 0),
+                    "complaints": stats_by_id.get(cid, {}).get("complaints", 0),
+                    "feature_requests": stats_by_id.get(cid, {}).get("feature_requests", 0),
+                    "negative": stats_by_id.get(cid, {}).get("negative", 0),
+                    "positive": stats_by_id.get(cid, {}).get("positive", 0),
+                },
+                "coherent": card.get("coherent", True),
+                "avg_similarity": card.get("avg_similarity", "0.75"),
+            }
+            result.append(cluster)
+        
+        return result
     except Exception:
         return []
 
