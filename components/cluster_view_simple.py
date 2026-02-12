@@ -297,20 +297,21 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
     with col1:
         st.caption(f"📊 {len(clusters)} Strategic Epics")
     with col2:
+        sort_options = ["Signals ↓", "Complaints ↓", "A→Z"]
         sort_by = st.selectbox(
             "Sort by",
-            ["Signals (High→Low)", "Complaints (High→Low)", "Alphabetical"],
+            sort_options,
             key="cluster_sort",
             label_visibility="collapsed"
         )
     
-    # Sort clusters
-    if sort_by == "Signals (High→Low)":
-        clusters = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
-    elif sort_by == "Complaints (High→Low)":
+    # Sort clusters based on selection
+    if sort_by == "Complaints ↓":
         clusters = sorted(clusters, key=lambda x: x.get("signal_counts", {}).get("complaints", 0), reverse=True)
-    else:
-        clusters = sorted(clusters, key=lambda x: x.get("title", ""))
+    elif sort_by == "A→Z":
+        clusters = sorted(clusters, key=lambda x: (x.get("title", "") or "").lower())
+    else:  # Default: Signals ↓
+        clusters = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
     
     for cluster in clusters:
         epic_name = cluster.get("title", "Unknown")
