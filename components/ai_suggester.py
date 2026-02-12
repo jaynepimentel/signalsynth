@@ -7,7 +7,21 @@ from docx import Document
 from slugify import slugify
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
+
+def _get_openai_key():
+    """Get OpenAI API key from Streamlit secrets or environment."""
+    # Try Streamlit secrets first (for Streamlit Cloud)
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
+            return st.secrets['OPENAI_API_KEY']
+    except Exception:
+        pass
+    # Fall back to environment variable
+    return os.getenv("OPENAI_API_KEY")
+
+_api_key = _get_openai_key()
+client = OpenAI(api_key=_api_key) if _api_key else None
 
 MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-4o")
 MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
