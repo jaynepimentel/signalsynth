@@ -347,9 +347,9 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                 negative = signal_counts.get("negative", 0)
                 positive = signal_counts.get("positive", 0)
                 if negative > positive:
-                    sentiment_label = f"� {negative} neg / {positive} pos"
+                    sentiment_label = f"\U0001f534 {negative} neg / {positive} pos"
                 elif positive > negative:
-                    sentiment_label = f"� {positive} pos / {negative} neg"
+                    sentiment_label = f"\U0001f7e2 {positive} pos / {negative} neg"
                 else:
                     sentiment_label = f"😐 {negative} neg / {positive} pos"
                 st.metric("Sentiment", sentiment_label)
