@@ -309,8 +309,18 @@ def display_brand_dashboard(insights):
             with col2:
                 st.metric("Negative %", f"{neg_pct}%")
             with col3:
-                st.metric("Partner Health", "⚠️ At Risk" if neg_pct > 40 else "✅ Healthy")
+                if neg_pct > 30:
+                    st.metric("Partner Health", "🔴 At Risk")
+                elif neg_pct > 15:
+                    st.metric("Partner Health", "🟡 Watch")
+                else:
+                    st.metric("Partner Health", "🟢 Healthy")
             
-            st.markdown("**🤝 Partner Insight:** High negative sentiment on partners impacts eBay seller experience.")
+            if neg_pct > 30:
+                st.markdown(f"**🤝 Partner Insight:** {neg_pct}% negative sentiment — partner experience is degrading eBay seller trust. Escalate to partnerships team.")
+            elif neg_pct > 15:
+                st.markdown(f"**🤝 Partner Insight:** {neg_pct}% negative sentiment — monitor for emerging partner service issues.")
+            else:
+                st.markdown("**🤝 Partner Insight:** Partner sentiment is healthy. Continue monitoring.")
         else:
             st.info("No partner signals found in current data.")
