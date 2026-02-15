@@ -28,6 +28,7 @@ data/*
 !data/scraped_competitor_posts.json
 !data/scraped_twitter_posts.json
 !data/scraped_community_posts.json
+!data/scraped_cllct_posts.json
 
 # Scraper outputs
 scraped_*.txt

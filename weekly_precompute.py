@@ -59,6 +59,7 @@ def main():
     parser.add_argument("--no-bluesky", action="store_true", help="Skip Bluesky scraper")
     parser.add_argument("--no-ebay", action="store_true", help="Skip eBay Forums scraper")
     parser.add_argument("--no-twitter", action="store_true", help="Skip Twitter/X scraper")
+    parser.add_argument("--no-cllct", action="store_true", help="Skip Cllct.com scraper")
     args = parser.parse_args()
 
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -81,6 +82,8 @@ def main():
             scrape_cmd.append("--no-ebay")
         if args.no_twitter:
             scrape_cmd.append("--no-twitter")
+        if args.no_cllct:
+            scrape_cmd.append("--no-cllct")
 
         results["scrape"] = run_step(
             "Step 1/3: Scraping all sources",
@@ -122,6 +125,7 @@ def main():
         "data/scraped_bluesky_posts.json",
         "data/scraped_competitor_posts.json",
         "data/scraped_twitter_posts.json",
+        "data/scraped_cllct_posts.json",
         "precomputed_insights.json",
         "precomputed_clusters.json",
     ]
