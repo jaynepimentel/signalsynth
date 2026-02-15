@@ -4,7 +4,7 @@ import streamlit as st
 import altair as alt
 
 # Define entity categories
-COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "Alt", "PWCC", "MySlabs"]
+COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "PWCC", "MySlabs"]
 PARTNERS = ["PSA", "ComC", "BGS", "CGC", "SGC"]
 SUBSIDIARIES = ["Goldin", "TCGPlayer"]
 
@@ -18,6 +18,9 @@ def categorize_entity(text):
     
     # Check competitors
     if any(c.lower() in text_lower for c in COMPETITORS):
+        return "Competitor"
+    # Alt requires specific phrases to avoid matching 'alternative', 'alt account', etc.
+    if any(phrase in text_lower for phrase in ["alt.xyz", "alt marketplace", "alt vault", "alt platform"]):
         return "Competitor"
     
     # Check subsidiaries
@@ -282,7 +285,9 @@ def display_brand_dashboard(insights):
             with col2:
                 st.metric("Negative %", f"{neg_pct}%")
             with col3:
-                top_comp = competitor_df["Brand"].value_counts().idxmax() if len(competitor_df) > 0 else "N/A"
+                # Exclude eBay-branded entries from competitor ranking
+                comp_brands = competitor_df[~competitor_df["Brand"].str.startswith("eBay")]["Brand"].value_counts()
+                top_comp = comp_brands.idxmax() if len(comp_brands) > 0 else "N/A"
                 st.metric("Most Discussed", top_comp)
             
             st.markdown("**🎯 Competitor Opportunity:** High negative sentiment on competitors = potential win-back opportunity.")
