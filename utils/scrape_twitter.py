@@ -6,6 +6,7 @@ import time
 import re
 from datetime import datetime
 from urllib.parse import quote
+from dotenv import load_dotenv
 
 # Search terms for collectibles/marketplace topics
 SEARCH_TERMS = [
@@ -21,14 +22,20 @@ SEARCH_TERMS = [
 
 SAVE_PATH = "data/scraped_twitter_posts.json"
 
+load_dotenv()
+
 # Twitter's internal API endpoints
-BEARER_TOKEN = "REDACTED_TWITTER_BEARER_TOKEN"
+BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 
 
 class TwitterGuestScraper:
     """Scrape Twitter using guest token (no login required)."""
     
     def __init__(self):
+        if not BEARER_TOKEN:
+            raise RuntimeError(
+                "TWITTER_BEARER_TOKEN not set. Add it to your environment or .env file."
+            )
         self.session = requests.Session()
         self.guest_token = None
         self.session.headers.update({
