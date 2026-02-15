@@ -6,6 +6,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import networkx as nx
+import altair as alt
 from datetime import datetime, timedelta
 
 TEMPORAL_WINDOW = timedelta(days=14)
@@ -73,20 +74,97 @@ def display_insight_charts(insights):
                 st.subheader("📋 Insight Type Distribution")
                 st.bar_chart(df['type_tag'].fillna("Unknown").value_counts().head(8))
             
-            # Topic trend over time (exclude eBay Marketplace to show other topics)
+            # Signal trend over time - use signal flags for categorization
             if '_date' in df.columns and df['_date'].notna().any():
-                st.subheader("📈 Topic Trend Over Time")
-                st.caption("Excludes 'eBay Marketplace' to highlight specific topics")
+                st.subheader("📈 Signal Trend Over Time")
+                st.caption("Hover over a line to highlight it. Excludes 'General' signals for clarity.")
                 try:
                     df_dated = df[df['_date'].notna()].copy()
-                    # Exclude eBay Marketplace and General to show specific topics
-                    df_dated = df_dated[~df_dated['subtag'].isin(['eBay Marketplace', 'General', 'Unknown'])]
-                    if 'subtag' in df_dated.columns and len(df_dated) > 0:
-                        topic_trend = df_dated.groupby([pd.Grouper(key='_date', freq='W'), 'subtag']).size().unstack(fill_value=0)
-                        if len(topic_trend) > 0:
-                            st.line_chart(topic_trend, use_container_width=True)
-                        else:
-                            st.info("Not enough data for trend chart.")
+                    
+                    # Categorize each insight by signal type
+                    def get_signal_category(row):
+                        if row.get('is_vault_signal'): return 'Vault'
+                        if row.get('is_psa_turnaround'): return 'Grading'
+                        if row.get('is_ag_signal'): return 'Authentication'
+                        if row.get('is_shipping_issue'): return 'Shipping'
+                        if row.get('_payment_issue'): return 'Payments'
+                        if row.get('is_refund_issue'): return 'Refunds'
+                        if row.get('is_fees_concern'): return 'Fees'
+                        if row.get('_upi_flag'): return 'UPI'
+                        return 'General'
+                    
+                    df_dated['signal_category'] = df_dated.apply(get_signal_category, axis=1)
+                    
+                    # Exclude General to reduce clutter
+                    df_dated = df_dated[df_dated['signal_category'] != 'General']
+                    
+                    # Limit date range to last 90 days to avoid smooshed chart
+                    max_date = df_dated['_date'].max()
+                    min_date = max_date - pd.Timedelta(days=90)
+                    df_dated = df_dated[df_dated['_date'] >= min_date]
+                    
+                    # Aggregate by week and signal category
+                    df_dated['week'] = df_dated['_date'].dt.to_period('W').dt.start_time
+                    trend_data = df_dated.groupby(['week', 'signal_category']).size().reset_index(name='count')
+                    
+                    # Show all categories with data
+                    categories_with_data = trend_data.groupby('signal_category')['count'].sum()
+                    categories_with_data = categories_with_data[categories_with_data > 0].index.tolist()
+                    trend_data = trend_data[trend_data['signal_category'].isin(categories_with_data)]
+                    
+                    if len(trend_data) > 0:
+                        # Create interactive Altair chart with hover highlight
+                        highlight = alt.selection_point(
+                            on='mouseover',
+                            fields=['signal_category'],
+                            nearest=True
+                        )
+                        
+                        # Color scale for signal categories
+                        color_scale = alt.Scale(
+                            domain=['Vault', 'Grading', 'Authentication', 'Shipping', 'Payments', 'Refunds', 'Fees', 'UPI', 'General'],
+                            range=['#8b5cf6', '#f59e0b', '#22c55e', '#3b82f6', '#ef4444', '#ec4899', '#14b8a6', '#f97316', '#6b7280']
+                        )
+                        
+                        base = alt.Chart(trend_data).encode(
+                            x=alt.X('week:T', title='Week', axis=alt.Axis(format='%b %d')),
+                            y=alt.Y('count:Q', title='Signal Count'),
+                            color=alt.Color('signal_category:N', title='Signal Type', scale=color_scale, legend=alt.Legend(orient='bottom', columns=5)),
+                            tooltip=[
+                                alt.Tooltip('signal_category:N', title='Signal'),
+                                alt.Tooltip('week:T', title='Week', format='%b %d, %Y'),
+                                alt.Tooltip('count:Q', title='Count')
+                            ]
+                        )
+                        
+                        # Lines - fade non-highlighted
+                        lines = base.mark_line(strokeWidth=3).encode(
+                            opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
+                            strokeWidth=alt.condition(highlight, alt.value(4), alt.value(1.5))
+                        ).add_params(highlight)
+                        
+                        # Points - show on hover
+                        points = base.mark_circle(size=80).encode(
+                            opacity=alt.condition(highlight, alt.value(1), alt.value(0))
+                        )
+                        
+                        chart = (lines + points).properties(
+                            height=400
+                        ).configure_axis(
+                            labelFontSize=12,
+                            titleFontSize=14
+                        ).configure_legend(
+                            labelFontSize=11,
+                            titleFontSize=12
+                        )
+                        
+                        st.altair_chart(chart, use_container_width=True)
+                        
+                        # Show signal counts summary
+                        signal_totals = df_dated['signal_category'].value_counts()
+                        st.caption(f"**Total signals:** {len(df_dated)} | " + " · ".join([f"{cat}: {cnt}" for cat, cnt in signal_totals.items()]))
+                    else:
+                        st.info("Not enough data for trend chart.")
                 except Exception as e:
                     st.info(f"Trend chart unavailable: {e}")
             

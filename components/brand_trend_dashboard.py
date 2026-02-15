@@ -1,63 +1,309 @@
-# brand_trend_dashboard.py — Enhanced brand dashboard with trend chart and sentiment share
+# brand_trend_dashboard.py — Strategic dashboard with competitors, partners, and brand insights
 import pandas as pd
 import streamlit as st
 import altair as alt
 
+# Define entity categories
+COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "Alt", "PWCC", "MySlabs"]
+PARTNERS = ["PSA", "ComC", "BGS", "CGC", "SGC"]
+SUBSIDIARIES = ["Goldin", "TCGPlayer"]
+
+def categorize_entity(text):
+    """Categorize an insight by entity type based on text content."""
+    text_lower = (text or "").lower()
+    
+    # Check partners first (PSA services)
+    if any(p.lower() in text_lower for p in ["psa vault", "psa grading", "psa consignment", "psa offer", "comc", "check out my cards"]):
+        return "Partner"
+    
+    # Check competitors
+    if any(c.lower() in text_lower for c in COMPETITORS):
+        return "Competitor"
+    
+    # Check subsidiaries
+    if any(s.lower() in text_lower for s in SUBSIDIARIES):
+        return "Subsidiary"
+    
+    return "eBay Core"
+
+def detect_brand_from_text(text):
+    """Detect brand/entity from text content. Returns primary brand + signal type."""
+    text_lower = (text or "").lower()
+    
+    # Partners - PSA services
+    if "psa vault" in text_lower or ("vault" in text_lower and "psa" in text_lower):
+        return "PSA Vault"
+    if "psa" in text_lower and ("grading" in text_lower or "grade" in text_lower or "turnaround" in text_lower or "submission" in text_lower):
+        return "PSA Grading"
+    if "psa" in text_lower and ("consignment" in text_lower or "consign" in text_lower):
+        return "PSA Consignment"
+    if "psa" in text_lower and ("offer" in text_lower or "buyback" in text_lower):
+        return "PSA Offers"
+    if "psa" in text_lower:
+        return "PSA"
+    if "comc" in text_lower or "check out my cards" in text_lower:
+        return "ComC"
+    if "bgs" in text_lower or "beckett" in text_lower:
+        return "BGS/Beckett"
+    if "cgc" in text_lower:
+        return "CGC"
+    if "sgc" in text_lower:
+        return "SGC"
+    
+    # Competitors
+    if "fanatics" in text_lower:
+        return "Fanatics"
+    if "heritage" in text_lower:
+        return "Heritage"
+    if "alt.xyz" in text_lower or "alt marketplace" in text_lower or "alt vault" in text_lower:
+        return "Alt"
+    if "pwcc" in text_lower:
+        return "PWCC"
+    if "myslabs" in text_lower:
+        return "MySlabs"
+    
+    # Subsidiaries
+    if "goldin" in text_lower:
+        return "Goldin"
+    if "tcgplayer" in text_lower or "tcg player" in text_lower:
+        return "TCGPlayer"
+    
+    # eBay specific features/issues
+    if "vault" in text_lower and "ebay" in text_lower:
+        return "eBay Vault"
+    if "authenticity guarantee" in text_lower or " ag " in text_lower or "authentication" in text_lower:
+        return "eBay AG"
+    if "managed payments" in text_lower or "payout" in text_lower or "payment processing" in text_lower:
+        return "eBay Payments"
+    if "shipping" in text_lower and "ebay" in text_lower:
+        return "eBay Shipping"
+    if "fees" in text_lower and "ebay" in text_lower:
+        return "eBay Fees"
+    if "refund" in text_lower or "return" in text_lower:
+        return "eBay Returns"
+    
+    # General eBay
+    if "ebay" in text_lower:
+        return "eBay"
+    
+    # Collectibles categories
+    if "pokemon" in text_lower or "pokémon" in text_lower:
+        return "Pokemon"
+    if "sports card" in text_lower or "baseball card" in text_lower or "football card" in text_lower:
+        return "Sports Cards"
+    if "magic" in text_lower and ("gathering" in text_lower or "mtg" in text_lower or "card" in text_lower):
+        return "MTG"
+    if "yugioh" in text_lower or "yu-gi-oh" in text_lower:
+        return "Yu-Gi-Oh"
+    
+    return "Other"
+
+
 def summarize_brand_insights(insights):
     rows = []
     for i in insights:
-        brand = i.get("target_brand", "Unknown")
+        text = i.get("text", "") + " " + i.get("title", "")
+        # Detect brand from text instead of relying on target_brand field
+        brand = detect_brand_from_text(text)
         sentiment = i.get("brand_sentiment", "Neutral")
-        logged_at = i.get("_logged_at")
-        rows.append((brand, sentiment, logged_at))
+        logged_at = i.get("_logged_at") or i.get("post_date")
+        entity_type = categorize_entity(text)
+        rows.append((brand, sentiment, logged_at, entity_type))
 
-    df = pd.DataFrame(rows, columns=["Brand", "Sentiment", "Date"])
+    df = pd.DataFrame(rows, columns=["Brand", "Sentiment", "Date", "EntityType"])
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     sentiment_counts = df.groupby(["Brand", "Sentiment"]).size().unstack(fill_value=0).reset_index()
 
     # Add Complaint %
     sentiment_cols = [col for col in sentiment_counts.columns if col not in ["Brand"]]
     sentiment_counts["Total"] = sentiment_counts[sentiment_cols].sum(axis=1)
-    sentiment_counts["Complaint %"] = round((sentiment_counts.get("Complaint", 0) / sentiment_counts["Total"].replace(0, 1)) * 100, 1)
+    if "Negative" in sentiment_counts.columns:
+        sentiment_counts["Complaint %"] = round((sentiment_counts["Negative"] / sentiment_counts["Total"].replace(0, 1)) * 100, 1)
+    else:
+        sentiment_counts["Complaint %"] = 0
 
     return df, sentiment_counts
 
 def display_brand_dashboard(insights):
-    st.header("📊 Brand-Level Insight Summary")
-    st.markdown("🧮 **Complaint %** shows the share of negative mentions out of total sentiment mentions for each brand.")
-
+    st.header("📊 Strategic Intelligence Dashboard")
+    
     df, summary = summarize_brand_insights(insights)
-
-    # Brand Filter
-    brand_list = sorted(df["Brand"].dropna().unique())
-    selected_brands = st.multiselect("🔎 Filter by Brand", options=brand_list, default=brand_list)
-    filtered_df = df[df["Brand"].isin(selected_brands)]
-    filtered_summary = summary[summary["Brand"].isin(selected_brands)]
-
-    # Summary Table
-    st.dataframe(filtered_summary.sort_values("Complaint %", ascending=False), use_container_width=True)
-
-    # Trend Over Time Chart
-    if st.checkbox("📈 Show Volume Trend Over Time by Brand"):
-        daily_counts = (
-            filtered_df.groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
-            .size()
-            .reset_index(name="Mentions")
-        )
-        chart = alt.Chart(daily_counts).mark_line(point=True).encode(
-            x=alt.X("Date:T", title="Week"),
-            y=alt.Y("Mentions:Q"),
-            color="Brand:N"
-        ).properties(height=350)
+    
+    # Strategic Overview Section
+    st.subheader("🎯 Strategic Overview")
+    
+    # Entity type metrics
+    entity_counts = df["EntityType"].value_counts()
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("🏪 eBay Core", entity_counts.get("eBay Core", 0))
+    with col2:
+        st.metric("🏢 Competitors", entity_counts.get("Competitor", 0))
+    with col3:
+        st.metric("🤝 Partners", entity_counts.get("Partner", 0))
+    with col4:
+        st.metric("🏪 Subsidiaries", entity_counts.get("Subsidiary", 0))
+    
+    # Sentiment by entity type
+    st.subheader("📈 Sentiment by Entity Type")
+    entity_sentiment = df.groupby(["EntityType", "Sentiment"]).size().reset_index(name="Count")
+    
+    if len(entity_sentiment) > 0:
+        # Create highlight selection
+        highlight = alt.selection_point(on='mouseover', fields=['EntityType'], nearest=True)
+        
+        chart = alt.Chart(entity_sentiment).mark_bar().encode(
+            x=alt.X("EntityType:N", title="Entity Type", sort=["eBay Core", "Competitor", "Partner", "Subsidiary"]),
+            y=alt.Y("Count:Q", title="Signal Count"),
+            color=alt.Color("Sentiment:N", scale=alt.Scale(
+                domain=["Positive", "Neutral", "Negative"],
+                range=["#22c55e", "#94a3b8", "#ef4444"]
+            )),
+            opacity=alt.condition(highlight, alt.value(1), alt.value(0.6)),
+            tooltip=["EntityType", "Sentiment", "Count"]
+        ).add_params(highlight).properties(height=300)
+        
         st.altair_chart(chart, use_container_width=True)
+    
+    # Competitor vs Partner Trend Over Time
+    st.subheader("📉 Entity Trends Over Time")
+    st.caption("Hover to highlight. Last 60 days only for readability.")
+    
+    df_dated = df[df["Date"].notna()].copy()
+    if len(df_dated) > 0:
+        # Limit to last 60 days for readability
+        max_date = df_dated["Date"].max()
+        min_date = max_date - pd.Timedelta(days=60)
+        df_dated = df_dated[df_dated["Date"] >= min_date]
+        
+        df_dated["Week"] = df_dated["Date"].dt.to_period("W").dt.start_time
+        trend_data = df_dated.groupby(["Week", "EntityType"]).size().reset_index(name="Count")
+        
+        if len(trend_data) > 0:
+            highlight = alt.selection_point(on='mouseover', fields=['EntityType'], nearest=True)
+            
+            base = alt.Chart(trend_data).encode(
+                x=alt.X("Week:T", title="Week", axis=alt.Axis(format="%b %d")),
+                y=alt.Y("Count:Q", title="Signals"),
+                color=alt.Color("EntityType:N", title="Entity", scale=alt.Scale(
+                    domain=["eBay Core", "Competitor", "Partner", "Subsidiary"],
+                    range=["#3b82f6", "#ef4444", "#22c55e", "#f59e0b"]
+                )),
+                tooltip=[
+                    alt.Tooltip("EntityType:N", title="Entity"),
+                    alt.Tooltip("Week:T", title="Week", format="%b %d, %Y"),
+                    alt.Tooltip("Count:Q", title="Signals")
+                ]
+            )
+            
+            lines = base.mark_line(strokeWidth=3).encode(
+                opacity=alt.condition(highlight, alt.value(1), alt.value(0.2)),
+                strokeWidth=alt.condition(highlight, alt.value(4), alt.value(1.5))
+            ).add_params(highlight)
+            
+            points = base.mark_circle(size=60).encode(
+                opacity=alt.condition(highlight, alt.value(1), alt.value(0))
+            )
+            
+            chart = (lines + points).properties(height=350)
+            st.altair_chart(chart, use_container_width=True)
+    
+    # Brand-Level Analysis (expandable)
+    with st.expander("🏷️ Brand-Level Detail", expanded=False):
+        st.markdown("Filter and compare specific brands across all entity types.")
+        
+        # Brand Filter
+        brand_list = sorted(df["Brand"].dropna().unique())
+        selected_brands = st.multiselect("🔎 Filter by Brand", options=brand_list, default=brand_list[:10] if len(brand_list) > 10 else brand_list, key="brand_filter_trends")
+        filtered_df = df[df["Brand"].isin(selected_brands)]
+        filtered_summary = summary[summary["Brand"].isin(selected_brands)]
 
-    # Sentiment Stacked Chart
-    if st.checkbox("📊 Show Sentiment Breakdown by Brand"):
-        melted = filtered_df.groupby(["Brand", "Sentiment"]).size().reset_index(name="Count")
-        chart = alt.Chart(melted).mark_bar().encode(
-            x=alt.X("Brand:N"),
-            y=alt.Y("Count:Q"),
-            color=alt.Color("Sentiment:N"),
-            tooltip=["Brand", "Sentiment", "Count"]
-        ).properties(height=350)
-        st.altair_chart(chart, use_container_width=True)
+        # Summary Table
+        if len(filtered_summary) > 0:
+            st.dataframe(
+                filtered_summary.sort_values("Complaint %", ascending=False)[["Brand", "Total", "Complaint %"]].head(15),
+                use_container_width=True,
+                hide_index=True
+            )
+
+        # Brand trend chart
+        if len(filtered_df) > 0 and filtered_df["Date"].notna().any():
+            st.markdown("**📈 Brand Volume Over Time** (last 60 days)")
+            
+            # Limit to last 60 days
+            brand_df = filtered_df[filtered_df["Date"].notna()].copy()
+            max_date = brand_df["Date"].max()
+            min_date = max_date - pd.Timedelta(days=60)
+            brand_df = brand_df[brand_df["Date"] >= min_date]
+            
+            daily_counts = (
+                brand_df
+                .groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
+                .size()
+                .reset_index(name="Mentions")
+            )
+            
+            if len(daily_counts) > 0:
+                # Limit to top 6 brands by volume
+                top_brands = daily_counts.groupby("Brand")["Mentions"].sum().nlargest(6).index.tolist()
+                daily_counts = daily_counts[daily_counts["Brand"].isin(top_brands)]
+                
+                highlight = alt.selection_point(on='mouseover', fields=['Brand'], nearest=True)
+                
+                base = alt.Chart(daily_counts).encode(
+                    x=alt.X("Date:T", title="Week"),
+                    y=alt.Y("Mentions:Q", title="Mentions"),
+                    color=alt.Color("Brand:N", legend=alt.Legend(orient="bottom", columns=3)),
+                    tooltip=["Brand", "Date:T", "Mentions"]
+                )
+                
+                lines = base.mark_line(strokeWidth=2).encode(
+                    opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
+                    strokeWidth=alt.condition(highlight, alt.value(3), alt.value(1))
+                ).add_params(highlight)
+                
+                points = base.mark_circle(size=50).encode(
+                    opacity=alt.condition(highlight, alt.value(1), alt.value(0))
+                )
+                
+                chart = (lines + points).properties(height=300)
+                st.altair_chart(chart, use_container_width=True)
+    
+    # Competitive Intelligence (expandable)
+    with st.expander("⚔️ Competitive Intelligence", expanded=False):
+        competitor_df = df[df["EntityType"] == "Competitor"]
+        if len(competitor_df) > 0:
+            comp_sentiment = competitor_df.groupby("Sentiment").size()
+            neg_pct = round(comp_sentiment.get("Negative", 0) / max(len(competitor_df), 1) * 100, 1)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Competitor Signals", len(competitor_df))
+            with col2:
+                st.metric("Negative %", f"{neg_pct}%")
+            with col3:
+                top_comp = competitor_df["Brand"].value_counts().idxmax() if len(competitor_df) > 0 else "N/A"
+                st.metric("Most Discussed", top_comp)
+            
+            st.markdown("**🎯 Competitor Opportunity:** High negative sentiment on competitors = potential win-back opportunity.")
+        else:
+            st.info("No competitor signals found in current data.")
+    
+    # Partner Intelligence (expandable)
+    with st.expander("🤝 Partner Intelligence", expanded=False):
+        partner_df = df[df["EntityType"] == "Partner"]
+        if len(partner_df) > 0:
+            partner_sentiment = partner_df.groupby("Sentiment").size()
+            neg_pct = round(partner_sentiment.get("Negative", 0) / max(len(partner_df), 1) * 100, 1)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Partner Signals", len(partner_df))
+            with col2:
+                st.metric("Negative %", f"{neg_pct}%")
+            with col3:
+                st.metric("Partner Health", "⚠️ At Risk" if neg_pct > 40 else "✅ Healthy")
+            
+            st.markdown("**🤝 Partner Insight:** High negative sentiment on partners impacts eBay seller experience.")
+        else:
+            st.info("No partner signals found in current data.")

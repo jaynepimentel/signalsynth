@@ -222,10 +222,11 @@ if st.session_state.show_intro:
 | 📍 **Reddit** | 33 collectibles subreddits + targeted searches |
 | 🏢 **Competitors** | Fanatics Collect, Fanatics Live, Heritage Auctions, Alt |
 | 🏪 **Your Subsidiaries** | Goldin, TCGPlayer (you manage these!) |
+| 🤝 **Strategic Partners** | PSA (Vault, Grading, Consignment, Offers), ComC |
 
 ---
 
-**🗂️ Five Tabs to Explore:**
+**🗂️ Six Tabs to Explore:**
 
 | Tab | Purpose | Key Action |
 |-----|---------|------------|
@@ -233,6 +234,7 @@ if st.session_state.show_intro:
 | **📌 Insights** | Individual signals with filters | Filter by topic, type, sentiment |
 | **🏢 Competitors** | What users say about rivals | ⚔️ **War Games** — competitive strategy |
 | **🏪 Subsidiaries** | Goldin & TCGPlayer feedback | 🔧 **Action Plan** — improvement roadmap |
+| **🤝 Partners** | PSA & ComC partner intelligence | 📋 **Partner Docs** — strategy & insights |
 | **📈 Trends** | Sentiment & topic over time | Spot emerging issues |
 
 ---
@@ -348,7 +350,7 @@ quick_filtered = normalized
 # Tabs (simplified to essential views)
 # ─────────────────────────────────────────────
 tabs = st.tabs([
-    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "📈 Trends"
+    "🧱 Clusters", "📌 Insights", "🏢 Competitors", "🏪 Subsidiaries", "🤝 Partners", "📈 Trends"
 ])
 
 # 🧱 CLUSTERS - Strategic epics (first tab now)
@@ -695,8 +697,189 @@ Be specific and actionable. Think like a PM who owns {subsidiary}."""
     except Exception as e:
         st.error(f"❌ Subsidiaries tab error: {e}")
 
-# 📈 TRENDS - Charts and summary
+# 🤝 STRATEGIC PARTNERS - PSA, ComC integration partners
 with tabs[4]:
+    st.header("🤝 Strategic Partners")
+    st.markdown("Track user feedback on eBay's strategic partners. Use **📋 Partner Strategy** to generate partnership insights and recommendations.")
+    
+    # Partner Strategy LLM function
+    def generate_partner_strategy(partner: str, post_text: str, post_title: str) -> str:
+        """Generate partner strategy brief."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return "LLM not available. Please configure OpenAI API key."
+        
+        prompt = f"""You are a Senior Partnerships Manager at eBay analyzing partner feedback.
+
+PARTNER: {partner}
+USER FEEDBACK:
+Title: {post_title}
+Content: {post_text}
+
+Analyze this partner signal and generate a PARTNER STRATEGY BRIEF:
+
+1. **SIGNAL TYPE**: Is this a partner service issue, integration problem, user experience gap, or positive feedback about {partner}?
+
+2. **IMPACT ON EBAY**: How does this feedback affect eBay sellers/buyers using {partner} services?
+
+3. **ROOT CAUSE**: What's likely causing this issue? Is it on the partner side, eBay integration side, or user education gap?
+
+4. **RECOMMENDED ACTION**: What should eBay's partnerships team do?
+   - Escalate to partner account team?
+   - Improve integration/documentation?
+   - Add feature to address gap?
+   - No action needed?
+
+5. **PARTNERSHIP HEALTH**: Rate the signal (🟢 Positive / 🟡 Neutral / 🔴 Concerning)
+
+Be specific and actionable. Write for a partnerships manager."""
+        
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are an expert partnerships strategist who writes crisp, actionable partner strategy briefs.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.5
+            )
+        except Exception as e:
+            return f"Partner strategy generation failed: {e}"
+    
+    STRATEGIC_PARTNERS = {
+        "PSA Vault": {"icon": "🏦", "desc": "Secure storage and eBay selling", "keywords": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"]},
+        "PSA Grading": {"icon": "🎯", "desc": "Card grading and authentication", "keywords": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"]},
+        "PSA Consignment": {"icon": "📦", "desc": "Consignment selling service", "keywords": ["psa consignment", "psa consign", "consignment psa"]},
+        "PSA Sell on eBay": {"icon": "🛒", "desc": "Direct selling through PSA", "keywords": ["psa sell ebay", "psa ebay", "sell through psa", "psa auction"]},
+        "PSA Offers": {"icon": "💰", "desc": "Instant offer/buyback program", "keywords": ["psa offer", "psa buyback", "psa buy back", "psa instant"]},
+        "ComC": {"icon": "📋", "desc": "Check Out My Cards - consignment partner", "keywords": ["comc", "check out my cards", "comc consignment", "comc selling"]},
+    }
+    
+    try:
+        partner_posts = {name: [] for name in STRATEGIC_PARTNERS.keys()}
+        for insight in normalized:
+            text = (insight.get("title", "") + " " + insight.get("text", "")).lower()
+            for partner_name, config in STRATEGIC_PARTNERS.items():
+                if any(kw in text for kw in config["keywords"]):
+                    partner_posts[partner_name].append(insight)
+        
+        # Metrics row
+        col1, col2, col3 = st.columns(3)
+        total_partner = sum(len(posts) for posts in partner_posts.values())
+        with col1:
+            st.metric("Total Partner Signals", total_partner)
+        with col2:
+            psa_total = sum(len(posts) for name, posts in partner_posts.items() if name.startswith("PSA"))
+            st.metric("PSA Signals", psa_total)
+        with col3:
+            st.metric("ComC Signals", len(partner_posts.get("ComC", [])))
+        
+        # Partner selector
+        selected_partner = st.selectbox("Select Partner", ["All Partners"] + list(STRATEGIC_PARTNERS.keys()), key="partner_sel")
+        partners_to_show = STRATEGIC_PARTNERS.keys() if selected_partner == "All Partners" else [selected_partner]
+        
+        for partner_name in partners_to_show:
+            posts = partner_posts.get(partner_name, [])
+            config = STRATEGIC_PARTNERS[partner_name]
+            
+            if posts or selected_partner != "All Partners":
+                with st.container(border=True):
+                    st.subheader(f"{config['icon']} {partner_name} ({len(posts)} signals)")
+                    st.caption(config["desc"])
+                    
+                    if posts:
+                        # Aggregate document generation buttons
+                        st.markdown("**📊 Aggregate Documents** (based on all signals)")
+                        doc_cols = st.columns(4)
+                        with doc_cols[0]:
+                            if st.button(f"📄 PRD", key=f"prd_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "PRD"
+                        with doc_cols[1]:
+                            if st.button(f"💼 BRD", key=f"brd_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "BRD"
+                        with doc_cols[2]:
+                            if st.button(f"🤖 Summary", key=f"sum_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "SUMMARY"
+                        with doc_cols[3]:
+                            if st.button(f"🎫 Jira", key=f"jira_{partner_name}", use_container_width=True):
+                                st.session_state[f"gen_doc_{partner_name}"] = "JIRA"
+                        
+                        # Show generated document if any
+                        if st.session_state.get(f"gen_doc_{partner_name}"):
+                            doc_type = st.session_state[f"gen_doc_{partner_name}"]
+                            with st.spinner(f"Generating {doc_type}..."):
+                                context = "\n---\n".join([f"[{p.get('type_tag', 'Feedback')}] {p.get('text', '')[:300]}" for p in posts[:10]])
+                                try:
+                                    from components.ai_suggester import _chat, MODEL_MAIN
+                                    if doc_type == "SUMMARY":
+                                        prompt = f"Write an executive summary for {partner_name} based on {len(posts)} user signals:\n{context}"
+                                    elif doc_type == "JIRA":
+                                        prompt = f"Create 3 Jira tickets for {partner_name} issues based on:\n{context}"
+                                    else:
+                                        prompt = f"Write a {doc_type} for {partner_name} improvements based on:\n{context}"
+                                    doc = _chat(MODEL_MAIN, f"You write excellent {doc_type}s.", prompt, max_completion_tokens=1200, temperature=0.4)
+                                    st.markdown(f"### Generated {doc_type}")
+                                    st.markdown(doc)
+                                    if st.button("❌ Close", key=f"close_doc_{partner_name}"):
+                                        st.session_state[f"gen_doc_{partner_name}"] = None
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Generation failed: {e}")
+                                    st.session_state[f"gen_doc_{partner_name}"] = None
+                        
+                        st.markdown("---")
+                        st.markdown("**📝 Individual Signals** (click 📋 Partner Strategy for per-signal analysis)")
+                        
+                        # Show posts with per-post Partner Strategy button
+                        sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
+                        show_key = f"show_all_{partner_name}"
+                        display_count = len(sorted_posts) if st.session_state.get(show_key) else 5
+                        
+                        for idx, post in enumerate(sorted_posts[:display_count]):
+                            post_id = post.get("fingerprint", f"{partner_name}_{idx}")
+                            title = post.get("title", "")[:80] or post.get("text", "")[:80]
+                            sentiment = post.get("brand_sentiment", "Neutral")
+                            sent_icon = {"Negative": "🔴", "Positive": "🟢"}.get(sentiment, "⚪")
+                            score = post.get("score", 0)
+                            date = post.get("post_date", "")
+                            url = post.get("url", "")
+                            
+                            with st.container(border=True):
+                                st.markdown(f"**{sent_icon} {title}**")
+                                st.markdown(f"> {post.get('text', '')[:500]}")
+                                st.caption(f"**Score:** 👍 {score} | **Date:** {date} | [🔗 View Original]({url})" if url else f"**Score:** 👍 {score} | **Date:** {date}")
+                                
+                                # Partner Strategy button (like War Games)
+                                strategy_key = f"partner_strategy_{post_id}"
+                                if st.button("📋 Partner Strategy", key=f"btn_{strategy_key}", help="Generate partnership strategy brief"):
+                                    st.session_state[strategy_key] = True
+                                    st.rerun()
+                                
+                                if st.session_state.get(strategy_key):
+                                    with st.spinner("Generating partner strategy..."):
+                                        strategy = generate_partner_strategy(partner_name, post.get("text", ""), post.get("title", ""))
+                                    st.info(strategy)
+                                    if st.button("❌ Close", key=f"close_{strategy_key}"):
+                                        st.session_state[strategy_key] = False
+                                        st.rerun()
+                        
+                        if len(sorted_posts) > 5:
+                            if st.session_state.get(show_key):
+                                if st.button("📤 Show Less", key=f"less_{partner_name}"):
+                                    st.session_state[show_key] = False
+                                    st.rerun()
+                            else:
+                                if st.button(f"📥 Load {len(posts) - 5} More", key=f"more_{partner_name}"):
+                                    st.session_state[show_key] = True
+                                    st.rerun()
+                    else:
+                        st.info(f"No {partner_name} signals found. Run scraper to collect partner feedback.")
+    
+    except Exception as e:
+        st.error(f"❌ Partners tab error: {e}")
+
+# �� TRENDS - Charts and summary
+with tabs[5]:
     st.header("📈 Trends & Summary")
     try:
         display_insight_charts(quick_filtered)

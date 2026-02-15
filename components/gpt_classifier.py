@@ -49,7 +49,7 @@ def classify_brand_sentiment(text, brand):
     if client and len(text_lower) > 30:
         try:
             response = client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL_SENTIMENT", "gpt-5.1-mini"),
+                model=os.getenv("OPENAI_MODEL_SENTIMENT", "gpt-4o-mini"),
                 messages=[
                     {"role": "system", "content": "Classify this customer's sentiment toward a brand as Praise, Complaint, or Neutral. Only return one of those words."},
                     {"role": "user", "content": f"Customer text:\n{text}\n\nBrand: {brand}"}

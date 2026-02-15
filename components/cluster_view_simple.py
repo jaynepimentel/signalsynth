@@ -160,14 +160,46 @@ def _generate_document(doc_type: str, cluster: Dict[str, Any], selected_insights
 
 
 def _load_clusters() -> List[Dict[str, Any]]:
-    """Load precomputed clusters from JSON file."""
+    """Load precomputed clusters from JSON file, merging cards with cluster insights."""
     path = Path(__file__).parent.parent / "precomputed_clusters.json"
     if not path.exists():
         return []
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("clusters", [])
+        
+        # Use cards for display data, merge with cluster insights
+        cards = data.get("cards", [])
+        clusters_raw = data.get("clusters", [])
+        
+        # Create lookup for cluster insights by cluster_id
+        insights_by_id = {c.get("cluster_id"): c.get("insights", []) for c in clusters_raw}
+        stats_by_id = {c.get("cluster_id"): c.get("stats", {}) for c in clusters_raw}
+        
+        result = []
+        for card in cards:
+            cid = card.get("cluster_id")
+            cluster = {
+                "title": card.get("title", "Unknown"),
+                "label": card.get("title", "Unknown"),
+                "size": card.get("insight_count", 0),
+                "description": card.get("problem_statement", ""),
+                "product_opportunity": card.get("theme", ""),
+                "cluster_id": cid,
+                "insights": insights_by_id.get(cid, []),
+                "signal_counts": {
+                    "total": card.get("insight_count", 0),
+                    "complaints": stats_by_id.get(cid, {}).get("complaints", 0),
+                    "feature_requests": stats_by_id.get(cid, {}).get("feature_requests", 0),
+                    "negative": stats_by_id.get(cid, {}).get("negative", 0),
+                    "positive": stats_by_id.get(cid, {}).get("positive", 0),
+                },
+                "coherent": card.get("coherent", True),
+                "avg_similarity": card.get("avg_similarity", "0.75"),
+            }
+            result.append(cluster)
+        
+        return result
     except Exception:
         return []
 
@@ -257,10 +289,29 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
     clusters = _load_clusters()
     
     if not clusters:
-        st.info("No clusters available. Run `python create_clusters_by_subtag.py` to generate.")
+        st.info("No clusters available. Run `python precompute_clusters.py` to generate.")
         return
     
-    st.caption(f"📊 {len(clusters)} Strategic Epics")
+    # Header with sorting
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.caption(f"📊 {len(clusters)} Strategic Epics")
+    with col2:
+        sort_options = ["Signals ↓", "Complaints ↓", "A→Z"]
+        sort_by = st.selectbox(
+            "Sort by",
+            sort_options,
+            key="cluster_sort",
+            label_visibility="collapsed"
+        )
+    
+    # Sort clusters based on selection
+    if sort_by == "Complaints ↓":
+        clusters = sorted(clusters, key=lambda x: x.get("signal_counts", {}).get("complaints", 0), reverse=True)
+    elif sort_by == "A→Z":
+        clusters = sorted(clusters, key=lambda x: (x.get("title", "") or "").lower())
+    else:  # Default: Signals ↓
+        clusters = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
     
     for cluster in clusters:
         epic_name = cluster.get("title", "Unknown")
@@ -282,19 +333,33 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
             if description:
                 st.caption(description)
             
-            # Metrics row
+            # Metrics row with color coding
             cols = st.columns(4)
             with cols[0]:
                 st.metric("Total Signals", signal_counts.get("total", size))
             with cols[1]:
-                st.metric("Complaints", signal_counts.get("complaints", 0))
+                complaints = signal_counts.get("complaints", 0)
+                complaint_pct = round(complaints / max(size, 1) * 100)
+                st.metric("Complaints", f"{complaints} ({complaint_pct}%)")
             with cols[2]:
                 st.metric("Feature Requests", signal_counts.get("feature_requests", 0))
             with cols[3]:
                 negative = signal_counts.get("negative", 0)
                 positive = signal_counts.get("positive", 0)
-                sentiment_ratio = f"{negative}↓ / {positive}↑"
-                st.metric("Sentiment", sentiment_ratio)
+                if negative > positive:
+                    sentiment_label = f"� {negative} neg / {positive} pos"
+                elif positive > negative:
+                    sentiment_label = f"� {positive} pos / {negative} neg"
+                else:
+                    sentiment_label = f"😐 {negative} neg / {positive} pos"
+                st.metric("Sentiment", sentiment_label)
+            
+            # Sample quote for context
+            if cluster_insights:
+                sample = cluster_insights[0]
+                sample_text = (sample.get("text", "") or sample.get("title", ""))[:200]
+                if sample_text:
+                    st.markdown(f"📝 *\"{sample_text}...\"*")
             
             # Top themes
             themes = _extract_top_themes(cluster_insights)

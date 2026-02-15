@@ -87,8 +87,8 @@ RE_PSA = re.compile(r"(psa|bgs|sgc|csg|cgc).{0,20}(turnaround|wait|days|weeks|mo
 RE_AG = re.compile(r"(authenticity guarantee|ebay.{0,10}authenticat|authenticat.{0,10}ebay|\bAG\b.{0,10}ebay|ebay.{0,10}\bAG\b|authentication.{0,10}(card|sneaker|watch|collectible|handbag|jersey)|verified.{0,10}authentic|counterfeit.{0,10}ebay|ebay.{0,10}counterfeit|fake.{0,10}ebay|ebay.{0,10}fake|trust.{0,10}authenticity|authenticity.{0,10}(check|service|program|failed|passed|pending))", re.I)
 # Price Guide - eBay's specific feature (tighter regex to avoid false positives)
 RE_PRICE_GUIDE = re.compile(r"(ebay.{0,10}price guide|price guide.{0,10}ebay|scan.?to.?price|ebay.{0,10}suggested price|ebay.{0,10}market value|tcgplayer price|what.?s.?my.?card.?worth|card.?value.?ebay|ebay.{0,10}pricing tool)", re.I)
-# Vault - eBay's specific Vault service (tighter regex)
-RE_VAULT = re.compile(r"(ebay.{0,10}vault|vault.{0,10}ebay|ebay vault|vault storage|vault.{0,10}withdraw|withdraw.{0,10}vault|vault.{0,10}card|card.{0,10}vault|vault.{0,10}collectible|store.{0,10}vault|vault.{0,10}service)", re.I)
+# Vault - eBay's Vault service AND PSA Vault (both are relevant for collectibles)
+RE_VAULT = re.compile(r"(ebay.{0,10}vault|vault.{0,10}ebay|ebay vault|psa.{0,10}vault|vault.{0,10}psa|psa vault|vault storage|vault.{0,10}withdraw|withdraw.{0,10}vault|vault.{0,10}card|card.{0,10}vault|vault.{0,10}collectible|store.{0,10}vault|vault.{0,10}service|vault.{0,10}auction|auction.{0,10}vault|vault.{0,10}sell|sell.{0,10}vault|vault.{0,10}list|list.{0,10}vault|vault isn.?t|vault trust)", re.I)
 RE_SHIPPING = re.compile(r"(shipping|ship|delivery|deliver|package|parcel|usps|ups|fedex).{0,15}(lost|damage|delay|late|missing|broken|never|issue|problem)", re.I)
 RE_REFUND = re.compile(r"(refund|return|money back|chargeback|dispute|case).{0,15}(denied|reject|wait|pending|won|lost|issue|problem)", re.I)
 RE_FEES = re.compile(r"(fee|commission|final value|fvf|cost|charge).{0,15}(high|increase|too much|expensive|ridiculous|outrageous)", re.I)
@@ -161,13 +161,13 @@ def is_relevant(text, subreddit=""):
     if any(sp in text_lower for sp in sales_patterns):
         return False
     
-    # Exclude non-collectibles categories
+    # Exclude non-collectibles categories (use word boundaries to avoid false positives like "car" in "card")
     non_collectibles = [
-        "shoes", "sneakers", "louboutin", "jordan", "nike", "adidas", "yeezy",
+        "shoes", "sneakers", "louboutin", "jordan shoe", "nike shoe", "adidas", "yeezy",
         "clothing", "clothes", "shirt", "pants", "dress", "jacket", "jeans",
         "thrift", "goodwill", "salvation army", "mystery box",
-        "laptop", "computer", "phone", "iphone", "electronics", "ram", "cpu",
-        "furniture", "appliance", "car", "vehicle", "motorcycle",
+        "laptop", "computer", "phone", "iphone", "electronics", "ram stick", "cpu",
+        "furniture", "appliance", " car ", "vehicle", "motorcycle",
         # Woodworking/tools (not collectibles)
         "woodworking", "hand tool", "power tool", "cabinet", "workbench", "dovetail",
         "plywood", "lumber", "sawdust", "chisel", "plane ", "jointer", "router",
@@ -197,9 +197,10 @@ def is_relevant(text, subreddit=""):
     if is_ebay_subreddit:
         return True
     
-    # Non-eBay subreddits - need eBay mention
+    # Non-eBay subreddits - need eBay mention OR PSA Vault (sells on eBay)
     has_ebay = "ebay" in text_lower
-    if has_ebay:
+    has_psa_vault = "psa vault" in text_lower or "vault" in text_lower and "psa" in text_lower
+    if has_ebay or has_psa_vault:
         return True
     
     return False
