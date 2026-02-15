@@ -213,64 +213,66 @@ def display_brand_dashboard(insights):
     
     # Brand-Level Analysis (expandable)
     with st.expander("🏷️ Brand-Level Detail", expanded=False):
-        st.markdown("Filter and compare specific brands across all entity types.")
+        st.markdown("Compare specific brands across competitors, partners, and subsidiaries.")
         
-        # Brand Filter
-        brand_list = sorted(df["Brand"].dropna().unique())
-        selected_brands = st.multiselect("🔎 Filter by Brand", options=brand_list, default=brand_list[:10] if len(brand_list) > 10 else brand_list, key="brand_filter_trends")
-        filtered_df = df[df["Brand"].isin(selected_brands)]
-        filtered_summary = summary[summary["Brand"].isin(selected_brands)]
+        # Exclude generic/untagged brands
+        EXCLUDE_BRANDS = {"Other", "eBay"}
+        brand_list = sorted([b for b in df["Brand"].dropna().unique() if b not in EXCLUDE_BRANDS])
+        if not brand_list:
+            st.info("No specific brands detected in the data.")
+        else:
+            selected_brands = st.multiselect("🔎 Filter by Brand", options=brand_list, default=brand_list[:10] if len(brand_list) > 10 else brand_list, key="brand_filter_trends")
+            filtered_df = df[df["Brand"].isin(selected_brands)]
+            filtered_summary = summary[summary["Brand"].isin(selected_brands)]
 
-        # Summary Table
-        if len(filtered_summary) > 0:
-            st.dataframe(
-                filtered_summary.sort_values("Complaint %", ascending=False)[["Brand", "Total", "Complaint %"]].head(15),
-                use_container_width=True,
-                hide_index=True
-            )
+            # Summary Table
+            if len(filtered_summary) > 0:
+                st.dataframe(
+                    filtered_summary.sort_values("Complaint %", ascending=False)[["Brand", "Total", "Complaint %"]].head(15),
+                    use_container_width=True,
+                    hide_index=True
+                )
 
-        # Brand trend chart
-        if len(filtered_df) > 0 and filtered_df["Date"].notna().any():
-            st.markdown("**📈 Brand Volume Over Time** (last 60 days)")
-            
-            # Limit to last 60 days
-            brand_df = filtered_df[filtered_df["Date"].notna()].copy()
-            max_date = brand_df["Date"].max()
-            min_date = max_date - pd.Timedelta(days=60)
-            brand_df = brand_df[brand_df["Date"] >= min_date]
-            
-            daily_counts = (
-                brand_df
-                .groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
-                .size()
-                .reset_index(name="Mentions")
-            )
-            
-            if len(daily_counts) > 0:
-                # Limit to top 6 brands by volume
-                top_brands = daily_counts.groupby("Brand")["Mentions"].sum().nlargest(6).index.tolist()
-                daily_counts = daily_counts[daily_counts["Brand"].isin(top_brands)]
+            # Brand trend chart
+            if len(filtered_df) > 0 and filtered_df["Date"].notna().any():
+                st.markdown("**📈 Brand Volume Over Time** (last 60 days)")
                 
-                highlight = alt.selection_point(on='mouseover', fields=['Brand'], nearest=True)
+                brand_df = filtered_df[filtered_df["Date"].notna()].copy()
+                max_date = brand_df["Date"].max()
+                min_date = max_date - pd.Timedelta(days=60)
+                brand_df = brand_df[brand_df["Date"] >= min_date]
                 
-                base = alt.Chart(daily_counts).encode(
-                    x=alt.X("Date:T", title="Week"),
-                    y=alt.Y("Mentions:Q", title="Mentions"),
-                    color=alt.Color("Brand:N", legend=alt.Legend(orient="bottom", columns=3)),
-                    tooltip=["Brand", "Date:T", "Mentions"]
+                daily_counts = (
+                    brand_df
+                    .groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
+                    .size()
+                    .reset_index(name="Mentions")
                 )
                 
-                lines = base.mark_line(strokeWidth=2).encode(
-                    opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
-                    strokeWidth=alt.condition(highlight, alt.value(3), alt.value(1))
-                ).add_params(highlight)
-                
-                points = base.mark_circle(size=50).encode(
-                    opacity=alt.condition(highlight, alt.value(1), alt.value(0))
-                )
-                
-                chart = (lines + points).properties(height=300)
-                st.altair_chart(chart, use_container_width=True)
+                if len(daily_counts) > 0:
+                    top_brands = daily_counts.groupby("Brand")["Mentions"].sum().nlargest(6).index.tolist()
+                    daily_counts = daily_counts[daily_counts["Brand"].isin(top_brands)]
+                    
+                    highlight = alt.selection_point(on='mouseover', fields=['Brand'], nearest=True)
+                    
+                    base = alt.Chart(daily_counts).encode(
+                        x=alt.X("Date:T", title="Week"),
+                        y=alt.Y("Mentions:Q", title="Mentions"),
+                        color=alt.Color("Brand:N", legend=alt.Legend(orient="bottom", columns=3)),
+                        tooltip=["Brand", "Date:T", "Mentions"]
+                    )
+                    
+                    lines = base.mark_line(strokeWidth=2).encode(
+                        opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
+                        strokeWidth=alt.condition(highlight, alt.value(3), alt.value(1))
+                    ).add_params(highlight)
+                    
+                    points = base.mark_circle(size=50).encode(
+                        opacity=alt.condition(highlight, alt.value(1), alt.value(0))
+                    )
+                    
+                    chart = (lines + points).properties(height=300)
+                    st.altair_chart(chart, use_container_width=True)
     
     # Competitive Intelligence (expandable)
     with st.expander("⚔️ Competitive Intelligence", expanded=False):
