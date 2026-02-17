@@ -139,6 +139,7 @@ SCRAPED_FILES = [
     "data/all_scraped_posts.json",  # Consolidated from all sources (Reddit, Bluesky, eBay Forums)
     "data/scraped_competitor_posts.json",  # Competitor & subsidiary data
     "data/scraped_twitter_posts.json",  # Twitter/X via Google News
+    "data/scraped_youtube_posts.json",  # YouTube transcripts + comments
     "data/scraped_blowout_posts.json",  # Blowout Cards indirect
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback

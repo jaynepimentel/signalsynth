@@ -62,6 +62,7 @@ def main():
     parser.add_argument("--no-cllct", action="store_true", help="Skip Cllct.com scraper")
     parser.add_argument("--no-news-rss", action="store_true", help="Skip RSS news feeds scraper")
     parser.add_argument("--no-blowout", action="store_true", help="Skip Blowout Cards indirect scraper")
+    parser.add_argument("--no-youtube", action="store_true", help="Skip YouTube scraper")
     args = parser.parse_args()
 
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -90,6 +91,8 @@ def main():
             scrape_cmd.append("--no-news-rss")
         if args.no_blowout:
             scrape_cmd.append("--no-blowout")
+        if args.no_youtube:
+            scrape_cmd.append("--no-youtube")
 
         results["scrape"] = run_step(
             "Step 1/3: Scraping all sources",

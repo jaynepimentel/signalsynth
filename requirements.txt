@@ -16,6 +16,9 @@ python-Levenshtein
 python-docx
 python-slugify
 
+# YouTube
+youtube-transcript-api
+
 # Visualization
 seaborn
 matplotlib
