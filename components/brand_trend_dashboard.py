@@ -8,8 +8,13 @@ COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "PWCC",
 PARTNERS = ["PSA", "ComC", "BGS", "CGC", "SGC"]
 SUBSIDIARIES = ["Goldin", "TCGPlayer"]
 
-def categorize_entity(text):
-    """Categorize an insight by entity type based on text content."""
+def categorize_entity(text, subtag=None):
+    """Categorize an insight by entity type based on text content.
+    
+    Returns a granular category instead of a single 'eBay Core' catch-all.
+    External entities (Competitor, Partner, Subsidiary) are detected from text.
+    eBay signals are split by product area using the subtag field.
+    """
     text_lower = (text or "").lower()
     
     # Check partners first (PSA services)
@@ -19,7 +24,6 @@ def categorize_entity(text):
     # Check competitors
     if any(c.lower() in text_lower for c in COMPETITORS):
         return "Competitor"
-    # Alt requires specific phrases to avoid matching 'alternative', 'alt account', etc.
     if any(phrase in text_lower for phrase in ["alt.xyz", "alt marketplace", "alt vault", "alt platform"]):
         return "Competitor"
     
@@ -27,7 +31,42 @@ def categorize_entity(text):
     if any(s.lower() in text_lower for s in SUBSIDIARIES):
         return "Subsidiary"
     
-    return "eBay Core"
+    # Split eBay signals by product area using subtag
+    SUBTAG_TO_ENTITY = {
+        "Trust": "Trust & Safety",
+        "Payments": "Payments",
+        "Vault": "Vault",
+        "Authenticity Guarantee": "Authentication",
+        "Shipping": "Shipping",
+        "Returns & Refunds": "Returns & Refunds",
+        "Fees": "Fees & Pricing",
+        "Grading Turnaround": "Grading",
+        "Price Guide": "Fees & Pricing",
+        "Seller Experience": "Seller Experience",
+        "Buyer Experience": "Buyer Experience",
+        "Collecting": "Collecting",
+        "High-Value": "High-Value Items",
+    }
+    if subtag and subtag in SUBTAG_TO_ENTITY:
+        return SUBTAG_TO_ENTITY[subtag]
+    
+    # Fallback: try to detect from text
+    if any(w in text_lower for w in ["scam", "fake", "counterfeit", "fraud", "trust", "legit"]):
+        return "Trust & Safety"
+    if any(w in text_lower for w in ["vault"]):
+        return "Vault"
+    if any(w in text_lower for w in ["authentication", "authenticity"]):
+        return "Authentication"
+    if any(w in text_lower for w in ["payment", "checkout", "payout"]):
+        return "Payments"
+    if any(w in text_lower for w in ["shipping", "delivery", "package"]):
+        return "Shipping"
+    if any(w in text_lower for w in ["seller", "listing", "sold"]):
+        return "Seller Experience"
+    if any(w in text_lower for w in ["buyer", "bought", "purchase"]):
+        return "Buyer Experience"
+    
+    return "General"
 
 def detect_brand_from_text(text):
     """Detect brand/entity from text content. Returns primary brand + signal type."""
@@ -110,7 +149,7 @@ def summarize_brand_insights(insights):
         brand = detect_brand_from_text(text)
         sentiment = i.get("brand_sentiment", "Neutral")
         logged_at = i.get("_logged_at") or i.get("post_date")
-        entity_type = categorize_entity(text)
+        entity_type = categorize_entity(text, subtag=i.get("subtag"))
         rows.append((brand, sentiment, logged_at, entity_type))
 
     df = pd.DataFrame(rows, columns=["Brand", "Sentiment", "Date", "EntityType"])
@@ -135,17 +174,31 @@ def display_brand_dashboard(insights):
     # Strategic Overview Section
     st.subheader("🎯 Strategic Overview")
     
-    # Entity type metrics
+    # Entity type metrics — show top categories dynamically
     entity_counts = df["EntityType"].value_counts()
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("🏪 eBay Core", entity_counts.get("eBay Core", 0))
-    with col2:
-        st.metric("🏢 Competitors", entity_counts.get("Competitor", 0))
-    with col3:
-        st.metric("🤝 Partners", entity_counts.get("Partner", 0))
-    with col4:
-        st.metric("🏪 Subsidiaries", entity_counts.get("Subsidiary", 0))
+    top_entities = entity_counts.head(4)
+    ENTITY_ICONS = {
+        "Trust & Safety": "\U0001f6e1\ufe0f",
+        "Seller Experience": "\U0001f4e6",
+        "Buyer Experience": "\U0001f6d2",
+        "Payments": "\U0001f4b3",
+        "Vault": "\U0001f3e6",
+        "Authentication": "\U0001f50d",
+        "Shipping": "\U0001f69a",
+        "Returns & Refunds": "\U0001f504",
+        "Fees & Pricing": "\U0001f4b0",
+        "Grading": "\U0001f3af",
+        "High-Value Items": "\U0001f48e",
+        "Collecting": "\U0001f0cf",
+        "Competitor": "\u2694\ufe0f",
+        "Partner": "\U0001f91d",
+        "Subsidiary": "\U0001f3e2",
+        "General": "\U0001f4cb",
+    }
+    metric_cols = st.columns(len(top_entities))
+    for col, (entity, count) in zip(metric_cols, top_entities.items()):
+        icon = ENTITY_ICONS.get(entity, "\U0001f4ca")
+        col.metric(f"{icon} {entity}", count)
     
     # Sentiment by entity type
     st.subheader("📈 Sentiment by Entity Type")
@@ -156,7 +209,7 @@ def display_brand_dashboard(insights):
         highlight = alt.selection_point(on='mouseover', fields=['EntityType'], nearest=True)
         
         chart = alt.Chart(entity_sentiment).mark_bar().encode(
-            x=alt.X("EntityType:N", title="Entity Type", sort=["eBay Core", "Competitor", "Partner", "Subsidiary"]),
+            x=alt.X("EntityType:N", title="Entity Type", sort="-y"),
             y=alt.Y("Count:Q", title="Signal Count"),
             color=alt.Color("Sentiment:N", scale=alt.Scale(
                 domain=["Positive", "Neutral", "Negative"],
@@ -188,10 +241,7 @@ def display_brand_dashboard(insights):
             base = alt.Chart(trend_data).encode(
                 x=alt.X("Week:T", title="Week", axis=alt.Axis(format="%b %d")),
                 y=alt.Y("Count:Q", title="Signals"),
-                color=alt.Color("EntityType:N", title="Entity", scale=alt.Scale(
-                    domain=["eBay Core", "Competitor", "Partner", "Subsidiary"],
-                    range=["#3b82f6", "#ef4444", "#22c55e", "#f59e0b"]
-                )),
+                color=alt.Color("EntityType:N", title="Entity", scale=alt.Scale(scheme="tableau10")),
                 tooltip=[
                     alt.Tooltip("EntityType:N", title="Entity"),
                     alt.Tooltip("Week:T", title="Week", format="%b %d, %Y"),
