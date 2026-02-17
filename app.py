@@ -242,20 +242,26 @@ except Exception as e:
     st.stop()
 
 # ─────────────────────────────────────────────
-# Compact KPI banner
+# KPI banner with context
 # ─────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric("Posts Scraped", f"{total_posts:,}")
+    st.metric("Posts Scraped", f"{total_posts:,}",
+              help="Total posts collected from Reddit, Twitter/X, YouTube, forums, and news sites")
 with col2:
-    st.metric("Insights", f"{total:,}")
+    st.metric("Actionable Insights", f"{total:,}",
+              help=f"Posts filtered for relevance and enriched with topic/sentiment tags. {total} out of {total_posts:,} posts contained actionable signal.")
 with col3:
-    st.metric("Strategic Epics", clusters_count)
+    st.metric("Themes", clusters_count,
+              help="AI-grouped clusters of related insights. Each theme represents a strategic area like 'Vault Trust' or 'Shipping Friction' — find them in the Strategy tab.")
 with col4:
-    st.metric("Hours Saved", f"~{hours_saved}")
+    st.metric("Est. Hours Saved", f"~{hours_saved}",
+              help=f"Estimated time to manually read and categorize {total_posts:,} posts at ~2 min each")
 
+filter_pct = round(total / max(total_posts, 1) * 100, 1)
+pipeline_text = f"{total_posts:,} posts → {total:,} insights ({filter_pct}% signal) → {clusters_count} themes"
 if date_range:
-    st.caption(f"Data: {date_range} | Processed: {datetime.now().strftime('%b %d, %Y')}")
+    st.caption(f"{pipeline_text} · Data: {date_range}")
 
 # ─────────────────────────────────────────────
 # 3 Tabs: Dashboard · Explore · Strategy
