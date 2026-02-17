@@ -333,26 +333,32 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
             if description:
                 st.caption(description)
             
-            # Metrics row with color coding
+            # Metrics row — clear labels, no ambiguity
+            negative = signal_counts.get("negative", 0)
+            positive = signal_counts.get("positive", 0)
+            complaints = signal_counts.get("complaints", 0)
+            feature_requests = signal_counts.get("feature_requests", 0)
+            total_with_sentiment = negative + positive
+            neg_pct = round(negative / max(total_with_sentiment, 1) * 100)
+
             cols = st.columns(4)
             with cols[0]:
-                st.metric("Total Signals", signal_counts.get("total", size))
+                st.metric("Signals", signal_counts.get("total", size))
             with cols[1]:
-                complaints = signal_counts.get("complaints", 0)
-                complaint_pct = round(complaints / max(size, 1) * 100)
-                st.metric("Complaints", f"{complaints} ({complaint_pct}%)")
+                st.metric("Complaints", complaints, help="Posts classified as complaints")
             with cols[2]:
-                st.metric("Feature Requests", signal_counts.get("feature_requests", 0))
+                st.metric("Feature Requests", feature_requests)
             with cols[3]:
-                negative = signal_counts.get("negative", 0)
-                positive = signal_counts.get("positive", 0)
-                if negative > positive:
-                    sentiment_label = f"\U0001f534 {negative} neg / {positive} pos"
-                elif positive > negative:
-                    sentiment_label = f"\U0001f7e2 {positive} pos / {negative} neg"
+                # Sentiment health: % of sentiment-tagged signals that are negative
+                if neg_pct >= 50:
+                    st.metric("Sentiment", f"\U0001f534 {neg_pct}% negative", help=f"{negative} negative / {positive} positive signals")
+                elif neg_pct >= 25:
+                    st.metric("Sentiment", f"\U0001f7e1 {neg_pct}% negative", help=f"{negative} negative / {positive} positive signals")
                 else:
-                    sentiment_label = f"😐 {negative} neg / {positive} pos"
-                st.metric("Sentiment", sentiment_label)
+                    st.metric("Sentiment", f"\U0001f7e2 {neg_pct}% negative", help=f"{negative} negative / {positive} positive signals")
+
+            # Compact breakdown line
+            st.caption(f"\U0001f534 {negative} negative \u00b7 \U0001f7e2 {positive} positive \u00b7 \u26aa {size - negative - positive} neutral")
             
             # Sample quote for context
             if cluster_insights:
