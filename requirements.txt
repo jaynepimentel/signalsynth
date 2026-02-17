@@ -5,15 +5,9 @@ requests
 pandas
 beautifulsoup4
 
-<<<<<<< C:/Users/jayne/repo/signalsynth/requirements.txt
 # Data Processing
 scikit-learn
 numpy
-=======
-# Data Processing (lightweight)
-scikit-learn==1.5.1
-numpy==2.1.3
->>>>>>> C:/Users/jayne/.windsurf/worktrees/signalsynth/signalsynth-24efd192/requirements.txt
 
 # AI & Utilities
 openai
