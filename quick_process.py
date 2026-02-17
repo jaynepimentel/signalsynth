@@ -203,20 +203,33 @@ def is_relevant(text, subreddit=""):
     if noise_count >= 2:
         return False
     
-    # Must have pain indicator
     has_pain = bool(RE_PAIN.search(text))
-    if not has_pain:
-        return False
     
     # eBay subreddits - include if has pain point
     is_ebay_subreddit = subreddit_lower in ["ebay", "ebayselleradvice", "flipping"]
-    if is_ebay_subreddit:
+    if is_ebay_subreddit and has_pain:
         return True
     
-    # Non-eBay subreddits - need eBay mention OR PSA Vault (sells on eBay)
+    # COMC is a direct eBay partner — always relevant if mentioned
+    has_comc = any(e in text_lower for e in ["comc", "check out my cards", "checkoutmycards"])
+    if has_comc:
+        return True
+    
+    # Other ecosystem entities need pain OR eBay mention to stay relevant
+    # (avoids flooding with generic PSA/BGS grading discussion)
+    ecosystem_entities = [
+        "psa", "bgs", "cgc", "sgc",
+        "goldin", "tcgplayer", "tcg player",
+        "fanatics", "whatnot", "heritage auction",
+    ]
+    has_ecosystem = any(e in text_lower for e in ecosystem_entities)
     has_ebay = "ebay" in text_lower
-    has_psa_vault = "psa vault" in text_lower or "vault" in text_lower and "psa" in text_lower
-    if has_ebay or has_psa_vault:
+    has_psa_vault = "psa vault" in text_lower or ("vault" in text_lower and "psa" in text_lower)
+    if has_ecosystem and (has_pain or has_ebay or has_psa_vault):
+        return True
+    
+    # Non-ecosystem posts need both pain AND eBay mention
+    if has_pain and (has_ebay or has_psa_vault):
         return True
     
     return False

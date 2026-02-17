@@ -249,11 +249,15 @@ def scrape_net54_gn():
 
 
 def scrape_comc_gn():
-    """COMC via Google News (direct scrape returns 403)."""
+    """COMC via Google News (direct scrape returns 403). Filter out product catalog pages."""
     print("  COMC (Google News)...")
     posts = _google_news_rss("site:comc.com", "COMC")
-    print(f"    {len(posts)} posts")
-    return posts
+    # Filter out product catalog pages (card listings, not user feedback)
+    catalog_patterns = ["ungraded comc", "comc rcr", "comc ex to", "comc good to", "comc nm",
+                        "baseball cards ungraded", "football cards ungraded", "basketball cards ungraded"]
+    filtered = [p for p in posts if not any(cp in p.get("title", "").lower() for cp in catalog_patterns)]
+    print(f"    {len(filtered)} posts ({len(posts) - len(filtered)} catalog pages filtered)")
+    return filtered
 
 
 def scrape_whatnot_gn():
