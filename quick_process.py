@@ -138,6 +138,8 @@ NON_COLLECTIBLES = [
 SCRAPED_FILES = [
     "data/all_scraped_posts.json",  # Consolidated from all sources (Reddit, Bluesky, eBay Forums)
     "data/scraped_competitor_posts.json",  # Competitor & subsidiary data
+    "data/scraped_twitter_posts.json",  # Twitter/X via Google News
+    "data/scraped_blowout_posts.json",  # Blowout Cards indirect
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
 ]
@@ -159,6 +161,18 @@ def is_relevant(text, subreddit=""):
         "timestampe", "timestamps", "pm me", "dm me",
     ]
     if any(sp in text_lower for sp in sales_patterns):
+        return False
+    
+    # Exclude product listings and promotional posts (ads, not feedback)
+    listing_patterns = [
+        "ebay.com/itm", "#ad", "check out this", "starting at",
+        "buy it now", "free shipping", "ships free", "pre-order",
+        "listed on ebay", "just listed", "new listing",
+        "cents at auction", "auction on ebay", "ending soon",
+        "bid now", "shop now", "order now", "get yours",
+        "use code", "promo code", "discount code", "coupon",
+    ]
+    if any(lp in text_lower for lp in listing_patterns):
         return False
     
     # Exclude non-collectibles categories (use word boundaries to avoid false positives like "car" in "card")
@@ -345,40 +359,39 @@ def enrich(post):
     # Check if post mentions eBay collectibles features
     has_ebay_context = bool(RE_EBAY_COLLECTIBLES_FEATURES.search(combined)) or bool(RE_COLLECTIBLES.search(combined))
     
-    # Assign primary subtag (most specific signal) - only if eBay-relevant
+    # Assign primary subtag — use the most specific detected signal.
+    # No longer gates on has_ebay_context; if a signal is detected, tag it.
+    # Priority order: most specific/actionable first.
     subtag = "General"
-    subreddit = post.get("subreddit", "").lower()
-    
-    # eBay subreddits get eBay Marketplace as default
-    if subreddit in ["ebay", "ebayselleradvice", "flipping"]:
-        subtag = "eBay Marketplace"
-    
-    # Override with specific signals if present AND eBay context exists
-    # Trust is high priority - counterfeits, scams, fake items are important signals
-    if has_trust and has_ebay_context: 
+    if has_trust:
         subtag = "Trust"
-    elif has_psa and has_ebay_context: 
+    elif has_psa:
         subtag = "Grading Turnaround"
-    elif has_ag and has_ebay_context: 
+    elif has_ag:
         subtag = "Authenticity Guarantee"
-    elif (has_payment or has_upi) and has_ebay_context: 
+    elif has_payment or has_upi:
         subtag = "Payments"
-    elif has_refund and has_ebay_context: 
+    elif has_refund:
         subtag = "Returns & Refunds"
-    elif has_shipping and has_ebay_context: 
+    elif has_shipping:
         subtag = "Shipping"
-    elif has_fees and has_ebay_context: 
+    elif has_fees:
         subtag = "Fees"
-    elif has_vault and has_ebay_context: 
+    elif has_vault:
         subtag = "Vault"
-    elif has_price_guide and has_ebay_context: 
+    elif has_price_guide:
         subtag = "Price Guide"
-    elif has_high_asp and has_ebay_context: 
+    elif has_high_asp:
         subtag = "High-Value"
     
-    # For non-eBay subreddits, only assign if eBay mentioned in text
-    if subtag == "General" and has_ebay_context:
-        subtag = "eBay Marketplace"
+    # If still General, try persona-based subtags to reduce the General bucket
+    if subtag == "General":
+        if "seller" in combined or "listing" in combined or "sold" in combined:
+            subtag = "Seller Experience"
+        elif "buyer" in combined or "bought" in combined or "purchase" in combined or "order" in combined:
+            subtag = "Buyer Experience"
+        elif "collect" in combined or "graded" in combined or "slab" in combined:
+            subtag = "Collecting"
     
     # Classify the insight
     insight_type, sentiment, is_urgent = classify_insight(combined)
