@@ -308,7 +308,7 @@ def _get_signal_category(insight):
         return "Fees"
     if "authentication" in text or "authenticity" in text:
         return "Authentication"
-    if "competitor" in text or "fanatics" in text or "alt" in text:
+    if "competitor" in text or "fanatics" in text or "alt" in text or "whatnot" in text:
         return "Competitors"
     if "goldin" in text or "tcgplayer" in text:
         return "Subsidiaries"

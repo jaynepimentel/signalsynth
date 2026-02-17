@@ -1,7 +1,7 @@
 # scrape_competitors.py — Scrape competitor and eBay subsidiary discussions from Reddit/social
 """
 Scrapes social discussions about:
-- Competitors: Fanatics Collect, Fanatics Live, Heritage Auctions, Alt
+- Competitors: Fanatics Collect, Fanatics Live, Heritage Auctions, Alt, Whatnot
 - eBay Subsidiaries: Goldin, TCGPlayer (TCGP)
 """
 
@@ -66,6 +66,17 @@ COMPETITORS = {
         ],
         "subreddits": ["sportscards", "baseballcards"],
         "required_keywords": ["alt.xyz", "alt marketplace", "alt vault", "alt app"],
+    },
+    "Whatnot": {
+        "type": "competitor",
+        "search_terms": [
+            "whatnot live breaks", "whatnot card breaks",
+            "whatnot sports cards", "whatnot pokemon cards",
+            "whatnot vs ebay", "selling on whatnot",
+            "whatnot app cards", "whatnot live shopping cards"
+        ],
+        "subreddits": ["sportscards", "baseballcards", "pokemontcg", "basketballcards", "footballcards"],
+        "required_keywords": ["whatnot"],
     },
     "Goldin": {
         "type": "ebay_subsidiary",

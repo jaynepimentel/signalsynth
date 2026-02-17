@@ -4,7 +4,7 @@ import streamlit as st
 import altair as alt
 
 # Define entity categories
-COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "PWCC", "MySlabs"]
+COMPETITORS = ["Fanatics Collect", "Fanatics Live", "Heritage Auctions", "PWCC", "MySlabs", "Whatnot"]
 PARTNERS = ["PSA", "ComC", "BGS", "CGC", "SGC"]
 SUBSIDIARIES = ["Goldin", "TCGPlayer"]
 
@@ -99,6 +99,8 @@ def detect_brand_from_text(text):
         return "Heritage"
     if "alt.xyz" in text_lower or "alt marketplace" in text_lower or "alt vault" in text_lower:
         return "Alt"
+    if "whatnot" in text_lower:
+        return "Whatnot"
     if "pwcc" in text_lower:
         return "PWCC"
     if "myslabs" in text_lower:
