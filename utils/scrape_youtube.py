@@ -26,6 +26,8 @@ HEADERS = {
 CHANNELS = {
     "Jabs Family": "UCBUF4GX277yARAA5BypZiaQ",
     "Sports Card Investor": "UCk9zL0UlZ28uS7tlcguSLQg",
+    "Stacking Slabs": "UCV1WAph8QQj0O5s3IQCjjBg",
+    "CardShopLive": "UCoUHqtkCTJ60WdYZHJRQrng",
     "CardCollector2": "UCbUwX0sho_2c9AweeyA8DlA",
     "Gary Vee": "UCctXZhXmG-kf3tlIXgVZUlw",
     "Whatnot": "UCVdat_B93QEX801rp3vTfOg",
@@ -214,9 +216,15 @@ def scrape_search_videos():
 
 
 def process_videos(videos, max_videos=50):
-    """Process videos: fetch transcripts and comments, build posts."""
+    """Process videos: fetch transcripts and comments, build posts.
+    
+    Falls back to video title + description if transcripts are IP-blocked.
+    """
     posts = []
     seen_ids = set()
+    transcript_ok = 0
+    transcript_fail = 0
+    transcript_blocked = False
 
     # Deduplicate
     unique_videos = []
@@ -228,7 +236,7 @@ def process_videos(videos, max_videos=50):
 
     # Limit to avoid excessive API calls
     unique_videos = unique_videos[:max_videos]
-    print(f"  Processing {len(unique_videos)} unique videos (transcripts + comments)...")
+    print(f"  Processing {len(unique_videos)} unique videos...")
 
     for i, video in enumerate(unique_videos):
         vid = video["video_id"]
@@ -248,15 +256,35 @@ def process_videos(videos, max_videos=50):
 
         video_url = f"https://www.youtube.com/watch?v={vid}"
 
-        # Fetch transcript
-        transcript = _get_transcript(vid)
+        # Try transcript (skip if already IP-blocked to avoid wasting time)
+        transcript = None
+        if not transcript_blocked:
+            transcript = _get_transcript(vid)
+            if transcript and len(transcript) > 50:
+                transcript_ok += 1
+            else:
+                transcript_fail += 1
+                # If first 3 all fail, assume IP-blocked
+                if transcript_fail >= 3 and transcript_ok == 0:
+                    transcript_blocked = True
+                    print("    [INFO] Transcripts appear IP-blocked, using title+description fallback")
+
+        # Build post from transcript or title+description
         if transcript and len(transcript) > 50:
-            # Truncate very long transcripts
-            transcript_text = transcript[:3000]
+            post_text = f"{title}\n\n{transcript[:3000]}"
+            source_label = "YouTube (transcript)"
+        else:
+            # Fallback: title + description from RSS (always available)
+            post_text = title
+            if description and len(description) > 10:
+                post_text = f"{title}\n\n{description[:2000]}"
+            source_label = "YouTube"
+
+        if len(post_text) >= 20:
             posts.append({
-                "text": f"{title}\n\n{transcript_text}",
+                "text": post_text,
                 "title": title,
-                "source": "YouTube (transcript)",
+                "source": source_label,
                 "url": video_url,
                 "username": channel,
                 "post_date": post_date,
@@ -265,10 +293,10 @@ def process_videos(videos, max_videos=50):
                 "score": 0,
                 "like_count": 0,
                 "num_comments": 0,
-                "post_id": f"yt_transcript_{vid}",
+                "post_id": f"yt_{vid}",
             })
 
-        # Fetch comments
+        # Fetch comments (requires YOUTUBE_API_KEY)
         comments = _get_video_comments_api(vid, max_comments=15)
         for comment in comments:
             c_text = comment.get("text", "")
@@ -303,6 +331,7 @@ def process_videos(videos, max_videos=50):
 
         time.sleep(0.3)
 
+    print(f"    Transcripts: {transcript_ok} ok, {transcript_fail} failed, blocked={transcript_blocked}")
     return posts
 
 

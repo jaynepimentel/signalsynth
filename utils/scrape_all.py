@@ -51,6 +51,11 @@ try:
 except ImportError:
     from scrape_youtube import run_youtube_scraper
 
+try:
+    from utils.scrape_forums_blogs import run_forums_blogs_scraper
+except ImportError:
+    from scrape_forums_blogs import run_forums_blogs_scraper
+
 CONSOLIDATED_PATH = "data/all_scraped_posts.json"
 
 
@@ -124,6 +129,7 @@ def run_all_scrapers(
     include_blowout: bool = True,
     include_twitter: bool = True,
     include_youtube: bool = True,
+    include_forums_blogs: bool = True,
 ) -> List[Dict[str, Any]]:
     """Run all scrapers and consolidate results."""
     
@@ -239,6 +245,19 @@ def run_all_scrapers(
             print(f"\u274c YouTube scraper failed: {e}")
             source_counts["YouTube"] = 0
     
+    # Forums & Blogs (Bench Trading, Alt.xyz, Net54, COMC, Whatnot, Fanatics, etc.)
+    if include_forums_blogs:
+        print("\n" + "=" * 40)
+        print("\U0001f4ac FORUMS & BLOGS")
+        print("=" * 40)
+        try:
+            posts = run_forums_blogs_scraper()
+            all_posts.extend(posts)
+            source_counts["Forums & Blogs"] = len(posts)
+        except Exception as e:
+            print(f"\u274c Forums & Blogs scraper failed: {e}")
+            source_counts["Forums & Blogs"] = 0
+    
     # Blowout Cards (indirect via Reddit, Bluesky, Google News)
     if include_blowout:
         print("\n" + "=" * 40)
@@ -305,6 +324,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-blowout", action="store_true", help="Skip Blowout Cards indirect scraping")
     parser.add_argument("--no-twitter", action="store_true", help="Skip Twitter/X scraping")
     parser.add_argument("--no-youtube", action="store_true", help="Skip YouTube scraping")
+    parser.add_argument("--no-forums-blogs", action="store_true", help="Skip Forums & Blogs scraping")
     
     args = parser.parse_args()
     
@@ -317,4 +337,5 @@ if __name__ == "__main__":
         include_blowout=not args.no_blowout,
         include_twitter=not args.no_twitter,
         include_youtube=not args.no_youtube,
+        include_forums_blogs=not args.no_forums_blogs,
     )

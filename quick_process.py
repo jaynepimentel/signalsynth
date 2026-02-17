@@ -140,6 +140,7 @@ SCRAPED_FILES = [
     "data/scraped_competitor_posts.json",  # Competitor & subsidiary data
     "data/scraped_twitter_posts.json",  # Twitter/X via Google News
     "data/scraped_youtube_posts.json",  # YouTube transcripts + comments
+    "data/scraped_forums_blogs_posts.json",  # Forums & blogs (Bench, Alt, Net54, COMC, etc.)
     "data/scraped_blowout_posts.json",  # Blowout Cards indirect
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
