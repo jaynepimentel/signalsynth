@@ -36,6 +36,11 @@ try:
 except ImportError:
     from scrape_news_rss import run_news_rss_scraper
 
+try:
+    from utils.scrape_blowout_indirect import run_blowout_scraper
+except ImportError:
+    from scrape_blowout_indirect import run_blowout_scraper
+
 CONSOLIDATED_PATH = "data/all_scraped_posts.json"
 
 
@@ -106,6 +111,7 @@ def run_all_scrapers(
     include_competitors: bool = True,
     include_cllct: bool = True,
     include_news_rss: bool = True,
+    include_blowout: bool = True,
 ) -> List[Dict[str, Any]]:
     """Run all scrapers and consolidate results."""
     
@@ -195,6 +201,19 @@ def run_all_scrapers(
             print(f"❌ News RSS scraper failed: {e}")
             source_counts["News RSS"] = 0
     
+    # Blowout Cards (indirect via Reddit, Bluesky, Google News)
+    if include_blowout:
+        print("\n" + "=" * 40)
+        print("📍 BLOWOUT CARDS (INDIRECT)")
+        print("=" * 40)
+        try:
+            posts = run_blowout_scraper()
+            all_posts.extend(posts)
+            source_counts["Blowout (indirect)"] = len(posts)
+        except Exception as e:
+            print(f"❌ Blowout indirect scraper failed: {e}")
+            source_counts["Blowout (indirect)"] = 0
+    
     # Consolidate and deduplicate
     print("\n" + "=" * 40)
     print("📊 CONSOLIDATING RESULTS")
@@ -245,6 +264,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-ebay", action="store_true", help="Skip eBay Forums scraping")
     parser.add_argument("--no-cllct", action="store_true", help="Skip Cllct.com scraping")
     parser.add_argument("--no-news-rss", action="store_true", help="Skip RSS news feeds scraping")
+    parser.add_argument("--no-blowout", action="store_true", help="Skip Blowout Cards indirect scraping")
     
     args = parser.parse_args()
     
@@ -254,4 +274,5 @@ if __name__ == "__main__":
         include_ebay_forums=not args.no_ebay,
         include_cllct=not args.no_cllct,
         include_news_rss=not args.no_news_rss,
+        include_blowout=not args.no_blowout,
     )

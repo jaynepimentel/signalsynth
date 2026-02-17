@@ -30,6 +30,7 @@ data/*
 !data/scraped_community_posts.json
 !data/scraped_cllct_posts.json
 !data/scraped_news_rss_posts.json
+!data/scraped_blowout_posts.json
 
 # Scraper outputs
 scraped_*.txt
