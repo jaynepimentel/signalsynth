@@ -266,12 +266,43 @@ tabs = st.tabs(["📊 Dashboard", "🔍 Explore", "🧱 Strategy"])
 # TAB 1: DASHBOARD — Executive overview
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
-    # Quick-start guide (collapsible, not a wall of text)
-    with st.expander("💡 How to use SignalSynth", expanded=False):
+    # Quick-start guide (collapsible, friendly for first-time users)
+    with st.expander("💡 New here? Start here — How to use SignalSynth", expanded=False):
         st.markdown("""
-**Dashboard** — You're here. See the big picture: top signals, sentiment, trends.
-**Explore** — Dig into individual insights. Filter by topic, type, sentiment, or entity (competitors, partners, subsidiaries).
-**Strategy** — AI-powered strategic epics. Generate PRDs, BRDs, Jira tickets, and executive summaries.
+### What is SignalSynth?
+
+SignalSynth scrapes **thousands of posts** from Reddit, Twitter/X, YouTube, forums, and news sites — then uses AI to surface the insights that matter most to a collectibles PM.
+
+Instead of reading 10,000+ posts, you get **actionable signals** organized by topic, sentiment, and urgency.
+
+---
+
+### Quick Start (2 minutes)
+
+**1. Check the numbers above** — the KPI bar shows how many posts were scraped, how many became insights, and how many strategic clusters were formed.
+
+**2. Scroll down on this Dashboard tab** — you'll see:
+- **Signal Trends** — what topics are spiking (Trust issues? Vault complaints? Shipping problems?)
+- **Entity Intelligence** — what competitors (Fanatics, Heritage), partners (PSA), and subsidiaries (Goldin, TCGPlayer) people are talking about
+- **Strategic Intelligence** — sentiment breakdown by product area and trends over time
+
+**3. Switch to the Explore tab** to dig into individual user quotes. Use the filters at the top to narrow by:
+- **Topic** — Vault, Payments, Trust, Shipping, etc.
+- **Type** — Complaints, Feature Requests, Questions
+- **Sentiment** — Negative, Positive, Neutral
+- Each card shows the **actual user quote**, and you can expand "🧠 AI Analysis" for a synthesized takeaway
+
+**4. Switch to the Strategy tab** to see AI-generated **strategic epics** — clusters of related signals grouped into themes like "Vault Trust Issues" or "Payment Friction." Each epic includes:
+- Signal counts and sentiment health
+- Top themes and sample quotes
+- Buttons to generate **PRDs, BRDs, PRFAQ docs, and Jira tickets**
+
+---
+
+### Tips
+- **Filters persist** across the Explore tab — combine topic + sentiment + type to find exactly what you need
+- **Deep Dive** (in Explore) calls GPT to generate a richer analysis of any individual insight
+- **Document generation** (in Strategy) creates PM-ready artifacts you can paste into your workflow
         """)
 
     # Two-column layout: charts left, entity intel right
