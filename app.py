@@ -396,16 +396,29 @@ with tabs[1]:
                 complaints_list = []
                 praise_list = []
                 changes_list = []
+                discussion_list = []
                 for p in posts:
                     text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
-                    if any(w in text_lower for w in ["announce", "launch", "new feature", "update", "policy", "change", "rolling out", "beta", "release"]):
+                    # Policy/product changes — require specific phrases, not generic words
+                    if any(w in text_lower for w in [
+                        "announced", "just launched", "new feature", "policy change", "new policy",
+                        "rolling out", "beta test", "now available", "just released", "price increase",
+                        "fee change", "fee increase", "new partnership", "acquired", "shut down",
+                    ]):
                         changes_list.append(p)
-                    elif any(w in text_lower for w in ["love", "great", "amazing", "best", "better than", "prefer", "switched to", "moved to"]):
+                    elif any(w in text_lower for w in [
+                        "love", "amazing", "best platform", "better than ebay", "prefer",
+                        "switched to", "moved to", "so much better", "way better",
+                    ]):
                         praise_list.append(p)
-                    elif any(w in text_lower for w in ["problem", "issue", "broken", "terrible", "worst", "hate", "frustrated", "scam", "complaint", "disappointed"]):
+                    elif any(w in text_lower for w in [
+                        "problem", "issue", "broken", "terrible", "worst", "hate",
+                        "frustrated", "scam", "complaint", "disappointed", "awful",
+                        "can't believe", "ridiculous", "rip off", "waste",
+                    ]):
                         complaints_list.append(p)
                     else:
-                        complaints_list.append(p)  # Default bucket
+                        discussion_list.append(p)
 
                 with st.container(border=True):
                     st.subheader(f"⚔️ {comp_name}")
@@ -453,6 +466,18 @@ with tabs[1]:
                             for idx, post in enumerate(sorted(praise_list, key=lambda x: x.get("score", 0), reverse=True)[:10], 1):
                                 title = post.get("title", "")[:100] or post.get("text", "")[:100]
                                 st.markdown(f"**{idx}.** {title}")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # General discussion
+                    if discussion_list:
+                        with st.expander(f"💬 General Discussion ({len(discussion_list)})", expanded=False):
+                            for idx, post in enumerate(sorted(discussion_list, key=lambda x: x.get("score", 0), reverse=True)[:10], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                score = post.get("score", 0)
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
                                 st.markdown(f"> {post.get('text', '')[:400]}")
                                 url = post.get("url", "")
                                 st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))

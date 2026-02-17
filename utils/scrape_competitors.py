@@ -21,10 +21,22 @@ OUTPUT_PATH = "data/scraped_competitor_posts.json"
 # Collectibles context keywords - posts must contain at least one of these
 COLLECTIBLES_CONTEXT = [
     "card", "cards", "trading card", "sports card", "pokemon", "magic", "yugioh",
-    "collectible", "collectibles", "auction", "graded", "psa", "bgs", "cgc",
-    "slab", "raw", "mint", "gem", "vintage", "rookie", "autograph", "auto",
-    "marketplace", "selling", "buying", "sold", "listing", "price", "value",
-    "collection", "collector", "hobby", "wax", "break", "breaks", "rip",
+    "collectible", "collectibles", "graded", "psa", "bgs", "cgc",
+    "slab", "raw card", "mint condition", "gem mint", "vintage card", "rookie", "autograph",
+    "collection", "collector", "hobby", "wax", "box break", "case break", "card break",
+    "ebay", "card show", "card shop", "lcs ", "memorabilia", "sports memorabilia",
+    "topps", "panini", "upper deck", "bowman", "prizm", "select", "optic",
+]
+
+# Exclude posts that match these patterns (clearly not collectibles)
+EXCLUDE_PATTERNS = [
+    "stabbed", "murder", "killed", "death", "died", "shooting", "shot ",
+    "arrested", "charged with", "sentenced", "prison", "jail",
+    "facebook marketplace", "craigslist", "offerup",
+    "car ", "truck", "vehicle", "motorcycle", "boat",
+    "real estate", "house", "apartment", "rent ",
+    "crypto", "bitcoin", "nft ", "stock market",
+    "recipe", "cooking", "restaurant",
 ]
 
 # Competitor/subsidiary definitions
@@ -233,6 +245,10 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
                 if not has_collectibles_context:
                     continue
                 
+                # Exclude clearly irrelevant posts (crime, vehicles, etc.)
+                if any(ep in text_lower for ep in EXCLUDE_PATTERNS):
+                    continue
+                
                 # Filter by required keywords if specified
                 if required_keywords:
                     if not any(kw.lower() in text_lower for kw in required_keywords):
@@ -258,6 +274,10 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
                 # Must have collectibles context
                 has_collectibles_context = any(kw in text_lower for kw in COLLECTIBLES_CONTEXT)
                 if not has_collectibles_context:
+                    continue
+                
+                # Exclude clearly irrelevant posts
+                if any(ep in text_lower for ep in EXCLUDE_PATTERNS):
                     continue
                 
                 # Filter by required keywords if specified
