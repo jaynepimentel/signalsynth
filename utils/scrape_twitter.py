@@ -1,245 +1,190 @@
-# scrape_twitter.py — Twitter/X scraper using guest token API
+# scrape_twitter.py — Twitter/X scraper via Google News RSS indexing
+# Twitter's guest token API and GraphQL endpoints are dead as of late 2024.
+# This scraper pulls indexed tweets from Google News RSS (site:x.com queries),
+# which reliably captures public tweets about collectibles topics.
+
 import requests
 import json
 import os
-import time
 import re
+import time
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from urllib.parse import quote
-from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
-# Search terms for collectibles/marketplace topics
-SEARCH_TERMS = [
-    "ebay trading cards",
-    "ebay psa graded", 
-    "ebay vault",
-    "ebay authentication",
-    "ebay shipping problem",
-    "ebay refund",
-    "funko vault",
-    "graded cards",
+# Search queries — "site:x.com" restricts Google to indexed tweets
+SEARCH_QUERIES = [
+    "site:x.com ebay collectibles",
+    "site:x.com ebay trading cards",
+    "site:x.com ebay vault",
+    "site:x.com ebay authentication guarantee",
+    "site:x.com psa grading cards",
+    "site:x.com goldin auctions",
+    "site:x.com fanatics collect",
+    "site:x.com sports cards graded",
+    "site:x.com ebay seller shipping",
+]
+
+# Known collectibles accounts to pull timelines from
+TWITTER_ACCOUNTS = [
+    "eBay",
+    "PSAcard",
+    "GoldinCo",
+    "Aborotics",
+    "CardPurchaser",
 ]
 
 SAVE_PATH = "data/scraped_twitter_posts.json"
 
-load_dotenv()
-
-# Twitter's internal API endpoints
-BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
-
-
-class TwitterGuestScraper:
-    """Scrape Twitter using guest token (no login required)."""
-    
-    def __init__(self):
-        if not BEARER_TOKEN:
-            raise RuntimeError(
-                "TWITTER_BEARER_TOKEN not set. Add it to your environment or .env file."
-            )
-        self.session = requests.Session()
-        self.guest_token = None
-        self.session.headers.update({
-            "Authorization": f"Bearer {BEARER_TOKEN}",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Content-Type": "application/json",
-        })
-    
-    def get_guest_token(self):
-        """Get a guest token from Twitter."""
-        try:
-            res = self.session.post(
-                "https://api.twitter.com/1.1/guest/activate.json",
-                timeout=10
-            )
-            if res.status_code == 200:
-                self.guest_token = res.json().get("guest_token")
-                self.session.headers["x-guest-token"] = self.guest_token
-                print(f"  🔑 Got guest token: {self.guest_token[:10]}...")
-                return True
-        except Exception as e:
-            print(f"  ❌ Failed to get guest token: {e}")
-        return False
-    
-    def search_tweets(self, query, count=20):
-        """Search for tweets using Twitter's internal API."""
-        posts = []
-        
-        if not self.guest_token:
-            if not self.get_guest_token():
-                return posts
-        
-        # Twitter's GraphQL search endpoint
-        variables = {
-            "rawQuery": query,
-            "count": count,
-            "querySource": "typed_query",
-            "product": "Latest"
-        }
-        
-        features = {
-            "rweb_lists_timeline_redesign_enabled": True,
-            "responsive_web_graphql_exclude_directive_enabled": True,
-            "verified_phone_label_enabled": False,
-            "creator_subscriptions_tweet_preview_api_enabled": True,
-            "responsive_web_graphql_timeline_navigation_enabled": True,
-            "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
-            "tweetypie_unmention_optimization_enabled": True,
-            "responsive_web_edit_tweet_api_enabled": True,
-            "graphql_is_translatable_rweb_tweet_is_translatable_enabled": True,
-            "view_counts_everywhere_api_enabled": True,
-            "longform_notetweets_consumption_enabled": True,
-            "responsive_web_twitter_article_tweet_consumption_enabled": False,
-            "tweet_awards_web_tipping_enabled": False,
-            "freedom_of_speech_not_reach_fetch_enabled": True,
-            "standardized_nudges_misinfo": True,
-            "longform_notetweets_rich_text_read_enabled": True,
-            "longform_notetweets_inline_media_enabled": True,
-            "responsive_web_media_download_video_enabled": False,
-            "responsive_web_enhance_cards_enabled": False
-        }
-        
-        params = {
-            "variables": json.dumps(variables),
-            "features": json.dumps(features),
-        }
-        
-        try:
-            res = self.session.get(
-                "https://twitter.com/i/api/graphql/gkjsKepM6gl_HmFWoWKfgg/SearchTimeline",
-                params=params,
-                timeout=15
-            )
-            
-            if res.status_code == 200:
-                data = res.json()
-                posts = self._parse_search_results(data, query)
-            elif res.status_code == 429:
-                print(f"  ⚠️ Rate limited, waiting...")
-                time.sleep(60)
-            else:
-                print(f"  ⚠️ Search failed: HTTP {res.status_code}")
-                
-        except Exception as e:
-            print(f"  ❌ Search error: {e}")
-        
-        return posts
-    
-    def _parse_search_results(self, data, query):
-        """Parse tweet data from Twitter's GraphQL response."""
-        posts = []
-        
-        try:
-            # Navigate the nested response structure
-            instructions = (
-                data.get("data", {})
-                .get("search_by_raw_query", {})
-                .get("search_timeline", {})
-                .get("timeline", {})
-                .get("instructions", [])
-            )
-            
-            for instruction in instructions:
-                entries = instruction.get("entries", [])
-                for entry in entries:
-                    try:
-                        # Get tweet content
-                        content = entry.get("content", {})
-                        item_content = content.get("itemContent", {})
-                        tweet_results = item_content.get("tweet_results", {})
-                        result = tweet_results.get("result", {})
-                        
-                        # Handle different result types
-                        if result.get("__typename") == "TweetWithVisibilityResults":
-                            result = result.get("tweet", {})
-                        
-                        legacy = result.get("legacy", {})
-                        
-                        text = legacy.get("full_text", "")
-                        if not text or len(text) < 20:
-                            continue
-                        
-                        # Get user info
-                        user = result.get("core", {}).get("user_results", {}).get("result", {})
-                        user_legacy = user.get("legacy", {})
-                        username = user_legacy.get("screen_name", "unknown")
-                        
-                        # Get tweet ID and date
-                        tweet_id = legacy.get("id_str", "")
-                        created_at = legacy.get("created_at", "")
-                        
-                        post_date = datetime.now().strftime("%Y-%m-%d")
-                        if created_at:
-                            try:
-                                dt = datetime.strptime(created_at, "%a %b %d %H:%M:%S %z %Y")
-                                post_date = dt.strftime("%Y-%m-%d")
-                            except:
-                                pass
-                        
-                        posts.append({
-                            "text": text,
-                            "source": "Twitter/X",
-                            "search_term": query,
-                            "username": username,
-                            "url": f"https://twitter.com/{username}/status/{tweet_id}" if tweet_id else "",
-                            "post_date": post_date,
-                            "_logged_date": datetime.now().isoformat(),
-                            "retweet_count": legacy.get("retweet_count", 0),
-                            "favorite_count": legacy.get("favorite_count", 0),
-                        })
-                        
-                    except Exception:
-                        continue
-                        
-        except Exception as e:
-            print(f"  ⚠️ Parse error: {e}")
-        
-        return posts
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 
-def run_twitter_scraper():
-    """Main entry point."""
-    print("🚀 Starting Twitter/X scraper (guest token API)...")
-    
-    scraper = TwitterGuestScraper()
+def _parse_google_news_rss(rss_url: str, search_term: str) -> list:
+    """Fetch and parse a Google News RSS feed, extracting tweet-like content."""
+    posts = []
+    try:
+        r = requests.get(rss_url, headers=HEADERS, timeout=15)
+        if r.status_code != 200:
+            return posts
+
+        root = ET.fromstring(r.content)
+        channel = root.find("channel")
+        if channel is None:
+            return posts
+
+        for item in channel.findall("item"):
+            title = item.findtext("title", "").strip()
+            link = item.findtext("link", "").strip()
+            pub_date = item.findtext("pubDate", "").strip()
+            description = item.findtext("description", "").strip()
+
+            # Clean HTML from description
+            description = re.sub(r"<[^>]+>", "", description).strip()
+
+            # Extract username from x.com or twitter.com URLs
+            username = "unknown"
+            url_match = re.search(r"(?:x\.com|twitter\.com)/(\w+)", link)
+            if url_match:
+                username = url_match.group(1)
+
+            # Parse date
+            post_date = datetime.now().strftime("%Y-%m-%d")
+            if pub_date:
+                try:
+                    from email.utils import parsedate_to_datetime
+                    post_date = parsedate_to_datetime(pub_date).strftime("%Y-%m-%d")
+                except Exception:
+                    pass
+
+            # Build text — title often IS the tweet text for x.com results
+            text = title
+            if description and description != title:
+                text = f"{title}\n{description}"
+
+            # Skip very short or non-tweet content
+            if len(text) < 20:
+                continue
+
+            posts.append({
+                "text": text,
+                "title": title,
+                "source": "Twitter/X",
+                "url": link,
+                "username": username,
+                "post_date": post_date,
+                "_logged_date": datetime.now().isoformat(),
+                "search_term": search_term,
+                "score": 0,
+                "like_count": 0,
+                "repost_count": 0,
+                "post_id": f"twitter_{hash(link) % 10**8}",
+            })
+
+    except Exception as e:
+        print(f"  [WARN] RSS parse failed for '{search_term}': {e}")
+
+    return posts
+
+
+def scrape_twitter_search() -> list:
+    """Search for tweets via Google News RSS (site:x.com)."""
+    print("  Searching Google News for indexed tweets...")
     all_posts = []
-    
-    for term in SEARCH_TERMS:
-        print(f"  🔍 Searching: '{term}'...")
-        posts = scraper.search_tweets(term, count=20)
-        
-        if posts:
-            print(f"  � '{term}': {len(posts)} tweets")
-            all_posts.extend(posts)
-        else:
-            print(f"  ⚠️ '{term}': No tweets found")
-        
-        time.sleep(2)  # Rate limiting
-    
-    if not all_posts:
-        print("\n❌ No tweets scraped. Twitter may have blocked guest access.")
-        print("\nAlternative options:")
-        print("  1. Use Twitter API v2 with bearer token (developer.twitter.com)")
-        print("  2. Set TWITTER_USERNAME/PASSWORD for authenticated access")
-        return []
-    
-    # Deduplicate
-    seen = set()
-    unique_posts = []
+
+    for query in SEARCH_QUERIES:
+        encoded = quote(query)
+        rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
+        posts = _parse_google_news_rss(rss_url, query)
+        all_posts.extend(posts)
+        print(f"    '{query}': {len(posts)} tweets")
+        time.sleep(1.0)
+
+    return all_posts
+
+
+def scrape_twitter_accounts() -> list:
+    """Pull indexed tweets from specific accounts via Google News."""
+    print("  Fetching indexed tweets from known accounts...")
+    all_posts = []
+
+    for account in TWITTER_ACCOUNTS:
+        query = f"site:x.com/{account}"
+        encoded = quote(query)
+        rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
+        posts = _parse_google_news_rss(rss_url, f"@{account}")
+        all_posts.extend(posts)
+        print(f"    @{account}: {len(posts)} tweets")
+        time.sleep(1.0)
+
+    return all_posts
+
+
+def run_twitter_scraper() -> list:
+    """Main entry point for Twitter/X scraper."""
+    print("\U0001f680 Starting Twitter/X scraper (Google News indexed tweets)...")
+
+    all_posts = []
+
+    # Search-based tweets
+    try:
+        search_posts = scrape_twitter_search()
+        all_posts.extend(search_posts)
+    except Exception as e:
+        print(f"  \u274c Twitter search scrape failed: {e}")
+
+    # Account-based tweets
+    try:
+        account_posts = scrape_twitter_accounts()
+        all_posts.extend(account_posts)
+    except Exception as e:
+        print(f"  \u274c Twitter account scrape failed: {e}")
+
+    # Deduplicate by URL
+    seen_urls = set()
+    unique = []
     for post in all_posts:
-        text_hash = post["text"][:100]
-        if text_hash not in seen:
-            seen.add(text_hash)
-            unique_posts.append(post)
-    
+        url = post.get("url", "")
+        if url and url in seen_urls:
+            continue
+        if url:
+            seen_urls.add(url)
+        unique.append(post)
+
+    # Sort by date
+    unique.sort(key=lambda x: x.get("post_date", ""), reverse=True)
+
     # Save
     os.makedirs(os.path.dirname(SAVE_PATH) if os.path.dirname(SAVE_PATH) else ".", exist_ok=True)
     with open(SAVE_PATH, "w", encoding="utf-8") as f:
-        json.dump(unique_posts, f, ensure_ascii=False, indent=2)
-    
-    print(f"\n✅ Scraped {len(unique_posts)} unique tweets → {SAVE_PATH}")
-    return unique_posts
+        json.dump(unique, f, ensure_ascii=False, indent=2)
+
+    print(f"\n\u2705 Scraped {len(unique)} unique tweets \u2192 {SAVE_PATH}")
+    return unique
 
 
 if __name__ == "__main__":
