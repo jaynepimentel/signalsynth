@@ -215,6 +215,30 @@ try:
     except:
         pass
 
+    # Forums & blogs data (Bench Trading, Alt.xyz, Blowout, Net54, COMC, Whatnot, etc.)
+    forums_blogs_raw = []
+    try:
+        with open("data/scraped_forums_blogs_posts.json", "r", encoding="utf-8") as f:
+            forums_blogs_raw = json.load(f)
+    except:
+        pass
+
+    # YouTube data
+    youtube_raw = []
+    try:
+        with open("data/scraped_youtube_posts.json", "r", encoding="utf-8") as f:
+            youtube_raw = json.load(f)
+    except:
+        pass
+
+    # News RSS data
+    news_rss_raw = []
+    try:
+        with open("data/scraped_news_rss_posts.json", "r", encoding="utf-8") as f:
+            news_rss_raw = json.load(f)
+    except:
+        pass
+
     clusters_count = 0
     try:
         with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
@@ -264,54 +288,37 @@ if date_range:
     st.caption(f"{pipeline_text} · Data: {date_range}")
 
 # ─────────────────────────────────────────────
-# 3 Tabs: Dashboard · Explore · Strategy
+# 5 Tabs
 # ─────────────────────────────────────────────
-tabs = st.tabs(["📊 Dashboard", "🔍 Explore", "🧱 Strategy"])
+tabs = st.tabs([
+    "📊 Overview",
+    "⚔️ Competitor Intel",
+    "🎯 eBay Voice",
+    "📰 Industry & Trends",
+    "🧱 Strategy",
+])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 1: DASHBOARD — Executive overview
+# TAB 1: OVERVIEW — Executive snapshot
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
-    # Quick-start guide (collapsible, friendly for first-time users)
-    with st.expander("💡 New here? Start here — How to use SignalSynth", expanded=False):
+    with st.expander("💡 New here? How to use SignalSynth", expanded=False):
         st.markdown("""
-### What is SignalSynth?
+**SignalSynth** scrapes thousands of posts from Reddit, Twitter/X, YouTube, forums, and news — then uses AI to surface what matters most to an eBay Collectibles PM.
 
-SignalSynth scrapes **thousands of posts** from Reddit, Twitter/X, YouTube, forums, and news sites — then uses AI to surface the insights that matter most to a collectibles PM.
-
-Instead of reading 10,000+ posts, you get **actionable signals** organized by topic, sentiment, and urgency.
-
----
-
-### Quick Start (2 minutes)
-
-**1. Check the numbers above** — the KPI bar shows how many posts were scraped, how many became insights, and how many strategic clusters were formed.
-
-**2. Scroll down on this Dashboard tab** — you'll see:
-- **Signal Trends** — what topics are spiking (Trust issues? Vault complaints? Shipping problems?)
-- **Entity Intelligence** — what competitors (Fanatics, Heritage), partners (PSA), and subsidiaries (Goldin, TCGPlayer) people are talking about
-- **Strategic Intelligence** — sentiment breakdown by product area and trends over time
-
-**3. Switch to the Explore tab** to dig into individual user quotes. Use the filters at the top to narrow by:
-- **Topic** — Vault, Payments, Trust, Shipping, etc.
-- **Type** — Complaints, Feature Requests, Questions
-- **Sentiment** — Negative, Positive, Neutral
-- Each card shows the **actual user quote**, and you can expand "🧠 AI Analysis" for a synthesized takeaway
-
-**4. Switch to the Strategy tab** to see AI-generated **strategic epics** — clusters of related signals grouped into themes like "Vault Trust Issues" or "Payment Friction." Each epic includes:
-- Signal counts and sentiment health
-- Top themes and sample quotes
-- Buttons to generate **PRDs, BRDs, PRFAQ docs, and Jira tickets**
-
----
-
-### Tips
-- **Filters persist** across the Explore tab — combine topic + sentiment + type to find exactly what you need
-- **Deep Dive** (in Explore) calls GPT to generate a richer analysis of any individual insight
-- **Document generation** (in Strategy) creates PM-ready artifacts you can paste into your workflow
+| Tab | What you'll find |
+|-----|-----------------|
+| **Competitor Intel** | What Fanatics, Whatnot, Heritage, PWCC are doing. What their customers complain about (conquest opportunities). What people like about them (threats). |
+| **eBay Voice** | What eBay's own customers are saying — product feedback, pain points, feature requests, filtered by topic. |
+| **Industry & Trends** | News, blog posts, YouTube commentary, forum discussions — the broader collectibles market. |
+| **Strategy** | AI-clustered themes with signal counts. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets. |
         """)
 
-    # Two-column layout: charts left, entity intel right
+    # Sentiment overview
+    neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
+    pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
+    neu = total - neg - pos
+
     dash_left, dash_right = st.columns([3, 2])
 
     with dash_left:
@@ -322,136 +329,141 @@ Instead of reading 10,000+ posts, you get **actionable signals** organized by to
             st.error(f"Chart error: {e}")
 
     with dash_right:
-        st.subheader("Entity Intelligence")
-        try:
-            # Quick entity breakdown from competitor data
-            if competitor_posts_raw:
-                comp_groups = defaultdict(int)
-                sub_groups = defaultdict(int)
-                for p in competitor_posts_raw:
-                    name = p.get("competitor", "Unknown")
-                    if p.get("competitor_type") == "ebay_subsidiary":
-                        sub_groups[name] += 1
-                    else:
-                        comp_groups[name] += 1
+        st.subheader("Pulse Check")
+        st.markdown(f"**Sentiment:** 🟢 {pos} positive · ⚪ {neu} neutral · 🔴 {neg} negative")
 
-                if comp_groups:
-                    st.markdown("**🏢 Competitors**")
-                    for name, count in sorted(comp_groups.items(), key=lambda x: -x[1])[:5]:
-                        st.markdown(f"- **{name}**: {count} posts")
+        # Top pain points
+        from collections import Counter
+        subtag_neg = Counter(i.get("subtag", "General") for i in normalized if i.get("brand_sentiment") == "Negative")
+        if subtag_neg:
+            st.markdown("**Top Pain Points (by negative sentiment):**")
+            for tag, cnt in subtag_neg.most_common(5):
+                pct = round(cnt / max(neg, 1) * 100)
+                st.markdown(f"- **{tag}**: {cnt} ({pct}%)")
 
-                if sub_groups:
-                    st.markdown("**🏪 Subsidiaries**")
-                    for name, count in sorted(sub_groups.items(), key=lambda x: -x[1]):
-                        st.markdown(f"- **{name}**: {count} posts")
+        # Competitor volume
+        if competitor_posts_raw:
+            comp_counts = Counter(p.get("competitor", "?") for p in competitor_posts_raw if p.get("competitor_type") != "ebay_subsidiary")
+            if comp_counts:
+                st.markdown("---")
+                st.markdown("**Competitor Chatter:**")
+                for name, cnt in comp_counts.most_common(5):
+                    st.markdown(f"- **{name}**: {cnt} posts")
 
-            # Partner signal counts
-            PARTNER_KEYWORDS = {
-                "PSA": ["psa vault", "psa grading", "psa grade", "psa turnaround", "psa submission", "psa consignment", "psa offer", "psa buyback", "psa 10", "psa 9"],
-                "ComC": ["comc", "check out my cards"],
-            }
-            partner_counts = {k: 0 for k in PARTNER_KEYWORDS}
-            for ins in normalized:
-                text = (ins.get("title", "") + " " + ins.get("text", "")).lower()
-                for partner, kws in PARTNER_KEYWORDS.items():
-                    if any(kw in text for kw in kws):
-                        partner_counts[partner] += 1
-
-            if any(v > 0 for v in partner_counts.values()):
-                st.markdown("**🤝 Partners**")
-                for name, count in sorted(partner_counts.items(), key=lambda x: -x[1]):
-                    if count > 0:
-                        st.markdown(f"- **{name}**: {count} signals")
-
-            # Sentiment summary
-            st.markdown("---")
-            neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
-            pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
-            neu = total - neg - pos
-            st.markdown(f"**Sentiment:** 🟢 {pos} positive · ⚪ {neu} neutral · 🔴 {neg} negative")
-
-        except Exception as e:
-            st.caption(f"Entity data unavailable: {e}")
-
-    # Strategic dashboard (brand trends)
+    # Brand trend dashboard
     st.markdown("---")
     try:
         display_brand_dashboard(normalized)
     except Exception as e:
         st.error(f"Dashboard error: {e}")
 
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 2: EXPLORE — Unified filtered view
+# TAB 2: COMPETITOR INTEL
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[1]:
-    # View selector: Insights vs Entities
-    explore_view = st.radio(
-        "View",
-        ["All Insights", "Competitors", "Subsidiaries", "Partners"],
-        horizontal=True,
-        key="explore_view"
-    )
+    st.markdown("What competitors are doing, what their customers complain about, and where eBay can win.")
 
-    if explore_view == "All Insights":
-        # Filters
-        filter_fields = {"Topic": "subtag", "Type": "type_tag"}
-        filters = render_floating_filters(normalized, filter_fields, key_prefix="explore")
-        filtered = [i for i in normalized if match_multiselect_filters(i, filters, filter_fields)]
-        time_range = filters.get("_time_range", "All Time")
-        filtered = filter_by_time(filtered, time_range)
-        st.caption(f"Showing {len(filtered)} of {total} insights")
-        model = get_model()
-        render_insight_cards(filtered, model, key_prefix="explore")
+    if not competitor_posts_raw:
+        st.info("No competitor data. Run `python utils/scrape_competitors.py` to collect competitor signals.")
+    else:
+        # Split into competitors vs subsidiaries
+        comp_posts = defaultdict(list)
+        sub_posts_map = defaultdict(list)
+        for p in competitor_posts_raw:
+            name = p.get("competitor", "Unknown")
+            if p.get("competitor_type") == "ebay_subsidiary":
+                sub_posts_map[name].append(p)
+            else:
+                comp_posts[name].append(p)
 
-    elif explore_view == "Competitors":
-        if not competitor_posts_raw:
-            st.info("No competitor data. Run `python utils/scrape_competitors.py`.")
-        else:
-            comp_groups = defaultdict(list)
-            for p in competitor_posts_raw:
-                if p.get("competitor_type") != "ebay_subsidiary":
-                    comp_groups[p.get("competitor", "Unknown")].append(p)
+        # ── Competitor selector ──
+        all_comps = sorted(comp_posts.keys())
+        comp_view = st.radio("View", ["All Competitors", "Subsidiaries (Goldin, TCGPlayer)"], horizontal=True, key="comp_intel_view")
 
-            all_comps = sorted(comp_groups.keys())
-            selected = st.selectbox("Competitor", ["All"] + all_comps, key="explore_comp")
+        if comp_view == "All Competitors":
+            selected_comp = st.selectbox("Filter by competitor", ["All"] + all_comps, key="comp_select")
+            show_comps = all_comps if selected_comp == "All" else [selected_comp]
 
-            for comp_name in (all_comps if selected == "All" else [selected]):
-                posts = comp_groups.get(comp_name, [])
+            for comp_name in show_comps:
+                posts = comp_posts.get(comp_name, [])
                 if not posts:
                     continue
+
+                # Classify posts: complaints, praise, policy/product changes
+                complaints_list = []
+                praise_list = []
+                changes_list = []
+                for p in posts:
+                    text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
+                    if any(w in text_lower for w in ["announce", "launch", "new feature", "update", "policy", "change", "rolling out", "beta", "release"]):
+                        changes_list.append(p)
+                    elif any(w in text_lower for w in ["love", "great", "amazing", "best", "better than", "prefer", "switched to", "moved to"]):
+                        praise_list.append(p)
+                    elif any(w in text_lower for w in ["problem", "issue", "broken", "terrible", "worst", "hate", "frustrated", "scam", "complaint", "disappointed"]):
+                        complaints_list.append(p)
+                    else:
+                        complaints_list.append(p)  # Default bucket
+
                 with st.container(border=True):
-                    st.subheader(f"🏢 {comp_name} ({len(posts)} posts)")
-                    sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
-                    for idx, post in enumerate(sorted_posts[:10], 1):
-                        title = post.get("title", "")[:80] or post.get("text", "")[:80]
-                        score = post.get("score", 0)
-                        post_id = post.get("post_id", f"{comp_name}_{idx}")
-                        with st.expander(f"{idx}. {title}... (⬆️ {score})"):
-                            st.markdown(f"> {post.get('text', '')[:500]}")
-                            st.caption(f"**Date:** {post.get('post_date', '')} | r/{post.get('subreddit', '')} | [Source]({post.get('url', '')})")
-                            brief_key = f"brief_comp_{post_id}"
-                            if st.button("⚔️ AI Brief", key=f"btn_{brief_key}"):
-                                st.session_state[brief_key] = True
-                                st.rerun()
-                            if st.session_state.get(brief_key):
-                                with st.spinner("Generating..."):
-                                    result = generate_ai_brief("competitor", comp_name, post.get("text", ""), post.get("title", ""))
-                                st.info(result)
+                    st.subheader(f"⚔️ {comp_name}")
+                    mc1, mc2, mc3 = st.columns(3)
+                    mc1.metric("Total Posts", len(posts))
+                    mc2.metric("Complaints", len(complaints_list), help="Posts with negative sentiment — potential conquest opportunities")
+                    mc3.metric("Praise / Threats", len(praise_list), help="Posts praising this competitor — areas where eBay may be losing")
 
-    elif explore_view == "Subsidiaries":
-        sub_posts = [p for p in competitor_posts_raw if p.get("competitor_type") == "ebay_subsidiary"]
-        if not sub_posts:
-            st.info("No subsidiary data found.")
+                    # Policy & product changes
+                    if changes_list:
+                        with st.expander(f"📢 Policy & Product Changes ({len(changes_list)})", expanded=False):
+                            for idx, post in enumerate(sorted(changes_list, key=lambda x: x.get("post_date", ""), reverse=True)[:8], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                st.markdown(f"**{idx}.** {title}")
+                                st.markdown(f"> {post.get('text', '')[:300]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # Complaints = conquest opportunities
+                    if complaints_list:
+                        with st.expander(f"🎯 Conquest Opportunities — What Their Customers Complain About ({len(complaints_list)})", expanded=False):
+                            sorted_complaints = sorted(complaints_list, key=lambda x: x.get("score", 0), reverse=True)
+                            for idx, post in enumerate(sorted_complaints[:10], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                score = post.get("score", 0)
+                                post_id = post.get("post_id", f"comp_{comp_name}_{idx}")
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | r/{post.get('subreddit', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                brief_key = f"brief_conquest_{post_id}"
+                                if st.button("⚔️ AI Conquest Brief", key=f"btn_{brief_key}"):
+                                    st.session_state[brief_key] = True
+                                    st.rerun()
+                                if st.session_state.get(brief_key):
+                                    with st.spinner("Generating conquest analysis..."):
+                                        result = generate_ai_brief("competitor", comp_name, post.get("text", ""), post.get("title", ""))
+                                    st.info(result)
+                                st.markdown("---")
+
+                    # Praise = competitive threats
+                    if praise_list:
+                        with st.expander(f"⚠️ Competitive Threats — What People Like About {comp_name} ({len(praise_list)})", expanded=False):
+                            for idx, post in enumerate(sorted(praise_list, key=lambda x: x.get("score", 0), reverse=True)[:10], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                st.markdown(f"**{idx}.** {title}")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
         else:
-            sub_groups = defaultdict(list)
-            for p in sub_posts:
-                sub_groups[p.get("competitor", "Unknown")].append(p)
+            # Subsidiaries view
+            all_subs = sorted(sub_posts_map.keys())
+            selected_sub = st.selectbox("Subsidiary", ["All"] + all_subs, key="sub_select")
+            show_subs = all_subs if selected_sub == "All" else [selected_sub]
 
-            all_subs = sorted(sub_groups.keys())
-            selected = st.selectbox("Subsidiary", ["All"] + all_subs, key="explore_sub")
-
-            for sub_name in (all_subs if selected == "All" else [selected]):
-                posts = sub_groups.get(sub_name, [])
+            for sub_name in show_subs:
+                posts = sub_posts_map.get(sub_name, [])
                 if not posts:
                     continue
                 with st.container(border=True):
@@ -473,57 +485,168 @@ with tabs[1]:
                                     result = generate_ai_brief("subsidiary", sub_name, post.get("text", ""), post.get("title", ""))
                                 st.success(result)
 
-    elif explore_view == "Partners":
-        STRATEGIC_PARTNERS = {
-            "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
-            "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
-            "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
-            "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
-            "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
-        }
-        partner_posts = {name: [] for name in STRATEGIC_PARTNERS}
-        for ins in normalized:
-            text = (ins.get("title", "") + " " + ins.get("text", "")).lower()
-            for pname, kws in STRATEGIC_PARTNERS.items():
-                if any(kw in text for kw in kws):
-                    partner_posts[pname].append(ins)
-
-        all_partners = [p for p in STRATEGIC_PARTNERS if partner_posts[p]]
-        if not all_partners:
-            st.info("No partner signals found.")
-        else:
-            selected = st.selectbox("Partner", ["All"] + all_partners, key="explore_partner")
-
-            for pname in (all_partners if selected == "All" else [selected]):
-                posts = partner_posts.get(pname, [])
-                if not posts:
-                    continue
-                with st.container(border=True):
-                    st.subheader(f"🤝 {pname} ({len(posts)} signals)")
-                    sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
-                    for idx, post in enumerate(sorted_posts[:10], 1):
-                        title = post.get("title", "")[:80] or post.get("text", "")[:80]
-                        sentiment = post.get("brand_sentiment", "Neutral")
-                        sent_icon = {"Negative": "🔴", "Positive": "🟢"}.get(sentiment, "⚪")
-                        post_id = post.get("fingerprint", f"{pname}_{idx}")
-                        with st.expander(f"{idx}. {sent_icon} {title}..."):
-                            st.markdown(f"> {post.get('text', '')[:500]}")
-                            url = post.get("url", "")
-                            st.caption(f"**Date:** {post.get('post_date', '')} | [Source]({url})" if url else f"**Date:** {post.get('post_date', '')}")
-                            brief_key = f"brief_partner_{post_id}"
-                            if st.button("📋 AI Brief", key=f"btn_{brief_key}"):
-                                st.session_state[brief_key] = True
-                                st.rerun()
-                            if st.session_state.get(brief_key):
-                                with st.spinner("Generating..."):
-                                    result = generate_ai_brief("partner", pname, post.get("text", ""), post.get("title", ""))
-                                st.info(result)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: STRATEGY — Clusters + AI doc generation
+# TAB 3: EBAY VOICE — What eBay customers are saying
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[2]:
-    st.markdown("Generate executive summaries, PRDs, BRDs, and Jira tickets from clustered user signals.")
+    st.markdown("What eBay customers are saying about products and experiences — filtered, enriched, and ready to act on.")
+
+    # Filters
+    filter_fields = {"Topic": "subtag", "Type": "type_tag", "Sentiment": "brand_sentiment"}
+    filters = render_floating_filters(normalized, filter_fields, key_prefix="ebay_voice")
+    filtered = [i for i in normalized if match_multiselect_filters(i, filters, filter_fields)]
+    time_range = filters.get("_time_range", "All Time")
+    filtered = filter_by_time(filtered, time_range)
+
+    # Quick stats for filtered view
+    f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
+    f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
+    f_complaints = sum(1 for i in filtered if i.get("type_tag") == "Complaint")
+    f_requests = sum(1 for i in filtered if i.get("type_tag") == "Feature Request")
+
+    vc1, vc2, vc3, vc4 = st.columns(4)
+    vc1.metric("Showing", f"{len(filtered)}", help=f"of {total} total insights")
+    vc2.metric("Negative", f_neg, help="Insights with negative sentiment")
+    vc3.metric("Complaints", f_complaints)
+    vc4.metric("Feature Requests", f_requests)
+
+    # Partner signals section
+    STRATEGIC_PARTNERS = {
+        "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
+        "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
+        "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
+        "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
+        "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
+    }
+    partner_counts = {}
+    for pname, kws in STRATEGIC_PARTNERS.items():
+        cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
+        if cnt > 0:
+            partner_counts[pname] = cnt
+
+    if partner_counts:
+        with st.expander(f"🤝 Partner Signals ({sum(partner_counts.values())} mentions in view)", expanded=False):
+            for pname, cnt in sorted(partner_counts.items(), key=lambda x: -x[1]):
+                st.markdown(f"- **{pname}**: {cnt} signals")
+
+    # Insight cards
+    model = get_model()
+    render_insight_cards(filtered, model, key_prefix="ebay_voice")
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TAB 4: INDUSTRY & TRENDS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+with tabs[3]:
+    st.markdown("What the broader collectibles industry is saying — news, blogs, YouTube, and forum discussions.")
+
+    # Combine all industry sources
+    industry_posts = []
+
+    # News RSS
+    for p in news_rss_raw:
+        p["_industry_source"] = "News"
+        industry_posts.append(p)
+
+    # YouTube
+    for p in youtube_raw:
+        p["_industry_source"] = "YouTube"
+        industry_posts.append(p)
+
+    # Forums & Blogs
+    for p in forums_blogs_raw:
+        src = p.get("source", "Forum")
+        p["_industry_source"] = src
+        industry_posts.append(p)
+
+    # Sort by date
+    industry_posts.sort(key=lambda x: x.get("post_date", ""), reverse=True)
+
+    if not industry_posts:
+        st.info("No industry data. Run scrapers to collect news, YouTube, and forum data.")
+    else:
+        # Source breakdown
+        from collections import Counter
+        source_counts = Counter(p.get("_industry_source", "?") for p in industry_posts)
+
+        ic1, ic2, ic3 = st.columns(3)
+        ic1.metric("Total Industry Posts", len(industry_posts))
+        ic2.metric("Sources", len(source_counts))
+        ic3.metric("Most Recent", industry_posts[0].get("post_date", "?") if industry_posts else "N/A")
+
+        # Source filter
+        all_sources = ["All"] + sorted(source_counts.keys())
+        selected_source = st.selectbox("Filter by source", all_sources, key="industry_source")
+
+        if selected_source != "All":
+            industry_posts = [p for p in industry_posts if p.get("_industry_source") == selected_source]
+
+        # Search
+        search_term = st.text_input("Search industry posts", "", key="industry_search")
+        if search_term:
+            search_lower = search_term.lower()
+            industry_posts = [p for p in industry_posts if search_lower in (p.get("text", "") + " " + p.get("title", "")).lower()]
+
+        st.caption(f"Showing {len(industry_posts)} posts")
+
+        # Paginate
+        per_page = 15
+        total_pages = max(1, (len(industry_posts) + per_page - 1) // per_page)
+        if "industry_page" not in st.session_state:
+            st.session_state["industry_page"] = 0
+        st.session_state["industry_page"] = min(st.session_state["industry_page"], total_pages - 1)
+
+        if total_pages > 1:
+            nav1, nav2, nav3 = st.columns([1, 3, 1])
+            with nav1:
+                if st.button("◀ Prev", key="ind_prev", disabled=st.session_state["industry_page"] == 0):
+                    st.session_state["industry_page"] -= 1
+                    st.rerun()
+            with nav2:
+                st.markdown(f"**Page {st.session_state['industry_page'] + 1} of {total_pages}**")
+            with nav3:
+                if st.button("Next ▶", key="ind_next", disabled=st.session_state["industry_page"] >= total_pages - 1):
+                    st.session_state["industry_page"] += 1
+                    st.rerun()
+
+        start = st.session_state["industry_page"] * per_page
+        paged = industry_posts[start:start + per_page]
+
+        for idx, post in enumerate(paged, start=start + 1):
+            source_label = post.get("_industry_source", post.get("source", "?"))
+            title = post.get("title", "")[:120] or post.get("text", "")[:120]
+            date = post.get("post_date", "")
+            url = post.get("url", "")
+
+            source_icons = {
+                "News": "📰", "YouTube": "🎬", "YouTube (transcript)": "🎬",
+                "YouTube (comment)": "💬", "Alt.xyz Blog": "📝",
+                "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
+                "COMC": "🃏", "Whatnot": "📱", "Fanatics Collect": "🏈",
+                "Bench Trading": "🔄", "TCDB": "🗂️",
+            }
+            icon = source_icons.get(source_label, "📄")
+
+            with st.expander(f"{icon} **{title}** — {source_label} · {date}"):
+                text = post.get("text", "")
+                if len(text) > 600:
+                    st.markdown(f"> {text[:600]}...")
+                else:
+                    st.markdown(f"> {text}")
+                meta_parts = [f"**Source:** {source_label}"]
+                if date:
+                    meta_parts.append(f"**Date:** {date}")
+                if url:
+                    meta_parts.append(f"[🔗 Original]({url})")
+                st.caption(" · ".join(meta_parts))
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TAB 5: STRATEGY — Clusters + AI doc generation
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+with tabs[4]:
+    st.markdown("AI-clustered themes from user signals. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
     except Exception as e:
