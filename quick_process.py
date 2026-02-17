@@ -401,19 +401,34 @@ def enrich(post):
     
     # If still General, try topic-based subtags to reduce the General bucket
     if subtag == "General":
+        # COMC / consignment partner
+        if any(w in combined for w in ["comc", "check out my cards", "checkoutmycards"]):
+            subtag = "COMC"
+        # Grading (broader than PSA turnaround — catches BGS, CGC, SGC, general grading talk)
+        elif any(w in combined for w in ["grading", "graded", "slab", "psa ", "bgs ", "cgc ", "sgc ", "grade ", "submission", "re-submit", "crack out", "crossover"]):
+            subtag = "Grading"
         # App / UX / Platform issues
-        if any(w in combined for w in ["app ", "website", "interface", "ui ", "watchlist", "notification", "2fa", "login", "dashboard", "mobile app", "desktop", "blurry label", "edit policy", "can't find the option"]):
+        elif any(w in combined for w in ["app ", "website", "interface", "ui ", "watchlist", "notification", "2fa", "login", "dashboard", "mobile app", "desktop", "blurry label", "edit policy", "can't find the option"]):
             subtag = "App & UX"
-        # Returns / INAD disputes (not caught by RE_REFUND because no "denied/wait/pending" qualifier)
+        # Returns / INAD disputes
         elif any(w in combined for w in ["inad", "item not as described", "open a return", "return request", "partial refund", "forced to take the return", "return all of them"]):
             subtag = "Returns & Refunds"
+        # Competitor mentions
+        elif any(w in combined for w in ["fanatics", "whatnot", "heritage auction", "pwcc", "alt.xyz", "myslabs"]):
+            subtag = "Competitor Intel"
+        # Live shopping / breaks
+        elif any(w in combined for w in ["live selling", "live break", "case break", "box break", "group break", "live stream", "live shopping", "live auction"]):
+            subtag = "Live Commerce"
+        # Market / investing / trends
+        elif any(w in combined for w in ["invest", "roi ", "flip ", "flipping", "profit", "hold ", "long term", "portfolio", "market crash", "market boom", "bubble", "market trend", "prices dropping", "prices rising"]):
+            subtag = "Market & Investing"
         # Listing strategy / optimization
         elif any(w in combined for w in ["how to list", "listing strategy", "listing variants", "competitive product", "views spike", "promoted listing", "best offer", "pricing strategy", "how to price"]):
             subtag = "Listing Strategy"
-        # Valuation / comp checks (not caught by RE_PRICE_GUIDE because no "ebay price guide" phrase)
-        elif any(w in combined for w in ["card value", "what's it worth", "worth anything", "comp ", "comps ", "best app for value", "card scanner", "figure out card value"]):
+        # Valuation / comp checks
+        elif any(w in combined for w in ["card value", "what's it worth", "worth anything", "comp ", "comps ", "best app for value", "card scanner", "figure out card value", "price discrepancy", "what would my"]):
             subtag = "Price Guide"
-        # Shipping logistics (not caught by RE_SHIPPING because no "lost/damage/delay" qualifier)
+        # Shipping logistics
         elif any(w in combined for w in ["shipping label", "standard envelope", "mailer", "packing", "usps", "fedex", "ups ", "how to ship", "shipping cost", "tracking"]):
             subtag = "Shipping"
         # Account issues
@@ -422,12 +437,15 @@ def enrich(post):
         # Customer service
         elif any(w in combined for w in ["customer service", "support", "called ebay", "chat with ebay", "ebay rep", "no response"]):
             subtag = "Customer Service"
+        # Subsidiaries (Goldin, TCGPlayer)
+        elif any(w in combined for w in ["goldin", "tcgplayer", "tcg player"]):
+            subtag = "Subsidiaries"
         # Persona-based fallbacks
         elif "seller" in combined or "listing" in combined or "sold" in combined:
             subtag = "Seller Experience"
         elif "buyer" in combined or "bought" in combined or "purchase" in combined or "order" in combined:
             subtag = "Buyer Experience"
-        elif "collect" in combined or "graded" in combined or "slab" in combined:
+        elif "collect" in combined or "hobby" in combined or "new to the hobby" in combined:
             subtag = "Collecting"
     
     # Classify the insight
