@@ -288,14 +288,15 @@ if date_range:
     st.caption(f"{pipeline_text} · Data: {date_range}")
 
 # ─────────────────────────────────────────────
-# 5 Tabs
+# 6 Tabs
 # ─────────────────────────────────────────────
 tabs = st.tabs([
     "📊 Overview",
     "⚔️ Competitor Intel",
     "🎯 eBay Voice",
     "📰 Industry & Trends",
-    "🧱 Strategy",
+    "� Broken Windows",
+    "� Strategy",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -311,6 +312,7 @@ with tabs[0]:
 | **Competitor Intel** | What Fanatics, Whatnot, Heritage, PWCC are doing. What their customers complain about (conquest opportunities). What people like about them (threats). |
 | **eBay Voice** | What eBay's own customers are saying — product feedback, pain points, feature requests, filtered by topic. |
 | **Industry & Trends** | News, blog posts, YouTube commentary, forum discussions — the broader collectibles market. |
+| **Broken Windows** | Bugs, UX confusion, fee complaints, shipping friction, return disputes — things that erode trust and need fixing. |
 | **Strategy** | AI-clustered themes with signal counts. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets. |
         """)
 
@@ -643,9 +645,141 @@ with tabs[3]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 5: STRATEGY — Clusters + AI doc generation
+# TAB 5: BROKEN WINDOWS — Bugs, UX confusion, fee friction
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[4]:
+    st.markdown("Things that are broken, confusing, or frustrating for eBay customers — bugs, UX friction, fee confusion, and product pain points that erode trust.")
+
+    # Define broken-window categories with detection keywords
+    BW_CATEGORIES = {
+        "Bugs & Errors": {
+            "keywords": ["bug", "glitch", "error", "crash", "broken", "not working", "doesn't work", "won't load", "can't access", "404", "white screen", "blank page", "stuck", "frozen", "loop"],
+            "icon": "🐛",
+            "description": "Technical bugs, errors, and things that are literally broken",
+        },
+        "UX Confusion": {
+            "keywords": ["confus", "unclear", "don't understand", "can't find", "where is", "how do i", "how to", "makes no sense", "unintuitive", "hard to find", "hidden", "not obvious", "misleading"],
+            "icon": "😕",
+            "description": "Users who can't figure out how to do something — UX gaps",
+        },
+        "Fee Complaints": {
+            "keywords": ["fee", "commission", "too expensive", "overcharged", "hidden fee", "extra charge", "final value", "insertion fee", "promoted listing cost", "take rate", "13%", "12.9%"],
+            "icon": "💸",
+            "description": "Complaints about eBay's fee structure, pricing, or unexpected charges",
+        },
+        "Shipping Friction": {
+            "keywords": ["shipping label", "tracking not", "lost package", "damaged in transit", "shipping cost", "standard envelope", "can't print label", "wrong weight", "shipping estimate"],
+            "icon": "📦",
+            "description": "Shipping-related pain points — labels, tracking, costs, damage",
+        },
+        "Returns & Disputes": {
+            "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund", "case opened", "dispute", "money back guarantee", "buyer scam", "empty box"],
+            "icon": "🔄",
+            "description": "Return policy friction, INAD abuse, dispute resolution problems",
+        },
+        "Account & Policy Issues": {
+            "keywords": ["account suspended", "account restricted", "banned", "limited", "locked out", "verification", "policy violation", "vero", "removed listing", "taken down"],
+            "icon": "🔒",
+            "description": "Account restrictions, policy enforcement confusion, VERO takedowns",
+        },
+        "Search & Discovery": {
+            "keywords": ["search broken", "can't find my listing", "no views", "visibility", "algorithm", "cassini", "best match", "search ranking", "not showing up", "buried"],
+            "icon": "🔍",
+            "description": "Search/discovery issues — listings not showing, ranking problems",
+        },
+    }
+
+    # Classify insights into broken-window categories
+    bw_buckets = {cat: [] for cat in BW_CATEGORIES}
+    bw_uncategorized = []
+
+    # Only look at complaints, confusion, and negative sentiment
+    bw_candidates = [
+        i for i in normalized
+        if i.get("type_tag") in ("Complaint", "Confusion", "Question")
+        or i.get("brand_sentiment") == "Negative"
+    ]
+
+    for insight in bw_candidates:
+        text_lower = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+        matched = False
+        for cat, config in BW_CATEGORIES.items():
+            if any(kw in text_lower for kw in config["keywords"]):
+                bw_buckets[cat].append(insight)
+                matched = True
+                break
+        if not matched:
+            bw_uncategorized.append(insight)
+
+    # Summary metrics
+    total_bw = sum(len(v) for v in bw_buckets.values())
+    bw1, bw2, bw3 = st.columns(3)
+    bw1.metric("Broken Window Signals", total_bw, help="Complaints, bugs, confusion, and friction points")
+    bw2.metric("Categories", sum(1 for v in bw_buckets.values() if v))
+    bw3.metric("Uncategorized", len(bw_uncategorized), help="Negative signals that don't fit a specific category")
+
+    # Render each category
+    for cat, config in BW_CATEGORIES.items():
+        items = bw_buckets[cat]
+        if not items:
+            continue
+
+        neg_count = sum(1 for i in items if i.get("brand_sentiment") == "Negative")
+        severity = "🔴 High" if neg_count > len(items) * 0.6 else ("🟡 Medium" if neg_count > len(items) * 0.3 else "🟢 Low")
+
+        with st.expander(f"{config['icon']} **{cat}** — {len(items)} signals ({severity} severity)", expanded=False):
+            st.caption(config["description"])
+
+            # Quick stats
+            complaints = sum(1 for i in items if i.get("type_tag") == "Complaint")
+            questions = sum(1 for i in items if i.get("type_tag") in ("Question", "Confusion"))
+            st.markdown(f"**{complaints}** complaints · **{questions}** confused users · **{neg_count}** negative sentiment")
+            st.markdown("---")
+
+            # Show top items sorted by score
+            sorted_items = sorted(items, key=lambda x: x.get("score", 0), reverse=True)
+            for idx, insight in enumerate(sorted_items[:10], 1):
+                text = insight.get("text", "")[:400]
+                title = insight.get("title", "")[:100]
+                score = insight.get("score", 0)
+                sentiment = insight.get("brand_sentiment", "Neutral")
+                sent_icon = {"Negative": "🔴", "Positive": "🟢"}.get(sentiment, "⚪")
+                subtag = insight.get("subtag", "")
+                url = insight.get("url", "")
+                date = insight.get("post_date", "")
+
+                st.markdown(f"**{idx}. {sent_icon}** {title or text[:80]}")
+                st.markdown(f"> {text}")
+                meta = []
+                if subtag and subtag.lower() not in ("general", "unknown"):
+                    meta.append(f"**Topic:** {subtag}")
+                if date:
+                    meta.append(f"**Date:** {date}")
+                if score:
+                    meta.append(f"⬆️ {score}")
+                if url:
+                    meta.append(f"[🔗 Source]({url})")
+                if meta:
+                    st.caption(" · ".join(meta))
+                st.markdown("---")
+
+    # Uncategorized negative signals
+    if bw_uncategorized:
+        with st.expander(f"❓ Other Negative Signals ({len(bw_uncategorized)})", expanded=False):
+            st.caption("Negative feedback that doesn't fit a specific broken-window category — worth scanning for emerging patterns.")
+            for idx, insight in enumerate(sorted(bw_uncategorized, key=lambda x: x.get("score", 0), reverse=True)[:15], 1):
+                text = insight.get("text", "")[:300]
+                subtag = insight.get("subtag", "")
+                st.markdown(f"**{idx}.** {text}")
+                if subtag and subtag.lower() not in ("general", "unknown"):
+                    st.caption(f"Topic: {subtag}")
+                st.markdown("---")
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TAB 6: STRATEGY — Clusters + AI doc generation
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+with tabs[5]:
     st.markdown("AI-clustered themes from user signals. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
