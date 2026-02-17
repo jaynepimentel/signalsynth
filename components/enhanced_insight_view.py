@@ -186,7 +186,11 @@ def render_insight_cards(
 
 
 def _render_ai_synthesis(i: Dict[str, Any], ideas: List[str], unique_id: str) -> None:
-    """Render synthesized analysis from precomputed insight fields."""
+    """Render synthesized analysis from precomputed insight fields.
+    
+    Builds a real takeaway from the user's actual text, not a generic template.
+    Focuses on what an eBay Collectibles PM needs to know.
+    """
     type_tag = i.get("type_tag") or "Feedback"
     sentiment = i.get("brand_sentiment") or "Neutral"
     persona = i.get("persona") or "Unknown"
@@ -195,82 +199,163 @@ def _render_ai_synthesis(i: Dict[str, Any], ideas: List[str], unique_id: str) ->
     topics = i.get("topic_focus_list") or i.get("topic_focus") or []
     if isinstance(topics, str):
         topics = [topics]
+    text = (i.get("text") or "").strip()
+    text_lower = text.lower()
 
-    # Takeaway line
-    sentiment_word = {"Negative": "frustrated", "Positive": "satisfied", "Neutral": "sharing feedback"}.get(sentiment, "sharing feedback")
-    takeaway = f"A **{persona.lower()}** is {sentiment_word}"
-    if type_tag == "Complaint":
-        takeaway += f" about a problem"
-    elif type_tag == "Feature Request":
-        takeaway += f" and requesting a new capability"
-    elif type_tag == "Confusion":
-        takeaway += f" and confused about how something works"
-    elif type_tag == "Praise":
-        takeaway += f" with a positive experience"
-    else:
-        takeaway += f" ({type_tag.lower()})"
-    if subtag and subtag.lower() not in ("general", "unknown"):
-        takeaway += f" related to **{subtag}**"
-    takeaway += "."
-    st.markdown(f"\U0001f3af **Takeaway:** {takeaway}")
+    # ── Quick Takeaway — extract the core issue from the actual text ──
+    takeaway = _build_smart_takeaway(text, type_tag, sentiment, persona, subtag)
+    st.markdown(f"\U0001f3af **Quick Take:** {takeaway}")
 
-    # Key themes
-    if topics:
-        theme_str = ", ".join([f"`{t}`" for t in topics[:5]])
-        st.markdown(f"\U0001f3f7\ufe0f **Key Themes:** {theme_str}")
+    # ── Actionability Assessment ──
+    actionability, action_color = _assess_actionability(i, text_lower)
+    st.markdown(
+        f"**Actionability:** <span style='background:{action_color}; padding:3px 8px; "
+        f"border-radius:6px; color:white; font-size:0.85em'>{actionability}</span>",
+        unsafe_allow_html=True,
+    )
 
-    # Signal flags
-    signals = []
-    if i.get("_payment_issue"):
-        signals.append("\U0001f4b3 Payment issue detected")
-    if i.get("_upi_flag"):
-        signals.append("\u26a0\ufe0f Unpaid item (UPI) signal")
-    if i.get("is_shipping_issue"):
-        signals.append("\U0001f4e6 Shipping concern")
-    if i.get("is_vault_signal"):
-        signals.append("\U0001f3e6 Vault-related")
-    if i.get("is_ag_signal"):
-        signals.append("\u2705 Authenticity Guarantee signal")
-    if i.get("is_psa_turnaround"):
-        signals.append("\U0001f3af PSA grading/turnaround")
-    if i.get("is_refund_issue"):
-        signals.append("\U0001f4b0 Refund issue")
-    if i.get("is_fees_concern"):
-        signals.append("\U0001f4ca Fees concern")
-    if i.get("_high_end_flag"):
-        signals.append("\U0001f48e High-value item")
-    if i.get("is_urgent"):
-        signals.append("\U0001f6a8 Urgent")
+    # ── What to watch / Why it matters (context-aware) ──
+    context_line = _build_context_line(i, text_lower, subtag, sentiment)
+    if context_line:
+        st.markdown(f"\U0001f4a1 **Why it matters:** {context_line}")
+
+    # ── Detected signals (compact, one line) ──
+    signals = _collect_signals(i)
     if signals:
-        st.markdown("**\U0001f4e1 Detected Signals:**")
-        for s in signals:
-            st.markdown(f"- {s}")
+        st.markdown(f"**Signals:** {' \u00b7 '.join(signals)}")
 
-    # PM suggestions
+    # ── PM suggestions from precompute ──
     if ideas and any(idea.strip() for idea in ideas if isinstance(idea, str)):
-        st.markdown("**\U0001f4a1 PM Actions:**")
+        st.markdown("**Suggested Actions:**")
         for idea in ideas:
             if isinstance(idea, str) and idea.strip() and not idea.startswith("[LLM disabled]"):
                 pretty = textwrap.shorten(str(idea), width=220, placeholder="...")
                 st.markdown(f"- {pretty}")
 
-    # Context metadata
+    # ── Compact metadata ──
     meta = []
-    if persona and persona != "Unknown":
+    if persona and persona not in ("Unknown", "General"):
         meta.append(f"**Persona:** {persona}")
-    if clarity and clarity != "Unknown":
-        meta.append(f"**Clarity:** {clarity}")
-    effort = i.get("effort")
-    if effort and effort != "Unknown":
-        meta.append(f"**Effort:** {effort}")
+    if subtag and subtag.lower() not in ("general", "unknown"):
+        meta.append(f"**Topic:** {subtag}")
+    if topics:
+        meta.append(f"**Themes:** {', '.join(topics[:4])}")
     if meta:
         st.caption(" \u00b7 ".join(meta))
 
-    # Full quote
-    text = i.get("text", "")
+    # Full quote (only if truncated above)
     if text and len(text) > 350:
         st.markdown("**Full user quote:**")
         st.markdown(f"> {text}")
+
+
+def _build_smart_takeaway(text: str, type_tag: str, sentiment: str, persona: str, subtag: str) -> str:
+    """Build a takeaway that actually summarizes the user's text, not a template."""
+    text_lower = text.lower()
+    # Extract the first meaningful sentence as the core signal
+    sentences = [s.strip() for s in text.replace("\n", ". ").split(".") if len(s.strip()) > 15]
+    core = sentences[0] if sentences else text[:150]
+    # Cap at ~120 chars
+    if len(core) > 120:
+        core = core[:117].rsplit(" ", 1)[0] + "..."
+
+    # Build a PM-oriented framing around the core
+    if type_tag == "Complaint" and sentiment == "Negative":
+        return f"User reports a problem: *\"{core}\"* \u2014 this is a negative experience that could drive churn."
+    elif type_tag == "Feature Request":
+        return f"User is requesting: *\"{core}\"* \u2014 evaluate whether this aligns with roadmap priorities."
+    elif type_tag == "Question":
+        return f"User is confused: *\"{core}\"* \u2014 may indicate a UX gap or missing documentation."
+    elif sentiment == "Positive":
+        return f"Positive signal: *\"{core}\"* \u2014 reinforces what's working well."
+    else:
+        return f"*\"{core}\"*"
+
+
+def _assess_actionability(i: Dict[str, Any], text_lower: str) -> tuple:
+    """Rate how actionable this insight is for a PM. Returns (label, color)."""
+    score = 0
+    # High-signal flags
+    if i.get("is_urgent"):
+        score += 3
+    if i.get("_payment_issue") or i.get("is_refund_issue"):
+        score += 2  # Revenue impact
+    if i.get("is_vault_signal") or i.get("is_ag_signal"):
+        score += 2  # Strategic product
+    if i.get("brand_sentiment") == "Negative" and i.get("type_tag") == "Complaint":
+        score += 2
+    if i.get("type_tag") == "Feature Request":
+        score += 1
+    if i.get("_high_end_flag"):
+        score += 1  # High-value segment
+    # Text quality
+    if len(i.get("text", "")) > 200:
+        score += 1  # Detailed feedback
+    if any(w in text_lower for w in ["switched to", "moved to", "leaving", "cancelled", "quit"]):
+        score += 3  # Churn signal
+
+    if score >= 5:
+        return "High \u2014 investigate now", "#e63946"
+    elif score >= 3:
+        return "Medium \u2014 worth tracking", "#f59e0b"
+    else:
+        return "Low \u2014 monitor", "#6b7280"
+
+
+def _build_context_line(i: Dict[str, Any], text_lower: str, subtag: str, sentiment: str) -> str:
+    """Build a one-line context explanation of why this matters to eBay Collectibles."""
+    # Competitive risk
+    competitors = ["fanatics", "whatnot", "heritage", "alt.xyz", "pwcc", "myslabs"]
+    mentioned_comp = [c for c in competitors if c in text_lower]
+    if mentioned_comp:
+        return f"Mentions competitor ({', '.join(mentioned_comp).title()}) \u2014 potential competitive risk or win-back signal."
+
+    # Revenue/trust signals
+    if any(w in text_lower for w in ["scam", "fake", "counterfeit", "fraud"]):
+        return "Trust & safety concern \u2014 directly impacts buyer confidence and GMV."
+    if any(w in text_lower for w in ["payment", "payout", "funds held", "checkout"]):
+        return "Payment friction \u2014 blocks transactions and impacts seller retention."
+    if "vault" in text_lower:
+        return "Vault product signal \u2014 strategic growth area for high-value collectibles."
+    if any(w in text_lower for w in ["authentication", "authenticity guarantee", " ag "]):
+        return "Authentication signal \u2014 key differentiator vs competitors."
+    if any(w in text_lower for w in ["shipping", "delivery", "tracking", "lost package"]):
+        return "Shipping/fulfillment friction \u2014 impacts buyer satisfaction and repeat purchase."
+    if any(w in text_lower for w in ["fee", "commission", "too expensive"]):
+        return "Pricing/fee sensitivity \u2014 could push sellers to competing platforms."
+    if any(w in text_lower for w in ["grading", "psa", "bgs", "cgc"]):
+        return "Grading ecosystem signal \u2014 affects supply quality and buyer trust."
+    if any(w in text_lower for w in ["comc", "check out my cards"]):
+        return "COMC partner signal \u2014 impacts consignment pipeline and card supply."
+    if sentiment == "Negative" and subtag in ("Seller Experience", "Buyer Experience"):
+        return f"{subtag} friction \u2014 negative experiences drive users to competing platforms."
+    return ""
+
+
+def _collect_signals(i: Dict[str, Any]) -> list:
+    """Collect detected signal flags as compact labels."""
+    signals = []
+    if i.get("_payment_issue"):
+        signals.append("\U0001f4b3 Payment")
+    if i.get("_upi_flag"):
+        signals.append("\u26a0\ufe0f UPI")
+    if i.get("is_shipping_issue"):
+        signals.append("\U0001f4e6 Shipping")
+    if i.get("is_vault_signal"):
+        signals.append("\U0001f3e6 Vault")
+    if i.get("is_ag_signal"):
+        signals.append("\u2705 AG")
+    if i.get("is_psa_turnaround"):
+        signals.append("\U0001f3af Grading")
+    if i.get("is_refund_issue"):
+        signals.append("\U0001f504 Refund")
+    if i.get("is_fees_concern"):
+        signals.append("\U0001f4b0 Fees")
+    if i.get("_high_end_flag"):
+        signals.append("\U0001f48e High-Value")
+    if i.get("is_urgent"):
+        signals.append("\U0001f6a8 Urgent")
+    return signals
 
 
 def _generate_deep_dive(text: str, insight: Dict[str, Any]) -> str:
@@ -284,28 +369,40 @@ def _generate_deep_dive(text: str, insight: Dict[str, Any]) -> str:
     sentiment = insight.get("brand_sentiment", "Neutral")
     persona = insight.get("persona", "Unknown")
     subtag = insight.get("subtag", "General")
+    source = insight.get("source", "Unknown")
+    topics = insight.get("topic_focus_list") or insight.get("topic_focus") or []
+    if isinstance(topics, list):
+        topics = ", ".join(topics)
 
-    prompt = f"""Analyze this user feedback signal for a product manager at eBay Collectibles.
+    prompt = f"""You are analyzing a real user signal for a Product Manager on the eBay Collectibles team (trading cards, sports memorabilia, coins, comics). eBay competes with Fanatics Collect, Whatnot (live breaks), Heritage Auctions, PWCC, and Alt.xyz. Key eBay products include Vault (secure storage), Authenticity Guarantee, and integrations with grading companies (PSA, BGS, CGC).
 
-USER QUOTE:
-\"{text[:800]}\"
+USER QUOTE (from {source}):
+\"{text[:1200]}\"
 
-METADATA: Type={type_tag}, Sentiment={sentiment}, Persona={persona}, Topic={subtag}
+SIGNAL METADATA:
+- Type: {type_tag} | Sentiment: {sentiment} | Persona: {persona}
+- Topic: {subtag} | Themes: {topics}
 
-Write a concise analysis (150 words max) with:
-1. **What happened** \u2014 one sentence summary of the user's experience
-2. **Why it matters** \u2014 business impact (revenue, trust, retention, competitive risk)
-3. **Root cause** \u2014 your best hypothesis for what's causing this
-4. **Recommended action** \u2014 one specific, actionable next step
+Write a sharp analysis in this exact format:
 
-Be direct. No filler. Write for a PM who has 30 seconds to read this."""
+**TL;DR:** [One sentence: what is this person saying and why should a PM care?]
+
+**The Problem:** [2-3 sentences. What specifically went wrong or what is the user asking for? Be concrete — reference details from their quote.]
+
+**Business Impact:** [1-2 sentences. How does this affect eBay's collectibles business? Think: GMV, seller/buyer retention, trust, competitive positioning. Be specific — e.g. "sellers moving to Whatnot" not just "retention risk".]
+
+**Is This Actionable?** [Yes/No/Maybe + 1 sentence explaining. "Yes — this is a known Vault UX gap that could be fixed in a sprint" or "No — this is a one-off edge case" or "Maybe — need to check if this is a pattern across more signals".]
+
+**Recommended Next Step:** [One specific action. Not "investigate further" — give a real action like "File a bug for the Vault withdrawal flow" or "Add to the Q3 Shipping roadmap" or "Share with Trust & Safety for policy review".]
+
+Rules: Be direct. No filler. No hedging. Write for a PM who reads 50 of these a day and needs to decide in 10 seconds whether to act."""
 
     try:
         return _chat(
             MODEL_MAIN,
-            "You are a senior product analyst who writes crisp, insight-dense analyses.",
+            "You are a senior product analyst at eBay who specializes in the collectibles vertical. You write crisp, opinionated analyses that help PMs make fast decisions. You never hedge or use vague language.",
             prompt,
-            max_completion_tokens=300,
+            max_completion_tokens=500,
             temperature=0.3,
         )
     except Exception as e:
