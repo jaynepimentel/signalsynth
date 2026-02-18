@@ -589,8 +589,8 @@ Be extremely specific and concrete. Reference actual product features, flows, an
                     with st.container(border=True):
                         st.markdown(st.session_state[brief_key])
 
-                # Raw signals — collapsed, for reference
-                with st.expander(f"📄 Raw signals ({len(tag_posts)})", expanded=False):
+                # Raw signals — toggle instead of nested expander
+                if st.checkbox(f"📄 Show raw signals ({len(tag_posts)})", key=f"raw_{tag}", value=False):
                     for idx, post in enumerate(tag_posts[:8], 1):
                         text = post.get("text", "")[:250]
                         score = post.get("score", 0)
