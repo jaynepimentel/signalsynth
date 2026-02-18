@@ -684,14 +684,22 @@ Be extremely specific and concrete. Reference actual product features, flows, an
         top_tags = subtag_counts.most_common(8)
         for tag, cnt in top_tags:
             neg_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative")
-            neg_pct = round(neg_in_tag / max(cnt, 1) * 100)
             complaints_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("type_tag") == "Complaint")
-            # Health score: use BOTH percentage AND absolute volume
-            # High absolute negative count = problem even if % is low
-            is_red = neg_pct > 40 or neg_in_tag >= 15 or complaints_in_tag >= 20
-            is_yellow = neg_pct > 15 or neg_in_tag >= 8 or complaints_in_tag >= 10
-            bar = "🔴" if is_red else ("�" if is_yellow else "�🟢")
-            st.markdown(f"{bar} **{tag}**: {cnt} signals · {neg_in_tag} negative ({neg_pct}%) · {complaints_in_tag} complaints")
+            bugs_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("type_tag") == "Bug Report")
+            # Pain signals = unique posts that are negative OR complaint OR bug (avoid double-counting)
+            pain_posts = set()
+            for i in normalized:
+                if i.get("subtag") != tag:
+                    continue
+                if i.get("brand_sentiment") == "Negative" or i.get("type_tag") in ("Complaint", "Bug Report"):
+                    pain_posts.add(id(i))
+            pain_count = len(pain_posts)
+            pain_pct = round(pain_count / max(cnt, 1) * 100)
+            # Health score based on pain signals (combines sentiment + type_tag)
+            is_red = pain_pct > 40 or pain_count >= 20
+            is_yellow = pain_pct > 15 or pain_count >= 10
+            bar = "🔴" if is_red else ("🟡" if is_yellow else "🟢")
+            st.markdown(f"{bar} **{tag}**: {cnt} signals · {pain_count} pain signals ({pain_pct}%)")
 
     st.markdown("---")
     st.markdown("### 🚦 Where to Go Next")
