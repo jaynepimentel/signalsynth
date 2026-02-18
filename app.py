@@ -521,12 +521,16 @@ with tabs[0]:
     subtag_counts.pop("General", None)
     if subtag_counts:
         top_tags = subtag_counts.most_common(8)
-        # Simple horizontal display
         for tag, cnt in top_tags:
             neg_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative")
             neg_pct = round(neg_in_tag / max(cnt, 1) * 100)
-            bar = "🔴" if neg_pct > 40 else ("🟡" if neg_pct > 20 else "🟢")
-            st.markdown(f"{bar} **{tag}**: {cnt} signals ({neg_pct}% negative)")
+            complaints_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("type_tag") == "Complaint")
+            # Health score: use BOTH percentage AND absolute volume
+            # High absolute negative count = problem even if % is low
+            is_red = neg_pct > 40 or neg_in_tag >= 15 or complaints_in_tag >= 20
+            is_yellow = neg_pct > 15 or neg_in_tag >= 8 or complaints_in_tag >= 10
+            bar = "🔴" if is_red else ("�" if is_yellow else "�🟢")
+            st.markdown(f"{bar} **{tag}**: {cnt} signals · {neg_in_tag} negative ({neg_pct}%) · {complaints_in_tag} complaints")
 
     st.markdown("---")
     st.markdown("### 🚦 Where to Go Next")
