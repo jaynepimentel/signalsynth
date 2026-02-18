@@ -463,7 +463,6 @@ RELEVANT SIGNALS:
                     st.markdown(msg["content"])
             if st.button("🗑️ Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
-                st.session_state["qa_draft"] = "is there any signal about PSA vault issues?"
                 st.rerun()
 
 # ─────────────────────────────────────────────
