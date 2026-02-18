@@ -607,20 +607,6 @@ tabs = st.tabs([
 # TAB 6: CHARTS — Executive snapshot
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[5]:
-    with st.expander("💡 New here? How to use SignalSynth", expanded=False):
-        st.markdown("""
-**SignalSynth** turns noisy community chatter into product-ready direction for eBay Collectibles teams.
-
-### Start here
-- **📋 Strategy:** identify top themes, then generate PRD/BRD/PRFAQ/Jira drafts.
-- **🎯 Customer Signals:** validate root causes from real user evidence.
-- **⚔️ Competitor Intel + 📰 Industry & Trends:** pressure-test decisions with market context.
-- **📦 Checklists & Sealed Launches:** track release/checklist timing.
-- **📊 Charts:** review KPIs and prioritize actions.
-
-**Tip:** Use Ask AI above the tabs for fast synthesis before diving in.
-        """)
-
     # ── Executive Briefing ──
     from collections import Counter
 
@@ -2299,6 +2285,20 @@ Reports:
 # TAB 1: STRATEGY — Strategic themes + AI doc generation
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
+    with st.expander("💡 New here? How to use SignalSynth", expanded=True):
+        st.markdown("""
+**SignalSynth** turns noisy community chatter into product-ready direction for eBay Collectibles teams.
+
+### Start here
+- **📋 Strategy:** identify top themes, then generate PRD/BRD/PRFAQ/Jira drafts.
+- **🎯 Customer Signals:** validate root causes from real user evidence.
+- **⚔️ Competitor Intel + 📰 Industry & Trends:** pressure-test decisions with market context.
+- **📦 Checklists & Sealed Launches:** track release/checklist timing.
+- **📊 Charts:** review KPIs and prioritize actions.
+
+**Tip:** Use Ask AI above the tabs for fast synthesis before diving in.
+        """)
+
     st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
