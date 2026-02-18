@@ -107,6 +107,67 @@ def match_multiselect_filters(insight, active_filters, filter_fields):
             return False
     return True
 
+def generate_competitor_analysis(comp_name, complaints, praise, changes, comparisons, total_posts):
+    """Generate an AI competitive intelligence summary for a competitor."""
+    try:
+        from components.ai_suggester import _chat, MODEL_MAIN
+    except ImportError:
+        return "LLM not available. Please configure OpenAI API key."
+
+    # Build a digest of top posts across categories
+    digest_parts = []
+    if complaints:
+        top_complaints = sorted(complaints, key=lambda x: x.get("score", 0), reverse=True)[:5]
+        complaint_texts = "\n".join([f"- {p.get('title', '')[:80] or p.get('text', '')[:80]}" for p in top_complaints])
+        digest_parts.append(f"COMPLAINTS ({len(complaints)} total):\n{complaint_texts}")
+    if praise:
+        top_praise = sorted(praise, key=lambda x: x.get("score", 0), reverse=True)[:5]
+        praise_texts = "\n".join([f"- {p.get('title', '')[:80] or p.get('text', '')[:80]}" for p in top_praise])
+        digest_parts.append(f"PRAISE ({len(praise)} total):\n{praise_texts}")
+    if changes:
+        change_texts = "\n".join([f"- {p.get('title', '')[:80] or p.get('text', '')[:80]}" for p in changes[:5]])
+        digest_parts.append(f"PRODUCT/POLICY CHANGES ({len(changes)} total):\n{change_texts}")
+    if comparisons:
+        comp_texts = "\n".join([f"- {p.get('title', '')[:80] or p.get('text', '')[:80]}" for p in comparisons[:5]])
+        digest_parts.append(f"COMPARISONS TO EBAY ({len(comparisons)} total):\n{comp_texts}")
+
+    digest = "\n\n".join(digest_parts)
+
+    prompt = f"""You are a Senior Competitive Intelligence Analyst at eBay Collectibles. Analyze these {total_posts} community signals about {comp_name}.
+
+{digest}
+
+Write a competitive intelligence brief in this exact format:
+
+**🏢 {comp_name} — Competitive Summary**
+
+**What they're doing:** (2-3 sentences on their strategy, recent moves, and market position. Reference any publicly known facts — funding, GMV, user base, fee structure, recent launches.)
+
+**Where they're vulnerable:** (2-3 sentences on their biggest pain points based on the complaints. What are users most frustrated about? Be specific.)
+
+**Where they're winning:** (1-2 sentences on what users praise them for. What does eBay need to match or beat?)
+
+**eBay response playbook:**
+1. (One specific conquest action — how to win their unhappy users)
+2. (One defensive action — how to prevent eBay users from switching)
+3. (One strategic move — longer-term competitive positioning)
+
+**Threat level:** (🔴 High / 🟡 Medium / 🟢 Low) — with one sentence explaining why.
+
+Be specific, data-driven, and actionable. Reference real product features and public market data where possible. No generic advice."""
+
+    try:
+        return _chat(
+            MODEL_MAIN,
+            "You are a sharp competitive intelligence analyst. Write crisp, specific, actionable briefs. Use real public data points when available.",
+            prompt,
+            max_completion_tokens=800,
+            temperature=0.4
+        )
+    except Exception as e:
+        return f"Analysis unavailable: {e}"
+
+
 def generate_ai_brief(entity_type, entity_name, post_text, post_title):
     """Unified AI brief generator for competitors, subsidiaries, and partners."""
     try:
@@ -641,6 +702,23 @@ with tabs[1]:
                     mc2.metric("Complaints", len(complaints_list), help="Conquest opportunities — what their customers hate")
                     mc3.metric("Praise", len(praise_list), help="Competitive threats — what people like about them")
                     mc4.metric("Comparisons", len(comparison_list), help="Direct platform comparisons")
+
+                    # AI Competitive Intelligence Summary
+                    analysis_key = f"comp_analysis_{comp_name}"
+                    if st.button(f"🧠 Generate AI Competitive Brief for {comp_name}", key=f"btn_{analysis_key}"):
+                        st.session_state[analysis_key] = "__generating__"
+                        st.rerun()
+                    if st.session_state.get(analysis_key) == "__generating__":
+                        with st.spinner(f"Analyzing {len(posts)} signals for {comp_name}..."):
+                            result = generate_competitor_analysis(
+                                comp_name, complaints_list, praise_list,
+                                changes_list, comparison_list, len(posts)
+                            )
+                        st.session_state[analysis_key] = result
+                        st.rerun()
+                    if st.session_state.get(analysis_key) and st.session_state[analysis_key] != "__generating__":
+                        with st.container(border=True):
+                            st.markdown(st.session_state[analysis_key])
 
                     # Policy & product changes
                     if changes_list:
