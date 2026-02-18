@@ -1627,15 +1627,49 @@ with tabs[3]:
         st.markdown("### 🧭 eBay Price Guide Signals")
         st.caption("What users like, where they are confused, and what they dislike about eBay's Price Guide (including Card Ladder coverage).")
 
+        # ── eBay Price Guide product keywords ──
+        # These must be specific to eBay's Price Guide product (Card Ladder integration).
+        # Generic "price guide" alone is too broad — require eBay context.
+        PG_EXACT_KW = [
+            "ebay price guide", "ebay's price guide", "ebay card value",
+            "card ladder", "cardladder", "card-ladder",
+            "ebay market value", "ebay comps", "ebay comp tool",
+            "ebay scan", "scan on ebay", "ebay scanner",
+            "price guide on ebay", "price guide feature",
+            "ebay trading card price", "ebay card price tool",
+        ]
+        PG_EBAY_CONTEXT = ["ebay"]
+        PG_PRODUCT_KW = [
+            "price guide", "market value tool", "card value tool",
+            "comp tool", "price lookup", "value lookup",
+        ]
+        # Exclude generic hobby/price chatter that has nothing to do with eBay's product
+        PG_EXCLUDE = [
+            "secret lair", "riftbound", "beanie", "lgs need", "scalper",
+            "rfid", "skimming", "gold bar", "fake gold", "iron maiden",
+            "error card", "wrong player", "logoman", "1st edition",
+            "pokemon break", "pikachu illustrator", "rookie debut patch",
+            "most expensive", "record sale", "banger grail",
+        ]
+
         def _is_price_guide_signal(item):
             txt = (item.get("title", "") + " " + item.get("text", "")).lower()
-            return (
-                _taxonomy_topic(item) == "Price Guide"
-                or bool(item.get("is_price_guide_signal"))
-                or any(k in txt for k in [
-                    "price guide", "card ladder", "cardladder", "scan card", "scanner", "market comps", "what's my card worth",
-                ])
-            )
+            # Hard exclude obvious false positives
+            if any(ex in txt for ex in PG_EXCLUDE):
+                return False
+            # Explicit taxonomy tag from enrichment
+            if _taxonomy_topic(item) == "Price Guide" and "ebay" in txt:
+                return True
+            # Explicit flag from enrichment pipeline
+            if item.get("is_price_guide_signal") and "ebay" in txt:
+                return True
+            # Direct exact-match keywords (already contain eBay context)
+            if any(k in txt for k in PG_EXACT_KW):
+                return True
+            # Co-occurrence: must mention eBay AND a price-guide product keyword
+            if any(ctx in txt for ctx in PG_EBAY_CONTEXT) and any(pk in txt for pk in PG_PRODUCT_KW):
+                return True
+            return False
 
         pg_signals = [p for p in normalized if _is_price_guide_signal(p)]
         pg_signals_sorted = sorted(pg_signals, key=lambda x: (x.get("post_date", ""), float(x.get("score", 0) or 0)), reverse=True)
