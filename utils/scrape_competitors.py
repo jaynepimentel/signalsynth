@@ -37,6 +37,10 @@ EXCLUDE_PATTERNS = [
     "real estate", "house", "apartment", "rent ",
     "crypto", "bitcoin", "nft ", "stock market",
     "recipe", "cooking", "restaurant",
+    "pixel", "google pixel", "iphone", "android", "samsung", "smartphone",
+    "laptop", "computer", "gpu", "cpu", "ram ",
+    "election", "democrat", "republican", "trump", "biden", "congress",
+    "extremist", "terrorism", "terrorist",
 ]
 
 # Competitor/subsidiary definitions
@@ -49,7 +53,7 @@ COMPETITORS = {
             "fanatics vs ebay cards", "selling on fanatics collect"
         ],
         "subreddits": ["baseballcards", "sportscards", "footballcards", "basketballcards"],
-        "required_keywords": ["fanatics", "collect", "card", "trading", "marketplace"],
+        "required_keywords": ["fanatics"],
     },
     "Fanatics Live": {
         "type": "competitor",
