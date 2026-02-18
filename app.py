@@ -949,7 +949,7 @@ Drill into customer feedback by topic, sentiment, and type.
     with nc3:
         st.markdown("""
 **📋 Strategy**
-AI-clustered themes. Generate PRDs, BRDs, and Jira tickets.
+Strategic Themes from user signals: Theme → Opportunity Area → Supporting Signals → Top Topics.
 """)
 
 
@@ -2054,10 +2054,10 @@ Reports:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 7: STRATEGY — Clusters + AI doc generation
+# TAB 7: STRATEGY — Strategic themes + AI doc generation
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[6]:
-    st.markdown("AI-clustered themes from user signals. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
+    st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
     except Exception as e:

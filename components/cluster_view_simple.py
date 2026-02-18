@@ -1,4 +1,4 @@
-# cluster_view_simple.py - Strategic epic display with LLM summaries and document generation
+# cluster_view_simple.py - Strategic theme display with LLM summaries and document generation
 
 import json
 import os
@@ -22,8 +22,8 @@ DOC_TEMPLATES = {
         "icon": "📄",
         "prompt": """You are a Senior Product Manager writing a PRD for engineering.
 
-EPIC: {epic_name}
-PRODUCT OPPORTUNITY: {product_opp}
+THEME: {theme_name}
+OPPORTUNITY AREA: {product_opp}
 
 USER SIGNALS ({total} signals, {complaints} complaints):
 {context}
@@ -43,8 +43,8 @@ Be specific with examples from the signals. Write for engineers."""
         "icon": "💼",
         "prompt": """You are a Business Analyst writing a BRD for stakeholders.
 
-EPIC: {epic_name}
-PRODUCT OPPORTUNITY: {product_opp}
+THEME: {theme_name}
+OPPORTUNITY AREA: {product_opp}
 
 USER SIGNALS ({total} signals, {complaints} complaints):
 {context}
@@ -65,8 +65,8 @@ Write for business stakeholders, not engineers."""
         "icon": "📰",
         "prompt": """You are writing an Amazon-style PRFAQ (Press Release + FAQ).
 
-EPIC: {epic_name}
-PRODUCT OPPORTUNITY: {product_opp}
+THEME: {theme_name}
+OPPORTUNITY AREA: {product_opp}
 
 USER SIGNALS ({total} signals, {complaints} complaints):
 {context}
@@ -94,8 +94,8 @@ Write as if the feature already launched successfully."""
         "icon": "🎫",
         "prompt": """You are a Product Manager writing Jira tickets for a sprint.
 
-EPIC: {epic_name}
-PRODUCT OPPORTUNITY: {product_opp}
+THEME: {theme_name}
+OPPORTUNITY AREA: {product_opp}
 
 USER SIGNALS ({total} signals, {complaints} complaints):
 {context}
@@ -132,14 +132,14 @@ def _generate_document(doc_type: str, cluster: Dict[str, Any], selected_insights
     sample_texts = [f"[{i.get('type_tag', 'Feedback')}] {i.get('text', '')[:200]}" for i in sorted_insights[:15]]
     context = "\n---\n".join(sample_texts)
     
-    epic_name = cluster.get("title", "Unknown")
+    theme_name = cluster.get("title", "Unknown")
     product_opp = cluster.get("product_opportunity", "")
     signal_counts = cluster.get("signal_counts", {})
     total = len(insights)
     complaints = sum(1 for i in insights if i.get("type_tag") == "Complaint")
     
     prompt = template["prompt"].format(
-        epic_name=epic_name,
+        theme_name=theme_name,
         product_opp=product_opp,
         total=total,
         complaints=complaints,
@@ -231,7 +231,7 @@ def _generate_cluster_summary(cluster: Dict[str, Any]) -> str:
     sample_texts = [f"[{i.get('type_tag', 'Feedback')}] {i.get('text', '')[:250]}" for i in sorted_insights[:12]]
     context = "\n---\n".join(sample_texts)
     
-    epic_name = cluster.get("title", "Unknown")
+    theme_name = cluster.get("title", "Unknown")
     product_opp = cluster.get("product_opportunity", "")
     signal_counts = cluster.get("signal_counts", {})
     total = signal_counts.get("total", len(insights))
@@ -240,8 +240,8 @@ def _generate_cluster_summary(cluster: Dict[str, Any]) -> str:
     
     prompt = f"""You are a Senior Product Manager preparing an executive briefing for leadership.
 
-EPIC: {epic_name}
-PRODUCT OPPORTUNITY: {product_opp}
+THEME: {theme_name}
+OPPORTUNITY AREA: {product_opp}
 SIGNAL VOLUME: {total} total ({complaints} complaints, {feature_requests} feature requests)
 
 USER FEEDBACK SIGNALS:
@@ -285,17 +285,18 @@ def _extract_top_themes(insights: List[Dict[str, Any]], n: int = 5) -> List[str]
 
 
 def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
-    """Display strategic epic clusters with LLM summaries."""
+    """Display strategic theme clusters with LLM summaries."""
     clusters = _load_clusters()
     
     if not clusters:
-        st.info("No clusters available. Run `python precompute_clusters.py` to generate.")
+        st.info("No strategic themes available. Run `python precompute_clusters.py` to generate.")
         return
     
     # Header with sorting
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.caption(f"📊 {len(clusters)} Strategic Epics")
+        st.caption(f"📊 {len(clusters)} Strategic Themes")
+        st.caption("Hierarchy: Theme → Opportunity Area → Supporting Signals → Top Topics")
     with col2:
         sort_options = ["Signals ↓", "Complaints ↓", "A→Z"]
         sort_by = st.selectbox(
@@ -314,24 +315,24 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
         clusters = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
     
     for cluster in clusters:
-        epic_name = cluster.get("title", "Unknown")
-        label = cluster.get("label", epic_name)
+        theme_name = cluster.get("title", "Unknown")
+        label = cluster.get("label", theme_name)
         size = cluster.get("size", 0)
         description = cluster.get("description", "")
         product_opp = cluster.get("product_opportunity", "")
         signal_counts = cluster.get("signal_counts", {})
         cluster_insights = cluster.get("insights", [])
-        cluster_id = cluster.get("cluster_id", epic_name)
+        cluster_id = cluster.get("cluster_id", theme_name)
         
-        # Epic card using container (no expander)
+        # Theme card using container (no expander)
         with st.container(border=True):
-            st.subheader(f"{label} — {size} signals")
+            st.subheader(f"Theme: {label} — {size} signals")
             
-            # Product opportunity header
+            # Opportunity area header
             if product_opp:
-                st.markdown(f"**🎯 Product Opportunity:** {product_opp}")
+                st.markdown(f"**🧭 Opportunity Area:** {product_opp}")
             if description:
-                st.caption(description)
+                st.caption(f"Problem statement: {description}")
             
             # Metrics row — clear labels, no ambiguity
             negative = signal_counts.get("negative", 0)
@@ -367,10 +368,10 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                 if sample_text:
                     st.markdown(f"📝 *\"{sample_text}...\"*")
             
-            # Top themes
+            # Top topics from supporting signals
             themes = _extract_top_themes(cluster_insights)
             if themes:
-                st.markdown("**🏷️ Top Themes:** " + " • ".join([f"`{t}`" for t in themes]))
+                st.markdown("**🏷️ Top Topics:** " + " • ".join([f"`{t}`" for t in themes]))
             
             # Two-column action layout
             action_col1, action_col2 = st.columns([1, 2])
@@ -442,7 +443,7 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
                 st.session_state[insights_key] = False
             
             # Toggle button
-            btn_label = f"📋 Hide {len(cluster_insights)} Insights" if st.session_state[insights_key] else f"📋 View {len(cluster_insights)} Insights"
+            btn_label = f"📋 Hide {len(cluster_insights)} Supporting Signals" if st.session_state[insights_key] else f"📋 View {len(cluster_insights)} Supporting Signals"
             if st.button(btn_label, key=f"toggle_{cluster_id}", use_container_width=True):
                 st.session_state[insights_key] = not st.session_state[insights_key]
                 st.rerun()
