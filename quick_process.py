@@ -235,6 +235,63 @@ def is_relevant(text, subreddit=""):
     return False
 
 
+# YouTube comment quality keywords — market intelligence, product feedback, competitive intel
+YT_QUALITY_KEYWORDS = [
+    # Marketplace & platform feedback
+    "ebay", "fee", "shipping", "listing", "seller", "buyer", "auction", "buy it now",
+    "promoted", "algorithm", "search", "visibility", "vault", "authenticity",
+    # Competitive intel
+    "fanatics", "whatnot", "heritage", "alt.xyz", "tcgplayer", "goldin", "pwcc",
+    # Market trends & pricing
+    "price", "value", "market", "invest", "flip", "profit", "trend", "crash", "boom",
+    "overpriced", "undervalued", "roi", "hold", "long term",
+    # Product quality & grading
+    "grading", "psa", "bgs", "cgc", "sgc", "topps", "panini", "bowman", "prizm",
+    "quality control", "qc", "short print", "shorted", "missing auto", "missing hit",
+    # Pain points
+    "scam", "fake", "counterfeit", "return", "refund", "rip off", "robbery",
+    "disappointed", "frustrated", "terrible", "worst", "broken",
+    # Industry direction
+    "hobby", "industry", "future", "license", "exclusive", "monopoly",
+]
+
+
+def is_quality_yt_comment(post):
+    """
+    Score a YouTube comment for quality. Returns True if it's worth
+    promoting as a standalone insight or showing in the Industry tab.
+    """
+    text = post.get("text", "")
+    text_lower = text.lower()
+    likes = post.get("like_count", 0) or 0
+
+    # Too short = spam
+    if len(text) < 50:
+        return False
+
+    # Exclude self-promo / affiliate spam
+    spam_patterns = ["sign up for", "use this link", "use code", "subscribe", "check out my", "follow me", "giveaway"]
+    if any(sp in text_lower for sp in spam_patterns):
+        return False
+
+    # Count quality signals
+    keyword_hits = sum(1 for kw in YT_QUALITY_KEYWORDS if kw in text_lower)
+
+    # High likes + any keyword = quality
+    if likes >= 5 and keyword_hits >= 1:
+        return True
+
+    # Strong keyword relevance even with few likes
+    if keyword_hits >= 2 and len(text) >= 80:
+        return True
+
+    # Very high engagement regardless
+    if likes >= 15:
+        return True
+
+    return False
+
+
 def classify_insight(text):
     """Classify insight type and sentiment for PM relevance."""
     text_lower = text.lower()
@@ -508,11 +565,23 @@ def main():
     # Filter for relevance first
     print("\n🔬 Filtering for eBay-specific actionable insights...")
     relevant_posts = []
+    yt_quality_count = 0
     for post in posts:
         text = f"{post.get('title', '')} {post.get('text', '')}"
         subreddit = post.get("subreddit", "")
+        source = post.get("source", "")
+
+        # Quality YouTube comments bypass normal relevance filter
+        if source == "YouTube (comment)" and is_quality_yt_comment(post):
+            relevant_posts.append(post)
+            yt_quality_count += 1
+            continue
+
         if is_relevant(text, subreddit):
             relevant_posts.append(post)
+
+    if yt_quality_count:
+        print(f"  🎬 YouTube quality comments promoted: {yt_quality_count}")
     
     print(f"📊 Relevant posts: {len(relevant_posts)} / {len(posts)} ({100*len(relevant_posts)//len(posts)}%)")
     

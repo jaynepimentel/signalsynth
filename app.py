@@ -576,7 +576,36 @@ with tabs[3]:
         p["_industry_source"] = "News"
         industry_posts.append(p)
 
-    # YouTube — group comments by video, don't show each comment as a separate line item
+    # YouTube — group comments by video, filter for quality comments only
+    YT_QUALITY_KW = [
+        "ebay", "fee", "shipping", "listing", "seller", "buyer", "auction",
+        "promoted", "vault", "authenticity", "fanatics", "whatnot", "heritage",
+        "tcgplayer", "goldin", "price", "value", "market", "invest", "flip",
+        "profit", "trend", "crash", "overpriced", "grading", "psa", "bgs",
+        "topps", "panini", "bowman", "prizm", "quality control", "shorted",
+        "missing auto", "scam", "fake", "rip off", "robbery", "hobby",
+        "industry", "future", "license", "monopoly",
+    ]
+    YT_SPAM = ["sign up for", "use this link", "use code", "subscribe", "check out my", "follow me", "giveaway"]
+
+    def _yt_comment_quality(c):
+        """Return True if comment is worth showing."""
+        text = c.get("text", "")
+        text_lower = text.lower()
+        likes = c.get("like_count", 0) or 0
+        if len(text) < 50:
+            return False
+        if any(sp in text_lower for sp in YT_SPAM):
+            return False
+        kw_hits = sum(1 for kw in YT_QUALITY_KW if kw in text_lower)
+        if likes >= 5 and kw_hits >= 1:
+            return True
+        if kw_hits >= 2 and len(text) >= 80:
+            return True
+        if likes >= 15:
+            return True
+        return False
+
     yt_videos = {}  # url -> {video_post, comments: []}
     for p in youtube_raw:
         url = p.get("url", "")
@@ -584,7 +613,9 @@ with tabs[3]:
         if source == "YouTube (comment)":
             if url not in yt_videos:
                 yt_videos[url] = {"video": None, "comments": []}
-            yt_videos[url]["comments"].append(p)
+            # Only keep quality comments
+            if _yt_comment_quality(p):
+                yt_videos[url]["comments"].append(p)
         else:
             if url not in yt_videos:
                 yt_videos[url] = {"video": p, "comments": []}
@@ -599,12 +630,12 @@ with tabs[3]:
             video["_yt_comments"] = comments
             industry_posts.append(video)
         elif comments:
-            # No transcript/video post, create a summary entry from comments
+            # No transcript/video post, create a summary entry from quality comments
             representative = comments[0].copy()
             representative["_industry_source"] = "YouTube"
             representative["source"] = "YouTube"
             representative["_yt_comments"] = comments
-            representative["text"] = f"{len(comments)} comments on this video"
+            representative["text"] = f"{len(comments)} quality comments on this video"
             industry_posts.append(representative)
 
     # Forums & Blogs
