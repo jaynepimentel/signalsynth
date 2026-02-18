@@ -804,7 +804,9 @@ with tabs[1]:
                 comp_posts[name].append(p)
 
         # ── Competitor selector ──
-        all_comps = sorted(comp_posts.keys())
+        # Put Whatnot first, then sort the rest alphabetically
+        _other_comps = sorted(k for k in comp_posts.keys() if k != "Whatnot")
+        all_comps = (["Whatnot"] if "Whatnot" in comp_posts else []) + _other_comps
         comp_view = st.radio("View", ["All Competitors", "Subsidiaries (Goldin, TCGPlayer)"], horizontal=True, key="comp_intel_view")
 
         if comp_view == "All Competitors":
