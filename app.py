@@ -1041,91 +1041,9 @@ with tabs[2]:
 # TAB 4: INDUSTRY & TRENDS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[3]:
-    st.markdown("What the broader collectibles industry is saying — news, blogs, YouTube, and forum discussions.")
+    st.markdown("Top news, viral posts, YouTube commentary, podcasts, forum discussions, and product launches across the collectibles industry.")
 
-    # ── Upcoming Releases & Checklists ──
-    releases_data = []
-    try:
-        with open("data/upcoming_releases.json", "r", encoding="utf-8") as f:
-            releases_data = json.load(f)
-    except:
-        pass
-
-    if releases_data:
-        checklists = [r for r in releases_data if r.get("category") == "checklist"]
-        releases = [r for r in releases_data if r.get("category") == "release"]
-
-        st.markdown("### 📦 Upcoming Product Releases & Checklists")
-        st.caption(f"{len(releases)} upcoming releases · {len(checklists)} checklists available — data team: click checklist links to pull card lists.")
-
-        rel_tab1, rel_tab2 = st.tabs(["📋 Checklists", "🗓️ Upcoming Releases"])
-
-        with rel_tab1:
-            # Filter controls
-            cl_sports = sorted(set(c.get("sport", "Trading Cards") for c in checklists))
-            cl_brands = sorted(set(c.get("brand", "Other") for c in checklists))
-            fc1, fc2 = st.columns(2)
-            with fc1:
-                cl_sport_filter = st.selectbox("Sport/Category", ["All"] + cl_sports, key="cl_sport")
-            with fc2:
-                cl_brand_filter = st.selectbox("Brand", ["All"] + cl_brands, key="cl_brand")
-
-            filtered_cl = checklists
-            if cl_sport_filter != "All":
-                filtered_cl = [c for c in filtered_cl if c.get("sport") == cl_sport_filter]
-            if cl_brand_filter != "All":
-                filtered_cl = [c for c in filtered_cl if c.get("brand") == cl_brand_filter]
-
-            # Display as a clean table
-            if filtered_cl:
-                for idx, cl in enumerate(filtered_cl[:30], 1):
-                    title = cl.get("title", "")
-                    url = cl.get("url", "")
-                    date = cl.get("post_date", "")
-                    sport = cl.get("sport", "")
-                    brand = cl.get("brand", "")
-                    link = f"[Open Checklist]({url})" if url else ""
-                    st.markdown(f"**{idx}.** {title}")
-                    st.caption(f"{brand} · {sport} · {date} · {link}")
-                if len(filtered_cl) > 30:
-                    st.caption(f"... and {len(filtered_cl) - 30} more checklists.")
-            else:
-                st.info("No checklists match your filters.")
-
-        with rel_tab2:
-            # Filter controls
-            rel_sports = sorted(set(r.get("sport", "Trading Cards") for r in releases))
-            rel_brands = sorted(set(r.get("brand", "Other") for r in releases))
-            fr1, fr2 = st.columns(2)
-            with fr1:
-                rel_sport_filter = st.selectbox("Sport/Category", ["All"] + rel_sports, key="rel_sport")
-            with fr2:
-                rel_brand_filter = st.selectbox("Brand", ["All"] + rel_brands, key="rel_brand")
-
-            filtered_rel = releases
-            if rel_sport_filter != "All":
-                filtered_rel = [r for r in filtered_rel if r.get("sport") == rel_sport_filter]
-            if rel_brand_filter != "All":
-                filtered_rel = [r for r in filtered_rel if r.get("brand") == rel_brand_filter]
-
-            if filtered_rel:
-                for idx, rel in enumerate(filtered_rel[:30], 1):
-                    title = rel.get("title", "")
-                    url = rel.get("url", "")
-                    date = rel.get("post_date", "")
-                    sport = rel.get("sport", "")
-                    brand = rel.get("brand", "")
-                    link = f"[Details]({url})" if url else ""
-                    st.markdown(f"**{idx}.** {title}")
-                    st.caption(f"{brand} · {sport} · {date} · {link}")
-                if len(filtered_rel) > 30:
-                    st.caption(f"... and {len(filtered_rel) - 30} more releases.")
-            else:
-                st.info("No releases match your filters.")
-
-        st.markdown("---")
-
-    # Combine all industry sources
+    # ── Combine all industry sources ──
     industry_posts = []
 
     # News RSS
@@ -1170,7 +1088,6 @@ with tabs[3]:
         if source == "YouTube (comment)":
             if url not in yt_videos:
                 yt_videos[url] = {"video": None, "comments": []}
-            # Only keep quality comments
             if _yt_comment_quality(p):
                 yt_videos[url]["comments"].append(p)
         else:
@@ -1187,7 +1104,6 @@ with tabs[3]:
             video["_yt_comments"] = comments
             industry_posts.append(video)
         elif comments:
-            # No transcript/video post, create a summary entry from quality comments
             representative = comments[0].copy()
             representative["_industry_source"] = "YouTube"
             representative["source"] = "YouTube"
@@ -1201,39 +1117,106 @@ with tabs[3]:
         p["_industry_source"] = src
         industry_posts.append(p)
 
-    # Sort by date
-    industry_posts.sort(key=lambda x: x.get("post_date", ""), reverse=True)
+    # Viral / high-engagement Reddit posts (score >= 100, not already in industry sources)
+    VIRAL_THRESHOLD = 100
+    industry_urls = {p.get("url", "") for p in industry_posts if p.get("url")}
+    viral_reddit = []
+    for p in normalized:
+        if p.get("source") not in ("Reddit", "Reddit (comment)"):
+            continue
+        if p.get("score", 0) < VIRAL_THRESHOLD:
+            continue
+        if p.get("url", "") in industry_urls:
+            continue
+        p_copy = dict(p)
+        p_copy["_industry_source"] = "Reddit"
+        viral_reddit.append(p_copy)
+    # Deduplicate by URL
+    seen_urls = set()
+    for p in viral_reddit:
+        u = p.get("url", "")
+        if u and u not in seen_urls:
+            seen_urls.add(u)
+            industry_posts.append(p)
+
+    # Twitter / Bluesky posts with engagement
+    for p in normalized:
+        src = p.get("source", "")
+        if src not in ("Twitter", "Bluesky"):
+            continue
+        if p.get("score", 0) < 20:
+            continue
+        if p.get("url", "") in industry_urls:
+            continue
+        p_copy = dict(p)
+        p_copy["_industry_source"] = src
+        industry_posts.append(p_copy)
+
+    # Sort by date (most recent first), then by score as tiebreaker
+    industry_posts.sort(key=lambda x: (x.get("post_date", ""), x.get("score", 0)), reverse=True)
 
     if not industry_posts:
         st.info("No industry data. Run scrapers to collect news, YouTube, and forum data.")
     else:
-        # Source breakdown
+        # ── Top metrics ──
         from collections import Counter
         source_counts = Counter(p.get("_industry_source", "?") for p in industry_posts)
 
-        ic1, ic2, ic3 = st.columns(3)
-        ic1.metric("Total Industry Posts", len(industry_posts))
+        ic1, ic2, ic3, ic4 = st.columns(4)
+        ic1.metric("Total Posts", len(industry_posts))
         ic2.metric("Sources", len(source_counts))
-        ic3.metric("Most Recent", industry_posts[0].get("post_date", "?") if industry_posts else "N/A")
+        viral_count = sum(1 for p in industry_posts if p.get("score", 0) >= VIRAL_THRESHOLD)
+        ic3.metric("Viral (100+ pts)", viral_count)
+        ic4.metric("Most Recent", industry_posts[0].get("post_date", "?") if industry_posts else "N/A")
+
+        # ── 🔥 Top Viral & Trending Posts ──
+        st.markdown("### 🔥 Top Discussions & Viral Posts")
+        st.caption("Highest-engagement posts across all sources — what the community is talking about right now.")
+        top_viral = sorted(industry_posts, key=lambda x: x.get("score", 0), reverse=True)[:10]
+        for rank, post in enumerate(top_viral, 1):
+            source_label = post.get("_industry_source", post.get("source", "?"))
+            title = post.get("title", "")[:120] or post.get("text", "")[:120]
+            score = post.get("score", 0)
+            date = post.get("post_date", "")
+            url = post.get("url", "")
+            sub = post.get("subreddit", "")
+            source_icons = {
+                "News": "📰", "YouTube": "🎬", "Reddit": "💬",
+                "Twitter": "🐦", "Bluesky": "🦋",
+                "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
+                "Alt.xyz Blog": "📝", "COMC": "🃏",
+            }
+            icon = source_icons.get(source_label, "📄")
+            sub_label = f"r/{sub} · " if sub else ""
+            link = f" · [Link]({url})" if url else ""
+            st.markdown(f"**{rank}.** {icon} **{title}**")
+            st.caption(f"⬆️ {score} pts · {sub_label}{source_label} · {date}{link}")
+
+        st.markdown("---")
+
+        # ── Full feed with filters ──
+        st.markdown("### 📡 Full Industry Feed")
 
         # Source filter
         all_sources = ["All"] + sorted(source_counts.keys())
-        selected_source = st.selectbox("Filter by source", all_sources, key="industry_source")
+        sf1, sf2 = st.columns([1, 2])
+        with sf1:
+            selected_source = st.selectbox("Filter by source", all_sources, key="industry_source")
+        with sf2:
+            search_term = st.text_input("Search", "", key="industry_search")
 
+        display_posts = industry_posts
         if selected_source != "All":
-            industry_posts = [p for p in industry_posts if p.get("_industry_source") == selected_source]
-
-        # Search
-        search_term = st.text_input("Search industry posts", "", key="industry_search")
+            display_posts = [p for p in display_posts if p.get("_industry_source") == selected_source]
         if search_term:
             search_lower = search_term.lower()
-            industry_posts = [p for p in industry_posts if search_lower in (p.get("text", "") + " " + p.get("title", "")).lower()]
+            display_posts = [p for p in display_posts if search_lower in (p.get("text", "") + " " + p.get("title", "")).lower()]
 
-        st.caption(f"Showing {len(industry_posts)} posts")
+        st.caption(f"Showing {len(display_posts)} posts")
 
         # Paginate
         per_page = 15
-        total_pages = max(1, (len(industry_posts) + per_page - 1) // per_page)
+        total_pages = max(1, (len(display_posts) + per_page - 1) // per_page)
         if "industry_page" not in st.session_state:
             st.session_state["industry_page"] = 0
         st.session_state["industry_page"] = min(st.session_state["industry_page"], total_pages - 1)
@@ -1252,13 +1235,15 @@ with tabs[3]:
                     st.rerun()
 
         start = st.session_state["industry_page"] * per_page
-        paged = industry_posts[start:start + per_page]
+        paged = display_posts[start:start + per_page]
 
         for idx, post in enumerate(paged, start=start + 1):
             source_label = post.get("_industry_source", post.get("source", "?"))
             title = post.get("title", "")[:120] or post.get("text", "")[:120]
             date = post.get("post_date", "")
             url = post.get("url", "")
+            score = post.get("score", 0)
+            sub = post.get("subreddit", "")
 
             source_icons = {
                 "News": "📰", "YouTube": "🎬", "YouTube (transcript)": "🎬",
@@ -1266,21 +1251,28 @@ with tabs[3]:
                 "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
                 "COMC": "🃏", "Whatnot": "📱", "Fanatics Collect": "🏈",
                 "Bench Trading": "🔄", "TCDB": "🗂️",
+                "Reddit": "💬", "Twitter": "🐦", "Bluesky": "🦋",
             }
             icon = source_icons.get(source_label, "📄")
 
             yt_comments = post.get("_yt_comments", [])
             comment_label = f" · 💬 {len(yt_comments)} comments" if yt_comments else ""
+            score_label = f" · ⬆️ {score}" if score else ""
+            sub_label = f" · r/{sub}" if sub else ""
 
-            with st.expander(f"{icon} **{title}** — {source_label} · {date}{comment_label}"):
+            with st.expander(f"{icon} **{title}** — {source_label} · {date}{sub_label}{score_label}{comment_label}"):
                 text = post.get("text", "")
                 if len(text) > 600:
                     st.markdown(f"> {text[:600]}...")
                 elif text:
                     st.markdown(f"> {text}")
                 meta_parts = [f"**Source:** {source_label}"]
+                if sub:
+                    meta_parts.append(f"**Subreddit:** r/{sub}")
                 if date:
                     meta_parts.append(f"**Date:** {date}")
+                if score:
+                    meta_parts.append(f"**Score:** {score}")
                 if url:
                     meta_parts.append(f"[🔗 Original]({url})")
                 st.caption(" · ".join(meta_parts))
@@ -1299,6 +1291,83 @@ with tabs[3]:
                         st.caption(f"u/{c_user}{likes_str}")
                     if len(yt_comments) > 8:
                         st.caption(f"... and {len(yt_comments) - 8} more comments")
+
+        st.markdown("---")
+
+    # ── Upcoming Releases & Checklists (collapsed) ──
+    releases_data = []
+    try:
+        with open("data/upcoming_releases.json", "r", encoding="utf-8") as f:
+            releases_data = json.load(f)
+    except:
+        pass
+
+    if releases_data:
+        checklists = [r for r in releases_data if r.get("category") == "checklist"]
+        releases = [r for r in releases_data if r.get("category") == "release"]
+
+        with st.expander(f"📦 Upcoming Product Releases & Checklists ({len(releases)} releases · {len(checklists)} checklists)", expanded=False):
+            rel_tab1, rel_tab2 = st.tabs(["📋 Checklists", "🗓️ Upcoming Releases"])
+
+            with rel_tab1:
+                cl_sports = sorted(set(c.get("sport", "Trading Cards") for c in checklists))
+                cl_brands = sorted(set(c.get("brand", "Other") for c in checklists))
+                fc1, fc2 = st.columns(2)
+                with fc1:
+                    cl_sport_filter = st.selectbox("Sport/Category", ["All"] + cl_sports, key="cl_sport")
+                with fc2:
+                    cl_brand_filter = st.selectbox("Brand", ["All"] + cl_brands, key="cl_brand")
+
+                filtered_cl = checklists
+                if cl_sport_filter != "All":
+                    filtered_cl = [c for c in filtered_cl if c.get("sport") == cl_sport_filter]
+                if cl_brand_filter != "All":
+                    filtered_cl = [c for c in filtered_cl if c.get("brand") == cl_brand_filter]
+
+                if filtered_cl:
+                    for idx, cl in enumerate(filtered_cl[:30], 1):
+                        title = cl.get("title", "")
+                        url = cl.get("url", "")
+                        date = cl.get("post_date", "")
+                        sport = cl.get("sport", "")
+                        brand = cl.get("brand", "")
+                        link = f"[Open Checklist]({url})" if url else ""
+                        st.markdown(f"**{idx}.** {title}")
+                        st.caption(f"{brand} · {sport} · {date} · {link}")
+                    if len(filtered_cl) > 30:
+                        st.caption(f"... and {len(filtered_cl) - 30} more checklists.")
+                else:
+                    st.info("No checklists match your filters.")
+
+            with rel_tab2:
+                rel_sports = sorted(set(r.get("sport", "Trading Cards") for r in releases))
+                rel_brands = sorted(set(r.get("brand", "Other") for r in releases))
+                fr1, fr2 = st.columns(2)
+                with fr1:
+                    rel_sport_filter = st.selectbox("Sport/Category", ["All"] + rel_sports, key="rel_sport")
+                with fr2:
+                    rel_brand_filter = st.selectbox("Brand", ["All"] + rel_brands, key="rel_brand")
+
+                filtered_rel = releases
+                if rel_sport_filter != "All":
+                    filtered_rel = [r for r in filtered_rel if r.get("sport") == rel_sport_filter]
+                if rel_brand_filter != "All":
+                    filtered_rel = [r for r in filtered_rel if r.get("brand") == rel_brand_filter]
+
+                if filtered_rel:
+                    for idx, rel in enumerate(filtered_rel[:30], 1):
+                        title = rel.get("title", "")
+                        url = rel.get("url", "")
+                        date = rel.get("post_date", "")
+                        sport = rel.get("sport", "")
+                        brand = rel.get("brand", "")
+                        link = f"[Details]({url})" if url else ""
+                        st.markdown(f"**{idx}.** {title}")
+                        st.caption(f"{brand} · {sport} · {date} · {link}")
+                    if len(filtered_rel) > 30:
+                        st.caption(f"... and {len(filtered_rel) - 30} more releases.")
+                else:
+                    st.info("No releases match your filters.")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
