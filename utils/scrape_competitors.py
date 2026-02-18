@@ -45,6 +45,11 @@ EXCLUDE_PATTERNS = [
     "[fanatical]", "build your own", "platinum collection",
     "resident evil", "devil may cry", "steamworld", "frostpunk",
     "tomb raider", "skyrim", "lego bricktales", "ace attorney",
+    # Trade/sale posts (not platform feedback)
+    "[us,ww]", "[us,us]", "[us,fl]", "[us,ny]", "[us,co]", "[us,tx]",
+    "[us-ny]", "[us-co]", "[us-tx]", "[us-fl]",
+    "binder for sale", "85% tcg", "90% tcg", "75% tcg",
+    "lowest verified", "market price",
 ]
 
 # Competitor/subsidiary definitions
