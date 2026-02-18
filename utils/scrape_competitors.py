@@ -124,6 +124,17 @@ COMPETITORS = {
         "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG"],
         "required_keywords": ["tcgplayer", "tcg player", "card", "pokemon", "magic", "yugioh", "marketplace", "price"],
     },
+    "PSA Consignment": {
+        "type": "ebay_subsidiary",
+        "search_terms": [
+            "PSA consignment eBay", "PSA sell on eBay",
+            "PSA vault sell", "PSA vault eBay store",
+            "PSA consignment experience", "PSA consignment fees",
+            "sell through PSA eBay", "PSA vault consignment",
+        ],
+        "subreddits": ["psagrading", "sportscards", "baseballcards", "basketballcards", "pokemontcg", "PokeInvesting"],
+        "required_keywords": ["psa"],
+    },
 }
 
 
