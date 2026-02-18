@@ -566,6 +566,11 @@ with tabs[0]:
         "to the moon", "hedge fund", "warrants to blockchain",
         # Generic trade/sales threads (not platform issues)
         "official sales/trade/breaks", "leave a comment here in this thread with your sales",
+        # False PSA/Vault matches from gaming/public-service posts
+        "psa if you think you might want to play survival",
+        "make a placeholder vault", "placeholder vault",
+        "rewards in experimental", "play survival in the future",
+        "survival vault", "public service announcement",
     ]
     # Subreddits that are never about eBay product issues
     NOT_ACTIONABLE_SUBS = [
@@ -1795,6 +1800,11 @@ with tabs[5]:
         "would you block this buyer? i already can smell",
         "i only brought 300",
         "seed vault extract", "arc raiders", "stella montis",
+        # False PSA/Vault matches from gaming/public-service posts
+        "psa if you think you might want to play survival",
+        "make a placeholder vault", "placeholder vault",
+        "rewards in experimental", "play survival in the future",
+        "survival vault", "public service announcement",
         # Celebrations, jokes, memes, personal stories
         "instant retirement", "can't believe i pulled", "best email to receive",
         "second best email", "shove it up", "going up on ebay today",
