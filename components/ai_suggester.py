@@ -45,7 +45,9 @@ def _get_openai_key():
 _api_key = _get_openai_key()
 client = OpenAI(api_key=_api_key) if _api_key else None
 
-MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", "gpt-4o")
+# Prefer a stronger default for executive-facing generation, with explicit fallback.
+MODEL_MAIN = os.getenv("OPENAI_MODEL_MAIN", os.getenv("OPENAI_MODEL_EXEC", "gpt-4.1"))
+MODEL_FALLBACK = os.getenv("OPENAI_MODEL_FALLBACK", "gpt-4o")
 MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
 CACHE_PATH = "gpt_suggestion_cache.json"
 
@@ -159,16 +161,25 @@ def _chat(model, system, user, max_completion_tokens=2000, temperature=0.3):
     if client is None:
         # Offline or no key: return a stub so the pipeline does not break
         return f"[LLM disabled] {system}\n\n{user[:800]}"
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=temperature,
-        max_completion_tokens=max_completion_tokens,
-    )
-    return (resp.choices[0].message.content or "").strip()
+    def _call(model_name):
+        resp = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            temperature=temperature,
+            max_completion_tokens=max_completion_tokens,
+        )
+        return (resp.choices[0].message.content or "").strip()
+
+    try:
+        return _call(model)
+    except Exception:
+        # Keep remote deployments resilient if a configured model is unavailable.
+        if MODEL_FALLBACK and MODEL_FALLBACK != model:
+            return _call(MODEL_FALLBACK)
+        raise
 
 
 def generate_gpt_doc(prompt, title, max_tokens=4000):

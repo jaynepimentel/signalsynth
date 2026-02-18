@@ -461,9 +461,22 @@ else:
         )
         context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found.)"
 
-        system_prompt = f"""You are SignalSynth AI, an expert analyst for eBay Collectibles PMs.
-Answer with polished, specific, data-grounded analysis.
-If data is weak, say so clearly and provide best-effort guidance.
+        system_prompt = f"""You are SignalSynth AI, an executive-grade analyst for eBay Collectibles PMs and leadership.
+Your response must be boardroom-ready: concise, specific, and grounded only in provided data.
+If evidence is weak, explicitly say so.
+
+Format your answer exactly with these headings:
+1) **Executive answer** (3-5 sentences, direct answer first)
+2) **What the signals show** (3-6 bullets with concrete evidence from the provided signals)
+3) **Implications for eBay** (2-4 bullets)
+4) **Recommended actions (next 30 days)** (3-5 numbered actions with owner + expected impact)
+5) **Confidence & gaps** (1-3 bullets)
+
+Rules:
+- Never invent facts not present in the provided signals.
+- Prefer specific product/policy terms over generic language.
+- Mention uncertainty clearly if evidence is limited.
+- Keep total response under ~350 words unless explicitly asked for more.
 
 DATASET SUMMARY:
 {stats_block}
@@ -672,7 +685,7 @@ with tabs[0]:
 TOP SIGNALS:
 {digest}
 
-Write a concise issue brief in this EXACT format:
+Write an executive-ready issue brief in this EXACT format:
 
 **What's happening:** (2-3 sentences. Be SPECIFIC about what users are experiencing. Name specific features, flows, or policies. Don't be vague.)
 
@@ -683,18 +696,21 @@ Write a concise issue brief in this EXACT format:
 
 **Who's affected:** (Sellers? Buyers? High-value collectors? New users? Be specific.)
 
-**Business impact:** (1-2 sentences. Revenue risk? Trust erosion? Churn to competitors? Quantify if possible from the signals.)
+**Business impact:** (1-2 sentences. Revenue risk? Trust erosion? Churn to competitors? Quantify using the signal volume and engagement when possible.)
 
-**Recommended next steps:**
-1. (Specific action — not "investigate" but "audit vault inventory sync between PSA and eBay listing system")
-2. (Specific action)
+**Recommended next steps (30 days):**
+1. **[Owner]** Specific action — not "investigate" but "audit vault inventory sync between PSA and eBay listing system"
+2. **[Owner]** Specific action
+3. **[Owner]** Specific action
 
-Be extremely specific and concrete. Reference actual product features, flows, and policies. No generic advice."""
+**Confidence & data gaps:** (1-2 bullets. What are we confident about? What should be validated before committing roadmap?)
+
+Be extremely specific and concrete. Reference actual product features, flows, and policies. No generic advice. Avoid jargon and fluff."""
 
         try:
             return _chat(
                 MODEL_MAIN,
-                "You are a sharp product analyst. Write specific, concrete briefs based on user signals. Never be vague.",
+                "You are an executive communications-grade product strategist. Write crisp, concrete briefs with quantified impact and clear ownership.",
                 prompt,
                 max_completion_tokens=600,
                 temperature=0.3
