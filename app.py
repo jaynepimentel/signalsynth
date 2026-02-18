@@ -1120,9 +1120,57 @@ with tabs[3]:
         p["_industry_source"] = src
         industry_posts.append(p)
 
-    # Viral / high-engagement Reddit posts (score >= 100, not already in industry sources)
+    # Viral / high-engagement Reddit posts — ONLY industry-relevant ones
     VIRAL_THRESHOLD = 100
     industry_urls = {p.get("url", "") for p in industry_posts if p.get("url")}
+
+    # Industry-relevant keywords: platform business, market trends, policy, fees, competitor moves
+    INDUSTRY_RELEVANT_KW = [
+        # Platform & business
+        "ebay fee", "ebay policy", "ebay change", "ebay update", "ebay announce",
+        "whatnot fee", "whatnot policy", "fanatics", "heritage auction",
+        "goldin", "tcgplayer", "tcg player", "alt marketplace",
+        "platform", "marketplace", "seller fee", "buyer fee", "final value",
+        "promoted listing", "managed payments", "payout",
+        # Market & industry trends
+        "market crash", "market trend", "hobby crash", "hobby boom",
+        "price drop", "price spike", "bubble", "overvalued", "undervalued",
+        "license", "licensing deal", "exclusive deal", "monopoly",
+        "panini", "topps", "upper deck", "bowman",
+        # Grading & authentication industry
+        "psa turnaround", "psa backlog", "bgs turnaround", "cgc turnaround",
+        "grading fee", "grading change", "grading service",
+        "psa vault", "vault update", "vault issue",
+        # Trust & fraud (industry-level)
+        "counterfeit", "fake card", "scam ring", "fraud ring",
+        "authentication", "authenticity guarantee",
+        # Business discussions
+        "investing in cards", "card market", "hobby is dying", "hobby is dead",
+        "future of collecting", "state of the hobby", "industry news",
+        "new product", "product release", "checklist release",
+        "quality control", "qc issue", "print run",
+    ]
+    # Exclude personal stories, memes, video games, off-topic
+    INDUSTRY_EXCLUDE_KW = [
+        "my nephew", "my daughter", "my son", "my kid", "my wife", "my husband",
+        "look what i found", "look what i pulled", "just pulled",
+        "mail day", "pickup", "lcs find", "card show find",
+        "instant retirement", "can't believe", "holy grail",
+        "rate my collection", "collection update", "added to the pc",
+        "nfs/nft", "show off", "shove it up",
+        "nintendo", "playstation", "xbox", "ps vita", "dev kit",
+        "seed vault extract", "arc raiders", "stella montis",
+        "hands free controller", "gold bar", "fake gold",
+        "iron maiden", "secret lair",
+        "superstonk", "gme", "gamestop", "diamond hands", "moass",
+        "push start", "early access",
+    ]
+    INDUSTRY_EXCLUDE_SUBS = [
+        "gamecollecting", "superstonk", "gme", "gamestop", "amcstock",
+        "gold", "silver", "coins", "arcraiders", "nostupidquestions",
+        "ismypokemoncardfake",
+    ]
+
     viral_reddit = []
     for p in normalized:
         if p.get("source") not in ("Reddit", "Reddit (comment)"):
@@ -1130,6 +1178,16 @@ with tabs[3]:
         if p.get("score", 0) < VIRAL_THRESHOLD:
             continue
         if p.get("url", "") in industry_urls:
+            continue
+        text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
+        sub_lower = p.get("subreddit", "").lower()
+        # Exclude off-topic subs and content
+        if sub_lower in INDUSTRY_EXCLUDE_SUBS:
+            continue
+        if any(ex in text_lower for ex in INDUSTRY_EXCLUDE_KW):
+            continue
+        # Must contain at least one industry-relevant keyword
+        if not any(kw in text_lower for kw in INDUSTRY_RELEVANT_KW):
             continue
         p_copy = dict(p)
         p_copy["_industry_source"] = "Reddit"
@@ -1142,7 +1200,7 @@ with tabs[3]:
             seen_urls.add(u)
             industry_posts.append(p)
 
-    # Twitter / Bluesky posts with engagement
+    # Twitter / Bluesky posts with engagement — also require industry relevance
     for p in normalized:
         src = p.get("source", "")
         if src not in ("Twitter", "Bluesky"):
@@ -1150,6 +1208,11 @@ with tabs[3]:
         if p.get("score", 0) < 20:
             continue
         if p.get("url", "") in industry_urls:
+            continue
+        text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
+        if any(ex in text_lower for ex in INDUSTRY_EXCLUDE_KW):
+            continue
+        if not any(kw in text_lower for kw in INDUSTRY_RELEVANT_KW):
             continue
         p_copy = dict(p)
         p_copy["_industry_source"] = src
@@ -1182,9 +1245,9 @@ with tabs[3]:
         ic3.metric("Viral (100+ pts)", viral_count)
         ic4.metric("Most Recent", industry_posts[0].get("post_date", "?") if industry_posts else "N/A")
 
-        # ── 🔥 Top Viral & Trending Posts ──
-        st.markdown("### 🔥 Top Discussions & Viral Posts")
-        st.caption("Highest-engagement posts across all sources — what the community is talking about right now.")
+        # ── 🔥 Top Industry News & Discussions ──
+        st.markdown("### 🔥 Top Industry News & Discussions")
+        st.caption("Highest-engagement industry-relevant posts — platform changes, market trends, competitor moves, and business discussions.")
         top_viral = sorted(industry_posts, key=lambda x: x.get("score", 0), reverse=True)[:10]
         for rank, post in enumerate(top_viral, 1):
             source_label = post.get("_industry_source", post.get("source", "?"))
