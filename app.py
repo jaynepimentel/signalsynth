@@ -392,8 +392,66 @@ with tabs[0]:
 
     # ── Section 1: Top Issues to Fix ──
     st.markdown("### 🔴 Top Issues to Fix")
-    st.caption("Highest-volume negative sentiment topics — expand each to see what's happening and what to do about it.")
-    subtag_neg = Counter(i.get("subtag", "General") for i in normalized if i.get("brand_sentiment") == "Negative")
+    st.caption("Platform & product issues that eBay, Goldin, or TCGPlayer teams can act on — ranked by volume.")
+
+    # Only count posts that describe something a product/engineering team can fix
+    # Must mention a platform feature, tool, policy, or flow — not just be from a relevant subreddit
+    PLATFORM_ACTION_KW = [
+        # eBay platform
+        "ebay", "e-bay", "listing", "seller hub", "promoted listing",
+        "managed payments", "checkout", "search result", "best match",
+        "authenticity guarantee", "standard envelope", "global shipping",
+        # Vault / storage
+        "vault", "psa vault", "vault sell", "vault inventory",
+        # Payments & fees
+        "fee", "final value", "payout", "payment hold", "held funds",
+        "managed payment", "paypal",
+        # Shipping & returns
+        "shipping label", "tracking", "return request", "inad",
+        "item not as described", "money back guarantee", "refund",
+        "return abuse", "partial refund",
+        # Account & policy
+        "account suspended", "account restricted", "verification",
+        "policy violation", "vero", "removed listing",
+        # Grading & authentication
+        "grading", "psa", "bgs", "cgc", "sgc", "authentication",
+        "turnaround time", "grading fee",
+        # Subsidiaries
+        "goldin", "tcgplayer", "tcg player", "comc",
+        # Product/UX
+        "app", "website", "mobile app", "notification", "watchlist",
+        "price guide", "scan", "barcode",
+        # Bugs & UX
+        "bug", "glitch", "error", "broken", "not working", "crash",
+        "confusing", "can't find", "won't load",
+    ]
+    # Exclude personal stories that aren't platform issues
+    NOT_ACTIONABLE = [
+        "stole my", "nephew", "my cards were stolen", "someone stole",
+        "lost my collection", "house fire", "flooded",
+        "fake money", "porch pick up", "counterfeit bill",
+        "hands free controller", "nintendo", "ruined someone's kid",
+        "dvd of an old film", "swirly shiny",
+        # Non-eBay marketplace stories
+        "sold a sealed japanese region 3ds", "mercari",
+        "card show drama", "dallas card show",
+        "am i dumb? 10k in cards", "10k in cards i got into slabs",
+        # Generic collecting frustrations (not platform bugs)
+        "i got into slabs during the peak",
+    ]
+
+    def _is_platform_issue(post):
+        """Return True if this post describes something a product/eng team can fix."""
+        text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
+        # Exclude personal stories
+        if any(na in text_lower for na in NOT_ACTIONABLE):
+            return False
+        # Must mention a platform feature/tool/policy
+        return any(kw in text_lower for kw in PLATFORM_ACTION_KW)
+
+    # Filter to only actionable issues, THEN count
+    actionable_neg = [i for i in normalized if i.get("brand_sentiment") == "Negative" and _is_platform_issue(i)]
+    subtag_neg = Counter(i.get("subtag", "General") for i in actionable_neg)
     subtag_neg.pop("General", None)
 
     # Classify what kind of action each topic area typically needs
@@ -480,20 +538,11 @@ Be extremely specific and concrete. Reference actual product features, flows, an
             pct = round(cnt / max(neg, 1) * 100)
             action_info = TOPIC_ACTION_MAP.get(tag, DEFAULT_ACTION)
 
-            # Get the actual posts for this topic — filter out likely noise
-            tag_posts = [i for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"]
-            # Filter: must mention eBay or be from eBay-related subreddit to avoid video game posts etc.
-            ebay_kw = ["ebay", "e-bay", "vault", "psa", "bgs", "grading", "listing", "seller", "buyer",
-                       "auction", "shipping", "fee", "return", "refund", "payment", "authenticity"]
-            ebay_subs = ["ebay", "flipping", "ebaySellers", "sportscards", "baseballcards",
-                         "basketballcards", "pokemontcg", "coins", "PokeInvesting", "psagrading"]
-            tag_posts_filtered = []
-            for p in tag_posts:
-                text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
-                sub = p.get("subreddit", "")
-                if any(kw in text_lower for kw in ebay_kw) or sub in ebay_subs:
-                    tag_posts_filtered.append(p)
-            tag_posts = sorted(tag_posts_filtered, key=lambda x: x.get("score", 0), reverse=True) if tag_posts_filtered else sorted(tag_posts, key=lambda x: x.get("score", 0), reverse=True)
+            # Get only actionable posts for this topic (already filtered by _is_platform_issue)
+            tag_posts = sorted(
+                [i for i in actionable_neg if i.get("subtag") == tag],
+                key=lambda x: x.get("score", 0), reverse=True
+            )
 
             tag_complaints = sum(1 for p in tag_posts if p.get("type_tag") == "Complaint")
             tag_feature_reqs = sum(1 for p in tag_posts if p.get("type_tag") == "Feature Request")
