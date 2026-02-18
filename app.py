@@ -421,18 +421,80 @@ with tabs[0]:
     }
     DEFAULT_ACTION = {"action": "🔍 Investigate", "owner": "PM Team", "next": "Review signals → determine if this is a bug, policy gap, or new opportunity"}
 
+    def _generate_issue_brief(tag, posts, action_info):
+        """Generate an AI-synthesized issue brief for a topic."""
+        try:
+            from components.ai_suggester import _chat, MODEL_MAIN
+        except ImportError:
+            return None
+
+        # Build a digest of the top posts — include enough for AI to find patterns
+        digest_lines = []
+        for p in posts[:15]:
+            text = p.get("text", "")[:200].replace("\n", " ")
+            score = p.get("score", 0)
+            type_tag = p.get("type_tag", "")
+            source = p.get("source", "")
+            digest_lines.append(f"[{type_tag}] [{source}] (⬆️{score}) {text}")
+
+        digest = "\n".join(digest_lines)
+
+        prompt = f"""You are a Senior Product Manager at eBay analyzing user feedback about "{tag}". Below are {len(posts)} negative signals from Reddit, Twitter, YouTube, and forums.
+
+TOP SIGNALS:
+{digest}
+
+Write a concise issue brief in this EXACT format:
+
+**What's happening:** (2-3 sentences. Be SPECIFIC about what users are experiencing. Name specific features, flows, or policies. Don't be vague.)
+
+**Sub-issues identified:**
+1. **[Specific sub-issue name]** — (1 sentence with concrete detail. e.g. "Vault inventory errors causing cancelled auctions after payment" not "users have issues with vault")
+2. **[Specific sub-issue name]** — (1 sentence)
+3. **[Specific sub-issue name]** — (1 sentence)
+
+**Who's affected:** (Sellers? Buyers? High-value collectors? New users? Be specific.)
+
+**Business impact:** (1-2 sentences. Revenue risk? Trust erosion? Churn to competitors? Quantify if possible from the signals.)
+
+**Recommended next steps:**
+1. (Specific action — not "investigate" but "audit vault inventory sync between PSA and eBay listing system")
+2. (Specific action)
+
+Be extremely specific and concrete. Reference actual product features, flows, and policies. No generic advice."""
+
+        try:
+            return _chat(
+                MODEL_MAIN,
+                "You are a sharp product analyst. Write specific, concrete briefs based on user signals. Never be vague.",
+                prompt,
+                max_completion_tokens=600,
+                temperature=0.3
+            )
+        except Exception as e:
+            return None
+
     if subtag_neg:
         top_issues = subtag_neg.most_common(5)
         for rank, (tag, cnt) in enumerate(top_issues, 1):
             pct = round(cnt / max(neg, 1) * 100)
             action_info = TOPIC_ACTION_MAP.get(tag, DEFAULT_ACTION)
 
-            # Get the actual posts for this topic
-            tag_posts = sorted(
-                [i for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"],
-                key=lambda x: x.get("score", 0), reverse=True
-            )
-            # Count sub-types
+            # Get the actual posts for this topic — filter out likely noise
+            tag_posts = [i for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"]
+            # Filter: must mention eBay or be from eBay-related subreddit to avoid video game posts etc.
+            ebay_kw = ["ebay", "e-bay", "vault", "psa", "bgs", "grading", "listing", "seller", "buyer",
+                       "auction", "shipping", "fee", "return", "refund", "payment", "authenticity"]
+            ebay_subs = ["ebay", "flipping", "ebaySellers", "sportscards", "baseballcards",
+                         "basketballcards", "pokemontcg", "coins", "PokeInvesting", "psagrading"]
+            tag_posts_filtered = []
+            for p in tag_posts:
+                text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
+                sub = p.get("subreddit", "")
+                if any(kw in text_lower for kw in ebay_kw) or sub in ebay_subs:
+                    tag_posts_filtered.append(p)
+            tag_posts = sorted(tag_posts_filtered, key=lambda x: x.get("score", 0), reverse=True) if tag_posts_filtered else sorted(tag_posts, key=lambda x: x.get("score", 0), reverse=True)
+
             tag_complaints = sum(1 for p in tag_posts if p.get("type_tag") == "Complaint")
             tag_feature_reqs = sum(1 for p in tag_posts if p.get("type_tag") == "Feature Request")
             tag_bugs = sum(1 for p in tag_posts if p.get("type_tag") == "Bug Report")
@@ -440,8 +502,6 @@ with tabs[0]:
             severity = "🔴 High" if cnt >= 20 else ("🟡 Medium" if cnt >= 8 else "🟢 Low")
 
             with st.expander(f"**{rank}. {tag}** — {cnt} signals ({pct}%) · {severity} · {action_info['action']}", expanded=False):
-                # Action summary
-                st.markdown(f"**Recommended action:** {action_info['next']}")
                 st.markdown(f"**Owner:** {action_info['owner']} · **Severity:** {severity}")
                 if tag_complaints or tag_feature_reqs or tag_bugs:
                     breakdown = []
@@ -450,21 +510,35 @@ with tabs[0]:
                     if tag_bugs: breakdown.append(f"{tag_bugs} bug reports")
                     st.caption(f"Signal mix: {' · '.join(breakdown)}")
 
-                st.markdown("---")
-                st.markdown("**Top signals (by engagement):**")
-                for idx, post in enumerate(tag_posts[:5], 1):
-                    text = post.get("text", "")[:300]
-                    score = post.get("score", 0)
-                    type_tag = post.get("type_tag", "")
-                    url = post.get("url", "")
-                    source = post.get("source", "")
-                    st.markdown(f"**{idx}.** {text}{'...' if len(post.get('text', '')) > 300 else ''}")
-                    meta = f"⬆️ {score} · {type_tag} · {source}"
-                    if url:
-                        meta += f" · [Source]({url})"
-                    st.caption(meta)
-                if len(tag_posts) > 5:
-                    st.info(f"🎯 **{len(tag_posts) - 5} more signals** — see the **eBay Voice** tab and filter by *{tag}* for the full list.")
+                # AI synthesis — cached in session state
+                brief_key = f"issue_brief_{tag}"
+                if st.button(f"🧠 Generate AI Issue Brief", key=f"btn_{brief_key}"):
+                    st.session_state[brief_key] = "__generating__"
+                    st.rerun()
+                if st.session_state.get(brief_key) == "__generating__":
+                    with st.spinner(f"Analyzing {len(tag_posts)} signals for {tag}..."):
+                        result = _generate_issue_brief(tag, tag_posts, action_info)
+                    st.session_state[brief_key] = result or "AI analysis unavailable. See raw signals below."
+                    st.rerun()
+                if st.session_state.get(brief_key) and st.session_state[brief_key] != "__generating__":
+                    with st.container(border=True):
+                        st.markdown(st.session_state[brief_key])
+
+                # Raw signals — collapsed, for reference
+                with st.expander(f"📄 Raw signals ({len(tag_posts)})", expanded=False):
+                    for idx, post in enumerate(tag_posts[:8], 1):
+                        text = post.get("text", "")[:250]
+                        score = post.get("score", 0)
+                        type_tag = post.get("type_tag", "")
+                        url = post.get("url", "")
+                        source = post.get("source", "")
+                        st.markdown(f"**{idx}.** {text}{'...' if len(post.get('text', '')) > 250 else ''}")
+                        meta = f"⬆️ {score} · {type_tag} · {source}"
+                        if url:
+                            meta += f" · [Source]({url})"
+                        st.caption(meta)
+                    if len(tag_posts) > 8:
+                        st.info(f"🎯 **{len(tag_posts) - 8} more** — see **eBay Voice** tab filtered by *{tag}*.")
     else:
         st.info("No negative signals found.")
 
