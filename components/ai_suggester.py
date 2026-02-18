@@ -12,15 +12,35 @@ load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), overri
 
 def _get_openai_key():
     """Get OpenAI API key from Streamlit secrets or environment."""
-    # Try Streamlit secrets first (for Streamlit Cloud)
+    def _is_placeholder(v):
+        if not v:
+            return True
+        s = str(v).strip()
+        if not s:
+            return True
+        bad_markers = [
+            "YOUR_OPENAI_API_KEY",
+            "YOUR_OPE",
+            "YOUR_OPEN",
+            "REPLACE_ME",
+        ]
+        return any(m in s.upper() for m in bad_markers)
+
+    # Prefer env key first (local dev), if valid
+    env_key = os.getenv("OPENAI_API_KEY")
+    if not _is_placeholder(env_key):
+        return env_key
+
+    # Fall back to Streamlit secrets (cloud), if valid
     try:
         import streamlit as st
         if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
-            return st.secrets['OPENAI_API_KEY']
+            sec_key = st.secrets['OPENAI_API_KEY']
+            if not _is_placeholder(sec_key):
+                return sec_key
     except Exception:
         pass
-    # Fall back to environment variable
-    return os.getenv("OPENAI_API_KEY")
+    return None
 
 _api_key = _get_openai_key()
 client = OpenAI(api_key=_api_key) if _api_key else None
