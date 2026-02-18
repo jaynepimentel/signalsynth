@@ -576,10 +576,36 @@ with tabs[3]:
         p["_industry_source"] = "News"
         industry_posts.append(p)
 
-    # YouTube
+    # YouTube — group comments by video, don't show each comment as a separate line item
+    yt_videos = {}  # url -> {video_post, comments: []}
     for p in youtube_raw:
-        p["_industry_source"] = "YouTube"
-        industry_posts.append(p)
+        url = p.get("url", "")
+        source = p.get("source", "")
+        if source == "YouTube (comment)":
+            if url not in yt_videos:
+                yt_videos[url] = {"video": None, "comments": []}
+            yt_videos[url]["comments"].append(p)
+        else:
+            if url not in yt_videos:
+                yt_videos[url] = {"video": p, "comments": []}
+            else:
+                yt_videos[url]["video"] = p
+
+    for url, group in yt_videos.items():
+        video = group["video"]
+        comments = group["comments"]
+        if video:
+            video["_industry_source"] = "YouTube"
+            video["_yt_comments"] = comments
+            industry_posts.append(video)
+        elif comments:
+            # No transcript/video post, create a summary entry from comments
+            representative = comments[0].copy()
+            representative["_industry_source"] = "YouTube"
+            representative["source"] = "YouTube"
+            representative["_yt_comments"] = comments
+            representative["text"] = f"{len(comments)} comments on this video"
+            industry_posts.append(representative)
 
     # Forums & Blogs
     for p in forums_blogs_raw:
@@ -655,11 +681,14 @@ with tabs[3]:
             }
             icon = source_icons.get(source_label, "📄")
 
-            with st.expander(f"{icon} **{title}** — {source_label} · {date}"):
+            yt_comments = post.get("_yt_comments", [])
+            comment_label = f" · 💬 {len(yt_comments)} comments" if yt_comments else ""
+
+            with st.expander(f"{icon} **{title}** — {source_label} · {date}{comment_label}"):
                 text = post.get("text", "")
                 if len(text) > 600:
                     st.markdown(f"> {text[:600]}...")
-                else:
+                elif text:
                     st.markdown(f"> {text}")
                 meta_parts = [f"**Source:** {source_label}"]
                 if date:
@@ -667,6 +696,21 @@ with tabs[3]:
                 if url:
                     meta_parts.append(f"[🔗 Original]({url})")
                 st.caption(" · ".join(meta_parts))
+
+                # Show YouTube comments nested under the video
+                if yt_comments:
+                    st.markdown("---")
+                    st.markdown(f"**💬 Top Comments ({len(yt_comments)}):**")
+                    sorted_comments = sorted(yt_comments, key=lambda c: c.get("like_count", 0) or 0, reverse=True)
+                    for ci, comment in enumerate(sorted_comments[:8], 1):
+                        c_text = comment.get("text", "")[:300]
+                        c_user = comment.get("username", "")
+                        c_likes = comment.get("like_count", 0) or 0
+                        likes_str = f" · 👍 {c_likes}" if c_likes else ""
+                        st.markdown(f"**{ci}.** {c_text}")
+                        st.caption(f"u/{c_user}{likes_str}")
+                    if len(yt_comments) > 8:
+                        st.caption(f"... and {len(yt_comments) - 8} more comments")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
