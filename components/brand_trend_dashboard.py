@@ -17,9 +17,23 @@ def categorize_entity(text, subtag=None):
     """
     text_lower = (text or "").lower()
     
-    # Check partners first (PSA services)
-    if any(p.lower() in text_lower for p in ["psa vault", "psa grading", "psa consignment", "psa offer", "comc", "check out my cards"]):
-        return "Partner"
+    # Check partners first — split into specific partner buckets
+    if "psa vault" in text_lower or ("vault" in text_lower and "psa" in text_lower):
+        return "PSA Vault"
+    if "psa" in text_lower and ("consignment" in text_lower or "consign" in text_lower):
+        return "PSA Consignment"
+    if "psa" in text_lower and ("grading" in text_lower or "grade" in text_lower or "turnaround" in text_lower or "submission" in text_lower):
+        return "PSA Grading"
+    if "psa" in text_lower and ("offer" in text_lower or "buyback" in text_lower):
+        return "PSA Offers"
+    if "comc" in text_lower or "check out my cards" in text_lower:
+        return "ComC"
+    if "bgs" in text_lower or "beckett" in text_lower:
+        return "BGS/Beckett"
+    if "cgc" in text_lower:
+        return "CGC"
+    if "sgc" in text_lower:
+        return "SGC"
     
     # Check competitors
     if any(c.lower() in text_lower for c in COMPETITORS):
@@ -193,7 +207,14 @@ def display_brand_dashboard(insights):
         "High-Value Items": "\U0001f48e",
         "Collecting": "\U0001f0cf",
         "Competitor": "\u2694\ufe0f",
-        "Partner": "\U0001f91d",
+        "PSA Vault": "\U0001f3e6",
+        "PSA Grading": "\U0001f3af",
+        "PSA Consignment": "\U0001f4e4",
+        "PSA Offers": "\U0001f4b5",
+        "ComC": "\U0001f0cf",
+        "BGS/Beckett": "\U0001f3af",
+        "CGC": "\U0001f3af",
+        "SGC": "\U0001f3af",
         "Subsidiary": "\U0001f3e2",
         "General": "\U0001f4cb",
     }
