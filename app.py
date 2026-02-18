@@ -722,39 +722,74 @@ with tabs[4]:
     # Define broken-window categories with detection keywords
     BW_CATEGORIES = {
         "Bugs & Errors": {
-            "keywords": ["bug", "glitch", "error", "crash", "broken", "not working", "doesn't work", "won't load", "can't access", "404", "white screen", "blank page", "stuck", "frozen", "loop"],
+            "keywords": ["bug", "glitch", "error", "crash", "broken", "not working", "doesn't work", "won't load", "can't access", "404", "white screen", "blank page", "stuck", "frozen", "loop", "down ", "outage"],
             "icon": "🐛",
             "description": "Technical bugs, errors, and things that are literally broken",
         },
         "UX Confusion": {
-            "keywords": ["confus", "unclear", "don't understand", "can't find", "where is", "how do i", "how to", "makes no sense", "unintuitive", "hard to find", "hidden", "not obvious", "misleading"],
+            "keywords": ["confus", "unclear", "don't understand", "can't find", "where is", "how do i", "how to", "makes no sense", "unintuitive", "hard to find", "hidden", "not obvious", "misleading", "why does ebay", "why can't i", "doesn't make sense"],
             "icon": "😕",
             "description": "Users who can't figure out how to do something — UX gaps",
         },
         "Fee Complaints": {
-            "keywords": ["fee", "commission", "too expensive", "overcharged", "hidden fee", "extra charge", "final value", "insertion fee", "promoted listing cost", "take rate", "13%", "12.9%"],
+            "keywords": ["fee", "commission", "too expensive", "overcharged", "hidden fee", "extra charge", "final value", "insertion fee", "take rate", "13%", "12.9%", "tax ", "1099", "sales tax"],
             "icon": "💸",
             "description": "Complaints about eBay's fee structure, pricing, or unexpected charges",
         },
+        "Promoted Listings & Ads": {
+            "keywords": ["promoted listing", "promoted", "ad ", "ads ", "advertising", "pay to play", "boost", "sponsored", "promoted standard", "promoted advanced", "ad rate"],
+            "icon": "📢",
+            "description": "Promoted listings frustration — forced visibility tax, ad spend, pay-to-play concerns",
+        },
+        "Payment & Payout Holds": {
+            "keywords": ["payment hold", "payout", "pending", "funds held", "managed payments", "hold my money", "can't get paid", "money held", "release my funds", "payment processing", "payment delay"],
+            "icon": "💳",
+            "description": "Payment holds, payout delays, managed payments friction",
+        },
         "Shipping Friction": {
-            "keywords": ["shipping label", "tracking not", "lost package", "damaged in transit", "shipping cost", "standard envelope", "can't print label", "wrong weight", "shipping estimate"],
+            "keywords": ["shipping label", "tracking not", "lost package", "damaged in transit", "shipping cost", "standard envelope", "can't print label", "wrong weight", "shipping estimate", "usps", "fedex", "shipping damage", "arrived damaged", "crushed"],
             "icon": "📦",
             "description": "Shipping-related pain points — labels, tracking, costs, damage",
         },
         "Returns & Disputes": {
-            "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund", "case opened", "dispute", "money back guarantee", "buyer scam", "empty box"],
+            "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund", "case opened", "dispute", "money back guarantee", "buyer scam", "empty box", "return request", "refund", "sent back", "sided with buyer", "unfair return"],
             "icon": "🔄",
             "description": "Return policy friction, INAD abuse, dispute resolution problems",
         },
+        "Trust & Safety": {
+            "keywords": ["scam", "fraud", "fake", "counterfeit", "stolen", "suspicious", "sketchy", "shill", "shill bid", "fake listing", "not authentic", "replica", "knock off"],
+            "icon": "🛡️",
+            "description": "Scams, fraud, counterfeits, and trust issues on the platform",
+        },
+        "Grading & Authentication": {
+            "keywords": ["grade", "grading", "graded", "psa ", "bgs ", "cgc ", "sgc ", "misgrade", "wrong grade", "crack out", "crossover", "slab", "authentic", "authentication", "not real"],
+            "icon": "🏅",
+            "description": "Grading disputes, authentication problems, misgraded items",
+        },
         "Account & Policy Issues": {
-            "keywords": ["account suspended", "account restricted", "banned", "limited", "locked out", "verification", "policy violation", "vero", "removed listing", "taken down"],
+            "keywords": ["account suspended", "account restricted", "banned", "limited", "locked out", "verification", "policy violation", "vero", "removed listing", "taken down", "flagged", "delisted", "blocked"],
             "icon": "🔒",
             "description": "Account restrictions, policy enforcement confusion, VERO takedowns",
         },
         "Search & Discovery": {
-            "keywords": ["search broken", "can't find my listing", "no views", "visibility", "algorithm", "cassini", "best match", "search ranking", "not showing up", "buried"],
+            "keywords": ["search broken", "can't find my listing", "no views", "visibility", "algorithm", "cassini", "best match", "search ranking", "not showing up", "buried", "no impressions", "no traffic"],
             "icon": "🔍",
             "description": "Search/discovery issues — listings not showing, ranking problems",
+        },
+        "Seller Protection": {
+            "keywords": ["no protection", "seller protection", "always side with buyer", "unfair", "ebay sided", "no recourse", "lost case", "ebay doesn't care", "hate selling", "done with ebay", "leaving ebay"],
+            "icon": "🛑",
+            "description": "Sellers feeling unprotected — eBay siding with buyers, no recourse, churn risk",
+        },
+        "Customer Service": {
+            "keywords": ["customer service", "support", "called ebay", "chat with ebay", "ebay rep", "no response", "wait time", "hours on hold", "useless support", "no help", "terrible support"],
+            "icon": "📞",
+            "description": "Customer service quality — long waits, unhelpful reps, no resolution",
+        },
+        "Vault Issues": {
+            "keywords": ["vault", "can't withdraw", "stuck in vault", "vault withdraw", "vault shipping", "vault delay"],
+            "icon": "🏦",
+            "description": "eBay Vault withdrawal, shipping, and access problems",
         },
     }
 
