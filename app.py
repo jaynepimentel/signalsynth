@@ -16,8 +16,6 @@ st.set_page_config(page_title="SignalSynth", layout="wide")
 # ─────────────────────────────────────────────
 # Component imports
 # ─────────────────────────────────────────────
-from components.brand_trend_dashboard import display_brand_dashboard
-from components.insight_visualizer import display_insight_charts
 from components.cluster_view_simple import display_clustered_insight_cards
 from components.enhanced_insight_view import render_insight_cards
 from components.floating_filters import render_floating_filters, filter_by_time
@@ -316,48 +314,93 @@ with tabs[0]:
 | **Strategy** | AI-clustered themes with signal counts. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets. |
         """)
 
-    # Sentiment overview
+    # ── Executive Briefing ──
+    from collections import Counter
+
     neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
     pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
-    neu = total - neg - pos
+    complaints = [i for i in normalized if i.get("type_tag") == "Complaint"]
+    feature_reqs = [i for i in normalized if i.get("type_tag") == "Feature Request"]
 
-    dash_left, dash_right = st.columns([3, 2])
+    # Headline metrics
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Negative Signals", neg, help="Posts with negative sentiment about eBay")
+    m2.metric("Complaints", len(complaints), help="Explicit complaints from users")
+    m3.metric("Feature Requests", len(feature_reqs), help="Users asking for something new or better")
+    m4.metric("Positive Signals", pos, help="Posts with positive sentiment")
 
-    with dash_left:
-        st.subheader("Signal Trends")
-        try:
-            display_insight_charts(normalized)
-        except Exception as e:
-            st.error(f"Chart error: {e}")
+    # ── Section 1: Top Issues to Fix ──
+    st.markdown("### 🔴 Top Issues to Fix")
+    st.caption("Highest-volume negative sentiment topics — where eBay is losing trust right now.")
+    subtag_neg = Counter(i.get("subtag", "General") for i in normalized if i.get("brand_sentiment") == "Negative")
+    # Remove General and low-signal tags
+    subtag_neg.pop("General", None)
+    if subtag_neg:
+        top_issues = subtag_neg.most_common(5)
+        for rank, (tag, cnt) in enumerate(top_issues, 1):
+            pct = round(cnt / max(neg, 1) * 100)
+            # Get a sample quote for this topic
+            sample = next((i.get("text", "")[:150] for i in normalized
+                          if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"), "")
+            st.markdown(f"**{rank}. {tag}** — {cnt} negative signals ({pct}%)")
+            if sample:
+                st.caption(f'> "{sample}..."')
+    else:
+        st.info("No negative signals found.")
 
-    with dash_right:
-        st.subheader("Pulse Check")
-        st.markdown(f"**Sentiment:** 🟢 {pos} positive · ⚪ {neu} neutral · 🔴 {neg} negative")
+    # ── Section 2: What Customers Want ──
+    st.markdown("### 💡 What Customers Are Asking For")
+    st.caption("Feature requests and suggestions — sorted by engagement.")
+    if feature_reqs:
+        top_reqs = sorted(feature_reqs, key=lambda x: x.get("score", 0), reverse=True)[:5]
+        for rank, req in enumerate(top_reqs, 1):
+            text = req.get("text", "")[:200]
+            score = req.get("score", 0)
+            subtag = req.get("subtag", "")
+            tag_label = f" · **{subtag}**" if subtag and subtag != "General" else ""
+            st.markdown(f"**{rank}.** {text}{'...' if len(req.get('text', '')) > 200 else ''}")
+            st.caption(f"⬆️ {score}{tag_label}")
+    else:
+        st.info("No feature requests found.")
 
-        # Top pain points
-        from collections import Counter
-        subtag_neg = Counter(i.get("subtag", "General") for i in normalized if i.get("brand_sentiment") == "Negative")
-        if subtag_neg:
-            st.markdown("**Top Pain Points (by negative sentiment):**")
-            for tag, cnt in subtag_neg.most_common(5):
-                pct = round(cnt / max(neg, 1) * 100)
-                st.markdown(f"- **{tag}**: {cnt} ({pct}%)")
+    # ── Section 3: Competitor Watch ──
+    st.markdown("### ⚔️ Competitor Watch")
+    st.caption("What's happening with competitors this cycle — click Competitor Intel tab for full detail.")
+    if competitor_posts_raw:
+        comp_counts = Counter(p.get("competitor", "?") for p in competitor_posts_raw if p.get("competitor_type") != "ebay_subsidiary")
+        if comp_counts:
+            # For each top competitor, find the highest-engagement complaint
+            for comp_name, cnt in comp_counts.most_common(4):
+                comp_posts_list = [p for p in competitor_posts_raw if p.get("competitor") == comp_name]
+                # Find a complaint or high-engagement post
+                complaint_kw = ["problem", "issue", "hate", "terrible", "worst", "frustrated", "scam", "disappointed", "rip off", "overpriced"]
+                comp_complaints = [p for p in comp_posts_list if any(kw in (p.get("text", "") + p.get("title", "")).lower() for kw in complaint_kw)]
+                praise_kw = ["love", "amazing", "better than", "switched to", "prefer", "great"]
+                comp_praise = [p for p in comp_posts_list if any(kw in (p.get("text", "") + p.get("title", "")).lower() for kw in praise_kw)]
 
-        # Competitor volume
-        if competitor_posts_raw:
-            comp_counts = Counter(p.get("competitor", "?") for p in competitor_posts_raw if p.get("competitor_type") != "ebay_subsidiary")
-            if comp_counts:
-                st.markdown("---")
-                st.markdown("**Competitor Chatter:**")
-                for name, cnt in comp_counts.most_common(5):
-                    st.markdown(f"- **{name}**: {cnt} posts")
+                headline = f"**{comp_name}** — {cnt} posts"
+                details = []
+                if comp_complaints:
+                    details.append(f"🎯 {len(comp_complaints)} complaints (conquest opps)")
+                if comp_praise:
+                    details.append(f"⚠️ {len(comp_praise)} praise (threats)")
+                st.markdown(f"{headline} · {' · '.join(details)}" if details else headline)
+    else:
+        st.info("No competitor data. Run scrapers to collect.")
 
-    # Brand trend dashboard
-    st.markdown("---")
-    try:
-        display_brand_dashboard(normalized)
-    except Exception as e:
-        st.error(f"Dashboard error: {e}")
+    # ── Section 4: Quick Pulse ──
+    st.markdown("### 📊 Signal Breakdown")
+    st.caption("Where signals are concentrated by topic.")
+    subtag_counts = Counter(i.get("subtag", "General") for i in normalized)
+    subtag_counts.pop("General", None)
+    if subtag_counts:
+        top_tags = subtag_counts.most_common(8)
+        # Simple horizontal display
+        for tag, cnt in top_tags:
+            neg_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative")
+            neg_pct = round(neg_in_tag / max(cnt, 1) * 100)
+            bar = "🔴" if neg_pct > 40 else ("🟡" if neg_pct > 20 else "🟢")
+            st.markdown(f"{bar} **{tag}**: {cnt} signals ({neg_pct}% negative)")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
