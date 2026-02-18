@@ -448,8 +448,8 @@ with tabs[0]:
     ]
     # Subreddits that are never about eBay product issues
     NOT_ACTIONABLE_SUBS = [
-        "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
-        "cryptocurrency", "bitcoin", "stocks", "investing",
+        "superstonk", "gme_meltdown", "amcstock",
+        "bitcoin", "stocks", "investing",
         "gamestop", "gmejungle", "fwfbthinktank", "gme",
     ]
 
@@ -1440,8 +1440,8 @@ with tabs[4]:
         "seed vault extract", "arc raiders", "stella montis",
     ]
     BW_EXCLUDE_SUBS = [
-        "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
-        "cryptocurrency", "bitcoin", "stocks", "investing",
+        "superstonk", "gme_meltdown", "amcstock",
+        "bitcoin", "stocks", "investing",
         "gamestop", "gmejungle", "fwfbthinktank", "gme",
         "kleinanzeigen_betrug",
         "arcraiders", "nostupidquestions",
