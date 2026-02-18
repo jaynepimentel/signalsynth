@@ -1382,6 +1382,31 @@ with tabs[3]:
         def _time_weighted_score(post):
             # Decay older posts so recency matters: score / (1 + age_in_months)
             base_score = float(post.get("score", 0) or 0)
+            src = str(post.get("_industry_source", post.get("source", "")) or "")
+            title_text = (str(post.get("title", "")) + " " + str(post.get("text", ""))).lower()
+
+            # Many news/forum items have no social score; give source-aware baseline so
+            # major stories can still rank in Top Industry News.
+            if base_score <= 0:
+                if src.startswith("News"):
+                    base_score = 120
+                elif src in ("YouTube", "YouTube (transcript)"):
+                    base_score = 90
+                elif src in ("Blowout Forums", "Net54 Baseball", "Alt.xyz Blog"):
+                    base_score = 70
+                else:
+                    base_score = 30
+
+            # Strategic boosts for major market-moving stories
+            boost = 0
+            if any(k in title_text for k in ["record sale", "record-breaking", "record ", "$16.5 million", "million", "auction"]):
+                boost += 35
+            if any(k in title_text for k in ["logan paul", "pikachu illustrator", "goldin"]):
+                boost += 30
+            if any(k in title_text for k in ["policy change", "fee change", "partnership", "acquired", "licensing"]):
+                boost += 20
+
+            base_score += boost
             age_days = _days_old(post)
             return base_score / (1 + (age_days / 30.0))
 
