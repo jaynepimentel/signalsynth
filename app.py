@@ -348,7 +348,7 @@ if date_range:
     st.caption(f"{pipeline_text} · Data: {date_range}")
 
 # ─────────────────────────────────────────────
-# 6 Tabs
+# 8 Tabs
 # ─────────────────────────────────────────────
 tabs = st.tabs([
     "📊 Overview",
@@ -358,6 +358,7 @@ tabs = st.tabs([
     "📦 Product Releases",
     "🔧 Broken Windows",
     "📋 Strategy",
+    "🤖 Ask AI",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1838,38 +1839,39 @@ with tabs[6]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# SIDEBAR: AI Q&A — Ask anything about the data
+# TAB 8: ASK AI — Data Q&A over all scraped insights
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with st.sidebar:
-    st.markdown("## 🧠 Ask SignalSynth")
-    st.caption("Ask any question about the scraped data — trends, competitors, pain points, opportunities, or anything else. AI will search the insights and give you a polished answer.")
+with tabs[7]:
+    st.markdown("### 🤖 Ask AI About the Data")
+    st.caption("Ask any question about scraped insights and get a polished, data-grounded answer.")
 
     if not OPENAI_KEY_PRESENT:
         st.warning("OpenAI API key not configured. Add your key to `.env` to enable AI Q&A.")
     else:
-        # Initialize chat history
         if "qa_messages" not in st.session_state:
             st.session_state["qa_messages"] = []
+        if "qa_draft" not in st.session_state:
+            st.session_state["qa_draft"] = "is there any signal about PSA vault issues?"
 
-        # Display chat history
-        for msg in st.session_state["qa_messages"]:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            user_question = st.text_input(
+                "Ask a question",
+                key="qa_draft",
+                placeholder="e.g., What are the top complaints about Whatnot vs eBay?",
+            )
+        with c2:
+            st.write("")
+            ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
 
-        # Chat input
-        user_question = st.chat_input("Ask about the data...", key="qa_input")
+        st.caption("Try this prompt: **is there any signal about PSA vault issues?**")
 
-        if user_question:
-            # Show user message
-            st.session_state["qa_messages"].append({"role": "user", "content": user_question})
-            with st.chat_message("user"):
-                st.markdown(user_question)
+        if ask_clicked and user_question.strip():
+            question = user_question.strip()
+            st.session_state["qa_messages"].append({"role": "user", "content": question})
 
-            # Build context from insights — find relevant posts
-            q_lower = user_question.lower()
-            q_words = set(q_lower.split())
+            q_words = set(question.lower().split())
 
-            # Score each insight by relevance to the question
             def _relevance_score(insight):
                 text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
                 subtag = (insight.get("subtag", "") or "").lower()
@@ -1888,7 +1890,6 @@ with st.sidebar:
             scored.sort(key=lambda x: -x[1])
             relevant = [p for p, s in scored if s > 0][:30]
 
-            # Build context digest
             context_lines = []
             for p in relevant[:20]:
                 title = p.get("title", "")[:100]
@@ -1901,10 +1902,9 @@ with st.sidebar:
                 type_tag = p.get("type_tag", "")
                 sub_label = f"r/{sub}" if sub else source
                 context_lines.append(
-                    f"- [{type_tag}] [{sentiment}] [{subtag}] (⬆️{score}, {sub_label}) {title}: {text}"
+                    f"- [{type_tag}] [{sentiment}] [{subtag}] (score:{score}, {sub_label}) {title}: {text}"
                 )
 
-            # Add summary stats
             total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
             total_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
             total_complaints = sum(1 for i in normalized if i.get("type_tag") == "Complaint")
@@ -1916,45 +1916,44 @@ with st.sidebar:
                     subtag_counts[st_val] += 1
             top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:10]
 
-            stats_block = f"""Dataset: {len(normalized)} insights total
-Sentiment: {total_neg} negative, {total_pos} positive
-Types: {total_complaints} complaints, {total_features} feature requests
-Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"""
+            stats_block = (
+                f"Dataset: {len(normalized)} insights total\n"
+                f"Sentiment: {total_neg} negative, {total_pos} positive\n"
+                f"Types: {total_complaints} complaints, {total_features} feature requests\n"
+                f"Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"
+            )
+            context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found.)"
 
-            context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found — answer based on the dataset summary above.)"
-
-            system_prompt = f"""You are SignalSynth AI, an expert analyst for eBay's Collectibles vertical.
-You have access to a dataset of {len(normalized)} scraped and enriched insights from Reddit, Twitter/X, YouTube, forums, blogs, and news sources about the collectibles industry (trading cards, sports cards, Pokemon, grading services like PSA/BGS, platforms like eBay/Whatnot/Goldin/Fanatics).
-
-Your job is to give polished, specific, data-grounded answers. Reference actual signals from the data when possible. Be concise but thorough. Format with markdown.
+            system_prompt = f"""You are SignalSynth AI, an expert analyst for eBay Collectibles PMs.
+Answer with polished, specific, data-grounded analysis.
+If data is weak, say so clearly and provide best-effort guidance.
 
 DATASET SUMMARY:
 {stats_block}
 
-RELEVANT SIGNALS (most relevant to the user's question):
+RELEVANT SIGNALS:
 {context_block}"""
 
             try:
                 from components.ai_suggester import _chat, MODEL_MAIN
-                with st.chat_message("assistant"):
-                    with st.spinner("Searching insights and generating answer..."):
-                        response = _chat(
-                            MODEL_MAIN,
-                            system_prompt,
-                            user_question,
-                            max_completion_tokens=1500,
-                            temperature=0.3,
-                        )
-                    st.markdown(response)
+                with st.spinner("Searching insights and generating answer..."):
+                    response = _chat(
+                        MODEL_MAIN,
+                        system_prompt,
+                        question,
+                        max_completion_tokens=1500,
+                        temperature=0.3,
+                    )
                 st.session_state["qa_messages"].append({"role": "assistant", "content": response})
             except Exception as e:
-                error_msg = f"⚠️ Error: {e}"
-                with st.chat_message("assistant"):
-                    st.error(error_msg)
-                st.session_state["qa_messages"].append({"role": "assistant", "content": error_msg})
+                st.session_state["qa_messages"].append({"role": "assistant", "content": f"⚠️ Error: {e}"})
 
-        # Clear chat button
-        if st.session_state.get("qa_messages"):
+        if st.session_state["qa_messages"]:
+            st.markdown("---")
+            for msg in st.session_state["qa_messages"]:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
             if st.button("🗑️ Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
+                st.session_state["qa_draft"] = "is there any signal about PSA vault issues?"
                 st.rerun()
