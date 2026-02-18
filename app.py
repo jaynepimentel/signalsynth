@@ -392,40 +392,63 @@ with tabs[1]:
                 if not posts:
                     continue
 
-                # Classify posts: complaints, praise, policy/product changes
+                # Classify posts: complaints, praise, policy/product changes, comparisons
                 complaints_list = []
                 praise_list = []
                 changes_list = []
+                comparison_list = []
                 discussion_list = []
                 for p in posts:
                     text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
-                    # Policy/product changes — require specific phrases, not generic words
+                    # Policy/product changes
                     if any(w in text_lower for w in [
                         "announced", "just launched", "new feature", "policy change", "new policy",
                         "rolling out", "beta test", "now available", "just released", "price increase",
                         "fee change", "fee increase", "new partnership", "acquired", "shut down",
+                        "exclusive", "partnership", "deal with",
                     ]):
                         changes_list.append(p)
-                    elif any(w in text_lower for w in [
-                        "love", "amazing", "best platform", "better than ebay", "prefer",
-                        "switched to", "moved to", "so much better", "way better",
-                    ]):
-                        praise_list.append(p)
+                    # Complaints — broader keywords
                     elif any(w in text_lower for w in [
                         "problem", "issue", "broken", "terrible", "worst", "hate",
                         "frustrated", "scam", "complaint", "disappointed", "awful",
-                        "can't believe", "ridiculous", "rip off", "waste",
+                        "can't believe", "ridiculous", "rip off", "waste", "shorted",
+                        "missing", "wrong", "damaged", "overpriced", "robbery",
+                        "bad experience", "never again", "don't buy", "warning",
+                        "buyer beware", "stay away", "not worth", "regret",
+                        "poor quality", "garbage", "trash", "junk",
                     ]):
                         complaints_list.append(p)
+                    # Praise / competitive threats — broader
+                    elif any(w in text_lower for w in [
+                        "love", "amazing", "best platform", "better than ebay", "prefer",
+                        "switched to", "moved to", "so much better", "way better",
+                        "great experience", "highly recommend", "impressed",
+                        "cheaper fees", "lower fees", "better fees",
+                        "easier to use", "better ui", "better app",
+                        "glad i switched", "never going back",
+                    ]):
+                        praise_list.append(p)
+                    # Direct comparisons (vs eBay, vs other platforms)
+                    elif any(w in text_lower for w in [
+                        "vs ebay", "vs ", "compared to", "or ebay", "over ebay",
+                        "instead of ebay", "better than", "worse than",
+                        "pros and cons", "pros/cons", "which is better",
+                    ]):
+                        comparison_list.append(p)
                     else:
-                        discussion_list.append(p)
+                        # Only keep discussion posts with some engagement
+                        if (p.get("score", 0) or 0) >= 5:
+                            discussion_list.append(p)
 
+                actionable = len(changes_list) + len(complaints_list) + len(praise_list) + len(comparison_list)
                 with st.container(border=True):
                     st.subheader(f"⚔️ {comp_name}")
-                    mc1, mc2, mc3 = st.columns(3)
-                    mc1.metric("Total Posts", len(posts))
-                    mc2.metric("Complaints", len(complaints_list), help="Posts with negative sentiment — potential conquest opportunities")
-                    mc3.metric("Praise / Threats", len(praise_list), help="Posts praising this competitor — areas where eBay may be losing")
+                    mc1, mc2, mc3, mc4 = st.columns(4)
+                    mc1.metric("Actionable", actionable, help="Posts with clear signal: complaints, praise, changes, or comparisons")
+                    mc2.metric("Complaints", len(complaints_list), help="Conquest opportunities — what their customers hate")
+                    mc3.metric("Praise", len(praise_list), help="Competitive threats — what people like about them")
+                    mc4.metric("Comparisons", len(comparison_list), help="Direct platform comparisons")
 
                     # Policy & product changes
                     if changes_list:
@@ -471,14 +494,26 @@ with tabs[1]:
                                 st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
                                 st.markdown("---")
 
-                    # General discussion
-                    if discussion_list:
-                        with st.expander(f"💬 General Discussion ({len(discussion_list)})", expanded=False):
-                            for idx, post in enumerate(sorted(discussion_list, key=lambda x: x.get("score", 0), reverse=True)[:10], 1):
+                    # Comparisons
+                    if comparison_list:
+                        with st.expander(f"⚖️ Platform Comparisons ({len(comparison_list)})", expanded=False):
+                            for idx, post in enumerate(sorted(comparison_list, key=lambda x: x.get("score", 0), reverse=True)[:10], 1):
                                 title = post.get("title", "")[:100] or post.get("text", "")[:100]
                                 score = post.get("score", 0)
                                 st.markdown(f"**{idx}.** {title} (⬆️ {score})")
                                 st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # General discussion — only high-engagement posts
+                    if discussion_list:
+                        with st.expander(f"💬 Other Discussion — {len(discussion_list)} high-engagement posts", expanded=False):
+                            for idx, post in enumerate(sorted(discussion_list, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                score = post.get("score", 0)
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
+                                st.markdown(f"> {post.get('text', '')[:300]}")
                                 url = post.get("url", "")
                                 st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
                                 st.markdown("---")

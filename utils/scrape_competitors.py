@@ -41,6 +41,10 @@ EXCLUDE_PATTERNS = [
     "laptop", "computer", "gpu", "cpu", "ram ",
     "election", "democrat", "republican", "trump", "biden", "congress",
     "extremist", "terrorism", "terrorist",
+    # Fanatical (game bundle site, NOT Fanatics Collect)
+    "[fanatical]", "build your own", "platinum collection",
+    "resident evil", "devil may cry", "steamworld", "frostpunk",
+    "tomb raider", "skyrim", "lego bricktales", "ace attorney",
 ]
 
 # Competitor/subsidiary definitions
