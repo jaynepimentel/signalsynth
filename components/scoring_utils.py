@@ -115,7 +115,7 @@ def infer_clarity(text):
 
 def detect_competitor_and_partner_mentions(text):
     lo=(text or "").lower()
-    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin"]
+    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin"]  # pwcc kept as alias — rebranded to Fanatics Collect
     partners=["psa","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
     market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold"]
     return {

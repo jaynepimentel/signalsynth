@@ -309,7 +309,7 @@ with tabs[0]:
 
 | Tab | What you'll find |
 |-----|-----------------|
-| **Competitor Intel** | What Fanatics, Whatnot, Heritage, PWCC are doing. What their customers complain about (conquest opportunities). What people like about them (threats). |
+| **Competitor Intel** | What Fanatics, Whatnot, Heritage, Alt are doing. What their customers complain about (conquest opportunities). What people like about them (threats). |
 | **eBay Voice** | What eBay's own customers are saying — product feedback, pain points, feature requests, filtered by topic. |
 | **Industry & Trends** | News, blog posts, YouTube commentary, forum discussions — the broader collectibles market. |
 | **Broken Windows** | Bugs, UX confusion, fee complaints, shipping friction, return disputes — things that erode trust and need fixing. |

@@ -305,7 +305,7 @@ def _assess_actionability(i: Dict[str, Any], text_lower: str) -> tuple:
 def _build_context_line(i: Dict[str, Any], text_lower: str, subtag: str, sentiment: str) -> str:
     """Build a one-line context explanation of why this matters to eBay Collectibles."""
     # Competitive risk
-    competitors = ["fanatics", "whatnot", "heritage", "alt.xyz", "pwcc", "myslabs"]
+    competitors = ["fanatics", "whatnot", "heritage", "alt.xyz", "myslabs"]
     mentioned_comp = [c for c in competitors if c in text_lower]
     if mentioned_comp:
         return f"Mentions competitor ({', '.join(mentioned_comp).title()}) \u2014 potential competitive risk or win-back signal."
@@ -374,7 +374,7 @@ def _generate_deep_dive(text: str, insight: Dict[str, Any]) -> str:
     if isinstance(topics, list):
         topics = ", ".join(topics)
 
-    prompt = f"""You are analyzing a real user signal for a Product Manager on the eBay Collectibles team (trading cards, sports memorabilia, coins, comics). eBay competes with Fanatics Collect, Whatnot (live breaks), Heritage Auctions, PWCC, and Alt.xyz. Key eBay products include Vault (secure storage), Authenticity Guarantee, and integrations with grading companies (PSA, BGS, CGC).
+    prompt = f"""You are analyzing a real user signal for a Product Manager on the eBay Collectibles team (trading cards, sports memorabilia, coins, comics). eBay competes with Fanatics Collect (formerly PWCC), Whatnot (live breaks), Heritage Auctions, and Alt.xyz. Key eBay products include Vault (secure storage), Authenticity Guarantee, and integrations with grading companies (PSA, BGS, CGC).
 
 USER QUOTE (from {source}):
 \"{text[:1200]}\"

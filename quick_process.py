@@ -241,7 +241,7 @@ YT_QUALITY_KEYWORDS = [
     "ebay", "fee", "shipping", "listing", "seller", "buyer", "auction", "buy it now",
     "promoted", "algorithm", "search", "visibility", "vault", "authenticity",
     # Competitive intel
-    "fanatics", "whatnot", "heritage", "alt.xyz", "tcgplayer", "goldin", "pwcc",
+    "fanatics", "whatnot", "heritage", "alt.xyz", "tcgplayer", "goldin",
     # Market trends & pricing
     "price", "value", "market", "invest", "flip", "profit", "trend", "crash", "boom",
     "overpriced", "undervalued", "roi", "hold", "long term",
@@ -471,7 +471,7 @@ def enrich(post):
         elif any(w in combined for w in ["inad", "item not as described", "open a return", "return request", "partial refund", "forced to take the return", "return all of them"]):
             subtag = "Returns & Refunds"
         # Competitor mentions
-        elif any(w in combined for w in ["fanatics", "whatnot", "heritage auction", "pwcc", "alt.xyz", "myslabs"]):
+        elif any(w in combined for w in ["fanatics", "whatnot", "heritage auction", "alt.xyz", "myslabs"]):
             subtag = "Competitor Intel"
         # Live shopping / breaks
         elif any(w in combined for w in ["live selling", "live break", "case break", "box break", "group break", "live stream", "live shopping", "live auction"]):
