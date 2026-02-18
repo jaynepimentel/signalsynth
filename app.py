@@ -1455,9 +1455,12 @@ with tabs[4]:
             "owner": "Seller Experience PM",
         },
         "App & UX Bugs": {
-            "keywords": ["ebay app", "ebay website", "glitch", "bug", "crash",
-                         "not working", "won't load", "error message",
-                         "confusing", "seller hub", "white screen", "blank page"],
+            "keywords": ["ebay app", "ebay website", "app glitch", "app bug", "app crash",
+                         "ebay not working", "ebay won't load", "error message",
+                         "seller hub bug", "seller hub glitch", "seller hub broken",
+                         "white screen", "blank page", "ebay crash",
+                         "ebay glitch", "ebay bug", "app won't", "app keeps",
+                         "app freezes", "app update broke"],
             "icon": "🐛",
             "owner": "App/UX PM",
         },
@@ -1518,6 +1521,16 @@ with tabs[4]:
         "would you block this buyer? i already can smell",
         "i only brought 300",
         "seed vault extract", "arc raiders", "stella montis",
+        # Celebrations, jokes, memes, personal stories
+        "instant retirement", "can't believe i pulled", "best email to receive",
+        "second best email", "shove it up", "going up on ebay today",
+        "look what i found", "look what i pulled", "just pulled this",
+        "mail day", "pickup of the year", "grail acquired",
+        "finally got one", "dream card", "holy grail",
+        "lcs pickup", "card show pickup", "hit of the year",
+        "rip results", "box break results", "case break results",
+        "my collection", "collection update", "added to the pc",
+        "rate my collection", "show off", "nfs/nft",
     ]
     BW_EXCLUDE_SUBS = [
         "superstonk", "gme_meltdown", "amcstock",
@@ -1527,12 +1540,26 @@ with tabs[4]:
         "arcraiders", "nostupidquestions",
     ]
 
+    # Positive/celebratory signals — these are NOT broken windows even if tagged negative
+    BW_POSITIVE_SIGNALS = [
+        "best email", "second best email", "can't believe i pulled",
+        "instant retirement", "just pulled", "look what i",
+        "finally got", "dream card", "holy grail", "grail acquired",
+        "love ebay", "ebay came through", "great experience",
+        "shout out to ebay", "thank you ebay", "ebay is the best",
+        "happy with", "so excited", "pumped", "let's go",
+        "w pull", "huge pull", "insane pull", "fire pull",
+    ]
+
     def _is_bw_actionable(post):
         text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
         sub_lower = post.get("subreddit", "").lower()
         if sub_lower in BW_EXCLUDE_SUBS:
             return False
         if any(ex in text_lower for ex in BW_EXCLUDE):
+            return False
+        # Skip celebratory / positive posts that aren't actual complaints
+        if any(pos in text_lower for pos in BW_POSITIVE_SIGNALS):
             return False
         # Must mention a platform by name, OR be from an eBay sub, OR mention a specific eBay feature
         mentions_platform = any(name in text_lower for name in BW_PLATFORM_NAMES)
