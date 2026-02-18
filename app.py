@@ -442,13 +442,15 @@ with tabs[0]:
         "gameshire", "$100b endgame", "the whale, the trio",
         "bitcoin treasury", "warrants (gme", "roll-up",
         "diamond hands", "short squeeze", "moass", "tendies",
-        "to the moon", "hedge fund",
+        "to the moon", "hedge fund", "warrants to blockchain",
+        # Generic trade/sales threads (not platform issues)
+        "official sales/trade/breaks", "leave a comment here in this thread with your sales",
     ]
     # Subreddits that are never about eBay product issues
     NOT_ACTIONABLE_SUBS = [
         "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
         "cryptocurrency", "bitcoin", "stocks", "investing",
-        "gamestop", "gmejungle", "fwfbthinktank",
+        "gamestop", "gmejungle", "fwfbthinktank", "gme",
     ]
 
     def _is_platform_issue(post):
@@ -1342,8 +1344,8 @@ with tabs[4]:
         },
         "Promoted Listings Friction": {
             "keywords": ["promoted listing", "promoted standard", "promoted advanced",
-                         "ad rate", "forced to promote", "pay to play",
-                         "promoted listings fee", "ad spend", "advertising cost"],
+                         "pay to play", "ad rate", "forced to promote", "ad spend",
+                         "promoted listings fee", "visibility tax"],
             "icon": "📢",
             "owner": "Ads PM",
         },
@@ -1389,7 +1391,7 @@ with tabs[4]:
 
     # ── Filter to platform-actionable issues only ──
     BW_PLATFORM_KW = [
-        "ebay", "e-bay", "listing", "seller hub", "promoted listing", "vault", "psa", "bgs", "cgc",
+        "ebay", "e-bay", "listing", "seller hub", "promoted", "vault", "psa", "bgs", "cgc",
         "authenticity guarantee", "standard envelope", "managed payments", "fee",
         "shipping label", "tracking", "return", "refund", "inad", "payment",
         "payout", "account", "verification", "grading", "goldin", "tcgplayer", "comc",
@@ -1401,12 +1403,13 @@ with tabs[4]:
         "dvd of an old film", "mercari", "card show drama",
         "gameshire", "$100b endgame", "the whale, the trio",
         "bitcoin treasury", "diamond hands", "short squeeze", "moass",
-        "to the moon", "hedge fund",
+        "to the moon", "hedge fund", "warrants to blockchain",
+        "official sales/trade/breaks", "leave a comment here in this thread with your sales",
     ]
     BW_EXCLUDE_SUBS = [
         "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
         "cryptocurrency", "bitcoin", "stocks", "investing",
-        "gamestop", "gmejungle", "fwfbthinktank",
+        "gamestop", "gmejungle", "fwfbthinktank", "gme",
     ]
 
     def _is_bw_actionable(post):
