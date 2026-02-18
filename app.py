@@ -683,23 +683,20 @@ Be extremely specific and concrete. Reference actual product features, flows, an
     if subtag_counts:
         top_tags = subtag_counts.most_common(8)
         for tag, cnt in top_tags:
-            neg_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative")
-            complaints_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("type_tag") == "Complaint")
-            bugs_in_tag = sum(1 for i in normalized if i.get("subtag") == tag and i.get("type_tag") == "Bug Report")
-            # Pain signals = unique posts that are negative OR complaint OR bug (avoid double-counting)
-            pain_posts = set()
-            for i in normalized:
-                if i.get("subtag") != tag:
-                    continue
-                if i.get("brand_sentiment") == "Negative" or i.get("type_tag") in ("Complaint", "Bug Report"):
-                    pain_posts.add(id(i))
-            pain_count = len(pain_posts)
-            pain_pct = round(pain_count / max(cnt, 1) * 100)
-            # Health score based on pain signals (combines sentiment + type_tag)
-            is_red = pain_pct > 40 or pain_count >= 20
-            is_yellow = pain_pct > 15 or pain_count >= 10
+            # Count unique posts that need attention (negative sentiment, complaint, or bug)
+            tag_posts = [i for i in normalized if i.get("subtag") == tag]
+            needs_attention = len([
+                p for p in tag_posts
+                if p.get("brand_sentiment") == "Negative"
+                or p.get("type_tag") in ("Complaint", "Bug Report")
+            ])
+            ok_count = cnt - needs_attention
+            attn_pct = round(needs_attention / max(cnt, 1) * 100)
+            # Health: red if majority are problems, yellow if significant minority
+            is_red = attn_pct > 40 or needs_attention >= 20
+            is_yellow = attn_pct > 15 or needs_attention >= 10
             bar = "🔴" if is_red else ("🟡" if is_yellow else "🟢")
-            st.markdown(f"{bar} **{tag}**: {cnt} signals · {pain_count} pain signals ({pain_pct}%)")
+            st.markdown(f"{bar} **{tag}** — {needs_attention} of {cnt} signals need attention ({attn_pct}%)")
 
     st.markdown("---")
     st.markdown("### 🚦 Where to Go Next")
