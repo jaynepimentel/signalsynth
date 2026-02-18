@@ -425,7 +425,7 @@ with tabs[0]:
         "bug", "glitch", "error", "broken", "not working", "crash",
         "confusing", "can't find", "won't load",
     ]
-    # Exclude personal stories that aren't platform issues
+    # Exclude personal stories and off-topic posts
     NOT_ACTIONABLE = [
         "stole my", "nephew", "my cards were stolen", "someone stole",
         "lost my collection", "house fire", "flooded",
@@ -438,12 +438,26 @@ with tabs[0]:
         "am i dumb? 10k in cards", "10k in cards i got into slabs",
         # Generic collecting frustrations (not platform bugs)
         "i got into slabs during the peak",
+        # Stock/investment conspiracy posts that mention eBay in passing
+        "gameshire", "$100b endgame", "the whale, the trio",
+        "bitcoin treasury", "warrants (gme", "roll-up",
+        "diamond hands", "short squeeze", "moass", "tendies",
+        "to the moon", "hedge fund",
+    ]
+    # Subreddits that are never about eBay product issues
+    NOT_ACTIONABLE_SUBS = [
+        "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
+        "cryptocurrency", "bitcoin", "stocks", "investing",
+        "gamestop", "gmejungle", "fwfbthinktank",
     ]
 
     def _is_platform_issue(post):
         """Return True if this post describes something a product/eng team can fix."""
         text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
-        # Exclude personal stories
+        # Exclude known off-topic subreddits
+        if post.get("subreddit", "").lower() in NOT_ACTIONABLE_SUBS:
+            return False
+        # Exclude personal stories and off-topic content
         if any(na in text_lower for na in NOT_ACTIONABLE):
             return False
         # Must mention a platform feature/tool/policy
@@ -1384,10 +1398,20 @@ with tabs[4]:
         "stole my", "nephew", "my cards were stolen", "house fire",
         "fake money", "porch pick up", "hands free controller", "nintendo",
         "dvd of an old film", "mercari", "card show drama",
+        "gameshire", "$100b endgame", "the whale, the trio",
+        "bitcoin treasury", "diamond hands", "short squeeze", "moass",
+        "to the moon", "hedge fund",
+    ]
+    BW_EXCLUDE_SUBS = [
+        "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
+        "cryptocurrency", "bitcoin", "stocks", "investing",
+        "gamestop", "gmejungle", "fwfbthinktank",
     ]
 
     def _is_bw_actionable(post):
         text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
+        if post.get("subreddit", "").lower() in BW_EXCLUDE_SUBS:
+            return False
         if any(ex in text_lower for ex in BW_EXCLUDE):
             return False
         return any(kw in text_lower for kw in BW_PLATFORM_KW)
