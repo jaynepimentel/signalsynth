@@ -1341,9 +1341,10 @@ with tabs[4]:
             "owner": "Monetization PM",
         },
         "Promoted Listings Friction": {
-            "keywords": ["promoted listing", "promoted", "pay to play", "sponsored",
-                         "promoted standard", "promoted advanced", "ad rate", "forced to promote"],
-            "icon": "�",
+            "keywords": ["promoted listing", "promoted standard", "promoted advanced",
+                         "ad rate", "forced to promote", "pay to play",
+                         "promoted listings fee", "ad spend", "advertising cost"],
+            "icon": "📢",
             "owner": "Ads PM",
         },
         "Search & Listing Visibility": {
@@ -1388,7 +1389,7 @@ with tabs[4]:
 
     # ── Filter to platform-actionable issues only ──
     BW_PLATFORM_KW = [
-        "ebay", "e-bay", "listing", "seller hub", "promoted", "vault", "psa", "bgs", "cgc",
+        "ebay", "e-bay", "listing", "seller hub", "promoted listing", "vault", "psa", "bgs", "cgc",
         "authenticity guarantee", "standard envelope", "managed payments", "fee",
         "shipping label", "tracking", "return", "refund", "inad", "payment",
         "payout", "account", "verification", "grading", "goldin", "tcgplayer", "comc",
