@@ -305,6 +305,21 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
         all_posts.extend(comp_posts)
         print(f"  ✅ Total for {comp_name}: {len(comp_posts)} posts")
     
+    # Deduplicate by title + competitor (same post found via different search terms)
+    seen_keys = set()
+    deduped = []
+    for p in all_posts:
+        title = (p.get("title", "") or p.get("text", ""))[:80].strip().lower()
+        comp = p.get("competitor", "")
+        key = f"{comp}|{title}"
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        deduped.append(p)
+    if len(all_posts) != len(deduped):
+        print(f"  🧹 Deduped: {len(all_posts)} → {len(deduped)} ({len(all_posts) - len(deduped)} duplicates removed)")
+    all_posts = deduped
+
     # Sort by date
     all_posts.sort(key=lambda x: x.get("post_date", ""), reverse=True)
     
