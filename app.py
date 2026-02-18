@@ -355,8 +355,8 @@ tabs = st.tabs([
     "⚔️ Competitor Intel",
     "🎯 eBay Voice",
     "📰 Industry & Trends",
-    "� Product Releases",
-    "�🔧 Broken Windows",
+    "📦 Product Releases",
+    "🔧 Broken Windows",
     "📋 Strategy",
 ])
 
@@ -1835,3 +1835,126 @@ with tabs[6]:
         display_clustered_insight_cards(normalized)
     except Exception as e:
         st.error(f"Cluster view error: {e}")
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SIDEBAR: AI Q&A — Ask anything about the data
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+with st.sidebar:
+    st.markdown("## 🧠 Ask SignalSynth")
+    st.caption("Ask any question about the scraped data — trends, competitors, pain points, opportunities, or anything else. AI will search the insights and give you a polished answer.")
+
+    if not OPENAI_KEY_PRESENT:
+        st.warning("OpenAI API key not configured. Add your key to `.env` to enable AI Q&A.")
+    else:
+        # Initialize chat history
+        if "qa_messages" not in st.session_state:
+            st.session_state["qa_messages"] = []
+
+        # Display chat history
+        for msg in st.session_state["qa_messages"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+        # Chat input
+        user_question = st.chat_input("Ask about the data...", key="qa_input")
+
+        if user_question:
+            # Show user message
+            st.session_state["qa_messages"].append({"role": "user", "content": user_question})
+            with st.chat_message("user"):
+                st.markdown(user_question)
+
+            # Build context from insights — find relevant posts
+            q_lower = user_question.lower()
+            q_words = set(q_lower.split())
+
+            # Score each insight by relevance to the question
+            def _relevance_score(insight):
+                text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+                subtag = (insight.get("subtag", "") or "").lower()
+                source = (insight.get("source", "") or "").lower()
+                score = 0
+                for w in q_words:
+                    if len(w) > 3 and w in text:
+                        score += 1
+                    if w in subtag:
+                        score += 3
+                    if w in source:
+                        score += 2
+                return score
+
+            scored = [(p, _relevance_score(p)) for p in normalized]
+            scored.sort(key=lambda x: -x[1])
+            relevant = [p for p, s in scored if s > 0][:30]
+
+            # Build context digest
+            context_lines = []
+            for p in relevant[:20]:
+                title = p.get("title", "")[:100]
+                text = p.get("text", "")[:200].replace("\n", " ")
+                source = p.get("source", "")
+                sub = p.get("subreddit", "")
+                subtag = p.get("subtag", "")
+                sentiment = p.get("brand_sentiment", "")
+                score = p.get("score", 0)
+                type_tag = p.get("type_tag", "")
+                sub_label = f"r/{sub}" if sub else source
+                context_lines.append(
+                    f"- [{type_tag}] [{sentiment}] [{subtag}] (⬆️{score}, {sub_label}) {title}: {text}"
+                )
+
+            # Add summary stats
+            total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
+            total_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
+            total_complaints = sum(1 for i in normalized if i.get("type_tag") == "Complaint")
+            total_features = sum(1 for i in normalized if i.get("type_tag") == "Feature Request")
+            subtag_counts = defaultdict(int)
+            for i in normalized:
+                st_val = i.get("subtag", "General")
+                if st_val:
+                    subtag_counts[st_val] += 1
+            top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:10]
+
+            stats_block = f"""Dataset: {len(normalized)} insights total
+Sentiment: {total_neg} negative, {total_pos} positive
+Types: {total_complaints} complaints, {total_features} feature requests
+Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"""
+
+            context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found — answer based on the dataset summary above.)"
+
+            system_prompt = f"""You are SignalSynth AI, an expert analyst for eBay's Collectibles vertical.
+You have access to a dataset of {len(normalized)} scraped and enriched insights from Reddit, Twitter/X, YouTube, forums, blogs, and news sources about the collectibles industry (trading cards, sports cards, Pokemon, grading services like PSA/BGS, platforms like eBay/Whatnot/Goldin/Fanatics).
+
+Your job is to give polished, specific, data-grounded answers. Reference actual signals from the data when possible. Be concise but thorough. Format with markdown.
+
+DATASET SUMMARY:
+{stats_block}
+
+RELEVANT SIGNALS (most relevant to the user's question):
+{context_block}"""
+
+            try:
+                from components.ai_suggester import _chat, MODEL_MAIN
+                with st.chat_message("assistant"):
+                    with st.spinner("Searching insights and generating answer..."):
+                        response = _chat(
+                            MODEL_MAIN,
+                            system_prompt,
+                            user_question,
+                            max_completion_tokens=1500,
+                            temperature=0.3,
+                        )
+                    st.markdown(response)
+                st.session_state["qa_messages"].append({"role": "assistant", "content": response})
+            except Exception as e:
+                error_msg = f"⚠️ Error: {e}"
+                with st.chat_message("assistant"):
+                    st.error(error_msg)
+                st.session_state["qa_messages"].append({"role": "assistant", "content": error_msg})
+
+        # Clear chat button
+        if st.session_state.get("qa_messages"):
+            if st.button("🗑️ Clear chat", key="clear_qa"):
+                st.session_state["qa_messages"] = []
+                st.rerun()
