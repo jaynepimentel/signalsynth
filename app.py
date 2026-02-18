@@ -506,7 +506,6 @@ RELEVANT SIGNALS:
             if st.button("🗑️ Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
                 st.rerun()
-
 # ─────────────────────────────────────────────
 # 7 Tabs
 # ─────────────────────────────────────────────
@@ -515,12 +514,13 @@ tabs = st.tabs([
     "⚔️ Competitor Intel",
     "🎯 eBay Voice",
     "📰 Industry & Trends",
-    "📦 Product Releases",
+    "📦 Checklists & Sealed Launches",
     "🔧 Broken Windows",
     "📋 Strategy",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TAB 4: CHECKLISTS & SEALED LAUNCHES — eBay product releases
 # TAB 1: OVERVIEW — Executive snapshot
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
@@ -1595,7 +1595,7 @@ with tabs[3]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 5: PRODUCT RELEASES — Checklists & Upcoming Sealed Product Launches
+# TAB 5: CHECKLISTS & SEALED LAUNCHES — Checklists & Upcoming Sealed Product Launches
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[4]:
     st.markdown("Upcoming sealed product launches and checklists from Panini, Topps, Leaf, Upper Deck, Bowman, and more.")
@@ -1608,7 +1608,7 @@ with tabs[4]:
         pass
 
     if not releases_data:
-        st.info("No release data available. Run scrapers to collect upcoming product releases and checklists.")
+        st.info("No data available. Run scrapers to collect upcoming sealed launches and checklists.")
     else:
         checklists = [r for r in releases_data if r.get("category") == "checklist"]
         releases = [r for r in releases_data if r.get("category") == "release"]

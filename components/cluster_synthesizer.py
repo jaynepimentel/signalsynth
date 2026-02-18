@@ -24,7 +24,54 @@ except ImportError:
 
 load_dotenv()
 load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+
+def _is_placeholder(v):
+    if not v:
+        return True
+    s = str(v).strip()
+    if not s:
+        return True
+    bad_markers = [
+        "YOUR_OPENAI_API_KEY",
+        "YOUR_OPE",
+        "YOUR_OPEN",
+        "REPLACE_ME",
+    ]
+    return any(m in s.upper() for m in bad_markers)
+
+
+def _get_openai_key():
+    # Prefer env for local scripts if valid
+    env_key = os.getenv("OPENAI_API_KEY")
+    if not _is_placeholder(env_key):
+        return env_key
+
+    # Fall back to Streamlit secrets for remote/runtime contexts
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets:
+            sec_key = st.secrets["OPENAI_API_KEY"]
+            if not _is_placeholder(sec_key):
+                return sec_key
+    except Exception:
+        pass
+    return None
+
+
+def _get_model_setting(key, default):
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key in st.secrets:
+            v = str(st.secrets[key]).strip()
+            if v:
+                return v
+    except Exception:
+        pass
+    v = os.getenv(key)
+    return v.strip() if isinstance(v, str) and v.strip() else default
+
+
+OPENAI_KEY = _get_openai_key()
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 # === Tunables ===
@@ -183,7 +230,7 @@ def generate_cluster_metadata(cluster):
     )
     try:
         response = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL_CLUSTER_META", "gpt-4o-mini"),
+            model=_get_model_setting("OPENAI_MODEL_CLUSTER_META", _get_model_setting("OPENAI_MODEL_SCREENER", "gpt-4o-mini")),
             messages=[
                 {"role": "system", "content": "You are a senior product strategist."},
                 {"role": "user", "content": prompt},
