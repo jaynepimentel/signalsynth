@@ -81,25 +81,76 @@ def coerce_bool(value):
         return "No"
     return "Unknown"
 
+
+def _nested_get(obj, path, default=None):
+    """Safe dotted-path getter, e.g. _nested_get(i, 'taxonomy.topic')."""
+    cur = obj
+    for part in str(path).split("."):
+        if not isinstance(cur, dict):
+            return default
+        if part not in cur:
+            return default
+        cur = cur.get(part)
+    return cur if cur is not None else default
+
+
+def _taxonomy_type(insight):
+    return _nested_get(insight, "taxonomy.type", insight.get("type_tag", "Unclassified"))
+
+
+def _taxonomy_topic(insight):
+    return _nested_get(insight, "taxonomy.topic", insight.get("subtag", "General"))
+
+
+def _taxonomy_theme(insight):
+    return _nested_get(insight, "taxonomy.theme", insight.get("theme") or _taxonomy_topic(insight))
+
 def normalize_insight(i, suggestion_cache):
     i["ideas"] = suggestion_cache.get(i.get("text",""), [])
     i["persona"] = i.get("persona", "Unknown")
     i["journey_stage"] = i.get("journey_stage", "Unknown")
-    i["type_tag"] = i.get("type_tag", "Unclassified")
+
+    # Canonical taxonomy object (single source of truth), while preserving
+    # legacy flat fields for backward compatibility.
+    taxonomy = i.get("taxonomy") if isinstance(i.get("taxonomy"), dict) else {}
+    canonical_type = (
+        taxonomy.get("type")
+        or i.get("type_tag")
+        or i.get("insight_type")
+        or "Unclassified"
+    )
+    canonical_topic = taxonomy.get("topic") or i.get("subtag")
+    if not canonical_topic:
+        tf = i.get("topic_focus_list") or i.get("topic_focus") or []
+        if isinstance(tf, list) and tf:
+            canonical_topic = tf[0]
+        elif isinstance(tf, str) and tf.strip():
+            canonical_topic = tf.strip()
+        else:
+            canonical_topic = "General"
+    canonical_theme = taxonomy.get("theme") or i.get("theme") or canonical_topic
+
+    i["taxonomy"] = {
+        "type": canonical_type,
+        "topic": canonical_topic,
+        "theme": canonical_theme,
+    }
+
+    # Legacy compatibility fields (read from canonical taxonomy)
+    i["type_tag"] = i["taxonomy"]["type"]
+    i["subtag"] = i["taxonomy"]["topic"]
+    i["theme"] = i["taxonomy"]["theme"]
+    i["type_subtag"] = i.get("type_subtag") or i["taxonomy"]["topic"]
+
+    if not i.get("type_subtags"):
+        i["type_subtags"] = [i["taxonomy"]["topic"]] if i["taxonomy"]["topic"] else []
+
     i["brand_sentiment"] = i.get("brand_sentiment", "Neutral")
     i["clarity"] = i.get("clarity", "Unknown")
     i["effort"] = i.get("effort", "Unknown")
     i["target_brand"] = i.get("target_brand", "Unknown")
     i["action_type"] = i.get("action_type", "Unclear")
     i["opportunity_tag"] = i.get("opportunity_tag", "General Insight")
-    if not i.get("subtag"):
-        tf = i.get("topic_focus_list") or i.get("topic_focus") or []
-        if isinstance(tf, list) and tf:
-            i["subtag"] = tf[0]
-        elif isinstance(tf, str) and tf.strip():
-            i["subtag"] = tf.strip()
-        else:
-            i["subtag"] = "General"
     if isinstance(i.get("topic_focus"), list):
         i["topic_focus_list"] = sorted({t for t in i["topic_focus"] if isinstance(t, str) and t})
     elif isinstance(i.get("topic_focus"), str) and i["topic_focus"].strip():
@@ -117,7 +168,7 @@ def normalize_insight(i, suggestion_cache):
     return i
 
 def get_field_values(insight, field):
-    val = insight.get(field, None)
+    val = _nested_get(insight, field, None)
     if val is None:
         return ["Unknown"]
     if isinstance(val, list):
@@ -328,6 +379,14 @@ try:
     except:
         pass
 
+    # Cllct news data
+    cllct_raw = []
+    try:
+        with open("data/scraped_cllct_posts.json", "r", encoding="utf-8") as f:
+            cllct_raw = json.load(f)
+    except:
+        pass
+
     clusters_count = 0
     try:
         with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
@@ -339,7 +398,7 @@ try:
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
 
     total = len(normalized)
-    complaints = sum(1 for i in normalized if i.get("type_tag") == "Complaint" or i.get("brand_sentiment") == "Negative")
+    complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint" or i.get("brand_sentiment") == "Negative")
     total_posts = raw_posts_count + competitor_posts_count
     hours_saved = round((total_posts * 2) / 60, 1)
 
@@ -411,7 +470,7 @@ else:
 
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
-            subtag = (insight.get("subtag", "") or "").lower()
+            subtag = (_taxonomy_topic(insight) or "").lower()
             source = (insight.get("source", "") or "").lower()
             score = 0
             for w in q_words:
@@ -433,10 +492,10 @@ else:
             text = p.get("text", "")[:200].replace("\n", " ")
             source = p.get("source", "")
             sub = p.get("subreddit", "")
-            subtag = p.get("subtag", "")
+            subtag = _taxonomy_topic(p)
             sentiment = p.get("brand_sentiment", "")
             score = p.get("score", 0)
-            type_tag = p.get("type_tag", "")
+            type_tag = _taxonomy_type(p)
             sub_label = f"r/{sub}" if sub else source
             context_lines.append(
                 f"- [{type_tag}] [{sentiment}] [{subtag}] (score:{score}, {sub_label}) {title}: {text}"
@@ -444,12 +503,12 @@ else:
 
         total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
         total_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
-        total_complaints = sum(1 for i in normalized if i.get("type_tag") == "Complaint")
-        total_features = sum(1 for i in normalized if i.get("type_tag") == "Feature Request")
+        total_complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint")
+        total_features = sum(1 for i in normalized if _taxonomy_type(i) == "Feature Request")
         subtag_counts = defaultdict(int)
         for i in normalized:
-            st_val = i.get("subtag", "General")
-            if st_val:
+            st_val = _taxonomy_topic(i)
+            if st_val and st_val != "General":
                 subtag_counts[st_val] += 1
         top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:10]
 
@@ -507,15 +566,14 @@ RELEVANT SIGNALS:
                 st.session_state["qa_messages"] = []
                 st.rerun()
 # ─────────────────────────────────────────────
-# 7 Tabs
+# 6 Tabs
 # ─────────────────────────────────────────────
 tabs = st.tabs([
     "📊 Overview",
     "⚔️ Competitor Intel",
-    "🎯 eBay Voice",
+    "🎯 Customer Signals",
     "📰 Industry & Trends",
     "📦 Checklists & Sealed Launches",
-    "🔧 Broken Windows",
     "📋 Strategy",
 ])
 
@@ -524,17 +582,28 @@ tabs = st.tabs([
 # TAB 1: OVERVIEW — Executive snapshot
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
-    with st.expander("💡 New here? How to use SignalSynth", expanded=False):
+    with st.expander("💡 New here? How to use SignalSynth", expanded=True):
         st.markdown("""
-**SignalSynth** scrapes thousands of posts from Reddit, Twitter/X, YouTube, forums, and news — then uses AI to surface what matters most to an eBay Collectibles PM.
+**SignalSynth** turns noisy community chatter into product-ready direction for eBay Collectibles teams.
 
-| Tab | What you'll find |
-|-----|-----------------|
-| **Competitor Intel** | What Fanatics, Whatnot, Heritage, Alt are doing. What their customers complain about (conquest opportunities). What people like about them (threats). |
-| **eBay Voice** | What eBay's own customers are saying — product feedback, pain points, feature requests, filtered by topic. |
-| **Industry & Trends** | News, blog posts, YouTube commentary, forum discussions — the broader collectibles market. |
-| **Broken Windows** | Bugs, UX confusion, fee complaints, shipping friction, return disputes — things that erode trust and need fixing. |
-| **Strategy** | AI-clustered themes with signal counts. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets. |
+### Start here (2-minute orientation)
+
+| Tab | When to use it | What you'll get |
+|-----|----------------|-----------------|
+| **📊 Overview** | First stop each day | Executive snapshot of top issues, requests, and where to focus next |
+| **⚔️ Competitor Intel** | Need a conquest/defense read | What competitors are winning on, where users are frustrated, and response ideas |
+| **🎯 Customer Signals** | Need to triage customer pain quickly | eBay feedback + Broken Windows in one place (bugs, UX confusion, fee friction) |
+| **📰 Industry & Trends** | Need market context | Top news, YouTube, forum, and social signals shaping the collectibles market |
+| **📦 Checklists & Sealed Launches** | Need release/checklist awareness | Upcoming product launches + checklist links by sport/brand |
+| **📋 Strategy** | Need decision-ready outputs | AI-clustered themes and one-click PRD/BRD/PRFAQ/Jira generation |
+
+### Recommended weekly workflow
+1. **Overview**: confirm top problems and opportunity themes.
+2. **Customer Signals**: validate root causes with real customer evidence.
+3. **Competitor Intel + Industry & Trends**: pressure-test decisions against market movement.
+4. **Strategy**: convert validated themes into execution artifacts.
+
+**Tip:** Use the Ask AI panel above the tabs for fast synthesis before deep-diving into any section.
         """)
 
     # ── Executive Briefing ──
@@ -542,8 +611,8 @@ with tabs[0]:
 
     neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
     pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
-    complaints = [i for i in normalized if i.get("type_tag") == "Complaint"]
-    feature_reqs = [i for i in normalized if i.get("type_tag") == "Feature Request"]
+    complaints = [i for i in normalized if _taxonomy_type(i) == "Complaint"]
+    feature_reqs = [i for i in normalized if _taxonomy_type(i) == "Feature Request"]
 
     # Headline metrics
     m1, m2, m3, m4 = st.columns(4)
@@ -634,7 +703,7 @@ with tabs[0]:
 
     # Filter to only actionable issues, THEN count
     actionable_neg = [i for i in normalized if i.get("brand_sentiment") == "Negative" and _is_platform_issue(i)]
-    subtag_neg = Counter(i.get("subtag", "General") for i in actionable_neg)
+    subtag_neg = Counter(_taxonomy_topic(i) for i in actionable_neg)
     subtag_neg.pop("General", None)
 
     # Classify what kind of action each topic area typically needs
@@ -726,13 +795,13 @@ Be extremely specific and concrete. Reference actual product features, flows, an
 
             # Get only actionable posts for this topic (already filtered by _is_platform_issue)
             tag_posts = sorted(
-                [i for i in actionable_neg if i.get("subtag") == tag],
+                [i for i in actionable_neg if _taxonomy_topic(i) == tag],
                 key=lambda x: x.get("score", 0), reverse=True
             )
 
-            tag_complaints = sum(1 for p in tag_posts if p.get("type_tag") == "Complaint")
-            tag_feature_reqs = sum(1 for p in tag_posts if p.get("type_tag") == "Feature Request")
-            tag_bugs = sum(1 for p in tag_posts if p.get("type_tag") == "Bug Report")
+            tag_complaints = sum(1 for p in tag_posts if _taxonomy_type(p) == "Complaint")
+            tag_feature_reqs = sum(1 for p in tag_posts if _taxonomy_type(p) == "Feature Request")
+            tag_bugs = sum(1 for p in tag_posts if _taxonomy_type(p) == "Bug Report")
 
             severity = "🔴 High" if cnt >= 20 else ("🟡 Medium" if cnt >= 8 else "🟢 Low")
 
@@ -773,7 +842,7 @@ Be extremely specific and concrete. Reference actual product features, flows, an
                             meta += f" · [Source]({url})"
                         st.caption(meta)
                     if len(tag_posts) > 8:
-                        st.info(f"🎯 **{len(tag_posts) - 8} more** — see **eBay Voice** tab filtered by *{tag}*.")
+                        st.info(f"🎯 **{len(tag_posts) - 8} more** — see **Customer Signals** tab filtered by *{tag}*.")
     else:
         st.info("No negative signals found.")
 
@@ -913,17 +982,17 @@ Be extremely specific and concrete. Reference actual product features, flows, an
     # ── Section 4: Quick Pulse ──
     st.markdown("### 📊 Signal Breakdown")
     st.caption("Where signals are concentrated by topic — click a topic to see all signals.")
-    subtag_counts = Counter(i.get("subtag", "General") for i in normalized)
+    subtag_counts = Counter(_taxonomy_topic(i) for i in normalized)
     subtag_counts.pop("General", None)
     if subtag_counts:
         top_tags = subtag_counts.most_common(8)
         for tag, cnt in top_tags:
             # Count unique posts that need attention (negative sentiment, complaint, or bug)
-            tag_posts = [i for i in normalized if i.get("subtag") == tag]
+            tag_posts = [i for i in normalized if _taxonomy_topic(i) == tag]
             needs_attention = len([
                 p for p in tag_posts
                 if p.get("brand_sentiment") == "Negative"
-                or p.get("type_tag") in ("Complaint", "Bug Report")
+                or _taxonomy_type(p) in ("Complaint", "Bug Report")
             ])
             ok_count = cnt - needs_attention
             attn_pct = round(needs_attention / max(cnt, 1) * 100)
@@ -938,13 +1007,13 @@ Be extremely specific and concrete. Reference actual product features, flows, an
     nc1, nc2, nc3 = st.columns(3)
     with nc1:
         st.markdown("""
-**🔧 Broken Windows**
-Bugs, UX confusion, fee friction — things to fix now.
+**🎯 Customer Signals**
+Customer feedback + broken windows triage in one place.
 """)
     with nc2:
         st.markdown("""
-**🎯 eBay Voice**
-Drill into customer feedback by topic, sentiment, and type.
+**📰 Industry & Trends**
+Market context from news, YouTube, forums, and social.
 """)
     with nc3:
         st.markdown("""
@@ -1161,52 +1230,105 @@ with tabs[1]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: EBAY VOICE — What eBay customers are saying
+# TAB 3: CUSTOMER SIGNALS — eBay voice + broken windows
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[2]:
-    st.markdown("What eBay customers are saying about products and experiences — filtered, enriched, and ready to act on.")
+    st.markdown("Customer feedback and broken-windows triage in one place — fewer tabs, clearer action path.")
 
     # Filters
-    filter_fields = {"Topic": "subtag", "Type": "type_tag", "Sentiment": "brand_sentiment"}
+    filter_fields = {"Topic": "taxonomy.topic", "Type": "taxonomy.type", "Sentiment": "brand_sentiment"}
     filters = render_floating_filters(normalized, filter_fields, key_prefix="ebay_voice")
     filtered = [i for i in normalized if match_multiselect_filters(i, filters, filter_fields)]
     time_range = filters.get("_time_range", "All Time")
     filtered = filter_by_time(filtered, time_range)
 
-    # Quick stats for filtered view
-    f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
-    f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
-    f_complaints = sum(1 for i in filtered if i.get("type_tag") == "Complaint")
-    f_requests = sum(1 for i in filtered if i.get("type_tag") == "Feature Request")
+    cs_pulse_tab, cs_problems_tab, cs_requests_tab, cs_raw_tab = st.tabs([
+        "📈 Pulse", "🔧 Problems", "💡 Requests", "📄 Raw Feed"
+    ])
 
-    vc1, vc2, vc3, vc4 = st.columns(4)
-    vc1.metric("Showing", f"{len(filtered)}", help=f"of {total} total insights")
-    vc2.metric("Negative", f_neg, help="Insights with negative sentiment")
-    vc3.metric("Complaints", f_complaints)
-    vc4.metric("Feature Requests", f_requests)
+    with cs_pulse_tab:
+        st.caption("Quick pulse on customer sentiment, issue load, and partner-related chatter for the current filter view.")
 
-    # Partner signals section
-    STRATEGIC_PARTNERS = {
-        "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
-        "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
-        "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
-        "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
-        "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
-    }
-    partner_counts = {}
-    for pname, kws in STRATEGIC_PARTNERS.items():
-        cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
-        if cnt > 0:
-            partner_counts[pname] = cnt
+        # Quick stats for filtered view
+        f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
+        f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
+        f_complaints = sum(1 for i in filtered if _taxonomy_type(i) == "Complaint")
+        f_requests = sum(1 for i in filtered if _taxonomy_type(i) == "Feature Request")
 
-    if partner_counts:
-        with st.expander(f"🤝 Partner Signals ({sum(partner_counts.values())} mentions in view)", expanded=False):
-            for pname, cnt in sorted(partner_counts.items(), key=lambda x: -x[1]):
-                st.markdown(f"- **{pname}**: {cnt} signals")
+        vc1, vc2, vc3, vc4 = st.columns(4)
+        vc1.metric("Showing", f"{len(filtered)}", help=f"of {total} total insights")
+        vc2.metric("Negative", f_neg, help="Insights with negative sentiment")
+        vc3.metric("Complaints", f_complaints)
+        vc4.metric("Feature Requests", f_requests)
 
-    # Insight cards
-    model = get_model()
-    render_insight_cards(filtered, model, key_prefix="ebay_voice")
+        # Partner signals section
+        STRATEGIC_PARTNERS = {
+            "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
+            "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
+            "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
+            "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
+            "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
+        }
+        partner_counts = {}
+        for pname, kws in STRATEGIC_PARTNERS.items():
+            cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
+            if cnt > 0:
+                partner_counts[pname] = cnt
+
+        if partner_counts:
+            with st.expander(f"🤝 Partner Signals ({sum(partner_counts.values())} mentions in view)", expanded=False):
+                for pname, cnt in sorted(partner_counts.items(), key=lambda x: -x[1]):
+                    st.markdown(f"- **{pname}**: {cnt} signals")
+
+        # Quick top-topic pulse
+        topic_counts = defaultdict(int)
+        for i in filtered:
+            t = _taxonomy_topic(i)
+            if t and t not in ("General", "Unknown"):
+                topic_counts[t] += 1
+        if topic_counts:
+            st.markdown("**Top topics in current view:**")
+            top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+            st.caption(" · ".join([f"{k} ({v})" for k, v in top_topics]))
+
+    with cs_requests_tab:
+        st.caption("Feature asks and improvement opportunities from the currently filtered Customer Signals view.")
+
+        REQUEST_HINTS = [
+            "should", "wish", "need", "please add", "feature", "why can't", "allow", "option to", "improve",
+        ]
+
+        request_posts = [
+            i for i in filtered
+            if _taxonomy_type(i) == "Feature Request"
+            or any(h in (i.get("text", "") + " " + i.get("title", "")).lower() for h in REQUEST_HINTS)
+        ]
+
+        st.metric("Request Signals", len(request_posts))
+        if not request_posts:
+            st.info("No request-like signals in this filtered view.")
+        else:
+            req_topic_counts = defaultdict(int)
+            for i in request_posts:
+                req_topic_counts[_taxonomy_topic(i)] += 1
+            st.caption("Top request topics: " + " · ".join([f"{k} ({v})" for k, v in sorted(req_topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]]))
+
+            for idx, post in enumerate(sorted(request_posts, key=lambda x: (x.get("score", 0), x.get("post_date", "")), reverse=True)[:20], 1):
+                title = post.get("title", "")[:120] or post.get("text", "")[:120]
+                ttype = _taxonomy_type(post)
+                topic = _taxonomy_topic(post)
+                score = post.get("score", 0)
+                date = post.get("post_date", "")
+                src = post.get("source", "")
+                url = post.get("url", "")
+                link = f" · [Source]({url})" if url else ""
+                st.markdown(f"**{idx}.** {title}")
+                st.caption(f"{ttype} · {topic} · ⬆️ {score} · {src} · {date}{link}")
+
+    with cs_raw_tab:
+        st.caption("Full customer signal explorer for the current filters.")
+        model = get_model()
+        render_insight_cards(filtered, model, key_prefix="ebay_voice")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1221,6 +1343,11 @@ with tabs[3]:
     # News RSS
     for p in news_rss_raw:
         p["_industry_source"] = "News"
+        industry_posts.append(p)
+
+    # Cllct direct scrape (important collectibles industry source)
+    for p in cllct_raw:
+        p["_industry_source"] = "Cllct"
         industry_posts.append(p)
 
     # YouTube — group comments by video, filter for quality comments only
@@ -1301,6 +1428,9 @@ with tabs[3]:
         "goldin", "tcgplayer", "tcg player", "alt marketplace",
         "platform", "marketplace", "seller fee", "buyer fee", "final value",
         "promoted listing", "managed payments", "payout",
+        # Price guide / valuation (eBay cards)
+        "price guide", "card ladder", "cardladder", "market comps", "comps",
+        "ebay price guide", "scan card", "scanner", "raw or graded",
         # Market & industry trends
         "market crash", "market trend", "hobby crash", "hobby boom",
         "price drop", "price spike", "bubble", "overvalued", "undervalued",
@@ -1438,7 +1568,7 @@ with tabs[3]:
             # Many news/forum items have no social score; give source-aware baseline so
             # major stories can still rank in Top Industry News.
             if base_score <= 0:
-                if src.startswith("News"):
+                if src.startswith("News") or src == "Cllct":
                     base_score = 120
                 elif src in ("YouTube", "YouTube (transcript)"):
                     base_score = 90
@@ -1455,6 +1585,8 @@ with tabs[3]:
                 boost += 30
             if any(k in title_text for k in ["policy change", "fee change", "partnership", "acquired", "licensing"]):
                 boost += 20
+            if any(k in title_text for k in ["price guide", "card ladder", "market comps", "scan", "scanner"]):
+                boost += 25
 
             base_score += boost
             age_days = _days_old(post)
@@ -1481,7 +1613,7 @@ with tabs[3]:
                 "News": "📰", "YouTube": "🎬", "Reddit": "💬",
                 "Twitter": "🐦", "Bluesky": "🦋",
                 "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
-                "Alt.xyz Blog": "📝", "COMC": "🃏",
+                "Alt.xyz Blog": "📝", "COMC": "🃏", "Cllct": "🗞️",
             }
             icon = source_icons.get(source_label, "📄")
             sub_label = f"r/{sub} · " if sub else ""
@@ -1490,6 +1622,70 @@ with tabs[3]:
             age_label = f" · {age_days}d ago" if age_days < 9999 else ""
             st.markdown(f"**{rank}.** {icon} **{title}**")
             st.caption(f"⬆️ {score} pts · {sub_label}{source_label} · {date}{age_label}{link}")
+
+        # ── eBay Price Guide Spotlight ──
+        st.markdown("### 🧭 eBay Price Guide Signals")
+        st.caption("What users like, where they are confused, and what they dislike about eBay's Price Guide (including Card Ladder coverage).")
+
+        def _is_price_guide_signal(item):
+            txt = (item.get("title", "") + " " + item.get("text", "")).lower()
+            return (
+                _taxonomy_topic(item) == "Price Guide"
+                or bool(item.get("is_price_guide_signal"))
+                or any(k in txt for k in [
+                    "price guide", "card ladder", "cardladder", "scan card", "scanner", "market comps", "what's my card worth",
+                ])
+            )
+
+        pg_signals = [p for p in normalized if _is_price_guide_signal(p)]
+        pg_signals_sorted = sorted(pg_signals, key=lambda x: (x.get("post_date", ""), float(x.get("score", 0) or 0)), reverse=True)
+
+        if not pg_signals_sorted:
+            st.info("No eBay Price Guide signals found in current insights cache.")
+        else:
+            pg_neg = sum(1 for p in pg_signals_sorted if p.get("brand_sentiment") == "Negative")
+            pg_pos = sum(1 for p in pg_signals_sorted if p.get("brand_sentiment") == "Positive")
+            pg_neu = max(0, len(pg_signals_sorted) - pg_neg - pg_pos)
+
+            confusion_kw = ["confus", "can't find", "how do i", "where is", "not showing", "missing", "doesn't work", "doesnt work"]
+            dislike_kw = ["wrong", "inaccurate", "bad", "hate", "useless", "terrible", "off", "not accurate", "broken"]
+            like_kw = ["helpful", "useful", "love", "great", "good", "accurate", "better", "nice"]
+
+            pg_confused = sum(1 for p in pg_signals_sorted if any(k in (p.get("text", "") + " " + p.get("title", "")).lower() for k in confusion_kw))
+            pg_dislike = sum(1 for p in pg_signals_sorted if any(k in (p.get("text", "") + " " + p.get("title", "")).lower() for k in dislike_kw))
+            pg_like = sum(1 for p in pg_signals_sorted if any(k in (p.get("text", "") + " " + p.get("title", "")).lower() for k in like_kw))
+
+            pg1, pg2, pg3, pg4 = st.columns(4)
+            pg1.metric("Price Guide Signals", len(pg_signals_sorted))
+            pg2.metric("👍 Positive", pg_pos)
+            pg3.metric("❓ Confusion Cues", pg_confused)
+            pg4.metric("👎 Negative", pg_neg)
+            st.caption(f"Sentiment mix: 🔴 {pg_neg} negative · 🟢 {pg_pos} positive · ⚪ {pg_neu} neutral · 👍 keyword likes: {pg_like} · 👎 keyword dislikes: {pg_dislike}")
+
+            for idx, post in enumerate(pg_signals_sorted[:8], 1):
+                title = post.get("title", "")[:120] or post.get("text", "")[:120]
+                sentiment = post.get("brand_sentiment", "Neutral")
+                score = post.get("score", 0)
+                src = post.get("source", "?")
+                date = post.get("post_date", "")
+                url = post.get("url", "")
+                link = f" · [Link]({url})" if url else ""
+                st.markdown(f"**{idx}.** {title}")
+                st.caption(f"{sentiment} · ⬆️ {score} · {src} · {date}{link}")
+
+        # Explicit industry coverage list (news/videos)
+        pg_coverage = [p for p in industry_posts if _is_price_guide_signal(p)]
+        pg_coverage = sorted(pg_coverage, key=lambda x: (_time_weighted_score(x), x.get("post_date", "")), reverse=True)
+        if pg_coverage:
+            st.caption("Industry coverage (news/videos) for Price Guide & Card Ladder:")
+            for i, p in enumerate(pg_coverage[:6], 1):
+                t = p.get("title", "")[:120] or p.get("text", "")[:120]
+                src = p.get("_industry_source", p.get("source", "?"))
+                d = p.get("post_date", "")
+                u = p.get("url", "")
+                l = f" · [Link]({u})" if u else ""
+                st.markdown(f"- **{i}.** {t}")
+                st.caption(f"{src} · {d}{l}")
 
         st.markdown("---")
 
@@ -1706,8 +1902,9 @@ with tabs[4]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 6: BROKEN WINDOWS — Bugs, UX confusion, fee friction
-with tabs[5]:
+# TAB 3 (continued): BROKEN WINDOWS — Bugs, UX confusion, fee friction
+with cs_problems_tab:
+    st.markdown("### 🔧 Broken Windows")
     st.markdown("Platform bugs, UX friction, and product pain points that eBay, Goldin, or TCGPlayer engineering teams can fix.")
 
     # ── Broken window categories ──
@@ -1898,7 +2095,7 @@ with tabs[5]:
 
     bw_candidates = [
         i for i in normalized
-        if (i.get("type_tag") in ("Complaint", "Bug Report") or i.get("brand_sentiment") == "Negative")
+        if (_taxonomy_type(i) in ("Complaint", "Bug Report") or i.get("brand_sentiment") == "Negative")
         and _is_bw_actionable(i)
     ]
 
@@ -2041,7 +2238,7 @@ Reports:
                 text = insight.get("text", "")[:300]
                 score = insight.get("score", 0)
                 url = insight.get("url", "")
-                subtag = insight.get("subtag", "")
+                subtag = _taxonomy_topic(insight)
                 st.markdown(f"**{idx}.** {text}{'...' if len(insight.get('text', '')) > 300 else ''}")
                 meta = f"⬆️ {score}"
                 if subtag and subtag.lower() not in ("general", "unknown"):
@@ -2054,9 +2251,9 @@ Reports:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 7: STRATEGY — Strategic themes + AI doc generation
+# TAB 6: STRATEGY — Strategic themes + AI doc generation
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[6]:
+with tabs[5]:
     st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)

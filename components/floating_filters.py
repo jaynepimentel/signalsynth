@@ -3,20 +3,35 @@ import streamlit as st
 from datetime import datetime, timedelta
 
 
+def _nested_get(obj, path, default=None):
+    cur = obj
+    for part in str(path).split("."):
+        if not isinstance(cur, dict):
+            return default
+        if part not in cur:
+            return default
+        cur = cur.get(part)
+    return cur if cur is not None else default
+
+
 def render_floating_filters(insights, filter_fields, key_prefix=""):
     """Render filter dropdowns: Topic, Type, and Time range."""
     filters = {}
+    topic_field = filter_fields.get("Topic", "taxonomy.topic")
+    type_field = filter_fields.get("Type", "taxonomy.type")
     
     # Extract unique topics
     topics = sorted({
-        ins.get("subtag", "") for ins in insights 
-        if ins.get("subtag") and ins.get("subtag").lower() not in ("unknown", "general", "")
+        _nested_get(ins, topic_field, ins.get("subtag", "")) for ins in insights
+        if _nested_get(ins, topic_field, ins.get("subtag", ""))
+        and str(_nested_get(ins, topic_field, ins.get("subtag", ""))).lower() not in ("unknown", "general", "")
     })
     
     # Extract unique types
     types = sorted({
-        ins.get("type_tag", "") for ins in insights
-        if ins.get("type_tag") and ins.get("type_tag").lower() not in ("unknown", "unclassified", "")
+        _nested_get(ins, type_field, ins.get("type_tag", "")) for ins in insights
+        if _nested_get(ins, type_field, ins.get("type_tag", ""))
+        and str(_nested_get(ins, type_field, ins.get("type_tag", ""))).lower() not in ("unknown", "unclassified", "")
     })
     
     # Render 3 columns
@@ -25,12 +40,12 @@ def render_floating_filters(insights, filter_fields, key_prefix=""):
     with col1:
         if topics:
             topic = st.selectbox("Topic", ["All"] + topics, key=f"{key_prefix}_topic")
-            filters["subtag"] = [topic] if topic != "All" else ["All"]
+            filters[topic_field] = [topic] if topic != "All" else ["All"]
     
     with col2:
         if types:
             typ = st.selectbox("Type", ["All"] + types, key=f"{key_prefix}_type")
-            filters["type_tag"] = [typ] if typ != "All" else ["All"]
+            filters[type_field] = [typ] if typ != "All" else ["All"]
     
     with col3:
         time_range = st.selectbox(

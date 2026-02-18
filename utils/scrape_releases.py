@@ -9,8 +9,13 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from urllib.parse import quote
+from bs4 import BeautifulSoup
 
 SAVE_PATH = "data/upcoming_releases.json"
+
+MANUAL_CHECKLIST_URLS = [
+    "https://www.checklistcenter.com/young-guns-card-checklist/",
+]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -124,6 +129,36 @@ def _extract_sport(title):
     return "Trading Cards"
 
 
+def _scrape_direct_checklist(url):
+    """Fetch direct checklist URLs (e.g., ChecklistCenter) and normalize into post shape."""
+    fallback_title = url.rstrip("/").split("/")[-1].replace("-", " ").title() or "Checklist"
+    title = fallback_title
+
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=20)
+        if r.status_code == 200:
+            soup = BeautifulSoup(r.text, "html.parser")
+            title_el = soup.find("h1") or soup.find("title")
+            if title_el and title_el.get_text(strip=True):
+                title = title_el.get_text(" ", strip=True)
+    except Exception:
+        pass
+
+    title = re.sub(r"\s*\|\s*ChecklistCenter\s*$", "", title, flags=re.IGNORECASE).strip()
+    title = re.sub(r"\s+", " ", title).strip()
+
+    return {
+        "title": title,
+        "text": title,
+        "url": url,
+        "post_date": datetime.now().strftime("%Y-%m-%d"),
+        "source": "checklistcenter.com",
+        "category": "checklist",
+        "brand": _extract_brand(title),
+        "sport": _extract_sport(title),
+    }
+
+
 def scrape_upcoming_releases():
     """Scrape upcoming trading card releases and checklists."""
     print("📦 Scraping upcoming trading card releases and checklists...")
@@ -156,6 +191,11 @@ def scrape_upcoming_releases():
         posts = _google_news_rss(query)
         all_posts.extend(posts)
         time.sleep(1.0)
+
+    # Direct checklist pages we always want represented
+    for url in MANUAL_CHECKLIST_URLS:
+        print(f"  Seeding direct checklist: {url}")
+        all_posts.append(_scrape_direct_checklist(url))
 
     # Deduplicate by URL
     seen_urls = set()

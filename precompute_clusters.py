@@ -58,7 +58,26 @@ def _ensure_lists(i: Dict[str, Any]) -> Dict[str, Any]:
     if "type_subtag" not in i:
         i["type_subtag"] = i["type_subtags"][0] if i["type_subtags"] else "General"
 
+    taxonomy = i.get("taxonomy") if isinstance(i.get("taxonomy"), dict) else {}
+    canonical_type = taxonomy.get("type") or i.get("type_tag") or i.get("insight_type") or "Unclassified"
+    canonical_topic = taxonomy.get("topic") or i.get("subtag") or i.get("type_subtag") or "General"
+    canonical_theme = taxonomy.get("theme") or i.get("theme") or canonical_topic
+    i["taxonomy"] = {
+        "type": canonical_type,
+        "topic": canonical_topic,
+        "theme": canonical_theme,
+    }
+    # Keep legacy flat fields aligned for compatibility.
+    i["type_tag"] = i.get("type_tag") or canonical_type
+    i["subtag"] = i.get("subtag") or canonical_topic
+    i["theme"] = i.get("theme") or canonical_theme
+
     return i
+
+
+def _taxonomy_type(i: Dict[str, Any]) -> str:
+    taxonomy = i.get("taxonomy") if isinstance(i.get("taxonomy"), dict) else {}
+    return taxonomy.get("type") or i.get("type_tag") or "Unclassified"
 
 
 def _promote_money_risk(i: Dict[str, Any]) -> Dict[str, Any]:
@@ -177,7 +196,7 @@ def _cluster_stats(cluster_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     
     # Count feature requests - check type_tag or text content
     feature_requests = sum(1 for x in cluster_items if 
-        x.get("type_tag") == "Feature Request" or 
+        _taxonomy_type(x) == "Feature Request" or 
         "feature" in (x.get("text", "") + x.get("title", "")).lower() or
         "wish" in (x.get("text", "") + x.get("title", "")).lower() or
         "should" in (x.get("text", "") + x.get("title", "")).lower()

@@ -561,6 +561,11 @@ def enrich(post):
         "is_urgent": is_urgent,
         "topic_focus": topics,
         "topic_focus_list": topics,
+        "taxonomy": {
+            "type": insight_type,
+            "topic": subtag,
+            "theme": subtag,
+        },
         "subtag": subtag,
         "target_brand": "eBay",
         "type_tag": insight_type,

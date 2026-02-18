@@ -10,7 +10,7 @@ import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from urllib.parse import quote
+from urllib.parse import quote, urlparse, parse_qs
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,12 +39,73 @@ SEARCH_QUERIES = [
     "ebay trading cards",
     "ebay vault review",
     "ebay authenticity guarantee",
+    "ebay price guide trading cards",
+    "ebay card ladder price guide",
+    "ebay scan card value",
     "psa grading turnaround",
     "sports cards investing",
     "ebay vs fanatics cards",
     "card breaks live",
     "graded cards selling tips",
 ]
+
+# Always-attempt videos. Can be extended via YOUTUBE_WATCHLIST_URLS env var
+# (comma-separated list of full YouTube URLs).
+WATCHLIST_VIDEO_URLS = [
+    "https://youtu.be/792QCQhGTJQ",
+]
+
+
+def _extract_video_id(url):
+    try:
+        parsed = urlparse(url)
+        host = (parsed.netloc or "").lower()
+        if "youtu.be" in host:
+            return parsed.path.strip("/")
+        if "youtube.com" in host:
+            qs = parse_qs(parsed.query)
+            if "v" in qs and qs["v"]:
+                return qs["v"][0]
+            parts = [p for p in parsed.path.split("/") if p]
+            if len(parts) >= 2 and parts[0] in ("shorts", "embed"):
+                return parts[1]
+    except Exception:
+        pass
+    return None
+
+
+def _seed_watchlist_videos():
+    """Return minimal video objects for explicit URLs we always want attempted."""
+    raw = list(WATCHLIST_VIDEO_URLS)
+    extra = os.getenv("YOUTUBE_WATCHLIST_URLS", "")
+    if extra.strip():
+        raw.extend([u.strip() for u in extra.split(",") if u.strip()])
+
+    seeded = []
+    seen = set()
+    for u in raw:
+        vid = _extract_video_id(u)
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+
+        title_hint = f"Watchlist video {vid}"
+        desc_hint = "Seeded watchlist video for strategic collectibles monitoring."
+        if vid == "792QCQhGTJQ":
+            title_hint = "eBay Price Guide + Card Ladder discussion"
+            desc_hint = (
+                "Seeded watchlist for eBay trading cards coverage: price guide, "
+                "Card Ladder data integration, scan card value workflow, and market comps."
+            )
+
+        seeded.append({
+            "video_id": vid,
+            "title": title_hint,
+            "channel": "Watchlist",
+            "published": "",
+            "description": desc_hint,
+        })
+    return seeded
 
 
 def _get_transcript(video_id):
@@ -183,6 +244,15 @@ def scrape_channel_videos():
     """Scrape recent videos from known collectibles channels."""
     print("  Fetching videos from collectibles channels...")
     all_videos = []
+
+    # Manual watchlist (ensures key industry videos are always attempted)
+    try:
+        watchlist_videos = _seed_watchlist_videos()
+        all_videos.extend(watchlist_videos)
+        if watchlist_videos:
+            print(f"  Watchlist videos seeded: {len(watchlist_videos)}")
+    except Exception as e:
+        print(f"  ⚠️ Watchlist seed failed: {e}")
 
     for name, channel_id in CHANNELS.items():
         videos = _get_channel_videos_rss(channel_id, name)
