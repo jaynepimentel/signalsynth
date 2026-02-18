@@ -295,8 +295,8 @@ tabs = st.tabs([
     "⚔️ Competitor Intel",
     "🎯 eBay Voice",
     "📰 Industry & Trends",
-    "� Broken Windows",
-    "� Strategy",
+    "🔧 Broken Windows",
+    "📋 Strategy",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
