@@ -25,7 +25,36 @@ from components.floating_filters import render_floating_filters, filter_by_time
 # ─────────────────────────────────────────────
 load_dotenv()
 load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
-OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
+
+def _has_valid_openai_key():
+    def _is_placeholder(v):
+        if not v:
+            return True
+        s = str(v).strip()
+        if not s:
+            return True
+        bad_markers = [
+            "YOUR_OPENAI_API_KEY",
+            "YOUR_OPE",
+            "YOUR_OPEN",
+            "REPLACE_ME",
+        ]
+        return any(m in s.upper() for m in bad_markers)
+
+    env_key = os.getenv("OPENAI_API_KEY")
+    if not _is_placeholder(env_key):
+        return True
+
+    try:
+        if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets:
+            sec_key = st.secrets["OPENAI_API_KEY"]
+            if not _is_placeholder(sec_key):
+                return True
+    except Exception:
+        pass
+    return False
+
+OPENAI_KEY_PRESENT = _has_valid_openai_key()
 
 def get_model():
     """Lazy-load embedding model only when needed."""
