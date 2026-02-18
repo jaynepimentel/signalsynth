@@ -409,18 +409,77 @@ with tabs[0]:
 
     # ── Section 2: What Customers Want ──
     st.markdown("### 💡 What Customers Are Asking For")
-    st.caption("Feature requests and suggestions — sorted by engagement.")
-    if feature_reqs:
-        top_reqs = sorted(feature_reqs, key=lambda x: x.get("score", 0), reverse=True)[:5]
-        for rank, req in enumerate(top_reqs, 1):
-            text = req.get("text", "")[:200]
-            score = req.get("score", 0)
-            subtag = req.get("subtag", "")
-            tag_label = f" · **{subtag}**" if subtag and subtag != "General" else ""
-            st.markdown(f"**{rank}.** {text}{'...' if len(req.get('text', '')) > 200 else ''}")
-            st.caption(f"⬆️ {score}{tag_label}")
+    st.caption("Synthesized product opportunities from user feedback — grouped by theme.")
+
+    # Synthesize feature requests into actionable themes instead of raw quotes
+    # Only include posts that are actually about eBay product/platform improvements
+    EBAY_PRODUCT_KEYWORDS = [
+        "ebay", "listing", "search", "filter", "app", "website", "vault", "authenticity",
+        "shipping", "label", "tracking", "fee", "payment", "payout", "return", "refund",
+        "promoted", "seller", "buyer", "price guide", "scan", "watchlist", "notification",
+        "category", "condition", "photo", "description", "offer", "auction", "checkout",
+        "dashboard", "analytics", "report", "feedback", "rating", "block",
+    ]
+
+    # Theme synthesis: group requests by subtag and generate actionable titles
+    THEME_TITLES = {
+        "Vault": "Better Vault Experience",
+        "Trust": "Stronger Trust & Authenticity Signals",
+        "Payments": "Smoother Payment & Payout Flow",
+        "Shipping": "Shipping Tools & Cost Improvements",
+        "Grading Turnaround": "Faster Grading Integration",
+        "Grading": "Better Grading Service Integration",
+        "Authenticity Guarantee": "Expanded Authentication Coverage",
+        "Returns & Refunds": "Fairer Return & Dispute Process",
+        "Fees": "More Transparent Fee Structure",
+        "High-Value": "Better High-Value Item Experience",
+        "Seller Experience": "Seller Tools & Workflow Improvements",
+        "Buyer Experience": "Buyer Discovery & Purchase Flow",
+        "App & UX": "App & UX Improvements",
+        "Collecting": "Better Collector Discovery Tools",
+        "Price Guide": "More Accurate Pricing Data",
+        "Listing Strategy": "Smarter Listing & Pricing Tools",
+        "Market & Investing": "Market Intelligence for Collectors",
+        "Competitor Intel": "Competitive Feature Gaps to Close",
+    }
+
+    # Filter to eBay-relevant feature requests
+    relevant_reqs = [
+        r for r in feature_reqs
+        if any(kw in (r.get("text", "") + " " + r.get("title", "")).lower() for kw in EBAY_PRODUCT_KEYWORDS)
+    ]
+
+    if relevant_reqs:
+        # Group by subtag
+        req_by_theme = defaultdict(list)
+        for r in relevant_reqs:
+            subtag = r.get("subtag", "General")
+            if subtag != "General":
+                req_by_theme[subtag].append(r)
+
+        # Sort themes by total engagement
+        sorted_themes = sorted(req_by_theme.items(), key=lambda x: sum(r.get("score", 0) for r in x[1]), reverse=True)
+
+        for rank, (subtag, reqs) in enumerate(sorted_themes[:5], 1):
+            theme_title = THEME_TITLES.get(subtag, f"{subtag} Improvements")
+            total_score = sum(r.get("score", 0) for r in reqs)
+            top_req = sorted(reqs, key=lambda x: x.get("score", 0), reverse=True)[0]
+            sample_text = top_req.get("text", "")[:200]
+
+            with st.expander(f"**{rank}. {theme_title}** — {len(reqs)} requests · ⬆️ {total_score} total engagement", expanded=False):
+                st.markdown(f"**Theme:** Users want improvements to **{subtag.lower()}** on eBay.")
+                st.markdown("**Top requests:**")
+                for idx, req in enumerate(sorted(reqs, key=lambda x: x.get("score", 0), reverse=True)[:4], 1):
+                    text = req.get("text", "")[:250]
+                    score = req.get("score", 0)
+                    url = req.get("url", "")
+                    st.markdown(f"**{idx}.** {text}{'...' if len(req.get('text', '')) > 250 else ''}")
+                    meta = f"⬆️ {score}"
+                    if url:
+                        meta += f" · [Source]({url})"
+                    st.caption(meta)
     else:
-        st.info("No feature requests found.")
+        st.info("No actionable feature requests found.")
 
     # ── Section 3: Competitor Watch ──
     st.markdown("### ⚔️ Competitor Watch")
