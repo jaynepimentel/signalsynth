@@ -1152,8 +1152,18 @@ with tabs[3]:
         p_copy["_industry_source"] = src
         industry_posts.append(p_copy)
 
-    # Sort by date (most recent first), then by score as tiebreaker
+    # Deduplicate by title+source — keep most recent when same title repeats (e.g. recurring livestreams)
     industry_posts.sort(key=lambda x: (x.get("post_date", ""), x.get("score", 0)), reverse=True)
+    _seen_titles = set()
+    _deduped = []
+    for p in industry_posts:
+        title = (p.get("title", "") or p.get("text", "")[:80]).strip().lower()
+        src = p.get("_industry_source", "")
+        key = f"{src}::{title}"
+        if key not in _seen_titles:
+            _seen_titles.add(key)
+            _deduped.append(p)
+    industry_posts = _deduped
 
     if not industry_posts:
         st.info("No industry data. Run scrapers to collect news, YouTube, and forum data.")
