@@ -2291,7 +2291,7 @@ with tabs[0]:
 
 ### Start here
 - **📋 Strategy:** identify top themes, then generate PRD/BRD/PRFAQ/Jira drafts.
-- **🎯 Customer Signals:** validate root causes from real user evidence.
+- **🎯 Customer Signals:** explore real user evidence and feedback.
 - **⚔️ Competitor Intel + 📰 Industry & Trends:** pressure-test decisions with market context.
 - **📦 Checklists & Sealed Launches:** track release/checklist timing.
 - **📊 Charts:** review KPIs and prioritize actions.
