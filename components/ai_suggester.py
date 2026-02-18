@@ -7,6 +7,8 @@ from docx import Document
 from slugify import slugify
 
 load_dotenv()
+# Also check alternate .env location
+load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
 
 def _get_openai_key():
     """Get OpenAI API key from Streamlit secrets or environment."""

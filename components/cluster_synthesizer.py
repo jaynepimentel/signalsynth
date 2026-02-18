@@ -23,6 +23,7 @@ except ImportError:
     pass  # Expected on Streamlit Cloud - we use precomputed clusters
 
 load_dotenv()
+load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 

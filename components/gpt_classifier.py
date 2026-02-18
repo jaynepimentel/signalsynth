@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("OPENAI_API_KEY") else None
 
 # Keyword and pattern rules

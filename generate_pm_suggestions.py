@@ -20,6 +20,7 @@ from openai import OpenAI
 from tqdm import tqdm
 
 load_dotenv()
+load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
 
 # Config
 INSIGHTS_PATH = "precomputed_insights.json"

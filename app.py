@@ -24,6 +24,7 @@ from components.floating_filters import render_floating_filters, filter_by_time
 # Env & model
 # ─────────────────────────────────────────────
 load_dotenv()
+load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
 OPENAI_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY"))
 
 def get_model():
