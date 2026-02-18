@@ -331,20 +331,79 @@ with tabs[0]:
 
     # ── Section 1: Top Issues to Fix ──
     st.markdown("### 🔴 Top Issues to Fix")
-    st.caption("Highest-volume negative sentiment topics — where eBay is losing trust right now.")
+    st.caption("Highest-volume negative sentiment topics — expand each to see what's happening and what to do about it.")
     subtag_neg = Counter(i.get("subtag", "General") for i in normalized if i.get("brand_sentiment") == "Negative")
-    # Remove General and low-signal tags
     subtag_neg.pop("General", None)
+
+    # Classify what kind of action each topic area typically needs
+    TOPIC_ACTION_MAP = {
+        "Vault": {"action": "🐛 Bug Fix / UX Improvement", "owner": "Vault PM", "next": "Review top complaints → file bugs or UX tickets"},
+        "Trust": {"action": "🛡️ Policy / Trust & Safety", "owner": "Trust PM", "next": "Assess if policy change or enforcement improvement needed"},
+        "Payments": {"action": "🐛 Bug Fix / Policy Review", "owner": "Payments PM", "next": "Check if payment hold logic needs tuning or if it's a bug"},
+        "Shipping": {"action": "🐛 Bug Fix / Partner Escalation", "owner": "Shipping PM", "next": "Review shipping label/tracking issues → escalate to carrier if needed"},
+        "Grading Turnaround": {"action": "📊 Partner Monitoring", "owner": "Partnerships", "next": "Track PSA/BGS turnaround times → escalate if SLAs slipping"},
+        "Grading": {"action": "📊 Partner Monitoring", "owner": "Partnerships", "next": "Track grading service issues → escalate to PSA/BGS if systemic"},
+        "Authenticity Guarantee": {"action": "📝 PRD / Policy Update", "owner": "Authentication PM", "next": "Evaluate if AG coverage or process needs expansion"},
+        "Returns & Refunds": {"action": "📝 Policy Review", "owner": "Returns PM", "next": "Analyze INAD patterns → consider policy tightening or seller tools"},
+        "Fees": {"action": "📊 Pricing Analysis", "owner": "Monetization PM", "next": "Benchmark fees vs competitors → model impact of changes"},
+        "High-Value": {"action": "📝 PRD / New Feature", "owner": "High-Value PM", "next": "Identify gaps in high-value seller/buyer experience → scope improvements"},
+        "Seller Experience": {"action": "🐛 Fix / 📝 PRD", "owner": "Seller Experience PM", "next": "Triage: bugs → fix, gaps → PRD, confusion → UX improvement"},
+        "Buyer Experience": {"action": "🐛 Fix / 📝 PRD", "owner": "Buyer Experience PM", "next": "Triage: bugs → fix, gaps → PRD, confusion → UX improvement"},
+        "App & UX": {"action": "🐛 Bug Fix / UX Improvement", "owner": "Platform PM", "next": "File UX bugs or design improvements"},
+        "Collecting": {"action": "🔍 Investigate", "owner": "Category PM", "next": "Understand collector pain points → identify product opportunities"},
+        "Competitor Intel": {"action": "⚔️ Competitive Response", "owner": "Strategy", "next": "Assess competitive threat → build response plan"},
+        "Listing Strategy": {"action": "📝 PRD / Education", "owner": "Seller Tools PM", "next": "Improve listing tools or create seller education content"},
+        "Price Guide": {"action": "📝 PRD / Data Quality", "owner": "Price Guide PM", "next": "Review pricing data accuracy → scope improvements"},
+        "Customer Service": {"action": "🔍 Ops Escalation", "owner": "CS Ops", "next": "Review CS quality metrics → escalate training gaps"},
+        "Market & Investing": {"action": "📊 Market Intelligence", "owner": "Strategy", "next": "Monitor for market shifts that affect eBay collectibles GMV"},
+        "Account Issues": {"action": "🐛 Bug Fix / Policy Review", "owner": "Trust PM", "next": "Review account restriction patterns → fix false positives"},
+    }
+    DEFAULT_ACTION = {"action": "🔍 Investigate", "owner": "PM Team", "next": "Review signals → determine if this is a bug, policy gap, or new opportunity"}
+
     if subtag_neg:
         top_issues = subtag_neg.most_common(5)
         for rank, (tag, cnt) in enumerate(top_issues, 1):
             pct = round(cnt / max(neg, 1) * 100)
-            # Get a sample quote for this topic
-            sample = next((i.get("text", "")[:150] for i in normalized
-                          if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"), "")
-            st.markdown(f"**{rank}. {tag}** — {cnt} negative signals ({pct}%)")
-            if sample:
-                st.caption(f'> "{sample}..."')
+            action_info = TOPIC_ACTION_MAP.get(tag, DEFAULT_ACTION)
+
+            # Get the actual posts for this topic
+            tag_posts = sorted(
+                [i for i in normalized if i.get("subtag") == tag and i.get("brand_sentiment") == "Negative"],
+                key=lambda x: x.get("score", 0), reverse=True
+            )
+            # Count sub-types
+            tag_complaints = sum(1 for p in tag_posts if p.get("type_tag") == "Complaint")
+            tag_feature_reqs = sum(1 for p in tag_posts if p.get("type_tag") == "Feature Request")
+            tag_bugs = sum(1 for p in tag_posts if p.get("type_tag") == "Bug Report")
+
+            severity = "🔴 High" if cnt >= 20 else ("🟡 Medium" if cnt >= 8 else "🟢 Low")
+
+            with st.expander(f"**{rank}. {tag}** — {cnt} signals ({pct}%) · {severity} · {action_info['action']}", expanded=False):
+                # Action summary
+                st.markdown(f"**Recommended action:** {action_info['next']}")
+                st.markdown(f"**Owner:** {action_info['owner']} · **Severity:** {severity}")
+                if tag_complaints or tag_feature_reqs or tag_bugs:
+                    breakdown = []
+                    if tag_complaints: breakdown.append(f"{tag_complaints} complaints")
+                    if tag_feature_reqs: breakdown.append(f"{tag_feature_reqs} feature requests")
+                    if tag_bugs: breakdown.append(f"{tag_bugs} bug reports")
+                    st.caption(f"Signal mix: {' · '.join(breakdown)}")
+
+                st.markdown("---")
+                st.markdown("**Top signals (by engagement):**")
+                for idx, post in enumerate(tag_posts[:5], 1):
+                    text = post.get("text", "")[:300]
+                    score = post.get("score", 0)
+                    type_tag = post.get("type_tag", "")
+                    url = post.get("url", "")
+                    source = post.get("source", "")
+                    st.markdown(f"**{idx}.** {text}{'...' if len(post.get('text', '')) > 300 else ''}")
+                    meta = f"⬆️ {score} · {type_tag} · {source}"
+                    if url:
+                        meta += f" · [Source]({url})"
+                    st.caption(meta)
+                if len(tag_posts) > 5:
+                    st.caption(f"... and {len(tag_posts) - 5} more signals. See **eBay Voice** tab filtered by {tag}.")
     else:
         st.info("No negative signals found.")
 
