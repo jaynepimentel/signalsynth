@@ -403,9 +403,11 @@ with tabs[0]:
                         meta += f" · [Source]({url})"
                     st.caption(meta)
                 if len(tag_posts) > 5:
-                    st.caption(f"... and {len(tag_posts) - 5} more signals. See **eBay Voice** tab filtered by {tag}.")
+                    st.info(f"🎯 **{len(tag_posts) - 5} more signals** — see the **eBay Voice** tab and filter by *{tag}* for the full list.")
     else:
         st.info("No negative signals found.")
+
+    st.markdown("---")
 
     # ── Section 2: What Customers Want ──
     st.markdown("### 💡 What Customers Are Asking For")
@@ -481,9 +483,11 @@ with tabs[0]:
     else:
         st.info("No actionable feature requests found.")
 
+    st.markdown("---")
+
     # ── Section 3: Competitor Watch ──
     st.markdown("### ⚔️ Competitor Watch")
-    st.caption("What's happening with competitors this cycle — click Competitor Intel tab for full detail.")
+    st.caption("Quick snapshot — click below to dive into full competitor analysis.")
     if competitor_posts_raw:
         comp_counts = Counter(p.get("competitor", "?") for p in competitor_posts_raw if p.get("competitor_type") != "ebay_subsidiary")
         if comp_counts:
@@ -503,12 +507,16 @@ with tabs[0]:
                 if comp_praise:
                     details.append(f"⚠️ {len(comp_praise)} praise (threats)")
                 st.markdown(f"{headline} · {' · '.join(details)}" if details else headline)
+
+            st.info("⚔️ **Want the full picture?** Switch to the **Competitor Intel** tab above for detailed complaints, praise, comparisons, and AI conquest briefs.")
     else:
         st.info("No competitor data. Run scrapers to collect.")
 
+    st.markdown("---")
+
     # ── Section 4: Quick Pulse ──
     st.markdown("### 📊 Signal Breakdown")
-    st.caption("Where signals are concentrated by topic.")
+    st.caption("Where signals are concentrated by topic — click a topic to see all signals.")
     subtag_counts = Counter(i.get("subtag", "General") for i in normalized)
     subtag_counts.pop("General", None)
     if subtag_counts:
@@ -519,6 +527,25 @@ with tabs[0]:
             neg_pct = round(neg_in_tag / max(cnt, 1) * 100)
             bar = "🔴" if neg_pct > 40 else ("🟡" if neg_pct > 20 else "🟢")
             st.markdown(f"{bar} **{tag}**: {cnt} signals ({neg_pct}% negative)")
+
+    st.markdown("---")
+    st.markdown("### 🚦 Where to Go Next")
+    nc1, nc2, nc3 = st.columns(3)
+    with nc1:
+        st.markdown("""
+**🔧 Broken Windows**
+Bugs, UX confusion, fee friction — things to fix now.
+""")
+    with nc2:
+        st.markdown("""
+**🎯 eBay Voice**
+Drill into customer feedback by topic, sentiment, and type.
+""")
+    with nc3:
+        st.markdown("""
+**📋 Strategy**
+AI-clustered themes. Generate PRDs, BRDs, and Jira tickets.
+""")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
