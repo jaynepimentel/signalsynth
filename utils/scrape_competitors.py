@@ -106,11 +106,13 @@ COMPETITORS = {
     "Goldin": {
         "type": "ebay_subsidiary",
         "search_terms": [
-            "goldin auctions cards", "goldin auction sports cards",
-            "goldin.co", "goldin auction memorabilia", "sold on goldin"
+            "goldin auctions experience", "goldin auctions fees",
+            "goldin vs ebay", "selling on goldin",
+            "goldin buyer premium", "goldin consignment",
+            "goldin auction complaint", "goldin auction review",
         ],
-        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards"],
-        "required_keywords": ["goldin auctions", "goldin auction", "goldin.co", "goldin sold", "at goldin"],
+        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "pokemontcg"],
+        "required_keywords": ["goldin"],
     },
     "TCGPlayer": {
         "type": "ebay_subsidiary",
