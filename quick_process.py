@@ -165,6 +165,18 @@ def is_relevant(text, subreddit=""):
     if any(sp in text_lower for sp in sales_patterns):
         return False
     
+    # Exclude Reddit bot/moderator messages (not real user feedback)
+    bot_patterns = [
+        "welcome /u/", "our two most-common rule violations",
+        "i am a bot", "this action was performed automatically",
+        "automoderator", "this is a reminder", "this post has been removed",
+        "your post has been", "your submission has been", "please read the rules",
+        "this thread is locked", "daily newbie thread", "weekly thread",
+        "megathread", "please use the", "this is an automated",
+    ]
+    if any(bp in text_lower for bp in bot_patterns):
+        return False
+    
     # Exclude product listings and promotional posts (ads, not feedback)
     listing_patterns = [
         "ebay.com/itm", "#ad", "check out this", "starting at",
