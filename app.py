@@ -1303,44 +1303,97 @@ with tabs[3]:
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TAB 5: BROKEN WINDOWS — Bugs, UX confusion, fee friction
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[4]:
     st.markdown("Platform bugs, UX friction, and product pain points that eBay, Goldin, or TCGPlayer engineering teams can fix.")
 
     # ── Broken window categories ──
+    # Keywords must be specific enough to avoid matching generic hobby posts
+    # Posts already passed _is_bw_actionable (confirmed eBay-related),
+    # so category keywords just need to identify the TOPIC, not re-confirm eBay context.
     BW_CATEGORIES = {
         "Returns & INAD Abuse": {
             "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund",
-                         "case opened", "dispute", "money back guarantee", "buyer scam", "empty box",
-                         "return request", "refund", "sided with buyer", "unfair return", "sent back wrong"],
-            "icon": "�",
+                         "case opened", "money back guarantee", "buyer scam", "empty box",
+                         "return request", "refund", "sided with buyer", "unfair return",
+                         "buyer opened a case", "sent back wrong", "returned wrong item",
+                         "buyer claims", "not received", "not as described"],
+            "icon": "🔄",
             "owner": "Returns PM",
+        },
+        "Trust & Fraud": {
+            "keywords": ["scam", "fraud", "shill bid", "fake listing", "counterfeit",
+                         "fake card", "says it's fake", "it's fake", "not authentic",
+                         "stolen", "replica", "knock off", "suspicious seller",
+                         "scammer", "ripped off", "got scammed"],
+            "icon": "🛡️",
+            "owner": "Trust & Safety PM",
+        },
+        "Authentication & Grading": {
+            "keywords": ["authenticity guarantee", "authentication", "misgrade",
+                         "wrong grade", "fake grade", "grading error",
+                         "grading issue", "grading problem", "grading complaint",
+                         "psa error", "bgs error", "cgc error",
+                         "grade came back", "grading service", "grading turnaround"],
+            "icon": "🏅",
+            "owner": "Authentication PM",
+        },
+        "Vault Bugs": {
+            "keywords": ["psa vault", "ebay vault", "vault sell", "vault inventory", "vault withdraw",
+                         "vault shipping", "vault delay", "vault error", "vault listing",
+                         "stuck in vault", "vault payout", "vault card"],
+            "icon": "🏦",
+            "owner": "Vault PM",
+        },
+        "Fee & Pricing Confusion": {
+            "keywords": ["fee", "final value", "insertion fee", "take rate", "13.25%",
+                         "13%", "12.9%", "ebay takes", "fee structure", "hidden fee",
+                         "commission", "overcharged", "too expensive to sell"],
+            "icon": "💸",
+            "owner": "Monetization PM",
+        },
+        "Shipping & Label Issues": {
+            "keywords": ["shipping label", "tracking", "lost in mail", "lost package",
+                         "damaged in transit", "standard envelope", "can't print label",
+                         "wrong weight", "shipping estimate", "shipping damage",
+                         "arrived damaged", "crushed", "print label"],
+            "icon": "📦",
+            "owner": "Shipping PM",
         },
         "Payment & Payout Issues": {
             "keywords": ["payment hold", "payout", "funds held", "managed payments", "hold my money",
                          "can't get paid", "money held", "release my funds", "payment processing",
-                         "payment delay", "paypal", "1099"],
-            "icon": "�",
+                         "payment delay", "stripe verification", "stopped payment"],
+            "icon": "💳",
             "owner": "Payments PM",
         },
-        "Vault Bugs": {
-            "keywords": ["vault", "can't withdraw", "stuck in vault", "vault withdraw", "vault shipping",
-                         "vault delay", "vault inventory", "vault sell", "vault error", "vault listing"],
-            "icon": "🏦",
-            "owner": "Vault PM",
+        "Seller Protection Gaps": {
+            "keywords": ["seller protection", "always side with buyer", "sided with buyer",
+                         "no recourse", "lost case", "hate selling", "done with ebay",
+                         "leaving ebay", "doesn't care about sellers", "unfair to sellers",
+                         "seller cancelled", "cancelled my order"],
+            "icon": "🛑",
+            "owner": "Seller Experience PM",
         },
-        "Shipping & Label Issues": {
-            "keywords": ["shipping label", "tracking not", "lost package", "damaged in transit",
-                         "standard envelope", "can't print label", "wrong weight", "shipping estimate",
-                         "shipping damage", "arrived damaged", "crushed", "label error"],
-            "icon": "📦",
-            "owner": "Shipping PM",
+        "App & UX Bugs": {
+            "keywords": ["ebay app", "ebay website", "glitch", "bug", "crash",
+                         "not working", "won't load", "error message",
+                         "confusing", "seller hub", "white screen", "blank page"],
+            "icon": "🐛",
+            "owner": "App/UX PM",
         },
-        "Fee & Pricing Confusion": {
-            "keywords": ["fee", "commission", "overcharged", "hidden fee", "extra charge", "final value",
-                         "insertion fee", "take rate", "13%", "12.9%", "sales tax", "too expensive"],
-            "icon": "�",
-            "owner": "Monetization PM",
+        "Account & Policy Enforcement": {
+            "keywords": ["account suspended", "account restricted", "banned",
+                         "locked out", "policy violation", "vero",
+                         "listing removed", "flagged", "delisted", "taken down"],
+            "icon": "🔒",
+            "owner": "Trust & Safety PM",
+        },
+        "Search & Listing Visibility": {
+            "keywords": ["search broken", "can't find my listing", "no views",
+                         "algorithm", "best match", "search ranking",
+                         "not showing up", "buried", "no impressions", "no traffic", "cassini"],
+            "icon": "🔍",
+            "owner": "Search PM",
         },
         "Promoted Listings Friction": {
             "keywords": ["promoted listing", "promoted standard", "promoted advanced",
@@ -1349,53 +1402,22 @@ with tabs[4]:
             "icon": "📢",
             "owner": "Ads PM",
         },
-        "Search & Listing Visibility": {
-            "keywords": ["search broken", "can't find my listing", "no views", "visibility", "algorithm",
-                         "best match", "search ranking", "not showing up", "buried", "no impressions",
-                         "no traffic", "cassini"],
-            "icon": "🔍",
-            "owner": "Search PM",
-        },
-        "Account & Policy Enforcement": {
-            "keywords": ["account suspended", "account restricted", "banned", "locked out", "verification",
-                         "policy violation", "vero", "removed listing", "flagged", "delisted"],
-            "icon": "🔒",
-            "owner": "Trust & Safety PM",
-        },
-        "Authentication & Grading": {
-            "keywords": ["authenticity guarantee", "authentication", "grading", "psa ", "bgs ", "cgc ",
-                         "misgrade", "wrong grade", "slab", "not authentic", "fake grade"],
-            "icon": "🏅",
-            "owner": "Authentication PM",
-        },
-        "App & UX Bugs": {
-            "keywords": ["bug", "glitch", "error", "crash", "not working", "doesn't work", "won't load",
-                         "can't access", "white screen", "blank page", "stuck", "frozen", "app",
-                         "confusing", "unintuitive", "hard to find", "makes no sense"],
-            "icon": "�",
-            "owner": "App/UX PM",
-        },
-        "Seller Protection Gaps": {
-            "keywords": ["no protection", "seller protection", "always side with buyer", "ebay sided",
-                         "no recourse", "lost case", "hate selling", "done with ebay", "leaving ebay"],
-            "icon": "🛑",
-            "owner": "Seller Experience PM",
-        },
-        "Trust & Fraud": {
-            "keywords": ["scam", "fraud", "counterfeit", "shill bid", "fake listing",
-                         "replica", "knock off", "stolen goods"],
-            "icon": "�️",
-            "owner": "Trust & Safety PM",
-        },
     }
 
     # ── Filter to platform-actionable issues only ──
-    BW_PLATFORM_KW = [
-        "ebay", "e-bay", "listing", "seller hub", "promoted", "vault", "psa", "bgs", "cgc",
-        "authenticity guarantee", "standard envelope", "managed payments", "fee",
-        "shipping label", "tracking", "return", "refund", "inad", "payment",
-        "payout", "account", "verification", "grading", "goldin", "tcgplayer", "comc",
-        "app", "website", "search", "checkout", "watchlist", "notification",
+    # Must mention eBay/Goldin/TCGPlayer by name OR be from an eBay-focused subreddit
+    BW_PLATFORM_NAMES = ["ebay", "e-bay", "goldin", "tcgplayer", "tcg player", "comc"]
+    BW_EBAY_SUBS = [
+        "ebay", "flipping", "ebaysellers", "ebayselleradvice",
+    ]
+    # Specific platform features (only count if post also mentions a platform name or is from eBay sub)
+    BW_FEATURE_KW = [
+        "seller hub", "promoted listing", "vault", "authenticity guarantee",
+        "standard envelope", "managed payments", "global shipping",
+        "shipping label", "inad", "item not as described", "money back guarantee",
+        "payment hold", "payout", "final value fee", "insertion fee",
+        "promoted standard", "promoted advanced", "best match",
+        "psa vault", "vault inventory",
     ]
     BW_EXCLUDE = [
         "stole my", "nephew", "my cards were stolen", "house fire",
@@ -1405,20 +1427,38 @@ with tabs[4]:
         "bitcoin treasury", "diamond hands", "short squeeze", "moass",
         "to the moon", "hedge fund", "warrants to blockchain",
         "official sales/trade/breaks", "leave a comment here in this thread with your sales",
+        # Generic hobby posts
+        "iron maiden", "secret lair", "new to mtg", "new player",
+        "dev kit", "ps vita", "playstation",
+        # Collecting stories that mention eBay in passing
+        "my daughter swears", "help! my daughter",
+        "catalogued my grandmother", "my inheritance",
+        "stopped ordering from amazon", "what website or app do you use instead",
+        "help me sell my storage unit", "jet engine",
+        "would you block this buyer? i already can smell",
+        "i only brought 300",
+        "seed vault extract", "arc raiders", "stella montis",
     ]
     BW_EXCLUDE_SUBS = [
         "superstonk", "wallstreetbets", "gme_meltdown", "amcstock",
         "cryptocurrency", "bitcoin", "stocks", "investing",
         "gamestop", "gmejungle", "fwfbthinktank", "gme",
+        "kleinanzeigen_betrug",
+        "arcraiders", "nostupidquestions",
     ]
 
     def _is_bw_actionable(post):
         text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
-        if post.get("subreddit", "").lower() in BW_EXCLUDE_SUBS:
+        sub_lower = post.get("subreddit", "").lower()
+        if sub_lower in BW_EXCLUDE_SUBS:
             return False
         if any(ex in text_lower for ex in BW_EXCLUDE):
             return False
-        return any(kw in text_lower for kw in BW_PLATFORM_KW)
+        # Must mention a platform by name, OR be from an eBay sub, OR mention a specific eBay feature
+        mentions_platform = any(name in text_lower for name in BW_PLATFORM_NAMES)
+        from_ebay_sub = sub_lower in BW_EBAY_SUBS
+        mentions_feature = any(kw in text_lower for kw in BW_FEATURE_KW)
+        return mentions_platform or from_ebay_sub or mentions_feature
 
     bw_candidates = [
         i for i in normalized
