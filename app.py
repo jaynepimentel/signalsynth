@@ -549,14 +549,43 @@ Be extremely specific and concrete. Reference actual product features, flows, an
     st.caption("Synthesized product opportunities from user feedback — grouped by theme.")
 
     # Synthesize feature requests into actionable themes instead of raw quotes
-    # Only include posts that are actually about eBay product/platform improvements
-    EBAY_PRODUCT_KEYWORDS = [
-        "ebay", "listing", "search", "filter", "app", "website", "vault", "authenticity",
-        "shipping", "label", "tracking", "fee", "payment", "payout", "return", "refund",
-        "promoted", "seller", "buyer", "price guide", "scan", "watchlist", "notification",
-        "category", "condition", "photo", "description", "offer", "auction", "checkout",
-        "dashboard", "analytics", "report", "feedback", "rating", "block",
+    # Require BOTH a product area keyword AND an intent keyword (actually requesting something)
+    EBAY_PRODUCT_AREAS = [
+        "listing", "search", "filter", "app", "website", "vault", "authenticity guarantee",
+        "shipping label", "tracking", "fee structure", "payment", "payout", "return policy",
+        "promoted listing", "price guide", "scan", "watchlist", "notification",
+        "category", "photo", "description", "checkout", "dashboard", "analytics",
+        "seller hub", "seller tool", "buyer experience", "authentication",
     ]
+    EBAY_INTENT_KEYWORDS = [
+        "should", "could", "would be nice", "wish", "need", "want", "please add",
+        "why can't", "why doesn't", "feature", "improve", "better", "option to",
+        "ability to", "allow", "enable", "support", "integrate", "add a",
+        "missing", "lack", "no way to", "can't even", "should be able",
+        "suggestion", "request", "idea", "proposal",
+    ]
+    # Posts that are just hobby questions, not platform feedback
+    HOBBY_NOISE = [
+        "best way to buy", "what's the best way", "where to buy",
+        "how to start collecting", "for my binder", "my collection",
+        "what should i collect", "is this card worth", "how much is",
+        "just started collecting", "new to collecting",
+        "when i started collecting", "i filled my case",
+        "i enjoy selling it on", "i really enjoy selling",
+        "heritage auctions this morning",
+    ]
+
+    def _is_actionable_feature_req(post):
+        text = (post.get("text", "") + " " + post.get("title", "")).lower()
+        # Exclude hobby noise
+        if any(n in text for n in HOBBY_NOISE):
+            return False
+        # Must mention a product area OR "ebay" + intent
+        has_product_area = any(kw in text for kw in EBAY_PRODUCT_AREAS)
+        has_ebay = "ebay" in text
+        has_intent = any(kw in text for kw in EBAY_INTENT_KEYWORDS)
+        # Pass if: product area keyword, OR (ebay + intent keyword)
+        return has_product_area or (has_ebay and has_intent)
 
     # Theme synthesis: group requests by subtag and generate actionable titles
     THEME_TITLES = {
@@ -580,11 +609,8 @@ Be extremely specific and concrete. Reference actual product features, flows, an
         "Competitor Intel": "Competitive Feature Gaps to Close",
     }
 
-    # Filter to eBay-relevant feature requests
-    relevant_reqs = [
-        r for r in feature_reqs
-        if any(kw in (r.get("text", "") + " " + r.get("title", "")).lower() for kw in EBAY_PRODUCT_KEYWORDS)
-    ]
+    # Filter to actionable eBay product feature requests (not hobby questions)
+    relevant_reqs = [r for r in feature_reqs if _is_actionable_feature_req(r)]
 
     if relevant_reqs:
         # Group by subtag
