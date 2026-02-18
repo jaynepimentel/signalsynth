@@ -355,7 +355,8 @@ tabs = st.tabs([
     "⚔️ Competitor Intel",
     "🎯 eBay Voice",
     "📰 Industry & Trends",
-    "🔧 Broken Windows",
+    "� Product Releases",
+    "�🔧 Broken Windows",
     "📋 Strategy",
 ])
 
@@ -1370,7 +1371,13 @@ with tabs[3]:
 
         st.markdown("---")
 
-    # ── Upcoming Releases & Checklists (collapsed) ──
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TAB 5: PRODUCT RELEASES — Checklists & Upcoming Sealed Product Launches
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+with tabs[4]:
+    st.markdown("Upcoming sealed product launches and checklists from Panini, Topps, Leaf, Upper Deck, Bowman, and more.")
+
     releases_data = []
     try:
         with open("data/upcoming_releases.json", "r", encoding="utf-8") as f:
@@ -1378,77 +1385,107 @@ with tabs[3]:
     except:
         pass
 
-    if releases_data:
+    if not releases_data:
+        st.info("No release data available. Run scrapers to collect upcoming product releases and checklists.")
+    else:
         checklists = [r for r in releases_data if r.get("category") == "checklist"]
         releases = [r for r in releases_data if r.get("category") == "release"]
 
-        with st.expander(f"📦 Upcoming Product Releases & Checklists ({len(releases)} releases · {len(checklists)} checklists)", expanded=False):
-            rel_tab1, rel_tab2 = st.tabs(["📋 Checklists", "🗓️ Upcoming Releases"])
+        # Metrics
+        pr1, pr2, pr3 = st.columns(3)
+        pr1.metric("Upcoming Releases", len(releases))
+        pr2.metric("Checklists Available", len(checklists))
+        all_brands = sorted(set(r.get("brand", "Other") for r in releases_data))
+        pr3.metric("Brands Tracked", len(all_brands))
 
-            with rel_tab1:
-                cl_sports = sorted(set(c.get("sport", "Trading Cards") for c in checklists))
-                cl_brands = sorted(set(c.get("brand", "Other") for c in checklists))
-                fc1, fc2 = st.columns(2)
-                with fc1:
-                    cl_sport_filter = st.selectbox("Sport/Category", ["All"] + cl_sports, key="cl_sport")
-                with fc2:
-                    cl_brand_filter = st.selectbox("Brand", ["All"] + cl_brands, key="cl_brand")
+        rel_tab1, rel_tab2 = st.tabs(["️ Upcoming Releases", "📋 Checklists"])
 
-                filtered_cl = checklists
-                if cl_sport_filter != "All":
-                    filtered_cl = [c for c in filtered_cl if c.get("sport") == cl_sport_filter]
-                if cl_brand_filter != "All":
-                    filtered_cl = [c for c in filtered_cl if c.get("brand") == cl_brand_filter]
+        with rel_tab1:
+            st.caption("Upcoming sealed product launches — filter by sport/category and brand.")
+            rel_sports = sorted(set(r.get("sport", "Trading Cards") for r in releases))
+            rel_brands = sorted(set(r.get("brand", "Other") for r in releases))
+            fr1, fr2, fr3 = st.columns(3)
+            with fr1:
+                rel_sport_filter = st.selectbox("Sport/Category", ["All"] + rel_sports, key="rel_sport")
+            with fr2:
+                rel_brand_filter = st.selectbox("Brand", ["All"] + rel_brands, key="rel_brand")
+            with fr3:
+                rel_search = st.text_input("Search releases", "", key="rel_search")
 
-                if filtered_cl:
-                    for idx, cl in enumerate(filtered_cl[:30], 1):
-                        title = cl.get("title", "")
-                        url = cl.get("url", "")
-                        date = cl.get("post_date", "")
-                        sport = cl.get("sport", "")
-                        brand = cl.get("brand", "")
-                        link = f"[Open Checklist]({url})" if url else ""
-                        st.markdown(f"**{idx}.** {title}")
-                        st.caption(f"{brand} · {sport} · {date} · {link}")
-                    if len(filtered_cl) > 30:
-                        st.caption(f"... and {len(filtered_cl) - 30} more checklists.")
-                else:
-                    st.info("No checklists match your filters.")
+            filtered_rel = releases
+            if rel_sport_filter != "All":
+                filtered_rel = [r for r in filtered_rel if r.get("sport") == rel_sport_filter]
+            if rel_brand_filter != "All":
+                filtered_rel = [r for r in filtered_rel if r.get("brand") == rel_brand_filter]
+            if rel_search:
+                rel_search_lower = rel_search.lower()
+                filtered_rel = [r for r in filtered_rel if rel_search_lower in (r.get("title", "") + " " + r.get("sport", "")).lower()]
 
-            with rel_tab2:
-                rel_sports = sorted(set(r.get("sport", "Trading Cards") for r in releases))
-                rel_brands = sorted(set(r.get("brand", "Other") for r in releases))
-                fr1, fr2 = st.columns(2)
-                with fr1:
-                    rel_sport_filter = st.selectbox("Sport/Category", ["All"] + rel_sports, key="rel_sport")
-                with fr2:
-                    rel_brand_filter = st.selectbox("Brand", ["All"] + rel_brands, key="rel_brand")
+            # Sort by date (most recent first)
+            filtered_rel.sort(key=lambda x: x.get("post_date", ""), reverse=True)
 
-                filtered_rel = releases
-                if rel_sport_filter != "All":
-                    filtered_rel = [r for r in filtered_rel if r.get("sport") == rel_sport_filter]
-                if rel_brand_filter != "All":
-                    filtered_rel = [r for r in filtered_rel if r.get("brand") == rel_brand_filter]
+            st.caption(f"Showing {len(filtered_rel)} releases")
 
-                if filtered_rel:
-                    for idx, rel in enumerate(filtered_rel[:30], 1):
-                        title = rel.get("title", "")
-                        url = rel.get("url", "")
-                        date = rel.get("post_date", "")
-                        sport = rel.get("sport", "")
-                        brand = rel.get("brand", "")
-                        link = f"[Details]({url})" if url else ""
-                        st.markdown(f"**{idx}.** {title}")
-                        st.caption(f"{brand} · {sport} · {date} · {link}")
-                    if len(filtered_rel) > 30:
-                        st.caption(f"... and {len(filtered_rel) - 30} more releases.")
-                else:
-                    st.info("No releases match your filters.")
+            if filtered_rel:
+                for idx, rel in enumerate(filtered_rel[:50], 1):
+                    title = rel.get("title", "")
+                    url = rel.get("url", "")
+                    date = rel.get("post_date", "")
+                    sport = rel.get("sport", "")
+                    brand = rel.get("brand", "")
+                    link = f"[Details]({url})" if url else ""
+                    st.markdown(f"**{idx}.** {title}")
+                    st.caption(f"{brand} · {sport} · {date} · {link}")
+                if len(filtered_rel) > 50:
+                    st.caption(f"... and {len(filtered_rel) - 50} more releases.")
+            else:
+                st.info("No releases match your filters.")
+
+        with rel_tab2:
+            st.caption("Published checklists — click links to view full card lists. Filter by sport/category and brand.")
+            cl_sports = sorted(set(c.get("sport", "Trading Cards") for c in checklists))
+            cl_brands = sorted(set(c.get("brand", "Other") for c in checklists))
+            fc1, fc2, fc3 = st.columns(3)
+            with fc1:
+                cl_sport_filter = st.selectbox("Sport/Category", ["All"] + cl_sports, key="cl_sport")
+            with fc2:
+                cl_brand_filter = st.selectbox("Brand", ["All"] + cl_brands, key="cl_brand")
+            with fc3:
+                cl_search = st.text_input("Search checklists", "", key="cl_search")
+
+            filtered_cl = checklists
+            if cl_sport_filter != "All":
+                filtered_cl = [c for c in filtered_cl if c.get("sport") == cl_sport_filter]
+            if cl_brand_filter != "All":
+                filtered_cl = [c for c in filtered_cl if c.get("brand") == cl_brand_filter]
+            if cl_search:
+                cl_search_lower = cl_search.lower()
+                filtered_cl = [c for c in filtered_cl if cl_search_lower in (c.get("title", "") + " " + c.get("sport", "")).lower()]
+
+            # Sort by date (most recent first)
+            filtered_cl.sort(key=lambda x: x.get("post_date", ""), reverse=True)
+
+            st.caption(f"Showing {len(filtered_cl)} checklists")
+
+            if filtered_cl:
+                for idx, cl in enumerate(filtered_cl[:50], 1):
+                    title = cl.get("title", "")
+                    url = cl.get("url", "")
+                    date = cl.get("post_date", "")
+                    sport = cl.get("sport", "")
+                    brand = cl.get("brand", "")
+                    link = f"[Open Checklist]({url})" if url else ""
+                    st.markdown(f"**{idx}.** {title}")
+                    st.caption(f"{brand} · {sport} · {date} · {link}")
+                if len(filtered_cl) > 50:
+                    st.caption(f"... and {len(filtered_cl) - 50} more checklists.")
+            else:
+                st.info("No checklists match your filters.")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 5: BROKEN WINDOWS — Bugs, UX confusion, fee friction
-with tabs[4]:
+# TAB 6: BROKEN WINDOWS — Bugs, UX confusion, fee friction
+with tabs[5]:
     st.markdown("Platform bugs, UX friction, and product pain points that eBay, Goldin, or TCGPlayer engineering teams can fix.")
 
     # ── Broken window categories ──
@@ -1790,9 +1827,9 @@ Reports:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 6: STRATEGY — Clusters + AI doc generation
+# TAB 7: STRATEGY — Clusters + AI doc generation
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[5]:
+with tabs[6]:
     st.markdown("AI-clustered themes from user signals. Generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
