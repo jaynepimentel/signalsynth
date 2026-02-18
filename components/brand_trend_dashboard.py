@@ -264,67 +264,42 @@ def display_brand_dashboard(insights):
             st.altair_chart(chart, use_container_width=True)
     
     # Brand-Level Analysis (expandable)
-    with st.expander("🏷️ Brand-Level Detail", expanded=False):
-        st.markdown("Compare specific brands across competitors, partners, and subsidiaries.")
+    with st.expander("🏷️ Brand Complaint Rates", expanded=False):
+        st.markdown("Which brands/products have the highest complaint rates? Sorted by % negative — higher = more pain.")
         
-        # Exclude generic/untagged brands
-        EXCLUDE_BRANDS = {"Other", "eBay"}
-        brand_list = sorted([b for b in df["Brand"].dropna().unique() if b not in EXCLUDE_BRANDS])
-        if not brand_list:
-            st.info("No specific brands detected in the data.")
-        else:
-            selected_brands = st.multiselect("🔎 Filter by Brand", options=brand_list, default=brand_list[:10] if len(brand_list) > 10 else brand_list, key="brand_filter_trends")
-            filtered_df = df[df["Brand"].isin(selected_brands)]
-            filtered_summary = summary[summary["Brand"].isin(selected_brands)]
+        # Exclude generic/untagged brands, require minimum volume
+        EXCLUDE_BRANDS = {"Other"}
+        brand_summary = summary[~summary["Brand"].isin(EXCLUDE_BRANDS)].copy()
+        brand_summary = brand_summary[brand_summary["Total"] >= 3]  # Minimum 3 signals
 
-            # Summary Table
-            if len(filtered_summary) > 0:
-                st.dataframe(
-                    filtered_summary.sort_values("Complaint %", ascending=False)[["Brand", "Total", "Complaint %"]].head(15),
-                    use_container_width=True,
-                    hide_index=True
-                )
+        if len(brand_summary) > 0:
+            display_cols = ["Brand", "Total", "Complaint %"]
+            if "Negative" in brand_summary.columns:
+                display_cols.insert(2, "Negative")
+            st.dataframe(
+                brand_summary.sort_values("Complaint %", ascending=False)[display_cols].head(15),
+                use_container_width=True,
+                hide_index=True
+            )
 
-            # Brand trend chart
-            if len(filtered_df) > 0 and filtered_df["Date"].notna().any():
-                st.markdown("**📈 Brand Volume Over Time** (last 60 days)")
-                
-                brand_df = filtered_df[filtered_df["Date"].notna()].copy()
-                max_date = brand_df["Date"].max()
-                min_date = max_date - pd.Timedelta(days=60)
-                brand_df = brand_df[brand_df["Date"] >= min_date]
-                
-                daily_counts = (
-                    brand_df
-                    .groupby([pd.Grouper(key="Date", freq="W"), "Brand"])
-                    .size()
-                    .reset_index(name="Mentions")
-                )
-                
-                if len(daily_counts) > 0:
-                    top_brands = daily_counts.groupby("Brand")["Mentions"].sum().nlargest(6).index.tolist()
-                    daily_counts = daily_counts[daily_counts["Brand"].isin(top_brands)]
-                    
-                    highlight = alt.selection_point(on='mouseover', fields=['Brand'], nearest=True)
-                    
-                    base = alt.Chart(daily_counts).encode(
-                        x=alt.X("Date:T", title="Week"),
-                        y=alt.Y("Mentions:Q", title="Mentions"),
-                        color=alt.Color("Brand:N", legend=alt.Legend(orient="bottom", columns=3)),
-                        tooltip=["Brand", "Date:T", "Mentions"]
-                    )
-                    
-                    lines = base.mark_line(strokeWidth=2).encode(
-                        opacity=alt.condition(highlight, alt.value(1), alt.value(0.15)),
-                        strokeWidth=alt.condition(highlight, alt.value(3), alt.value(1))
-                    ).add_params(highlight)
-                    
-                    points = base.mark_circle(size=50).encode(
-                        opacity=alt.condition(highlight, alt.value(1), alt.value(0))
-                    )
-                    
-                    chart = (lines + points).properties(height=300)
-                    st.altair_chart(chart, use_container_width=True)
+            # Horizontal bar chart of complaint % for top brands
+            top_complaint = brand_summary.nlargest(10, "Complaint %")
+            if len(top_complaint) > 0:
+                chart = alt.Chart(top_complaint).mark_bar().encode(
+                    y=alt.Y("Brand:N", sort="-x", title=""),
+                    x=alt.X("Complaint %:Q", title="Complaint Rate (%)"),
+                    color=alt.condition(
+                        alt.datum["Complaint %"] > 40,
+                        alt.value("#ef4444"),
+                        alt.condition(
+                            alt.datum["Complaint %"] > 20,
+                            alt.value("#f59e0b"),
+                            alt.value("#22c55e")
+                        )
+                    ),
+                    tooltip=["Brand", "Total", "Complaint %"]
+                ).properties(height=250)
+                st.altair_chart(chart, use_container_width=True)
     
     # Competitive Intelligence (expandable)
     with st.expander("⚔️ Competitive Intelligence", expanded=False):
