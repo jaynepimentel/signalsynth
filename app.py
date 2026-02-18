@@ -1367,8 +1367,34 @@ with tabs[3]:
 
         # ── 🔥 Top Industry News & Discussions ──
         st.markdown("### 🔥 Top Industry News & Discussions")
-        st.caption("Highest-engagement industry-relevant posts — platform changes, market trends, competitor moves, and business discussions.")
-        top_viral = sorted(industry_posts, key=lambda x: x.get("score", 0), reverse=True)[:10]
+        st.caption("Recent-first ranking with engagement weighting — prioritizes fresh industry signals over stale high-score posts.")
+
+        def _days_old(post):
+            raw_date = str(post.get("post_date", "") or "")[:10]
+            if not raw_date:
+                return 9999
+            try:
+                d = datetime.fromisoformat(raw_date).date()
+                return max(0, (datetime.now().date() - d).days)
+            except Exception:
+                return 9999
+
+        def _time_weighted_score(post):
+            # Decay older posts so recency matters: score / (1 + age_in_months)
+            base_score = float(post.get("score", 0) or 0)
+            age_days = _days_old(post)
+            return base_score / (1 + (age_days / 30.0))
+
+        # Prefer recent windows; fall back if data is sparse
+        recent_120 = [p for p in industry_posts if _days_old(p) <= 120]
+        recent_365 = [p for p in industry_posts if _days_old(p) <= 365]
+        top_pool = recent_120 if len(recent_120) >= 8 else (recent_365 if recent_365 else industry_posts)
+
+        top_viral = sorted(
+            top_pool,
+            key=lambda x: (_time_weighted_score(x), float(x.get("score", 0) or 0)),
+            reverse=True,
+        )[:10]
         for rank, post in enumerate(top_viral, 1):
             source_label = post.get("_industry_source", post.get("source", "?"))
             title = post.get("title", "")[:120] or post.get("text", "")[:120]
@@ -1385,8 +1411,10 @@ with tabs[3]:
             icon = source_icons.get(source_label, "📄")
             sub_label = f"r/{sub} · " if sub else ""
             link = f" · [Link]({url})" if url else ""
+            age_days = _days_old(post)
+            age_label = f" · {age_days}d ago" if age_days < 9999 else ""
             st.markdown(f"**{rank}.** {icon} **{title}**")
-            st.caption(f"⬆️ {score} pts · {sub_label}{source_label} · {date}{link}")
+            st.caption(f"⬆️ {score} pts · {sub_label}{source_label} · {date}{age_label}{link}")
 
         st.markdown("---")
 
