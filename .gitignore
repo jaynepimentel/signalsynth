@@ -33,6 +33,7 @@ data/*
 !data/scraped_blowout_posts.json
 !data/scraped_youtube_posts.json
 !data/scraped_forums_blogs_posts.json
+!data/upcoming_releases.json
 
 # Scraper outputs
 scraped_*.txt

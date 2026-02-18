@@ -873,6 +873,88 @@ with tabs[2]:
 with tabs[3]:
     st.markdown("What the broader collectibles industry is saying — news, blogs, YouTube, and forum discussions.")
 
+    # ── Upcoming Releases & Checklists ──
+    releases_data = []
+    try:
+        with open("data/upcoming_releases.json", "r", encoding="utf-8") as f:
+            releases_data = json.load(f)
+    except:
+        pass
+
+    if releases_data:
+        checklists = [r for r in releases_data if r.get("category") == "checklist"]
+        releases = [r for r in releases_data if r.get("category") == "release"]
+
+        st.markdown("### 📦 Upcoming Product Releases & Checklists")
+        st.caption(f"{len(releases)} upcoming releases · {len(checklists)} checklists available — data team: click checklist links to pull card lists.")
+
+        rel_tab1, rel_tab2 = st.tabs(["📋 Checklists", "🗓️ Upcoming Releases"])
+
+        with rel_tab1:
+            # Filter controls
+            cl_sports = sorted(set(c.get("sport", "Trading Cards") for c in checklists))
+            cl_brands = sorted(set(c.get("brand", "Other") for c in checklists))
+            fc1, fc2 = st.columns(2)
+            with fc1:
+                cl_sport_filter = st.selectbox("Sport/Category", ["All"] + cl_sports, key="cl_sport")
+            with fc2:
+                cl_brand_filter = st.selectbox("Brand", ["All"] + cl_brands, key="cl_brand")
+
+            filtered_cl = checklists
+            if cl_sport_filter != "All":
+                filtered_cl = [c for c in filtered_cl if c.get("sport") == cl_sport_filter]
+            if cl_brand_filter != "All":
+                filtered_cl = [c for c in filtered_cl if c.get("brand") == cl_brand_filter]
+
+            # Display as a clean table
+            if filtered_cl:
+                for idx, cl in enumerate(filtered_cl[:30], 1):
+                    title = cl.get("title", "")
+                    url = cl.get("url", "")
+                    date = cl.get("post_date", "")
+                    sport = cl.get("sport", "")
+                    brand = cl.get("brand", "")
+                    link = f"[Open Checklist]({url})" if url else ""
+                    st.markdown(f"**{idx}.** {title}")
+                    st.caption(f"{brand} · {sport} · {date} · {link}")
+                if len(filtered_cl) > 30:
+                    st.caption(f"... and {len(filtered_cl) - 30} more checklists.")
+            else:
+                st.info("No checklists match your filters.")
+
+        with rel_tab2:
+            # Filter controls
+            rel_sports = sorted(set(r.get("sport", "Trading Cards") for r in releases))
+            rel_brands = sorted(set(r.get("brand", "Other") for r in releases))
+            fr1, fr2 = st.columns(2)
+            with fr1:
+                rel_sport_filter = st.selectbox("Sport/Category", ["All"] + rel_sports, key="rel_sport")
+            with fr2:
+                rel_brand_filter = st.selectbox("Brand", ["All"] + rel_brands, key="rel_brand")
+
+            filtered_rel = releases
+            if rel_sport_filter != "All":
+                filtered_rel = [r for r in filtered_rel if r.get("sport") == rel_sport_filter]
+            if rel_brand_filter != "All":
+                filtered_rel = [r for r in filtered_rel if r.get("brand") == rel_brand_filter]
+
+            if filtered_rel:
+                for idx, rel in enumerate(filtered_rel[:30], 1):
+                    title = rel.get("title", "")
+                    url = rel.get("url", "")
+                    date = rel.get("post_date", "")
+                    sport = rel.get("sport", "")
+                    brand = rel.get("brand", "")
+                    link = f"[Details]({url})" if url else ""
+                    st.markdown(f"**{idx}.** {title}")
+                    st.caption(f"{brand} · {sport} · {date} · {link}")
+                if len(filtered_rel) > 30:
+                    st.caption(f"... and {len(filtered_rel) - 30} more releases.")
+            else:
+                st.info("No releases match your filters.")
+
+        st.markdown("---")
+
     # Combine all industry sources
     industry_posts = []
 
