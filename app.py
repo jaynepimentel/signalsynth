@@ -1289,11 +1289,12 @@ with tabs[3]:
         "iron maiden", "secret lair",
         "superstonk", "gme", "gamestop", "diamond hands", "moass",
         "push start", "early access",
+        "riftbound", "lgs need to be reeled in", "as a game",
     ]
     INDUSTRY_EXCLUDE_SUBS = [
         "gamecollecting", "superstonk", "gme", "gamestop", "amcstock",
         "gold", "silver", "coins", "arcraiders", "nostupidquestions",
-        "ismypokemoncardfake",
+        "ismypokemoncardfake", "riftboundtcg",
     ]
 
     viral_reddit = []
