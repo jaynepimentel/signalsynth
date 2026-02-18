@@ -45,13 +45,25 @@ def _get_openai_key():
 _api_key = _get_openai_key()
 client = OpenAI(api_key=_api_key) if _api_key else None
 
-# Prefer configured model vars first; fall back to robust defaults.
-MODEL_MAIN = os.getenv(
+# Prefer Streamlit secrets (remote deploy), then env vars (local dev).
+def _get_model_setting(key, default):
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key in st.secrets:
+            v = str(st.secrets[key]).strip()
+            if v:
+                return v
+    except Exception:
+        pass
+    v = os.getenv(key)
+    return v.strip() if isinstance(v, str) and v.strip() else default
+
+MODEL_MAIN = _get_model_setting(
     "OPENAI_MODEL_MAIN",
-    os.getenv("OPENAI_MODEL_DOCS", os.getenv("OPENAI_MODEL_EXEC", "gpt-4.1")),
+    _get_model_setting("OPENAI_MODEL_DOCS", _get_model_setting("OPENAI_MODEL_EXEC", "gpt-4.1")),
 )
-MODEL_FALLBACK = os.getenv("OPENAI_MODEL_FALLBACK", "gpt-4o")
-MODEL_MINI = os.getenv("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
+MODEL_FALLBACK = _get_model_setting("OPENAI_MODEL_FALLBACK", "gpt-4o")
+MODEL_MINI = _get_model_setting("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
 CACHE_PATH = "gpt_suggestion_cache.json"
 
 
