@@ -85,8 +85,24 @@ RE_HIGH_ASP = re.compile(r"(\$[5-9]\d{2}|\$[1-9],?\d{3,}|\$\d+k|\d+\s*thousand|e
 RE_PSA = re.compile(r"(psa|bgs|sgc|csg|cgc).{0,20}(turnaround|wait|days|weeks|months|delay|slow|fast|submit|submission|return|back)", re.I)
 # Authenticity Guarantee (AG) - eBay's authentication service for collectibles
 RE_AG = re.compile(r"(authenticity guarantee|ebay.{0,10}authenticat|authenticat.{0,10}ebay|\bAG\b.{0,10}ebay|ebay.{0,10}\bAG\b|authentication.{0,10}(card|sneaker|watch|collectible|handbag|jersey)|verified.{0,10}authentic|counterfeit.{0,10}ebay|ebay.{0,10}counterfeit|fake.{0,10}ebay|ebay.{0,10}fake|trust.{0,10}authenticity|authenticity.{0,10}(check|service|program|failed|passed|pending))", re.I)
-# Price Guide - eBay's specific feature (tighter regex to avoid false positives)
-RE_PRICE_GUIDE = re.compile(r"(ebay.{0,10}price guide|price guide.{0,10}ebay|scan.?to.?price|ebay.{0,10}suggested price|ebay.{0,10}market value|tcgplayer price|what.?s.?my.?card.?worth|card.?value.?ebay|ebay.{0,10}pricing tool)", re.I)
+# Price Guide - eBay's specific feature (strict matching)
+# Require explicit eBay Price Guide/Card Ladder context to avoid generic card-value chatter.
+RE_PRICE_GUIDE_EXACT = re.compile(
+    r"(ebay.{0,12}price guide|price guide.{0,12}ebay|ebay.{0,12}price tool|"
+    r"card\s*ladder|cardladder|card-ladder|scan.?to.?price)",
+    re.I,
+)
+RE_PRICE_GUIDE_PRODUCT = re.compile(
+    r"(price guide|scan.?to.?price)",
+    re.I,
+)
+RE_EBAY_WORD = re.compile(r"\bebay\b", re.I)
+PRICE_GUIDE_EXCLUDE = [
+    "riftbound", "secret lair", "beanie", "logoman", "pikachu illustrator",
+    "rookie debut patch", "record sale", "most expensive", "banger grail",
+    "best app for value", "what's it worth", "worth anything", "price discrepancy",
+    "need help pricing", "pricing you say",
+]
 # Vault - eBay's Vault service AND PSA Vault (both are relevant for collectibles)
 RE_VAULT = re.compile(r"(ebay.{0,10}vault|vault.{0,10}ebay|ebay vault|psa.{0,10}vault|vault.{0,10}psa|psa vault|vault storage|vault.{0,10}withdraw|withdraw.{0,10}vault|vault.{0,10}card|card.{0,10}vault|vault.{0,10}collectible|store.{0,10}vault|vault.{0,10}service|vault.{0,10}auction|auction.{0,10}vault|vault.{0,10}sell|sell.{0,10}vault|vault.{0,10}list|list.{0,10}vault|vault isn.?t|vault trust)", re.I)
 RE_SHIPPING = re.compile(r"(shipping|ship|delivery|deliver|package|parcel|usps|ups|fedex).{0,15}(lost|damage|delay|late|missing|broken|never|issue|problem)", re.I)
@@ -419,7 +435,13 @@ def enrich(post):
     has_high_asp = bool(RE_HIGH_ASP.search(combined))
     has_psa = bool(RE_PSA.search(combined))
     has_ag = bool(RE_AG.search(combined))
-    has_price_guide = bool(RE_PRICE_GUIDE.search(combined))
+    has_price_guide = (
+        not any(ex in combined for ex in PRICE_GUIDE_EXCLUDE)
+        and (
+            bool(RE_PRICE_GUIDE_EXACT.search(combined))
+            or (bool(RE_EBAY_WORD.search(combined)) and bool(RE_PRICE_GUIDE_PRODUCT.search(combined)))
+        )
+    )
     has_vault = bool(RE_VAULT.search(combined))
     has_shipping = bool(RE_SHIPPING.search(combined))
     has_refund = bool(RE_REFUND.search(combined))
@@ -494,8 +516,11 @@ def enrich(post):
         # Listing strategy / optimization
         elif any(w in combined for w in ["how to list", "listing strategy", "listing variants", "competitive product", "views spike", "promoted listing", "best offer", "pricing strategy", "how to price"]):
             subtag = "Listing Strategy"
-        # Valuation / comp checks
-        elif any(w in combined for w in ["card value", "what's it worth", "worth anything", "comp ", "comps ", "best app for value", "card scanner", "figure out card value", "price discrepancy", "what would my"]):
+        # Valuation / comp checks (strictly eBay Price Guide/Card Ladder product context)
+        elif (
+            ("ebay" in combined and any(w in combined for w in ["price guide", "scan to price"]))
+            or any(w in combined for w in ["card ladder", "cardladder", "card-ladder", "ebay price guide"])
+        ):
             subtag = "Price Guide"
         # Shipping logistics
         elif any(w in combined for w in ["shipping label", "standard envelope", "mailer", "packing", "usps", "fedex", "ups ", "how to ship", "shipping cost", "tracking"]):

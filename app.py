@@ -4,6 +4,7 @@ import os
 os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
 
 import json
+import re
 import streamlit as st
 from dotenv import load_dotenv
 from datetime import datetime
@@ -104,6 +105,31 @@ def _taxonomy_topic(insight):
 
 def _taxonomy_theme(insight):
     return _nested_get(insight, "taxonomy.theme", insight.get("theme") or _taxonomy_topic(insight))
+
+
+PG_STRICT_EXACT_KW = [
+    "ebay price guide", "ebay's price guide", "price guide on ebay",
+    "card ladder", "cardladder", "card-ladder", "scan to price",
+]
+PG_STRICT_EBAY_CONTEXT_KW = ["ebay"]
+PG_STRICT_PRODUCT_KW = ["price guide", "scan to price"]
+PG_STRICT_EXCLUDE_KW = [
+    "riftbound", "secret lair", "beanie", "logoman", "pikachu illustrator",
+    "rookie debut patch", "record sale", "most expensive", "banger grail",
+    "best app for value", "what's it worth", "worth anything", "price discrepancy",
+    "need help pricing", "pricing you say",
+]
+
+
+def _is_true_price_guide_signal(item):
+    txt = (str(item.get("title", "")) + " " + str(item.get("text", ""))).lower()
+    if any(ex in txt for ex in PG_STRICT_EXCLUDE_KW):
+        return False
+    if any(k in txt for k in PG_STRICT_EXACT_KW):
+        return True
+    if any(ctx in txt for ctx in PG_STRICT_EBAY_CONTEXT_KW) and any(pk in txt for pk in PG_STRICT_PRODUCT_KW):
+        return True
+    return False
 
 def normalize_insight(i, suggestion_cache):
     i["ideas"] = suggestion_cache.get(i.get("text",""), [])
@@ -569,41 +595,30 @@ RELEVANT SIGNALS:
 # 6 Tabs
 # ─────────────────────────────────────────────
 tabs = st.tabs([
-    "📊 Overview",
+    "📋 Strategy",
     "⚔️ Competitor Intel",
     "🎯 Customer Signals",
     "📰 Industry & Trends",
     "📦 Checklists & Sealed Launches",
-    "📋 Strategy",
+    "📊 Charts",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 4: CHECKLISTS & SEALED LAUNCHES — eBay product releases
-# TAB 1: OVERVIEW — Executive snapshot
+# TAB 6: CHARTS — Executive snapshot
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[0]:
-    with st.expander("💡 New here? How to use SignalSynth", expanded=True):
+with tabs[5]:
+    with st.expander("💡 New here? How to use SignalSynth", expanded=False):
         st.markdown("""
 **SignalSynth** turns noisy community chatter into product-ready direction for eBay Collectibles teams.
 
-### Start here (2-minute orientation)
+### Start here
+- **📋 Strategy:** identify top themes, then generate PRD/BRD/PRFAQ/Jira drafts.
+- **🎯 Customer Signals:** validate root causes from real user evidence.
+- **⚔️ Competitor Intel + 📰 Industry & Trends:** pressure-test decisions with market context.
+- **📦 Checklists & Sealed Launches:** track release/checklist timing.
+- **📊 Charts:** review KPIs and prioritize actions.
 
-| Tab | When to use it | What you'll get |
-|-----|----------------|-----------------|
-| **📊 Overview** | First stop each day | Executive snapshot of top issues, requests, and where to focus next |
-| **⚔️ Competitor Intel** | Need a conquest/defense read | What competitors are winning on, where users are frustrated, and response ideas |
-| **🎯 Customer Signals** | Need to triage customer pain quickly | eBay feedback + Broken Windows in one place (bugs, UX confusion, fee friction) |
-| **📰 Industry & Trends** | Need market context | Top news, YouTube, forum, and social signals shaping the collectibles market |
-| **📦 Checklists & Sealed Launches** | Need release/checklist awareness | Upcoming product launches + checklist links by sport/brand |
-| **📋 Strategy** | Need decision-ready outputs | AI-clustered themes and one-click PRD/BRD/PRFAQ/Jira generation |
-
-### Recommended weekly workflow
-1. **Overview**: confirm top problems and opportunity themes.
-2. **Customer Signals**: validate root causes with real customer evidence.
-3. **Competitor Intel + Industry & Trends**: pressure-test decisions against market movement.
-4. **Strategy**: convert validated themes into execution artifacts.
-
-**Tip:** Use the Ask AI panel above the tabs for fast synthesis before deep-diving into any section.
+**Tip:** Use Ask AI above the tabs for fast synthesis before diving in.
         """)
 
     # ── Executive Briefing ──
@@ -1242,6 +1257,12 @@ with tabs[2]:
     time_range = filters.get("_time_range", "All Time")
     filtered = filter_by_time(filtered, time_range)
 
+    # When Topic filter includes Price Guide, enforce strict product relevance so
+    # generic card-pricing chatter does not leak into Customer Signals Raw Feed.
+    selected_topics = filters.get("taxonomy.topic", [])
+    if selected_topics and "All" not in selected_topics and "Price Guide" in selected_topics:
+        filtered = [i for i in filtered if _is_true_price_guide_signal(i)]
+
     cs_pulse_tab, cs_problems_tab, cs_requests_tab, cs_raw_tab = st.tabs([
         "📈 Pulse", "🔧 Problems", "💡 Requests", "📄 Raw Feed"
     ])
@@ -1518,12 +1539,43 @@ with tabs[3]:
         p_copy["_industry_source"] = src
         industry_posts.append(p_copy)
 
+    def _is_industry_feed_spam(post):
+        src = post.get("_industry_source", post.get("source", ""))
+        title = (post.get("title", "") or "").strip()
+        text = (post.get("text", "") or "").strip()
+        combined = f"{title} {text}".lower()
+
+        # YouTube livestream break spam (repetitive numbered titles)
+        if src == "YouTube":
+            if re.match(r"^!\d+\b", title.lower()):
+                return True
+            if "break w/" in combined and any(k in combined for k in ["1x ", "2x ", "tennis break", "ufc with"]):
+                return True
+
+        # Checklist-heavy news belongs in Checklists tab, not Full Industry Feed
+        if src in ("News", "Cllct"):
+            if "checklist" in combined and any(k in combined for k in ["team set list", "set lists", "checklist and details", "set list"]):
+                return True
+
+        return False
+
+    industry_posts = [p for p in industry_posts if not _is_industry_feed_spam(p)]
+
+    def _normalized_industry_title(post):
+        raw = (post.get("title", "") or post.get("text", "")[:80]).strip().lower()
+        # Normalize common stream counters so duplicates collapse
+        raw = re.sub(r"^!\d+\s*", "", raw)
+        raw = re.sub(r"^#\d+\s*", "", raw)
+        raw = re.sub(r"^\d+x\s+", "", raw)
+        raw = re.sub(r"\s+", " ", raw)
+        return raw
+
     # Deduplicate by title+source — keep most recent when same title repeats (e.g. recurring livestreams)
     industry_posts.sort(key=lambda x: (x.get("post_date", ""), x.get("score", 0)), reverse=True)
     _seen_titles = set()
     _deduped = []
     for p in industry_posts:
-        title = (p.get("title", "") or p.get("text", "")[:80]).strip().lower()
+        title = _normalized_industry_title(p)
         src = p.get("_industry_source", "")
         key = f"{src}::{title}"
         if key not in _seen_titles:
@@ -1627,49 +1679,8 @@ with tabs[3]:
         st.markdown("### 🧭 eBay Price Guide Signals")
         st.caption("What users like, where they are confused, and what they dislike about eBay's Price Guide (including Card Ladder coverage).")
 
-        # ── eBay Price Guide product keywords ──
-        # These must be specific to eBay's Price Guide product (Card Ladder integration).
-        # Generic "price guide" alone is too broad — require eBay context.
-        PG_EXACT_KW = [
-            "ebay price guide", "ebay's price guide", "ebay card value",
-            "card ladder", "cardladder", "card-ladder",
-            "ebay market value", "ebay comps", "ebay comp tool",
-            "ebay scan", "scan on ebay", "ebay scanner",
-            "price guide on ebay", "price guide feature",
-            "ebay trading card price", "ebay card price tool",
-        ]
-        PG_EBAY_CONTEXT = ["ebay"]
-        PG_PRODUCT_KW = [
-            "price guide", "market value tool", "card value tool",
-            "comp tool", "price lookup", "value lookup",
-        ]
-        # Exclude generic hobby/price chatter that has nothing to do with eBay's product
-        PG_EXCLUDE = [
-            "secret lair", "riftbound", "beanie", "lgs need", "scalper",
-            "rfid", "skimming", "gold bar", "fake gold", "iron maiden",
-            "error card", "wrong player", "logoman", "1st edition",
-            "pokemon break", "pikachu illustrator", "rookie debut patch",
-            "most expensive", "record sale", "banger grail",
-        ]
-
         def _is_price_guide_signal(item):
-            txt = (item.get("title", "") + " " + item.get("text", "")).lower()
-            # Hard exclude obvious false positives
-            if any(ex in txt for ex in PG_EXCLUDE):
-                return False
-            # Explicit taxonomy tag from enrichment
-            if _taxonomy_topic(item) == "Price Guide" and "ebay" in txt:
-                return True
-            # Explicit flag from enrichment pipeline
-            if item.get("is_price_guide_signal") and "ebay" in txt:
-                return True
-            # Direct exact-match keywords (already contain eBay context)
-            if any(k in txt for k in PG_EXACT_KW):
-                return True
-            # Co-occurrence: must mention eBay AND a price-guide product keyword
-            if any(ctx in txt for ctx in PG_EBAY_CONTEXT) and any(pk in txt for pk in PG_PRODUCT_KW):
-                return True
-            return False
+            return _is_true_price_guide_signal(item)
 
         pg_signals = [p for p in normalized if _is_price_guide_signal(p)]
         pg_signals_sorted = sorted(pg_signals, key=lambda x: (x.get("post_date", ""), float(x.get("score", 0) or 0)), reverse=True)
@@ -2285,9 +2296,9 @@ Reports:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 6: STRATEGY — Strategic themes + AI doc generation
+# TAB 1: STRATEGY — Strategic themes + AI doc generation
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[5]:
+with tabs[0]:
     st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
     try:
         display_clustered_insight_cards(normalized)
