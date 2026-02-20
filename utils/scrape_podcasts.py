@@ -17,36 +17,37 @@ HEADERS = {
 }
 
 # Podcast RSS feeds — collectibles industry voices
+# All URLs verified via iTunes Search API + direct HTTP check
 PODCAST_FEEDS = [
     {
-        "name": "Sports Card Nonsense",
-        "url": "https://feeds.megaphone.fm/sportscardnonsense",
-        "focus": "Sports cards market analysis, hobby news, industry interviews",
+        "name": "Sports Cards Nonsense",
+        "url": "https://feeds.megaphone.fm/sports-cards-nonsense",
+        "focus": "Sports cards market analysis, hobby news, industry interviews (The Ringer)",
+    },
+    {
+        "name": "Sports Card Investor",
+        "url": "https://feeds.captivate.fm/sports-card-investor/",
+        "focus": "Card investing strategy, market analysis, buying/selling advice",
+    },
+    {
+        "name": "Stacking Slabs",
+        "url": "https://feeds.transistor.fm/stacking-slabs",
+        "focus": "Graded cards, PSA/BGS/SGC, slab investing, pop reports",
     },
     {
         "name": "Hobby News Daily",
-        "url": "https://feeds.buzzsprout.com/1710582.rss",
+        "url": "https://anchor.fm/s/db5bb554/podcast/rss",
         "focus": "Daily hobby news, product releases, market trends",
     },
     {
-        "name": "Card Shop Life",
-        "url": "https://feeds.libsyn.com/437888/rss",
-        "focus": "Card shop owner perspective, retail hobby, market trends",
-    },
-    {
-        "name": "The Hobby Wire",
-        "url": "https://feeds.buzzsprout.com/2012175.rss",
-        "focus": "Breaking hobby news, industry analysis, market moves",
-    },
-    {
-        "name": "Pull Tab Podcast",
-        "url": "https://feeds.libsyn.com/412648/rss",
+        "name": "The Pull-Tab Podcast",
+        "url": "https://anchor.fm/s/1e7e9b04/podcast/rss",
         "focus": "Sports cards investing, market analysis, box breaks",
     },
     {
-        "name": "Wax Poetics",
-        "url": "https://anchor.fm/s/d9c51e28/podcast/rss",
-        "focus": "Card collecting culture, hobby trends, industry interviews",
+        "name": "Collector Nation",
+        "url": "https://rss2.flightcast.com/s0b568vp78icj45z9f87fhg4.xml",
+        "focus": "Trading cards & collectibles, hobby culture, industry interviews",
     },
 ]
 
