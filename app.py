@@ -500,101 +500,255 @@ else:
         question = user_question.strip()
         st.session_state["qa_messages"].append({"role": "user", "content": question})
 
-        q_words = set(question.lower().split())
+        q_lower = question.lower()
+        q_words = set(q_lower.split())
+
+        # ── Synonym / related-term expansion for smarter retrieval ──
+        _TERM_EXPANSIONS = {
+            "vault": ["vault", "storage", "withdraw", "stuck in vault", "vault sell", "vault payout", "vault card"],
+            "shipping": ["shipping", "tracking", "lost package", "damaged in transit", "standard envelope", "label", "carrier"],
+            "payment": ["payment", "payout", "funds held", "managed payments", "hold my money", "payment hold"],
+            "returns": ["return", "inad", "refund", "item not as described", "money back", "buyer scam"],
+            "fees": ["fee", "final value", "insertion fee", "take rate", "commission", "overcharged"],
+            "authentication": ["authentication", "authenticity guarantee", "ag", "misgrade", "grading"],
+            "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
+            "whatnot": ["whatnot", "live breaks", "live shopping"],
+            "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
+            "goldin": ["goldin", "goldin auctions"],
+            "tcgplayer": ["tcgplayer", "tcg player"],
+            "churn": ["churn", "leaving ebay", "switching", "done with ebay", "switched to"],
+            "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value"],
+            "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
+            "promoted": ["promoted listing", "promoted standard", "promoted advanced", "pay to play", "ad spend"],
+            "app": ["app", "seller hub", "app crash", "app bug", "app glitch"],
+        }
+        expanded_terms = set()
+        for w in q_words:
+            if len(w) > 2:
+                expanded_terms.add(w)
+        for trigger, expansions in _TERM_EXPANSIONS.items():
+            if trigger in q_lower:
+                expanded_terms.update(expansions)
 
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
             subtag = (_taxonomy_topic(insight) or "").lower()
             source = (insight.get("source", "") or "").lower()
             score = 0
-            for w in q_words:
-                if len(w) > 3 and w in text:
-                    score += 1
-                if w in subtag:
-                    score += 3
-                if w in source:
+            for term in expanded_terms:
+                if len(term) > 2 and term in text:
                     score += 2
+                if term in subtag:
+                    score += 4
+                if term in source:
+                    score += 2
+            # Boost high-quality signals
+            sig_strength = insight.get("signal_strength", 0)
+            if sig_strength > 60:
+                score += 3
+            elif sig_strength > 30:
+                score += 1
+            # Boost high-engagement posts
+            eng = insight.get("score", 0)
+            if eng >= 50:
+                score += 2
+            elif eng >= 10:
+                score += 1
             return score
 
         scored = [(p, _relevance_score(p)) for p in normalized]
         scored.sort(key=lambda x: -x[1])
-        relevant = [p for p, s in scored if s > 0][:30]
+        relevant = [p for p, s in scored if s > 0][:40]
 
         # Build numbered source references for the AI to cite
         context_lines = []
         source_refs = []  # [(label, title, url, source_platform)]
-        for idx, p in enumerate(relevant[:20], 1):
-            title = p.get("title", "")[:120]
-            text = p.get("text", "")[:350].replace("\n", " ")
+        for idx, p in enumerate(relevant[:25], 1):
+            title = p.get("title", "")[:140]
+            text = p.get("text", "")[:500].replace("\n", " ")
             source = p.get("source", "")
             sub = p.get("subreddit", "")
             subtag = _taxonomy_topic(p)
             sentiment = p.get("brand_sentiment", "")
             score = p.get("score", 0)
             type_tag = _taxonomy_type(p)
+            persona = p.get("persona", "")
+            sig_str = p.get("signal_strength", 0)
+            date = p.get("post_date", "")
             url = p.get("url", "")
             sub_label = f"r/{sub}" if sub else source
             ref_label = f"S{idx}"
             context_lines.append(
-                f"- [{ref_label}] [{type_tag}] [{sentiment}] [{subtag}] (score:{score}, {sub_label}) {title}: {text}"
+                f"- [{ref_label}] [{type_tag}] [{sentiment}] [{subtag}] (engagement:{score}, strength:{sig_str}, persona:{persona}, date:{date}, {sub_label}) {title}: {text}"
             )
             if url:
                 source_refs.append((ref_label, title or text[:80], url, sub_label))
 
+        # ── Aggregate intelligence context ──
         total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
         total_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
         total_complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint")
         total_features = sum(1 for i in normalized if _taxonomy_type(i) == "Feature Request")
+        total_churn = sum(1 for i in normalized if i.get("type_tag") == "Churn Signal")
+        total_praise = sum(1 for i in normalized if i.get("type_tag") == "Praise")
         subtag_counts = defaultdict(int)
+        type_counts = defaultdict(int)
         for i in normalized:
             st_val = _taxonomy_topic(i)
             if st_val and st_val != "General":
                 subtag_counts[st_val] += 1
-        top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:10]
+            tt = _taxonomy_type(i)
+            if tt:
+                type_counts[tt] += 1
+        top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:12]
 
         stats_block = (
-            f"Dataset: {len(normalized)} insights total\n"
-            f"Sentiment: {total_neg} negative, {total_pos} positive\n"
-            f"Types: {total_complaints} complaints, {total_features} feature requests\n"
+            f"Dataset: {len(normalized)} insights from Reddit, Twitter, YouTube, eBay Forums, Bluesky, industry news, podcasts\n"
+            f"Sentiment: {total_neg} negative, {total_pos} positive, {total_churn} churn signals, {total_praise} praise\n"
+            f"Types: {', '.join(f'{k} ({v})' for k, v in sorted(type_counts.items(), key=lambda x: -x[1])[:8])}\n"
             f"Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"
         )
+
+        # ── Cluster themes (strategic layer) ──
+        cluster_context = ""
+        try:
+            with open("precomputed_clusters.json", "r", encoding="utf-8") as _cf:
+                _cdata = json.load(_cf)
+            cluster_themes = []
+            for cl in _cdata.get("clusters", [])[:8]:
+                label = cl.get("label", "")
+                size = cl.get("size", 0)
+                summary = cl.get("summary", "")[:200]
+                cluster_themes.append(f"- {label} ({size} signals): {summary}")
+            if cluster_themes:
+                cluster_context = "\n\nSTRATEGIC THEMES (from clustering analysis):\n" + "\n".join(cluster_themes)
+        except Exception:
+            pass
+
+        # ── Competitor landscape ──
+        competitor_context = ""
+        try:
+            comp_counts = defaultdict(int)
+            for p in competitor_posts_raw:
+                comp_counts[p.get("competitor_name", p.get("source", "Unknown"))] += 1
+            if comp_counts:
+                comp_lines = [f"- {name}: {cnt} signals" for name, cnt in sorted(comp_counts.items(), key=lambda x: -x[1])[:8]]
+                competitor_context = f"\n\nCOMPETITOR LANDSCAPE ({competitor_posts_count} total signals):\n" + "\n".join(comp_lines)
+        except Exception:
+            pass
+
+        # ── Industry news headlines ──
+        industry_context = ""
+        try:
+            news_headlines = []
+            for src_list, src_name in [(cllct_raw, "Cllct"), (news_rss_raw, "News"), (podcast_raw, "Podcast")]:
+                for p in sorted(src_list, key=lambda x: x.get("post_date", ""), reverse=True)[:3]:
+                    hl = (p.get("title", "") or p.get("text", ""))[:120]
+                    if hl:
+                        news_headlines.append(f"- [{src_name}] {hl}")
+            if news_headlines:
+                industry_context = "\n\nRECENT INDUSTRY NEWS:\n" + "\n".join(news_headlines[:8])
+        except Exception:
+            pass
+
+        # ── Question-type detection for adaptive prompting ──
+        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "goldin", "heritage", "tcgplayer", "versus", " vs ", "compete", "market share", "threat"])
+        _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
+        _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
+        _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
+
+        # Adaptive format instructions
+        if _q_competitive:
+            format_guidance = """Format with these headings:
+### Executive Answer
+(4-6 sentences framing the competitive dynamics)
+### Competitive Evidence
+(5-8 bullets with verbatim user quotes [S#] showing how users compare platforms)
+### Threat Assessment
+(3-4 bullets: What specific advantage/disadvantage does eBay have? What's the switching trigger?)
+### Strategic Response
+(4-6 numbered actions: what eBay Collectibles should do, with owner + timeline + expected impact)
+### Confidence & Gaps
+(2-3 bullets on evidence quality and what's missing)"""
+        elif _q_strategic:
+            format_guidance = """Format with these headings:
+### Strategic Assessment
+(5-8 sentences framing the opportunity/challenge with data backing)
+### Signal Evidence
+(5-8 bullets with verbatim user quotes [S#] — organized by theme)
+### Market Context
+(3-4 bullets connecting signals to broader collectibles industry trends)
+### Recommended Strategy
+(5-7 numbered actions organized by time horizon: immediate / 30-day / 90-day, each with owner + expected impact)
+### Risks & Dependencies
+(2-4 bullets)"""
+        elif _q_product:
+            format_guidance = """Format with these headings:
+### Product Assessment
+(4-6 sentences — what's working, what's broken, user sentiment)
+### User Evidence
+(5-8 bullets with verbatim quotes [S#] — group by positive/negative/neutral)
+### Impact Analysis
+(3-4 bullets: Who's affected? How severely? Revenue/retention implications?)
+### Recommended Fixes & Improvements
+(4-6 numbered actions with priority, owner, and expected user impact)
+### Confidence & Gaps
+(2-3 bullets)"""
+        else:
+            format_guidance = """Format with these headings:
+### Executive Answer
+(4-6 sentences, direct answer first, then context)
+### What the Signals Show
+(5-8 bullets with concrete evidence — cite verbatim user quotes in "italics" with [S#] references)
+### Implications for eBay Collectibles
+(3-5 bullets connecting evidence to business impact)
+### Recommended Actions
+(4-6 numbered actions with owner + timeline + expected impact)
+### Confidence & Gaps
+(2-3 bullets on evidence quality)"""
+
         context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found.)"
 
-        system_prompt = f"""You are SignalSynth AI, an executive-grade analyst for eBay Collectibles PMs and leadership.
-Your response must be boardroom-ready: concise, specific, and grounded only in provided data.
-If evidence is weak, explicitly say so.
+        system_prompt = f"""You are SignalSynth AI — a senior strategy analyst embedded in the eBay Collectibles & Trading Cards business unit.
 
-Each signal below is tagged with a reference like [S1], [S2], etc. When you quote or reference a signal, include its tag so the reader can trace it back to the source.
+DOMAIN EXPERTISE:
+- eBay owns Goldin (premium auctions), TCGPlayer (TCG marketplace), and has PSA partnerships (vault, consignment, grading)
+- Key competitors: Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment)
+- eBay products: Authenticity Guarantee, Price Guide (Card Ladder integration), Vault, Promoted Listings, Seller Hub
+- User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
+- Key metrics: GMV, take rate, seller NPS, buyer conversion, authentication volume
 
-Format your answer exactly with these headings:
-1) **Executive answer** (3-5 sentences, direct answer first)
-2) **What the signals show** (3-6 bullets with concrete evidence — cite verbatim user quotes in "italics" and tag each with its source reference like [S1])
-3) **Implications for eBay** (2-4 bullets)
-4) **Recommended actions (next 30 days)** (3-5 numbered actions with owner + expected impact)
-5) **Confidence & gaps** (1-3 bullets)
+YOUR AUDIENCE: VP/GM-level leaders who make investment and prioritization decisions. They need strategic clarity, not just data summaries. Connect evidence to business impact.
 
-Rules:
-- Never invent facts not present in the provided signals.
-- Always cite 2-4 verbatim user quotes from the signals to back up your key points, with their [S#] reference.
-- Prefer specific product/policy terms over generic language.
-- Mention uncertainty clearly if evidence is limited.
-- Keep total response under ~450 words unless explicitly asked for more.
+{format_guidance}
+
+RULES:
+- Ground every claim in the provided signals — never invent data.
+- Cite 4-8 verbatim user quotes with [S#] tags so readers can verify.
+- Use specific product names, features, and policies — never generic language like "improve the experience."
+- Quantify when possible (e.g., "X of Y signals mention..." or "engagement score of Z").
+- If evidence is thin or one-sided, say so explicitly and flag what data would strengthen the analysis.
+- Connect dots between signals — identify patterns, not just individual complaints.
+- When recommending actions, name the specific PM/team owner and expected business impact.
 
 DATASET SUMMARY:
 {stats_block}
+{cluster_context}
+{competitor_context}
+{industry_context}
 
-RELEVANT SIGNALS:
+RELEVANT SIGNALS (sorted by relevance to the question):
 {context_block}"""
 
         try:
             from components.ai_suggester import _chat, MODEL_MAIN
-            with st.spinner("Searching insights and generating answer..."):
+            with st.spinner("Analyzing signals across all sources..."):
                 response = _chat(
                     MODEL_MAIN,
                     system_prompt,
                     question,
-                    max_completion_tokens=1800,
-                    temperature=0.3,
+                    max_completion_tokens=2800,
+                    temperature=0.25,
                 )
             st.session_state["qa_messages"].append({
                 "role": "assistant",
