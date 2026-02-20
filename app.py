@@ -832,7 +832,8 @@ RELEVANT SIGNALS (sorted by relevance to the question):
 
     if st.session_state["qa_messages"]:
         with st.expander("AI Q&A responses", expanded=True):
-            for msg_idx, msg in enumerate(st.session_state["qa_messages"]):
+            _qa_reversed = list(reversed(list(enumerate(st.session_state["qa_messages"]))))
+            for msg_idx, msg in _qa_reversed:
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
                     # Render source links below assistant responses
