@@ -1262,109 +1262,458 @@ with tabs[1]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: CUSTOMER SIGNALS — eBay voice + broken windows
+# TAB 3: CUSTOMER SIGNALS — executive briefing
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[2]:
-    st.markdown("Customer feedback and broken-windows triage in one place — fewer tabs, clearer action path.")
+    st.markdown("One-page executive view — scroll top-to-bottom for health, top issues, customer asks, and deep-dive explorer.")
 
-    # Filters
+    # ── Filters ──
     filter_fields = {"Topic": "taxonomy.topic", "Type": "taxonomy.type", "Sentiment": "brand_sentiment"}
     filters = render_floating_filters(normalized, filter_fields, key_prefix="ebay_voice")
     filtered = [i for i in normalized if match_multiselect_filters(i, filters, filter_fields)]
     time_range = filters.get("_time_range", "All Time")
     filtered = filter_by_time(filtered, time_range)
 
-    # When Topic filter includes Price Guide, enforce strict product relevance so
-    # generic card-pricing chatter does not leak into Customer Signals Raw Feed.
     selected_topics = filters.get("taxonomy.topic", [])
     if selected_topics and "All" not in selected_topics and "Price Guide" in selected_topics:
         filtered = [i for i in filtered if _is_true_price_guide_signal(i)]
 
-    cs_pulse_tab, cs_problems_tab, cs_requests_tab, cs_raw_tab = st.tabs([
-        "📈 Pulse", "🔧 Problems", "💡 Requests", "📄 Raw Feed"
-    ])
+    # ═══════════════════════════════════════════════
+    # HEALTH SNAPSHOT
+    # ═══════════════════════════════════════════════
+    f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
+    f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
+    f_complaints = sum(1 for i in filtered if _taxonomy_type(i) == "Complaint")
+    f_requests = sum(1 for i in filtered if _taxonomy_type(i) == "Feature Request")
+    f_churn = sum(1 for i in filtered if i.get("type_tag") == "Churn Signal")
+    strengths = [i.get("signal_strength", 0) for i in filtered if i.get("signal_strength")]
+    avg_strength = round(sum(strengths) / max(len(strengths), 1), 1) if strengths else 0
 
-    with cs_pulse_tab:
-        st.caption("Quick pulse on customer sentiment, issue load, and partner-related chatter for the current filter view.")
+    h1, h2, h3, h4, h5, h6 = st.columns(6)
+    h1.metric("Signals", len(filtered), help=f"of {total} total")
+    neg_pct = round(f_neg / max(len(filtered), 1) * 100)
+    h2.metric("Negative", f_neg, delta=f"{neg_pct}%", delta_color="inverse")
+    h3.metric("Complaints", f_complaints)
+    h4.metric("Churn Risks", f_churn, delta_color="inverse" if f_churn else "off")
+    h5.metric("Feature Asks", f_requests)
+    h6.metric("Avg Strength", f"{avg_strength}/100")
 
-        # Quick stats for filtered view
-        f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
-        f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
-        f_complaints = sum(1 for i in filtered if _taxonomy_type(i) == "Complaint")
-        f_requests = sum(1 for i in filtered if _taxonomy_type(i) == "Feature Request")
+    topic_counts = defaultdict(int)
+    for i in filtered:
+        t = _taxonomy_topic(i)
+        if t and t not in ("General", "Unknown"):
+            topic_counts[t] += 1
+    if topic_counts:
+        top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        st.caption("**Top topics:** " + " · ".join([f"{k} ({v})" for k, v in top_topics]))
 
-        vc1, vc2, vc3, vc4 = st.columns(4)
-        vc1.metric("Showing", f"{len(filtered)}", help=f"of {total} total insights")
-        vc2.metric("Negative", f_neg, help="Insights with negative sentiment")
-        vc3.metric("Complaints", f_complaints)
-        vc4.metric("Feature Requests", f_requests)
+    st.markdown("---")
 
-        # Partner signals section
-        STRATEGIC_PARTNERS = {
-            "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
-            "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
-            "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
-            "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
-            "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
-        }
-        partner_counts = {}
-        for pname, kws in STRATEGIC_PARTNERS.items():
-            cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
-            if cnt > 0:
-                partner_counts[pname] = cnt
+    # ═══════════════════════════════════════════════
+    # 🔥 TOP ISSUES TO FIX
+    # ═══════════════════════════════════════════════
+    st.markdown("### 🔥 Top Issues to Fix")
+    st.caption("Highest-impact platform problems from user reports — sorted by engagement × severity.")
 
-        if partner_counts:
-            with st.expander(f"🤝 Partner Signals ({sum(partner_counts.values())} mentions in view)", expanded=False):
-                for pname, cnt in sorted(partner_counts.items(), key=lambda x: -x[1]):
-                    st.markdown(f"- **{pname}**: {cnt} signals")
+    # ── Broken-windows classification (inlined) ──
+    _BW_CATEGORIES = {
+        "Returns & INAD Abuse": {
+            "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund",
+                         "case opened", "money back guarantee", "buyer scam", "empty box",
+                         "return request", "refund", "sided with buyer", "unfair return",
+                         "buyer opened a case", "sent back wrong", "returned wrong item",
+                         "buyer claims", "not received", "not as described"],
+            "icon": "🔄", "owner": "Returns PM",
+        },
+        "Trust & Fraud": {
+            "keywords": ["scam", "fraud", "shill bid", "fake listing", "counterfeit",
+                         "fake card", "says it's fake", "it's fake", "not authentic",
+                         "stolen", "replica", "knock off", "suspicious seller",
+                         "scammer", "ripped off", "got scammed"],
+            "icon": "🛡️", "owner": "Trust & Safety PM",
+        },
+        "Authentication & Grading": {
+            "keywords": ["authenticity guarantee", "authentication", "misgrade",
+                         "wrong grade", "fake grade", "grading error",
+                         "grading issue", "grading problem", "grading complaint",
+                         "psa error", "bgs error", "cgc error",
+                         "grade came back", "grading service", "grading turnaround"],
+            "icon": "🏅", "owner": "Authentication PM",
+        },
+        "Vault Bugs": {
+            "keywords": ["psa vault", "ebay vault", "vault sell", "vault inventory", "vault withdraw",
+                         "vault shipping", "vault delay", "vault error", "vault listing",
+                         "stuck in vault", "vault payout", "vault card"],
+            "icon": "🏦", "owner": "Vault PM",
+        },
+        "Fee & Pricing Confusion": {
+            "keywords": ["fee", "final value", "insertion fee", "take rate", "13.25%",
+                         "13%", "12.9%", "ebay takes", "fee structure", "hidden fee",
+                         "commission", "overcharged", "too expensive to sell"],
+            "icon": "💸", "owner": "Monetization PM",
+        },
+        "Shipping & Label Issues": {
+            "keywords": ["shipping label", "tracking", "lost in mail", "lost package",
+                         "damaged in transit", "standard envelope", "can't print label",
+                         "wrong weight", "shipping estimate", "shipping damage",
+                         "arrived damaged", "crushed", "print label"],
+            "icon": "📦", "owner": "Shipping PM",
+        },
+        "Payment & Payout Issues": {
+            "keywords": ["payment hold", "payout", "funds held", "managed payments", "hold my money",
+                         "can't get paid", "money held", "release my funds", "payment processing",
+                         "payment delay", "stripe verification", "stopped payment"],
+            "icon": "💳", "owner": "Payments PM",
+        },
+        "Seller Protection Gaps": {
+            "keywords": ["seller protection", "always side with buyer", "sided with buyer",
+                         "no recourse", "lost case", "hate selling", "done with ebay",
+                         "leaving ebay", "doesn't care about sellers", "unfair to sellers",
+                         "seller cancelled", "cancelled my order"],
+            "icon": "🛑", "owner": "Seller Experience PM",
+        },
+        "App & UX Bugs": {
+            "keywords": ["ebay app", "ebay website", "app glitch", "app bug", "app crash",
+                         "ebay not working", "ebay won't load", "error message",
+                         "seller hub bug", "seller hub glitch", "seller hub broken",
+                         "white screen", "blank page", "ebay crash",
+                         "ebay glitch", "ebay bug", "app won't", "app keeps",
+                         "app freezes", "app update broke"],
+            "icon": "🐛", "owner": "App/UX PM",
+        },
+        "Account & Policy Enforcement": {
+            "keywords": ["account suspended", "account restricted", "banned",
+                         "locked out", "policy violation", "vero",
+                         "listing removed", "flagged", "delisted", "taken down"],
+            "icon": "🔒", "owner": "Trust & Safety PM",
+        },
+        "Search & Listing Visibility": {
+            "keywords": ["search broken", "can't find my listing", "no views",
+                         "algorithm", "best match", "search ranking",
+                         "not showing up", "buried", "no impressions", "no traffic", "cassini"],
+            "icon": "🔍", "owner": "Search PM",
+        },
+        "Promoted Listings Friction": {
+            "keywords": ["promoted listing", "promoted standard", "promoted advanced",
+                         "pay to play", "ad rate", "forced to promote", "ad spend",
+                         "promoted listings fee", "visibility tax"],
+            "icon": "📢", "owner": "Ads PM",
+        },
+    }
 
-        # Quick top-topic pulse
-        topic_counts = defaultdict(int)
-        for i in filtered:
-            t = _taxonomy_topic(i)
-            if t and t not in ("General", "Unknown"):
-                topic_counts[t] += 1
-        if topic_counts:
-            st.markdown("**Top topics in current view:**")
-            top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]
-            st.caption(" · ".join([f"{k} ({v})" for k, v in top_topics]))
+    _BW_PLATFORM_NAMES = ["ebay", "e-bay", "goldin", "tcgplayer", "tcg player", "comc"]
+    _BW_EBAY_SUBS = ["ebay", "flipping", "ebaysellers", "ebayselleradvice"]
+    _BW_FEATURE_KW = [
+        "seller hub", "promoted listing", "vault", "authenticity guarantee",
+        "standard envelope", "managed payments", "global shipping",
+        "shipping label", "inad", "item not as described", "money back guarantee",
+        "payment hold", "payout", "final value fee", "insertion fee",
+        "promoted standard", "promoted advanced", "best match",
+        "psa vault", "vault inventory",
+    ]
+    _BW_EXCLUDE = [
+        "stole my", "nephew", "my cards were stolen", "house fire",
+        "fake money", "porch pick up", "hands free controller", "nintendo",
+        "dvd of an old film", "mercari", "card show drama",
+        "gameshire", "$100b endgame", "the whale, the trio",
+        "bitcoin treasury", "diamond hands", "short squeeze", "moass",
+        "to the moon", "hedge fund", "warrants to blockchain",
+        "official sales/trade/breaks", "leave a comment here in this thread with your sales",
+        "iron maiden", "secret lair", "new to mtg", "new player",
+        "dev kit", "ps vita", "playstation",
+        "my daughter swears", "help! my daughter",
+        "catalogued my grandmother", "my inheritance",
+        "stopped ordering from amazon", "what website or app do you use instead",
+        "help me sell my storage unit", "jet engine",
+        "would you block this buyer? i already can smell",
+        "i only brought 300",
+        "seed vault extract", "arc raiders", "stella montis",
+        "psa if you think you might want to play survival",
+        "make a placeholder vault", "placeholder vault",
+        "rewards in experimental", "play survival in the future",
+        "survival vault", "public service announcement",
+        "instant retirement", "can't believe i pulled", "best email to receive",
+        "second best email", "shove it up", "going up on ebay today",
+        "look what i found", "look what i pulled", "just pulled this",
+        "mail day", "pickup of the year", "grail acquired",
+        "finally got one", "dream card", "holy grail",
+        "lcs pickup", "card show pickup", "hit of the year",
+        "rip results", "box break results", "case break results",
+        "my collection", "collection update", "added to the pc",
+        "rate my collection", "show off", "nfs/nft",
+    ]
+    _BW_EXCLUDE_SUBS = [
+        "superstonk", "gme_meltdown", "amcstock",
+        "bitcoin", "stocks", "investing",
+        "gamestop", "gmejungle", "fwfbthinktank", "gme",
+        "kleinanzeigen_betrug", "arcraiders", "nostupidquestions",
+    ]
+    _BW_POSITIVE = [
+        "best email", "second best email", "can't believe i pulled",
+        "instant retirement", "just pulled", "look what i",
+        "finally got", "dream card", "holy grail", "grail acquired",
+        "love ebay", "ebay came through", "great experience",
+        "shout out to ebay", "thank you ebay", "ebay is the best",
+        "happy with", "so excited", "pumped", "let's go",
+        "w pull", "huge pull", "insane pull", "fire pull",
+    ]
 
-    with cs_requests_tab:
-        st.caption("Feature asks and improvement opportunities from the currently filtered Customer Signals view.")
+    def _is_bw_actionable(post):
+        text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
+        sub_lower = post.get("subreddit", "").lower()
+        if sub_lower in _BW_EXCLUDE_SUBS:
+            return False
+        if any(ex in text_lower for ex in _BW_EXCLUDE):
+            return False
+        if any(pos in text_lower for pos in _BW_POSITIVE):
+            return False
+        return (any(n in text_lower for n in _BW_PLATFORM_NAMES)
+                or sub_lower in _BW_EBAY_SUBS
+                or any(kw in text_lower for kw in _BW_FEATURE_KW))
 
-        REQUEST_HINTS = [
-            "should", "wish", "need", "please add", "feature", "why can't", "allow", "option to", "improve",
-        ]
+    bw_candidates = [
+        i for i in normalized
+        if (_taxonomy_type(i) in ("Complaint", "Bug Report") or i.get("brand_sentiment") == "Negative")
+        and _is_bw_actionable(i)
+    ]
+    bw_buckets = {cat: [] for cat in _BW_CATEGORIES}
+    for insight in bw_candidates:
+        text_lower = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+        for cat, config in _BW_CATEGORIES.items():
+            if any(kw in text_lower for kw in config["keywords"]):
+                bw_buckets[cat].append(insight)
+                break
+    sorted_cats = sorted(_BW_CATEGORIES.items(), key=lambda x: len(bw_buckets[x[0]]), reverse=True)
+    active_cats = [(cat, config) for cat, config in sorted_cats if bw_buckets[cat]]
+    total_bw = sum(len(bw_buckets[cat]) for cat, _ in active_cats)
 
-        request_posts = [
-            i for i in filtered
-            if _taxonomy_type(i) == "Feature Request"
-            or any(h in (i.get("text", "") + " " + i.get("title", "")).lower() for h in REQUEST_HINTS)
-        ]
+    # Flatten top issues across all categories, sorted by score
+    all_bw = []
+    for cat in bw_buckets:
+        for item in bw_buckets[cat]:
+            item_copy = dict(item)
+            item_copy["_bw_cat"] = cat
+            item_copy["_bw_icon"] = _BW_CATEGORIES[cat]["icon"]
+            item_copy["_bw_owner"] = _BW_CATEGORIES[cat]["owner"]
+            all_bw.append(item_copy)
+    all_bw.sort(key=lambda x: (x.get("signal_strength", 0), x.get("score", 0)), reverse=True)
 
-        st.metric("Request Signals", len(request_posts))
-        if not request_posts:
-            st.info("No request-like signals in this filtered view.")
-        else:
-            req_topic_counts = defaultdict(int)
-            for i in request_posts:
-                req_topic_counts[_taxonomy_topic(i)] += 1
-            st.caption("Top request topics: " + " · ".join([f"{k} ({v})" for k, v in sorted(req_topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]]))
+    if not all_bw:
+        st.info("No actionable platform issues in the current view. Adjust filters or run scrapers.")
+    else:
+        bw_m1, bw_m2, bw_m3 = st.columns(3)
+        bw_m1.metric("Actionable Issues", total_bw)
+        bw_m2.metric("Problem Areas", len(active_cats))
+        top_cat_name = active_cats[0][0] if active_cats else "None"
+        bw_m3.metric("Hottest Area", top_cat_name, delta=f"{len(bw_buckets.get(top_cat_name, []))} signals", delta_color="inverse")
 
-            for idx, post in enumerate(sorted(request_posts, key=lambda x: (x.get("score", 0), x.get("post_date", "")), reverse=True)[:20], 1):
-                title = post.get("title", "")[:120] or post.get("text", "")[:120]
-                ttype = _taxonomy_type(post)
-                topic = _taxonomy_topic(post)
-                score = post.get("score", 0)
-                date = post.get("post_date", "")
-                src = post.get("source", "")
-                url = post.get("url", "")
-                link = f" · [Source]({url})" if url else ""
-                st.markdown(f"**{idx}.** {title}")
-                st.caption(f"{ttype} · {topic} · ⬆️ {score} · {src} · {date}{link}")
+        for idx, item in enumerate(all_bw[:8], 1):
+            score = item.get("score", 0)
+            sev = "🔴" if score >= 50 else ("🟡" if score >= 10 else "⚪")
+            text = item.get("text", "")[:250]
+            url = item.get("url", "")
+            link = f" · [Source]({url})" if url else ""
+            st.markdown(f"**{idx}.** {sev} {item['_bw_icon']} {text}{'...' if len(item.get('text', '')) > 250 else ''}")
+            st.caption(f"⬆️ {score} · {item['_bw_cat']} · Owner: {item['_bw_owner']} · {item.get('post_date', '')}{link}")
 
-    with cs_raw_tab:
-        st.caption("Full customer signal explorer for the current filters.")
+        # AI Broken Windows Executive Brief
+        def _generate_bw_brief_inline(categories, buckets):
+            try:
+                from components.ai_suggester import _chat, MODEL_MAIN
+            except ImportError:
+                return None
+            digest = ""
+            for cat, config in categories[:6]:
+                items = buckets[cat]
+                if not items:
+                    continue
+                digest += f"\n## {cat} ({len(items)} signals, Owner: {config['owner']})\n"
+                for p in sorted(items, key=lambda x: x.get("score", 0), reverse=True)[:5]:
+                    text = p.get("text", "")[:150].replace("\n", " ")
+                    digest += f"- [{p.get('score',0)} pts] {text}\n"
+            prompt = f"""You are a Senior Product Manager at eBay writing a Broken Windows executive brief.
+
+{digest}
+
+Write a crisp brief:
+
+### Top 3 Priorities to Fix Now
+
+**1. [Issue]** (Owner: [team])
+- **What's broken:** (1-2 sentences, name exact flow/feature/policy)
+- **User impact:** (1 sentence)
+- **Suggested fix:** (1 concrete action)
+
+**2. [Issue]** (Owner: [team])
+- **What's broken:** / **User impact:** / **Suggested fix:**
+
+**3. [Issue]** (Owner: [team])
+- **What's broken:** / **User impact:** / **Suggested fix:**
+
+### Emerging Risks
+- (1-2 bullets about patterns that could become bigger)
+
+Be extremely specific. Name exact features and flows."""
+            try:
+                return _chat(MODEL_MAIN, "Write sharp, specific product briefs.", prompt, max_completion_tokens=800, temperature=0.3)
+            except Exception:
+                return None
+
+        bw_brief_key = "bw_executive_brief"
+        if st.button("🧠 Generate AI Executive Brief", key="btn_bw_brief"):
+            st.session_state[bw_brief_key] = "__generating__"
+            st.rerun()
+        if st.session_state.get(bw_brief_key) == "__generating__":
+            with st.spinner("Analyzing top issues across all categories..."):
+                result = _generate_bw_brief_inline(active_cats, bw_buckets)
+            st.session_state[bw_brief_key] = result or "AI analysis unavailable."
+            st.rerun()
+        if st.session_state.get(bw_brief_key) and st.session_state[bw_brief_key] != "__generating__":
+            with st.container(border=True):
+                st.markdown(st.session_state[bw_brief_key])
+
+    st.markdown("---")
+
+    # ═══════════════════════════════════════════════
+    # 📊 PROBLEM BREAKDOWN
+    # ═══════════════════════════════════════════════
+    if active_cats:
+        st.markdown("### 📊 Problem Breakdown by Area")
+        st.caption("Expand any category for details and per-area AI analysis.")
+
+        for cat, config in active_cats:
+            items = bw_buckets[cat]
+            total_eng = sum(i.get("score", 0) for i in items)
+            sev = "🔴" if len(items) >= 15 else ("🟡" if len(items) >= 5 else "🟢")
+
+            with st.expander(f"{sev} {config['icon']} **{cat}** — {len(items)} issues · ⬆️ {total_eng} · Owner: {config['owner']}"):
+                cat_brief_key = f"bw_cat_brief_{cat}"
+                if st.button(f"🧠 AI Summary", key=f"btn_{cat_brief_key}"):
+                    st.session_state[cat_brief_key] = "__generating__"
+                    st.rerun()
+                if st.session_state.get(cat_brief_key) == "__generating__":
+                    digest_lines = []
+                    for p in sorted(items, key=lambda x: x.get("score", 0), reverse=True)[:10]:
+                        text = p.get("text", "")[:200].replace("\n", " ")
+                        digest_lines.append(f"[{p.get('score',0)} pts] {text}")
+                    cat_prompt = f"""Analyze these {len(items)} user reports about "{cat}" on eBay. Write a 4-sentence summary:
+1. What specific things are broken or frustrating
+2. How many users are affected and how severely
+3. The #1 thing to fix first and why
+4. One specific Jira ticket title for the top fix
+
+Reports:
+""" + "\n".join(digest_lines)
+                    with st.spinner(f"Analyzing {cat}..."):
+                        try:
+                            from components.ai_suggester import _chat, MODEL_MAIN
+                            result = _chat(MODEL_MAIN, "Write specific, actionable product analysis.", cat_prompt, max_completion_tokens=300, temperature=0.3)
+                        except Exception:
+                            result = None
+                    st.session_state[cat_brief_key] = result or "AI analysis unavailable."
+                    st.rerun()
+                if st.session_state.get(cat_brief_key) and st.session_state[cat_brief_key] != "__generating__":
+                    with st.container(border=True):
+                        st.markdown(st.session_state[cat_brief_key])
+
+                sorted_items = sorted(items, key=lambda x: x.get("score", 0), reverse=True)
+                for idx, insight in enumerate(sorted_items[:6], 1):
+                    text = insight.get("text", "")[:300]
+                    score = insight.get("score", 0)
+                    url = insight.get("url", "")
+                    subtag = _taxonomy_topic(insight)
+                    st.markdown(f"**{idx}.** {text}{'...' if len(insight.get('text', '')) > 300 else ''}")
+                    meta = f"⬆️ {score}"
+                    if subtag and subtag.lower() not in ("general", "unknown"):
+                        meta += f" · {subtag}"
+                    if url:
+                        meta += f" · [Source]({url})"
+                    st.caption(meta)
+                if len(items) > 6:
+                    st.caption(f"+ {len(items) - 6} more signals")
+
+        st.markdown("---")
+
+    # ═══════════════════════════════════════════════
+    # 🚨 CHURN & RETENTION RISKS
+    # ═══════════════════════════════════════════════
+    churn_signals = [i for i in filtered if i.get("type_tag") == "Churn Signal"]
+    if churn_signals:
+        st.markdown("### 🚨 Churn & Retention Risks")
+        st.caption(f"{len(churn_signals)} signals where users mention leaving eBay or switching to competitors.")
+        for idx, post in enumerate(sorted(churn_signals, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
+            text = post.get("text", "")[:220]
+            score = post.get("score", 0)
+            url = post.get("url", "")
+            link = f" · [Source]({url})" if url else ""
+            st.markdown(f"**{idx}.** 🚨 {text}{'...' if len(post.get('text', '')) > 220 else ''}")
+            st.caption(f"⬆️ {score} · {post.get('source', '')} · {post.get('post_date', '')}{link}")
+        st.markdown("---")
+
+    # ═══════════════════════════════════════════════
+    # 💡 WHAT CUSTOMERS ARE ASKING FOR
+    # ═══════════════════════════════════════════════
+    st.markdown("### 💡 What Customers Are Asking For")
+    st.caption("Feature requests and improvement ideas from the community.")
+
+    _REQUEST_HINTS = [
+        "should", "wish", "need", "please add", "feature", "why can't", "allow", "option to", "improve",
+    ]
+    request_posts = [
+        i for i in filtered
+        if _taxonomy_type(i) == "Feature Request"
+        or any(h in (i.get("text", "") + " " + i.get("title", "")).lower() for h in _REQUEST_HINTS)
+    ]
+
+    if not request_posts:
+        st.info("No feature requests in current filter view.")
+    else:
+        req_topic_counts = defaultdict(int)
+        for i in request_posts:
+            req_topic_counts[_taxonomy_topic(i)] += 1
+        rq1, rq2 = st.columns([1, 3])
+        rq1.metric("Request Signals", len(request_posts))
+        with rq2:
+            st.caption("**Top request topics:** " + " · ".join([f"{k} ({v})" for k, v in sorted(req_topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]]))
+
+        for idx, post in enumerate(sorted(request_posts, key=lambda x: (x.get("score", 0), x.get("post_date", "")), reverse=True)[:12], 1):
+            text = post.get("text", "")[:200] or post.get("title", "")[:200]
+            score = post.get("score", 0)
+            url = post.get("url", "")
+            link = f" · [Source]({url})" if url else ""
+            st.markdown(f"**{idx}.** 💡 {text}{'...' if len((post.get('text', '') or post.get('title', ''))) > 200 else ''}")
+            st.caption(f"{_taxonomy_topic(post)} · ⬆️ {score} · {post.get('source', '')} · {post.get('post_date', '')}{link}")
+
+    st.markdown("---")
+
+    # ═══════════════════════════════════════════════
+    # 🤝 PARTNER HEALTH
+    # ═══════════════════════════════════════════════
+    STRATEGIC_PARTNERS = {
+        "PSA Vault": ["psa vault", "vault storage", "vault sell", "vault auction", "vault withdraw"],
+        "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
+        "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
+        "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
+        "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
+    }
+    partner_counts = {}
+    for pname, kws in STRATEGIC_PARTNERS.items():
+        cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
+        if cnt > 0:
+            partner_counts[pname] = cnt
+    if partner_counts:
+        st.markdown("### 🤝 Partner Health")
+        st.caption("Signal volume for strategic partners and subsidiaries.")
+        pcols = st.columns(min(len(partner_counts), 5))
+        for idx, (pname, cnt) in enumerate(sorted(partner_counts.items(), key=lambda x: -x[1])):
+            pcols[idx % len(pcols)].metric(pname, cnt)
+        st.markdown("---")
+
+    # ═══════════════════════════════════════════════
+    # 📋 DEEP DIVE EXPLORER
+    # ═══════════════════════════════════════════════
+    with st.expander(f"📋 Deep Dive — Explore All {len(filtered)} Signals", expanded=False):
+        st.caption("Full insight cards with AI analysis, suggested actions, and document generation.")
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="ebay_voice")
 
@@ -2002,353 +2351,6 @@ with tabs[4]:
                 st.info("No checklists match your filters.")
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3 (continued): BROKEN WINDOWS — Bugs, UX confusion, fee friction
-with cs_problems_tab:
-    st.markdown("### 🔧 Broken Windows")
-    st.markdown("Platform bugs, UX friction, and product pain points that eBay, Goldin, or TCGPlayer engineering teams can fix.")
-
-    # ── Broken window categories ──
-    # Keywords must be specific enough to avoid matching generic hobby posts
-    # Posts already passed _is_bw_actionable (confirmed eBay-related),
-    # so category keywords just need to identify the TOPIC, not re-confirm eBay context.
-    BW_CATEGORIES = {
-        "Returns & INAD Abuse": {
-            "keywords": ["inad", "item not as described", "forced return", "return abuse", "partial refund",
-                         "case opened", "money back guarantee", "buyer scam", "empty box",
-                         "return request", "refund", "sided with buyer", "unfair return",
-                         "buyer opened a case", "sent back wrong", "returned wrong item",
-                         "buyer claims", "not received", "not as described"],
-            "icon": "🔄",
-            "owner": "Returns PM",
-        },
-        "Trust & Fraud": {
-            "keywords": ["scam", "fraud", "shill bid", "fake listing", "counterfeit",
-                         "fake card", "says it's fake", "it's fake", "not authentic",
-                         "stolen", "replica", "knock off", "suspicious seller",
-                         "scammer", "ripped off", "got scammed"],
-            "icon": "🛡️",
-            "owner": "Trust & Safety PM",
-        },
-        "Authentication & Grading": {
-            "keywords": ["authenticity guarantee", "authentication", "misgrade",
-                         "wrong grade", "fake grade", "grading error",
-                         "grading issue", "grading problem", "grading complaint",
-                         "psa error", "bgs error", "cgc error",
-                         "grade came back", "grading service", "grading turnaround"],
-            "icon": "🏅",
-            "owner": "Authentication PM",
-        },
-        "Vault Bugs": {
-            "keywords": ["psa vault", "ebay vault", "vault sell", "vault inventory", "vault withdraw",
-                         "vault shipping", "vault delay", "vault error", "vault listing",
-                         "stuck in vault", "vault payout", "vault card"],
-            "icon": "🏦",
-            "owner": "Vault PM",
-        },
-        "Fee & Pricing Confusion": {
-            "keywords": ["fee", "final value", "insertion fee", "take rate", "13.25%",
-                         "13%", "12.9%", "ebay takes", "fee structure", "hidden fee",
-                         "commission", "overcharged", "too expensive to sell"],
-            "icon": "💸",
-            "owner": "Monetization PM",
-        },
-        "Shipping & Label Issues": {
-            "keywords": ["shipping label", "tracking", "lost in mail", "lost package",
-                         "damaged in transit", "standard envelope", "can't print label",
-                         "wrong weight", "shipping estimate", "shipping damage",
-                         "arrived damaged", "crushed", "print label"],
-            "icon": "📦",
-            "owner": "Shipping PM",
-        },
-        "Payment & Payout Issues": {
-            "keywords": ["payment hold", "payout", "funds held", "managed payments", "hold my money",
-                         "can't get paid", "money held", "release my funds", "payment processing",
-                         "payment delay", "stripe verification", "stopped payment"],
-            "icon": "💳",
-            "owner": "Payments PM",
-        },
-        "Seller Protection Gaps": {
-            "keywords": ["seller protection", "always side with buyer", "sided with buyer",
-                         "no recourse", "lost case", "hate selling", "done with ebay",
-                         "leaving ebay", "doesn't care about sellers", "unfair to sellers",
-                         "seller cancelled", "cancelled my order"],
-            "icon": "🛑",
-            "owner": "Seller Experience PM",
-        },
-        "App & UX Bugs": {
-            "keywords": ["ebay app", "ebay website", "app glitch", "app bug", "app crash",
-                         "ebay not working", "ebay won't load", "error message",
-                         "seller hub bug", "seller hub glitch", "seller hub broken",
-                         "white screen", "blank page", "ebay crash",
-                         "ebay glitch", "ebay bug", "app won't", "app keeps",
-                         "app freezes", "app update broke"],
-            "icon": "🐛",
-            "owner": "App/UX PM",
-        },
-        "Account & Policy Enforcement": {
-            "keywords": ["account suspended", "account restricted", "banned",
-                         "locked out", "policy violation", "vero",
-                         "listing removed", "flagged", "delisted", "taken down"],
-            "icon": "🔒",
-            "owner": "Trust & Safety PM",
-        },
-        "Search & Listing Visibility": {
-            "keywords": ["search broken", "can't find my listing", "no views",
-                         "algorithm", "best match", "search ranking",
-                         "not showing up", "buried", "no impressions", "no traffic", "cassini"],
-            "icon": "🔍",
-            "owner": "Search PM",
-        },
-        "Promoted Listings Friction": {
-            "keywords": ["promoted listing", "promoted standard", "promoted advanced",
-                         "pay to play", "ad rate", "forced to promote", "ad spend",
-                         "promoted listings fee", "visibility tax"],
-            "icon": "📢",
-            "owner": "Ads PM",
-        },
-    }
-
-    # ── Filter to platform-actionable issues only ──
-    # Must mention eBay/Goldin/TCGPlayer by name OR be from an eBay-focused subreddit
-    BW_PLATFORM_NAMES = ["ebay", "e-bay", "goldin", "tcgplayer", "tcg player", "comc"]
-    BW_EBAY_SUBS = [
-        "ebay", "flipping", "ebaysellers", "ebayselleradvice",
-    ]
-    # Specific platform features (only count if post also mentions a platform name or is from eBay sub)
-    BW_FEATURE_KW = [
-        "seller hub", "promoted listing", "vault", "authenticity guarantee",
-        "standard envelope", "managed payments", "global shipping",
-        "shipping label", "inad", "item not as described", "money back guarantee",
-        "payment hold", "payout", "final value fee", "insertion fee",
-        "promoted standard", "promoted advanced", "best match",
-        "psa vault", "vault inventory",
-    ]
-    BW_EXCLUDE = [
-        "stole my", "nephew", "my cards were stolen", "house fire",
-        "fake money", "porch pick up", "hands free controller", "nintendo",
-        "dvd of an old film", "mercari", "card show drama",
-        "gameshire", "$100b endgame", "the whale, the trio",
-        "bitcoin treasury", "diamond hands", "short squeeze", "moass",
-        "to the moon", "hedge fund", "warrants to blockchain",
-        "official sales/trade/breaks", "leave a comment here in this thread with your sales",
-        # Generic hobby posts
-        "iron maiden", "secret lair", "new to mtg", "new player",
-        "dev kit", "ps vita", "playstation",
-        # Collecting stories that mention eBay in passing
-        "my daughter swears", "help! my daughter",
-        "catalogued my grandmother", "my inheritance",
-        "stopped ordering from amazon", "what website or app do you use instead",
-        "help me sell my storage unit", "jet engine",
-        "would you block this buyer? i already can smell",
-        "i only brought 300",
-        "seed vault extract", "arc raiders", "stella montis",
-        # False PSA/Vault matches from gaming/public-service posts
-        "psa if you think you might want to play survival",
-        "make a placeholder vault", "placeholder vault",
-        "rewards in experimental", "play survival in the future",
-        "survival vault", "public service announcement",
-        # Celebrations, jokes, memes, personal stories
-        "instant retirement", "can't believe i pulled", "best email to receive",
-        "second best email", "shove it up", "going up on ebay today",
-        "look what i found", "look what i pulled", "just pulled this",
-        "mail day", "pickup of the year", "grail acquired",
-        "finally got one", "dream card", "holy grail",
-        "lcs pickup", "card show pickup", "hit of the year",
-        "rip results", "box break results", "case break results",
-        "my collection", "collection update", "added to the pc",
-        "rate my collection", "show off", "nfs/nft",
-    ]
-    BW_EXCLUDE_SUBS = [
-        "superstonk", "gme_meltdown", "amcstock",
-        "bitcoin", "stocks", "investing",
-        "gamestop", "gmejungle", "fwfbthinktank", "gme",
-        "kleinanzeigen_betrug",
-        "arcraiders", "nostupidquestions",
-    ]
-
-    # Positive/celebratory signals — these are NOT broken windows even if tagged negative
-    BW_POSITIVE_SIGNALS = [
-        "best email", "second best email", "can't believe i pulled",
-        "instant retirement", "just pulled", "look what i",
-        "finally got", "dream card", "holy grail", "grail acquired",
-        "love ebay", "ebay came through", "great experience",
-        "shout out to ebay", "thank you ebay", "ebay is the best",
-        "happy with", "so excited", "pumped", "let's go",
-        "w pull", "huge pull", "insane pull", "fire pull",
-    ]
-
-    def _is_bw_actionable(post):
-        text_lower = (post.get("text", "") + " " + post.get("title", "")).lower()
-        sub_lower = post.get("subreddit", "").lower()
-        if sub_lower in BW_EXCLUDE_SUBS:
-            return False
-        if any(ex in text_lower for ex in BW_EXCLUDE):
-            return False
-        # Skip celebratory / positive posts that aren't actual complaints
-        if any(pos in text_lower for pos in BW_POSITIVE_SIGNALS):
-            return False
-        # Must mention a platform by name, OR be from an eBay sub, OR mention a specific eBay feature
-        mentions_platform = any(name in text_lower for name in BW_PLATFORM_NAMES)
-        from_ebay_sub = sub_lower in BW_EBAY_SUBS
-        mentions_feature = any(kw in text_lower for kw in BW_FEATURE_KW)
-        return mentions_platform or from_ebay_sub or mentions_feature
-
-    bw_candidates = [
-        i for i in normalized
-        if (_taxonomy_type(i) in ("Complaint", "Bug Report") or i.get("brand_sentiment") == "Negative")
-        and _is_bw_actionable(i)
-    ]
-
-    # Classify into categories
-    bw_buckets = {cat: [] for cat in BW_CATEGORIES}
-    for insight in bw_candidates:
-        text_lower = (insight.get("text", "") + " " + insight.get("title", "")).lower()
-        for cat, config in BW_CATEGORIES.items():
-            if any(kw in text_lower for kw in config["keywords"]):
-                bw_buckets[cat].append(insight)
-                break
-
-    # Sort categories by volume
-    sorted_cats = sorted(BW_CATEGORIES.items(), key=lambda x: len(bw_buckets[x[0]]), reverse=True)
-    active_cats = [(cat, config) for cat, config in sorted_cats if bw_buckets[cat]]
-
-    # ── Executive summary metrics ──
-    total_bw = sum(len(bw_buckets[cat]) for cat, _ in active_cats)
-    bw1, bw2, bw3 = st.columns(3)
-    bw1.metric("Actionable Issues", total_bw, help="Platform bugs, friction, and pain points that teams can fix")
-    bw2.metric("Problem Areas", len(active_cats))
-    top_cat_name = active_cats[0][0] if active_cats else "None"
-    top_cat_count = len(bw_buckets[top_cat_name]) if active_cats else 0
-    bw3.metric("Hottest Area", f"{top_cat_name}", delta=f"{top_cat_count} signals", delta_color="inverse")
-
-    # ── AI Broken Windows Executive Brief ──
-    def _generate_bw_brief(categories, buckets):
-        try:
-            from components.ai_suggester import _chat, MODEL_MAIN
-        except ImportError:
-            return None
-
-        # Build digest of top issues per category
-        digest = ""
-        for cat, config in categories[:6]:
-            items = buckets[cat]
-            if not items:
-                continue
-            digest += f"\n## {cat} ({len(items)} signals, Owner: {config['owner']})\n"
-            for p in sorted(items, key=lambda x: x.get("score", 0), reverse=True)[:5]:
-                text = p.get("text", "")[:150].replace("\n", " ")
-                digest += f"- [{p.get('score',0)} pts] {text}\n"
-
-        prompt = f"""You are a Senior Product Manager at eBay writing a Broken Windows executive brief for the engineering and product leadership team.
-
-Below are the top platform issues grouped by category, sourced from Reddit, Twitter, YouTube, and forums.
-
-{digest}
-
-Write a crisp executive brief in this EXACT format:
-
-### Top 3 Priorities to Fix Now
-
-**1. [Specific issue name]** (Owner: [team])
-- **What's broken:** (1-2 sentences, be VERY specific — name the exact flow, feature, or policy)
-- **User impact:** (1 sentence — who is affected and how badly)
-- **Suggested fix:** (1 concrete action)
-
-**2. [Specific issue name]** (Owner: [team])
-- **What's broken:** (1-2 sentences)
-- **User impact:** (1 sentence)
-- **Suggested fix:** (1 concrete action)
-
-**3. [Specific issue name]** (Owner: [team])
-- **What's broken:** (1-2 sentences)
-- **User impact:** (1 sentence)
-- **Suggested fix:** (1 concrete action)
-
-### Emerging Risks
-- (1-2 bullet points about patterns that could become bigger problems)
-
-Be extremely specific. Name exact features, flows, and policies. No generic advice like "investigate" or "improve the experience"."""
-
-        try:
-            return _chat(
-                MODEL_MAIN,
-                "You write sharp, specific product briefs for engineering leadership. Every recommendation must be concrete and actionable.",
-                prompt,
-                max_completion_tokens=800,
-                temperature=0.3
-            )
-        except Exception:
-            return None
-
-    bw_brief_key = "bw_executive_brief"
-    if st.button("🧠 Generate AI Broken Windows Brief", key="btn_bw_brief"):
-        st.session_state[bw_brief_key] = "__generating__"
-        st.rerun()
-    if st.session_state.get(bw_brief_key) == "__generating__":
-        with st.spinner("Analyzing broken windows across all categories..."):
-            result = _generate_bw_brief(active_cats, bw_buckets)
-        st.session_state[bw_brief_key] = result or "AI analysis unavailable."
-        st.rerun()
-    if st.session_state.get(bw_brief_key) and st.session_state[bw_brief_key] != "__generating__":
-        with st.container(border=True):
-            st.markdown(st.session_state[bw_brief_key])
-
-    st.markdown("---")
-
-    # ── Per-category drill-downs ──
-    for cat, config in active_cats:
-        items = bw_buckets[cat]
-        total_engagement = sum(i.get("score", 0) for i in items)
-        severity = "🔴" if len(items) >= 15 else ("🟡" if len(items) >= 5 else "🟢")
-
-        with st.expander(f"{config['icon']} **{cat}** — {len(items)} issues · ⬆️ {total_engagement} engagement · Owner: {config['owner']}", expanded=False):
-            # Per-category AI brief
-            cat_brief_key = f"bw_cat_brief_{cat}"
-            if st.button(f"🧠 AI Summary", key=f"btn_{cat_brief_key}"):
-                st.session_state[cat_brief_key] = "__generating__"
-                st.rerun()
-            if st.session_state.get(cat_brief_key) == "__generating__":
-                digest_lines = []
-                for p in sorted(items, key=lambda x: x.get("score", 0), reverse=True)[:10]:
-                    text = p.get("text", "")[:200].replace("\n", " ")
-                    digest_lines.append(f"[{p.get('score',0)} pts] {text}")
-                cat_prompt = f"""Analyze these {len(items)} user reports about "{cat}" on eBay. Write a 4-sentence summary:
-1. What specific things are broken or frustrating (be concrete — name features/flows)
-2. How many users are affected and how severely
-3. The #1 thing to fix first and why
-4. One specific Jira ticket title for the top fix
-
-Reports:
-""" + "\n".join(digest_lines)
-                with st.spinner(f"Analyzing {cat}..."):
-                    try:
-                        from components.ai_suggester import _chat, MODEL_MAIN
-                        result = _chat(MODEL_MAIN, "Write specific, actionable product analysis.", cat_prompt, max_completion_tokens=300, temperature=0.3)
-                    except Exception:
-                        result = None
-                st.session_state[cat_brief_key] = result or "AI analysis unavailable."
-                st.rerun()
-            if st.session_state.get(cat_brief_key) and st.session_state[cat_brief_key] != "__generating__":
-                with st.container(border=True):
-                    st.markdown(st.session_state[cat_brief_key])
-
-            # Top signals
-            sorted_items = sorted(items, key=lambda x: x.get("score", 0), reverse=True)
-            for idx, insight in enumerate(sorted_items[:6], 1):
-                text = insight.get("text", "")[:300]
-                score = insight.get("score", 0)
-                url = insight.get("url", "")
-                subtag = _taxonomy_topic(insight)
-                st.markdown(f"**{idx}.** {text}{'...' if len(insight.get('text', '')) > 300 else ''}")
-                meta = f"⬆️ {score}"
-                if subtag and subtag.lower() not in ("general", "unknown"):
-                    meta += f" · {subtag}"
-                if url:
-                    meta += f" · [Source]({url})"
-                st.caption(meta)
-            if len(items) > 6:
-                st.caption(f"+ {len(items) - 6} more signals")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
