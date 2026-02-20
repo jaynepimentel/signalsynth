@@ -36,6 +36,21 @@ RSS_FEEDS = [
         "url": "https://www.dacardworld.com/blog/feed/",
         "focus": "Product news, chase cards, market trends",
     },
+    {
+        "name": "Sports Collectors Daily",
+        "url": "https://www.sportscollectorsdaily.com/feed/",
+        "focus": "Vintage cards, auction results, market trends, hobby news",
+    },
+    {
+        "name": "PSA Blog",
+        "url": "https://www.psacard.com/articles/feed",
+        "focus": "Grading updates, population reports, authentication, card market",
+    },
+    {
+        "name": "Blowout Buzz",
+        "url": "https://www.blowoutcards.com/blog/feed/",
+        "focus": "Product previews, case breaks, hobby box reviews, market trends",
+    },
 ]
 
 SAVE_PATH = "data/scraped_news_rss_posts.json"

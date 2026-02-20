@@ -127,9 +127,16 @@ def _generate_document(doc_type: str, cluster: Dict[str, Any], selected_insights
     if not insights:
         return "No insights selected for document generation."
     
-    # Build context from insights
-    sorted_insights = sorted(insights, key=lambda x: x.get("type_tag") == "Complaint", reverse=True)
-    sample_texts = [f"[{i.get('type_tag', 'Feedback')}] {i.get('text', '')[:200]}" for i in sorted_insights[:15]]
+    # Build context from insights (prioritize by signal_strength, then complaints)
+    sorted_insights = sorted(insights, key=lambda x: (x.get("signal_strength", 0), x.get("type_tag") == "Complaint"), reverse=True)
+    sample_texts = []
+    for i in sorted_insights[:18]:
+        src = i.get('source', '')
+        sub = i.get('subreddit', '')
+        src_label = f"r/{sub}" if sub else src
+        url = i.get('url', '')
+        url_ref = f" [src: {url}]" if url else ""
+        sample_texts.append(f"[{i.get('type_tag', 'Feedback')}] [{src_label}] {i.get('text', '')[:300]}{url_ref}")
     context = "\n---\n".join(sample_texts)
     
     theme_name = cluster.get("title", "Unknown")
@@ -149,9 +156,9 @@ def _generate_document(doc_type: str, cluster: Dict[str, Any], selected_insights
     try:
         doc = _chat(
             MODEL_MAIN,
-            f"You are an expert at writing {template['name']}s. Be specific and actionable.",
+            f"You are an expert at writing {template['name']}s. Be specific and actionable. Always cite verbatim user quotes to ground your claims.",
             prompt,
-            max_completion_tokens=1500,
+            max_completion_tokens=2000,
             temperature=0.4
         )
         return doc
@@ -226,9 +233,14 @@ def _generate_cluster_summary(cluster: Dict[str, Any]) -> str:
     if not insights:
         return "No insights to summarize."
     
-    # Build context from top insights (prioritize complaints)
-    sorted_insights = sorted(insights, key=lambda x: x.get("type_tag") == "Complaint", reverse=True)
-    sample_texts = [f"[{i.get('type_tag', 'Feedback')}] {i.get('text', '')[:250]}" for i in sorted_insights[:12]]
+    # Build context from top insights (prioritize by signal_strength, then complaints)
+    sorted_insights = sorted(insights, key=lambda x: (x.get("signal_strength", 0), x.get("type_tag") == "Complaint"), reverse=True)
+    sample_texts = []
+    for i in sorted_insights[:15]:
+        src = i.get('source', '')
+        sub = i.get('subreddit', '')
+        src_label = f"r/{sub}" if sub else src
+        sample_texts.append(f"[{i.get('type_tag', 'Feedback')}] [{src_label}] {i.get('text', '')[:350]}")
     context = "\n---\n".join(sample_texts)
     
     theme_name = cluster.get("title", "Unknown")
@@ -259,9 +271,9 @@ Cite 1-2 verbatim user quotes from the signals to ground each claim. Write in a 
     try:
         summary = _chat(
             MODEL_MAIN, 
-            "You are a senior product strategist who writes crisp, actionable executive briefings. You never use filler words or vague statements.", 
+            "You are a senior product strategist who writes crisp, actionable executive briefings. You never use filler words or vague statements. Always cite specific user quotes.", 
             prompt, 
-            max_completion_tokens=350, 
+            max_completion_tokens=500, 
             temperature=0.4
         )
         st.session_state[cache_key] = summary

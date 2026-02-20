@@ -116,6 +116,12 @@ RE_MARKETPLACE = re.compile(r"\b(ebay|mercari|whatnot|goldin|pwcc|comc|myslabs|a
 RE_SELLER_BUYER = re.compile(r"\b(seller|buyer|listing|sold|purchase|order|transaction|checkout|cart|bid|auction|buy\s*it\s*now|bin|offer|counterfeit|scam|fraud)\b", re.I)
 RE_GRADING_SERVICE = re.compile(r"\b(psa|bgs|sgc|csg|cgc|beckett|gem\s*mint|population|pop\s*report|registry|crossover|crack|regrade|resubmit|raw|slab)\b", re.I)
 
+# Competitive churn — users explicitly leaving eBay for a competitor
+RE_CHURN = re.compile(r"(switch(?:ed|ing)?\s+to|mov(?:ed|ing)\s+to|left\s+ebay|leaving\s+ebay|done\s+with\s+ebay|quit\s+ebay|stop(?:ped)?\s+(?:using|selling\s+on|buying\s+on)\s+ebay|(?:fanatics|whatnot|mercari|stockx|heritage|goldin|alt)\s+(?:is|are)\s+(?:better|easier|cheaper)|rather\s+(?:use|sell\s+on|buy\s+on)\s+(?:fanatics|whatnot|mercari|stockx|heritage|goldin|alt))", re.I)
+
+# Praise — explicitly positive eBay signals (retention/advocacy)
+RE_PRAISE = re.compile(r"(love\s+ebay|ebay\s+is\s+(?:great|amazing|awesome|the\s+best)|best\s+(?:marketplace|platform)|recommend\s+ebay|ebay\s+(?:nailed|knocked)\s+it|authenticity\s+guarantee\s+(?:is\s+)?(?:great|amazing|awesome)|vault\s+(?:is\s+)?(?:great|amazing|awesome)|price\s+guide\s+(?:is\s+)?(?:great|amazing|helpful))", re.I)
+
 # Noise phrases to exclude (collection flexes, personal stories)
 NOISE_PHRASES = [
     "just pulled", "look what i found", "mail day", "new pickup", "got this today",
@@ -469,7 +475,17 @@ def enrich(post):
     # No longer gates on has_ebay_context; if a signal is detected, tag it.
     # Priority order: most specific/actionable first.
     subtag = "General"
-    if has_trust:
+    # Competitive churn is the highest-priority signal — user is leaving
+    has_churn = bool(RE_CHURN.search(combined))
+    if has_churn:
+        topics.append("Competitive Churn")
+
+    # Praise signals matter for advocacy tracking
+    has_praise = bool(RE_PRAISE.search(combined))
+
+    if has_churn:
+        subtag = "Competitive Churn"
+    elif has_trust:
         subtag = "Trust"
     elif has_psa:
         subtag = "Grading Turnaround"
@@ -531,6 +547,9 @@ def enrich(post):
         # Customer service
         elif any(w in combined for w in ["customer service", "support", "called ebay", "chat with ebay", "ebay rep", "no response"]):
             subtag = "Customer Service"
+        # Beckett (grading competitor / acquisition target)
+        elif any(w in combined for w in ["beckett", "bgs ", "beckett grading", "beckett acquisition"]):
+            subtag = "Beckett"
         # Subsidiaries (Goldin, TCGPlayer)
         elif any(w in combined for w in ["goldin", "tcgplayer", "tcg player"]):
             subtag = "Subsidiaries"
@@ -544,10 +563,26 @@ def enrich(post):
     
     # Classify the insight
     insight_type, sentiment, is_urgent = classify_insight(combined)
+
+    # Override type for churn and praise signals
+    if has_churn:
+        insight_type = "Churn Signal"
+        if sentiment == "Neutral":
+            sentiment = "Negative"
+    if has_praise and insight_type == "Feedback":
+        insight_type = "Praise"
     
-    # Determine persona more accurately
-    if "seller" in combined or "listing" in combined or "sold" in combined:
+    # Determine persona with richer segmentation
+    if any(w in combined for w in ["power seller", "top rated", "top-rated", "full time seller", "full-time seller", "high volume"]):
+        persona = "Power Seller"
+    elif any(w in combined for w in ["new to selling", "first time selling", "just started selling", "beginner seller"]):
+        persona = "New Seller"
+    elif "seller" in combined or "listing" in combined or "sold" in combined:
         persona = "Seller"
+    elif any(w in combined for w in ["new to the hobby", "just started collecting", "beginner", "first card", "getting into"]):
+        persona = "New Collector"
+    elif any(w in combined for w in ["invest", "roi", "portfolio", "long term hold", "flip ", "flipping"]):
+        persona = "Investor"
     elif "buyer" in combined or "bought" in combined or "purchase" in combined:
         persona = "Buyer"
     elif "collect" in combined:
@@ -563,6 +598,15 @@ def enrich(post):
     else:
         clarity = "Low"
     
+    # Compute signal_strength composite score (0-100)
+    # Combines engagement, text specificity, and recency
+    engagement = min(post.get("score", 0), 200) / 200 * 30  # up to 30 pts
+    specificity = min(len(text), 500) / 500 * 25  # up to 25 pts (longer = more specific)
+    pain_bonus = 20 if bool(RE_PAIN.search(combined)) else 0  # 20 pts for pain
+    churn_bonus = 15 if has_churn else 0  # 15 pts for churn risk
+    topic_bonus = 10 if subtag != "General" else 0  # 10 pts for specific topic
+    signal_strength = round(min(engagement + specificity + pain_bonus + churn_bonus + topic_bonus, 100), 1)
+
     return {
         "text": text[:2000],
         "title": title,
@@ -573,6 +617,7 @@ def enrich(post):
         "_logged_date": datetime.now().isoformat(),
         "score": post.get("score", 0),
         "num_comments": post.get("num_comments", 0),
+        "signal_strength": signal_strength,
         "_payment_issue": has_payment,
         "_upi_flag": has_upi,
         "_high_end_flag": has_high_asp,
@@ -584,6 +629,8 @@ def enrich(post):
         "is_refund_issue": has_refund,
         "is_fees_concern": has_fees,
         "is_urgent": is_urgent,
+        "is_churn_signal": has_churn,
+        "is_praise_signal": has_praise,
         "topic_focus": topics,
         "topic_focus_list": topics,
         "taxonomy": {
@@ -659,6 +706,10 @@ def main():
     refund = sum(1 for i in unique if i.get("is_refund_issue"))
     fees = sum(1 for i in unique if i.get("is_fees_concern"))
     
+    churn = sum(1 for i in unique if i.get("is_churn_signal"))
+    praise = sum(1 for i in unique if i.get("is_praise_signal"))
+    avg_strength = round(sum(i.get("signal_strength", 0) for i in unique) / max(len(unique), 1), 1)
+
     print(f"\n📊 Signals found:")
     print(f"  💳 Payment issues: {payment}")
     print(f"  ⚠️ UPI/Non-paying: {upi}")
@@ -669,6 +720,9 @@ def main():
     print(f"  📦 Shipping issues: {shipping}")
     print(f"  🔄 Refund/Return issues: {refund}")
     print(f"  💰 Fee concerns: {fees}")
+    print(f"  🚨 Competitive churn: {churn}")
+    print(f"  🌟 Praise signals: {praise}")
+    print(f"  📈 Avg signal strength: {avg_strength}/100")
 
 if __name__ == "__main__":
     main()

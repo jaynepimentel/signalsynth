@@ -48,6 +48,14 @@ SUBREDDITS = [
     "VintageApple",
     "Sneakers",
     "SneakerMarket",
+    # Investing / Finance
+    "PokeInvesting",
+    "mtgfinance",
+    # Additional TCG
+    "magicTCG",
+    "DigimonCardGame2020",
+    "OnePieceTCG",
+    "lorcana",
 ]
 
 # Search queries for cross-subreddit search
@@ -392,6 +400,14 @@ def filter_high_signal_posts(posts: List[Dict[str, Any]], min_score: int = 2) ->
         "customer service", "support", "help", "advice", "recommend",
         "experience", "review", "warning", "beware", "tip", "psa",
         "bgs", "cgc", "ebay", "whatnot", "fanatics", "marketplace",
+        # Competitive signals
+        "switched to", "moving to", "better than ebay", "leaving ebay",
+        "heritage", "goldin", "tcgplayer", "alt.xyz", "mercari",
+        # Product-specific
+        "price guide", "card ladder", "scan to price", "authenticity guarantee",
+        "promoted listing", "best offer", "buy it now",
+        # Beckett
+        "beckett", "bgs", "beckett grading", "beckett acquisition",
     ]
     
     high_signal = []

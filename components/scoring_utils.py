@@ -116,7 +116,7 @@ def infer_clarity(text):
 
 def detect_competitor_and_partner_mentions(text):
     lo=(text or "").lower()
-    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin"]  # pwcc kept as alias — rebranded to Fanatics Collect
+    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin","beckett","stockx","mercari"]  # pwcc kept as alias — rebranded to Fanatics Collect
     partners=["psa","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
     market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold"]
     return {
@@ -129,14 +129,17 @@ def generate_insight_title(text):
     t=(text or "").strip()
     return t[:60].capitalize()+"..." if len(t)>60 else t.capitalize()
 
+RE_CHURN_SCORING = re.compile(r"(switch(?:ed|ing)?\s+to|mov(?:ed|ing)\s+to|left\s+ebay|leaving\s+ebay|done\s+with\s+ebay|quit\s+ebay|stop(?:ped)?\s+(?:using|selling\s+on|buying\s+on)\s+ebay)", re.I)
+
 def classify_opportunity_type(text):
     lo=(text or "").lower()
+    if bool(RE_CHURN_SCORING.search(text or "")): return "Retention Risk"
     if any(x in lo for x in ["payment","payment declined","card declined","wire transfer","bank transfer","ach","charge failed"]): return "Conversion Blocker"
     if "upi" in lo or "unpaid item" in lo or "buyer never paid" in lo: return "Policy Risk"
     if any(x in lo for x in ["policy","terms","blocked","suspended"]): return "Policy Risk"
     if any(x in lo for x in ["conversion","checkout","didn’t buy","abandon","hesitated"]): return "Conversion Blocker"
     if any(x in lo for x in ["leaving","quit","stop using","moved to","switched to"]): return "Retention Risk"
-    if any(x in lo for x in ["compared to","fanatics","whatnot","alt","loupe","tiktok"]): return "Competitor Signal"
+    if any(x in lo for x in ["compared to","fanatics","whatnot","alt","loupe","tiktok","beckett"]): return "Competitor Signal"
     if any(x in lo for x in ["trust","scam","fraud"]): return "Trust Erosion"
     if any(x in lo for x in ["love","recommend","amazing","best"]): return "Referral Amplifier"
     return "General Insight"
@@ -154,6 +157,7 @@ def tag_topic_focus(text):
     if "vault" in lo: tags.append("Vault")
     if "grading" in lo and any(x in lo for x in ["psa","bgs","sgc","pcgs","ngc"]): tags.append("Grading")
     if any(x in lo for x in ["case break","box break","repack","mystery pack"]): tags.append("Case Break / Repack")
+    if bool(RE_CHURN_SCORING.search(text or "")): tags.append("Competitive Churn")
     if "authentication" in lo or "authenticity guarantee" in lo: tags.append("Authenticity Guarantee")
     if "population report" in lo or "pop report" in lo: tags.append("Pop Report")
     if any(x in lo for x in ["search","filter","filters","relevancy"]): tags.append("Search/Relevancy")
