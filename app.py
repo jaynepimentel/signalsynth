@@ -312,7 +312,7 @@ Content: {post_text}
 Write a brief (5 sentences max):
 1. Signal type (service issue / integration gap / positive)
 2. Impact on eBay users
-3. Root cause hypothesis
+3. Key drivers or contributing factors
 4. Recommended action
 5. Partnership health (Green/Yellow/Red)""",
     }
@@ -514,8 +514,8 @@ else:
 
         context_lines = []
         for p in relevant[:20]:
-            title = p.get("title", "")[:100]
-            text = p.get("text", "")[:200].replace("\n", " ")
+            title = p.get("title", "")[:120]
+            text = p.get("text", "")[:350].replace("\n", " ")
             source = p.get("source", "")
             sub = p.get("subreddit", "")
             subtag = _taxonomy_topic(p)
@@ -552,16 +552,17 @@ If evidence is weak, explicitly say so.
 
 Format your answer exactly with these headings:
 1) **Executive answer** (3-5 sentences, direct answer first)
-2) **What the signals show** (3-6 bullets with concrete evidence from the provided signals)
+2) **What the signals show** (3-6 bullets with concrete evidence — cite verbatim user quotes in "italics" to ground each claim)
 3) **Implications for eBay** (2-4 bullets)
 4) **Recommended actions (next 30 days)** (3-5 numbered actions with owner + expected impact)
 5) **Confidence & gaps** (1-3 bullets)
 
 Rules:
 - Never invent facts not present in the provided signals.
+- Always cite 2-3 verbatim user quotes from the signals to back up your key points.
 - Prefer specific product/policy terms over generic language.
 - Mention uncertainty clearly if evidence is limited.
-- Keep total response under ~350 words unless explicitly asked for more.
+- Keep total response under ~400 words unless explicitly asked for more.
 
 DATASET SUMMARY:
 {stats_block}
@@ -775,14 +776,14 @@ Write an executive-ready issue brief in this EXACT format:
 
 **Confidence & data gaps:** (1-2 bullets. What are we confident about? What should be validated before committing roadmap?)
 
-Be extremely specific and concrete. Reference actual product features, flows, and policies. No generic advice. Avoid jargon and fluff."""
+Cite 2-3 verbatim user quotes from the signals to ground your claims. Be extremely specific and concrete. Reference actual product features, flows, and policies. No generic advice. Avoid jargon and fluff."""
 
         try:
             return _chat(
                 MODEL_MAIN,
-                "You are an executive communications-grade product strategist. Write crisp, concrete briefs with quantified impact and clear ownership.",
+                "You are an executive communications-grade product strategist. Write crisp, concrete briefs with quantified impact and clear ownership. Always cite specific user quotes.",
                 prompt,
-                max_completion_tokens=600,
+                max_completion_tokens=700,
                 temperature=0.3
             )
         except Exception as e:

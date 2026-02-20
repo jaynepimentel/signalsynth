@@ -34,7 +34,7 @@
 
 ### AI-Powered Documents
 
-- 🤖 **Executive Summary** — Problem, impact, root cause, recommendation
+- 🤖 **Executive Summary** — Problem, impact, key drivers, recommendation
 - 📄 **PRD** — User stories, requirements, success metrics
 - 💼 **BRD** — Business case for stakeholders
 - 📰 **PRFAQ** — Amazon-style press release + FAQ

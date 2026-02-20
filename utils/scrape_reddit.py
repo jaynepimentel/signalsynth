@@ -96,6 +96,14 @@ SEARCH_QUERIES = [
     "selling cards ebay",
     "buying cards ebay",
     "graded card ebay",
+    # Beckett (acquisition, grading, pricing — competitive intel)
+    "beckett grading",
+    "beckett acquisition",
+    "beckett fanatics",
+    "beckett ebay",
+    "beckett pricing cards",
+    "beckett vs psa",
+    "beckett card grading review",
 ]
 
 SAVE_PATH = "data/scraped_reddit_posts.json"

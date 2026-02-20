@@ -610,7 +610,7 @@ Generate a well-structured JIRA ticket with:
 ## User Question
 [Summarize what the user is confused about]
 
-## Root Cause Analysis
+## Analysis
 [Why is this confusing? Is documentation unclear? Is the UX not intuitive?]
 
 ## Acceptance Criteria
@@ -715,8 +715,8 @@ Generate a well-structured JIRA ticket with:
 - Platform: {brand}
 - Category: {subtag}
 
-## Possible Root Cause
-[Initial hypothesis]
+## Initial Hypothesis
+[What's likely happening based on user signals]
 
 ## Suggested Fix
 [If obvious, suggest a fix approach]"""

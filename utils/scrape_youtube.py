@@ -47,6 +47,9 @@ SEARCH_QUERIES = [
     "ebay vs fanatics cards",
     "card breaks live",
     "graded cards selling tips",
+    "beckett grading cards",
+    "beckett acquisition fanatics",
+    "beckett ebay cards",
 ]
 
 # Always-attempt videos. Can be extended via YOUTUBE_WATCHLIST_URLS env var

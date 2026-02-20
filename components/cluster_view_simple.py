@@ -36,7 +36,7 @@ Write a complete PRD with these sections:
 5. **Out of Scope** - What we're NOT building
 6. **Open Questions** - Unknowns to resolve
 
-Be specific with examples from the signals. Write for engineers."""
+Be specific with examples from the signals. Cite verbatim user quotes to ground key points. Write for engineers."""
     },
     "BRD": {
         "name": "Business Requirements Document",
@@ -58,7 +58,7 @@ Write a complete BRD with these sections:
 6. **Benefits & ROI** - Expected impact
 7. **Risks & Mitigations** - What could go wrong?
 
-Write for business stakeholders, not engineers."""
+Cite verbatim user quotes to ground the problem and opportunity. Write for business stakeholders, not engineers."""
     },
     "PRFAQ": {
         "name": "Press Release / FAQ",
@@ -109,7 +109,7 @@ Create 5 Jira tickets. For each ticket:
 - **Acceptance Criteria:** 3-4 bullet points
 - **Story Points:** 1, 2, 3, 5, 8, or 13
 
-Make tickets specific and actionable. Include edge cases in acceptance criteria."""
+Make tickets specific and actionable. Include verbatim user quotes in descriptions where relevant. Include edge cases in acceptance criteria."""
     },
 }
 
@@ -251,10 +251,10 @@ Write an EXECUTIVE SUMMARY (4-5 sentences) that a VP of Product would read. Incl
 
 1. **THE PROBLEM**: What specific pain point are users experiencing? Be concrete, not vague.
 2. **BUSINESS IMPACT**: Why should we care? Revenue risk, churn signal, competitive threat, or brand damage?
-3. **ROOT CAUSE HYPOTHESIS**: What's likely causing this based on the signals?
+3. **KEY DRIVERS**: What's likely causing this based on the signals?
 4. **RECOMMENDED ACTION**: One specific next step (investigate, build, fix, or deprioritize).
 
-Write in a direct, confident executive tone. No bullet points. No hedging. Be specific with examples from the signals."""
+Cite 1-2 verbatim user quotes from the signals to ground each claim. Write in a direct, confident executive tone. No hedging. Be specific with examples from the signals."""
     
     try:
         summary = _chat(

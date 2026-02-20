@@ -124,6 +124,18 @@ COMPETITORS = {
         "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG"],
         "required_keywords": ["tcgplayer", "tcg player", "card", "pokemon", "magic", "yugioh", "marketplace", "price"],
     },
+    "Beckett": {
+        "type": "competitor",
+        "search_terms": [
+            "beckett grading cards", "beckett grading review",
+            "beckett acquisition", "beckett fanatics acquisition",
+            "beckett vs psa grading", "beckett pricing tool",
+            "beckett marketplace", "beckett ebay",
+            "beckett raw card review", "BGS beckett grading",
+        ],
+        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "hockeycards", "pokemontcg", "PSAcard"],
+        "required_keywords": ["beckett", "bgs"],
+    },
     "PSA Consignment": {
         "type": "ebay_subsidiary",
         "search_terms": [
