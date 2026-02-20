@@ -2614,16 +2614,56 @@ with tabs[4]:
 with tabs[0]:
     with st.expander("💡 New here? How to use SignalSynth", expanded=True):
         st.markdown("""
-**SignalSynth** turns noisy community chatter into product-ready direction for eBay Collectibles teams.
+**SignalSynth** is an AI-powered intelligence engine built for eBay Collectibles & Trading Cards leadership. It continuously scrapes, enriches, and synthesizes community signals into executive-ready insights — so you don't have to manually read thousands of posts to know what's happening.
 
-### Start here
-- **📋 Strategy:** identify top themes, then generate PRD/BRD/PRFAQ/Jira drafts.
-- **🎯 Customer Signals:** explore real user evidence and feedback.
-- **⚔️ Competitor Intel + 📰 Industry & Trends:** pressure-test decisions with market context.
-- **📦 Checklists & Sealed Launches:** track release/checklist timing.
-- **📊 Charts:** review KPIs and prioritize actions.
+---
 
-**Tip:** Use Ask AI above the tabs for fast synthesis before diving in.
+#### 🤖 Start with Ask AI (above the tabs)
+The fastest way to get answers. Type any question and get a strategic, source-cited response grounded in real data. Examples:
+- *"What are the top complaints about the PSA Vault?"*
+- *"How does Whatnot threaten eBay in live breaks?"*
+- *"What do sellers want most from eBay right now?"*
+
+If your question has thin results, SignalSynth will offer to **live-scrape Google News and Reddit** for that topic, add the results to the dataset, and re-analyze — so the system learns your interests over time.
+
+---
+
+#### 📡 Where the data comes from
+SignalSynth pulls from **10+ sources** across the collectibles ecosystem:
+
+| Source | What it captures |
+|--------|-----------------|
+| **Reddit** | r/baseballcards, r/sportscards, r/eBay, r/pokemontcg, r/footballcards + 20 more subs |
+| **Twitter / X** | Hobby influencers, eBay mentions, competitor chatter |
+| **YouTube** | Hobby channels, product reviews, break commentary + top comments |
+| **eBay Forums** | Seller and buyer community discussions (via Google News fallback) |
+| **Bluesky** | Emerging hobby community signals |
+| **Cllct** | Industry news from Cllct.com |
+| **News RSS** | Sports Collectors Daily, PSA Blog, Blowout Buzz, Cardlines, Beckett |
+| **Podcasts** | Sports Cards Nonsense, Sports Card Investor, Stacking Slabs, Hobby News Daily |
+| **Forums & Blogs** | Blowout Forums, Net54, Bench Trading, Alt.xyz |
+| **Competitors** | Whatnot, Fanatics Collect, Heritage, COMC, Alt — scraped for competitive intel |
+
+Every post is enriched with **sentiment, topic, persona, churn risk, signal strength**, and taxonomy tags.
+
+---
+
+#### 🗂️ Tab guide
+
+- **📋 Strategy** (you're here) — AI-clustered strategic themes from user signals. Drill into any theme, then generate **PRDs, BRDs, PRFAQs, or Jira tickets** with one click.
+- **⚔️ Competitor Intel** — What Whatnot, Fanatics, Heritage, and others are doing. Complaints (conquest opportunities), praise (competitive threats), policy changes, and platform comparisons.
+- **🎯 Customer Signals** — Executive briefing: health snapshot → top issues to fix → problem breakdown → churn risks → customer asks → partner health → deep-dive explorer. Filters apply across all sections.
+- **📰 Industry & Trends** — Top industry news, podcast episodes, viral posts, YouTube commentary, Price Guide signals, and a full filterable feed.
+- **📦 Checklists & Sealed Launches** — Upcoming product releases and published checklists from Topps, Panini, Bowman, Upper Deck, and more.
+- **📊 Charts** — KPI dashboard: sentiment breakdown, top issues, feature request themes, and opportunity areas.
+
+---
+
+#### 💡 Tips
+- **Filters matter** — use topic, sentiment, and time filters on the Customer Signals tab to focus on what you care about.
+- **AI buttons everywhere** — look for 🧠 buttons to generate executive briefs, competitive analyses, and per-category summaries.
+- **Source links** — every insight links back to the original post so you can verify context.
+- **Data refreshes** — run `python utils/scrape_all.py` → `python quick_process.py` → `python precompute_clusters.py` to pull the latest signals.
         """)
 
     st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")
