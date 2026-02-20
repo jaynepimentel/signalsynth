@@ -523,8 +523,10 @@ else:
 
     st.caption("Try this prompt: **is there any signal about PSA vault issues?**")
 
-    if ask_clicked and user_question.strip():
-        question = user_question.strip()
+    # Also trigger on ad-hoc re-ask after scrape
+    _auto_reask = st.session_state.pop("_adhoc_auto_ask", None)
+    if (ask_clicked or _auto_reask) and (user_question.strip() or _auto_reask):
+        question = (_auto_reask or user_question).strip()
         st.session_state["qa_messages"].append({"role": "user", "content": question})
 
         q_lower = question.lower()
@@ -825,12 +827,8 @@ RELEVANT SIGNALS (sorted by relevance to the question):
     if st.session_state.get("_adhoc_reask"):
         reask_q = st.session_state.pop("_adhoc_reask")
         st.session_state["qa_draft"] = reask_q
-        # Simulate ask click by setting flag
         st.session_state["_adhoc_auto_ask"] = reask_q
-
-    if st.session_state.pop("_adhoc_auto_ask", None):
-        # This will be picked up on the next rerun cycle
-        pass
+        st.rerun()
 
     if st.session_state["qa_messages"]:
         with st.expander("AI Q&A responses", expanded=True):
@@ -1726,7 +1724,7 @@ with tabs[2]:
                 or any(kw in text_lower for kw in _BW_FEATURE_KW))
 
     bw_candidates = [
-        i for i in normalized
+        i for i in filtered
         if (_taxonomy_type(i) in ("Complaint", "Bug Report") or i.get("brand_sentiment") == "Negative")
         and _is_bw_actionable(i)
     ]
@@ -1966,7 +1964,9 @@ Reports:
     # ═══════════════════════════════════════════════
     # 📋 DEEP DIVE EXPLORER
     # ═══════════════════════════════════════════════
-    with st.expander(f"📋 Deep Dive — Explore All {len(filtered)} Signals", expanded=False):
+    st.markdown("### 📋 Deep Dive Explorer")
+    _show_explorer = st.checkbox(f"Show all {len(filtered)} signals", value=False, key="cs_explorer_toggle")
+    if _show_explorer:
         st.caption("Full insight cards with AI analysis, suggested actions, and document generation.")
         model = get_model()
         render_insight_cards(filtered, model, key_prefix="ebay_voice")
