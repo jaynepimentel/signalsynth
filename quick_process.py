@@ -164,9 +164,36 @@ SCRAPED_FILES = [
     "data/scraped_youtube_posts.json",  # YouTube transcripts + comments
     "data/scraped_forums_blogs_posts.json",  # Forums & blogs (Bench, Alt, Net54, COMC, etc.)
     "data/scraped_blowout_posts.json",  # Blowout Cards indirect
+    "data/scraped_ebay_forums.json",  # eBay community forums (Google News fallback)
+    "data/scraped_cllct_posts.json",  # Cllct.com industry news
+    "data/scraped_news_rss_posts.json",  # RSS news feeds (Beckett, Cardlines, PSA Blog, etc.)
+    "data/scraped_podcast_posts.json",  # Podcast episodes (Sports Card Nonsense, etc.)
+    "data/scraped_community_posts.json",  # Community discussions
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
 ]
+
+# Sources that are already topic-curated by their scrapers — they get a lighter
+# relevance bar because the scraper already ensured they're about collectibles/eBay.
+# These only need to pass basic quality checks (not spam, not too short), not the
+# full "pain + eBay mention" test that Reddit posts need.
+CURATED_SOURCES = {
+    # eBay-specific forums — already about eBay by definition
+    "eBay Forum", "eBay Forums", "Google News (eBay Forums)",
+    # Industry news sites — curated by the scraper for collectibles relevance
+    "Cllct", "News:Beckett News", "News:Cardlines", "News:Just Collect Blog",
+    "News:Dave and Adams", "News:Cardboard Connection", "News:Sports Collectors Daily",
+    "News:PSA Blog", "News:Blowout Buzz",
+    # Podcasts — all are collectibles industry podcasts
+    "Podcast",
+    # Forums already curated for collectibles
+    "Blowout Forums", "Net54 Baseball", "Bench Trading",
+    # Competitor intel scrapers — already filtered for competitor relevance
+    "COMC", "Whatnot", "Fanatics Collect", "Heritage Auctions",
+    "Alt.xyz Blog",
+    # Bluesky — small volume, already keyword-filtered by scraper
+    "Bluesky",
+}
 
 
 def is_relevant(text, subreddit=""):
@@ -265,8 +292,29 @@ def is_relevant(text, subreddit=""):
     # Non-ecosystem posts need both pain AND eBay mention
     if has_pain and (has_ebay or has_psa_vault):
         return True
-    
+
     return False
+
+
+def is_relevant_curated(text):
+    """Lighter relevance filter for curated sources (news, podcasts, forums, eBay forums).
+    These were already topic-filtered by their scrapers, so we only exclude obvious noise."""
+    text_lower = text.lower()
+    if len(text_lower) < 30:
+        return False
+    # Exclude bot / automated
+    bot_patterns = ["i am a bot", "this action was performed automatically", "automoderator"]
+    if any(bp in text_lower for bp in bot_patterns):
+        return False
+    # Exclude pure sales/listing posts
+    sales_patterns = ["[h]", "[w]", "[fs]", "[ft]", "paypal only", "prices include shipping"]
+    if any(sp in text_lower for sp in sales_patterns):
+        return False
+    # Exclude non-collectibles categories
+    non_collectibles = ["shoes", "sneakers", "laptop", "computer", "phone", "furniture", "woodworking"]
+    if any(nc in text_lower for nc in non_collectibles):
+        return False
+    return True
 
 
 # YouTube comment quality keywords — market intelligence, product feedback, competitive intel
@@ -666,6 +714,11 @@ def main():
             yt_quality_count += 1
             continue
 
+        # Curated sources get a lighter relevance bar
+        if source in CURATED_SOURCES and is_relevant_curated(text):
+            relevant_posts.append(post)
+            continue
+
         if is_relevant(text, subreddit):
             relevant_posts.append(post)
 
@@ -723,6 +776,15 @@ def main():
     print(f"  🚨 Competitive churn: {churn}")
     print(f"  🌟 Praise signals: {praise}")
     print(f"  📈 Avg signal strength: {avg_strength}/100")
+
+    # Source distribution
+    from collections import Counter
+    src_dist = Counter(i.get("source", "Unknown") for i in unique)
+    print(f"\n📡 Source distribution:")
+    for src, cnt in src_dist.most_common():
+        pct = round(cnt / max(len(unique), 1) * 100, 1)
+        print(f"  {src}: {cnt} ({pct}%)")
+    print(f"  Total unique sources: {len(src_dist)}")
 
 if __name__ == "__main__":
     main()
