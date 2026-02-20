@@ -56,6 +56,11 @@ try:
 except ImportError:
     from scrape_forums_blogs import run_forums_blogs_scraper
 
+try:
+    from utils.scrape_podcasts import run_podcast_scraper
+except ImportError:
+    from scrape_podcasts import run_podcast_scraper
+
 CONSOLIDATED_PATH = "data/all_scraped_posts.json"
 
 
@@ -130,6 +135,7 @@ def run_all_scrapers(
     include_twitter: bool = True,
     include_youtube: bool = True,
     include_forums_blogs: bool = True,
+    include_podcasts: bool = True,
 ) -> List[Dict[str, Any]]:
     """Run all scrapers and consolidate results."""
     
@@ -258,6 +264,19 @@ def run_all_scrapers(
             print(f"\u274c Forums & Blogs scraper failed: {e}")
             source_counts["Forums & Blogs"] = 0
     
+    # Podcasts (Sports Card Nonsense, Hobby Wire, Card Shop Life, etc.)
+    if include_podcasts:
+        print("\n" + "=" * 40)
+        print("🎙️ PODCASTS")
+        print("=" * 40)
+        try:
+            posts = run_podcast_scraper()
+            all_posts.extend(posts)
+            source_counts["Podcasts"] = len(posts)
+        except Exception as e:
+            print(f"❌ Podcast scraper failed: {e}")
+            source_counts["Podcasts"] = 0
+
     # Blowout Cards (indirect via Reddit, Bluesky, Google News)
     if include_blowout:
         print("\n" + "=" * 40)
@@ -325,6 +344,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-twitter", action="store_true", help="Skip Twitter/X scraping")
     parser.add_argument("--no-youtube", action="store_true", help="Skip YouTube scraping")
     parser.add_argument("--no-forums-blogs", action="store_true", help="Skip Forums & Blogs scraping")
+    parser.add_argument("--no-podcasts", action="store_true", help="Skip Podcast scraping")
     
     args = parser.parse_args()
     
@@ -338,4 +358,5 @@ if __name__ == "__main__":
         include_twitter=not args.no_twitter,
         include_youtube=not args.no_youtube,
         include_forums_blogs=not args.no_forums_blogs,
+        include_podcasts=not args.no_podcasts,
     )

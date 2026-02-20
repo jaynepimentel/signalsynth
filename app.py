@@ -413,6 +413,14 @@ try:
     except:
         pass
 
+    # Podcast episodes
+    podcast_raw = []
+    try:
+        with open("data/scraped_podcast_posts.json", "r", encoding="utf-8") as f:
+            podcast_raw = json.load(f)
+    except:
+        pass
+
     clusters_count = 0
     try:
         with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
@@ -1380,6 +1388,11 @@ with tabs[3]:
         p["_industry_source"] = "Cllct"
         industry_posts.append(p)
 
+    # Podcasts (Sports Card Nonsense, Hobby Wire, Card Shop Life, etc.)
+    for p in podcast_raw:
+        p["_industry_source"] = "Podcast"
+        industry_posts.append(p)
+
     # YouTube — group comments by video, filter for quality comments only
     YT_QUALITY_KW = [
         "ebay", "fee", "shipping", "listing", "seller", "buyer", "auction",
@@ -1631,6 +1644,8 @@ with tabs[3]:
             if base_score <= 0:
                 if src.startswith("News") or src == "Cllct":
                     base_score = 120
+                elif src == "Podcast":
+                    base_score = 110
                 elif src in ("YouTube", "YouTube (transcript)"):
                     base_score = 90
                 elif src in ("Blowout Forums", "Net54 Baseball", "Alt.xyz Blog"):
@@ -1675,6 +1690,7 @@ with tabs[3]:
                 "Twitter": "🐦", "Bluesky": "🦋",
                 "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
                 "Alt.xyz Blog": "📝", "COMC": "🃏", "Cllct": "🗞️",
+                "Podcast": "🎙️",
             }
             icon = source_icons.get(source_label, "📄")
             sub_label = f"r/{sub} · " if sub else ""
@@ -1683,6 +1699,36 @@ with tabs[3]:
             age_label = f" · {age_days}d ago" if age_days < 9999 else ""
             st.markdown(f"**{rank}.** {icon} **{title}**")
             st.caption(f"⬆️ {score} pts · {sub_label}{source_label} · {date}{age_label}{link}")
+
+        # ── Industry News & Podcasts ──
+        st.markdown("### 📰 Industry News & Podcasts")
+        st.caption("Latest from Cllct, Beckett, Cardlines, Sports Card Nonsense, and other industry sources — curated for your strategy team.")
+
+        # Gather news + podcast posts, sorted by date
+        _news_sources = {"News", "Cllct", "Podcast", "Alt.xyz Blog", "Blowout Forums", "Net54 Baseball"}
+        news_podcast_feed = sorted(
+            [p for p in industry_posts if p.get("_industry_source") in _news_sources],
+            key=lambda x: x.get("post_date", ""),
+            reverse=True,
+        )
+
+        if not news_podcast_feed:
+            st.info("No industry news or podcast data. Run scrapers to collect this content.")
+        else:
+            _np_icons = {"News": "📰", "Cllct": "🗞️", "Podcast": "🎙️", "Alt.xyz Blog": "📝", "Blowout Forums": "🗣️", "Net54 Baseball": "⚾"}
+            for idx, np_post in enumerate(news_podcast_feed[:15], 1):
+                np_src = np_post.get("_industry_source", "")
+                np_icon = _np_icons.get(np_src, "📄")
+                np_title = np_post.get("title", "")[:130] or np_post.get("text", "")[:130]
+                np_date = np_post.get("post_date", "")
+                np_url = np_post.get("url", "")
+                np_podcast = np_post.get("podcast_name", "")
+                np_link = f" · [Read / Listen ↗]({np_url})" if np_url else ""
+                np_show = f" · {np_podcast}" if np_podcast and np_podcast not in np_title else ""
+                st.markdown(f"**{idx}.** {np_icon} {np_title}")
+                st.caption(f"{np_src}{np_show} · {np_date}{np_link}")
+
+        st.markdown("---")
 
         # ── eBay Price Guide Spotlight ──
         st.markdown("### 🧭 eBay Price Guide Signals")
@@ -1801,6 +1847,7 @@ with tabs[3]:
                 "COMC": "🃏", "Whatnot": "📱", "Fanatics Collect": "🏈",
                 "Bench Trading": "🔄", "TCDB": "🗂️",
                 "Reddit": "💬", "Twitter": "🐦", "Bluesky": "🦋",
+                "Cllct": "🗞️", "Podcast": "🎙️",
             }
             icon = source_icons.get(source_label, "📄")
 
