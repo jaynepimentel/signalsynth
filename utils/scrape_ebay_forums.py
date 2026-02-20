@@ -1,4 +1,6 @@
 # scrape_ebay_forums.py — eBay Community Forums scraper
+# Direct scraping blocked by Akamai (HTTP 202), so we use Google News RSS
+# as primary source to capture indexed eBay community discussions.
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -7,6 +9,8 @@ import time
 import re
 from datetime import datetime
 from typing import List, Dict, Any
+from urllib.parse import quote
+from xml.etree import ElementTree as ET
 
 # eBay Community Forums to scrape
 FORUM_SECTIONS = [
@@ -194,12 +198,62 @@ def scrape_thread(url: str, title: str, section: str) -> List[Dict[str, Any]]:
     return posts
 
 
+def _google_news_rss(query, source_label="eBay Forums", max_results=100):
+    """Fetch indexed eBay community content from Google News RSS."""
+    posts = []
+    try:
+        encoded = quote(query)
+        rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
+        r = requests.get(rss_url, headers=HEADERS, timeout=15)
+        if r.status_code != 200:
+            return posts
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item")[:max_results]:
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            pub_date = (item.findtext("pubDate") or "").strip()
+            description = re.sub(r"<[^>]+>", "", (item.findtext("description") or "")).strip()
+
+            post_date = datetime.now().strftime("%Y-%m-%d")
+            if pub_date:
+                try:
+                    from email.utils import parsedate_to_datetime
+                    post_date = parsedate_to_datetime(pub_date).strftime("%Y-%m-%d")
+                except Exception:
+                    pass
+
+            text = title
+            if description and description != title:
+                text = f"{title}\n{description}"
+            if len(text) < 20:
+                continue
+
+            posts.append({
+                "text": text,
+                "title": title,
+                "source": source_label,
+                "url": link,
+                "username": "",
+                "post_date": post_date,
+                "_logged_date": datetime.now().isoformat(),
+                "forum_section": "Google News",
+                "search_term": query,
+                "score": 0,
+                "post_id": f"ebay_gn_{hash(link) % 10**8}",
+            })
+    except Exception as e:
+        print(f"    [WARN] Google News RSS failed for '{query}': {e}")
+    return posts
+
+
 def run_ebay_forums_scraper() -> List[Dict[str, Any]]:
     """Main entry point for eBay Forums scraping."""
     print("🛒 Starting eBay Community Forums scraper...")
     
     all_posts = []
     
+    # Try direct scraping first
+    direct_success = False
     for section in FORUM_SECTIONS:
         print(f"  📂 {section['name']}...")
         posts = scrape_forum_section(section, max_pages=2)
@@ -207,10 +261,36 @@ def run_ebay_forums_scraper() -> List[Dict[str, Any]]:
         if posts:
             print(f"  📥 {section['name']}: {len(posts)} posts")
             all_posts.extend(posts)
+            direct_success = True
         else:
             print(f"  ⚠️ {section['name']}: No posts found")
         
         time.sleep(1)
+    
+    # Fallback: Google News RSS for eBay community content
+    if not direct_success:
+        print("\n  📡 Direct scraping blocked — falling back to Google News RSS...")
+        gn_queries = [
+            'site:community.ebay.com',
+            'site:community.ebay.com seller',
+            'site:community.ebay.com trading cards',
+            'site:community.ebay.com collectibles',
+            'site:community.ebay.com vault',
+            'site:community.ebay.com shipping returns',
+            'site:community.ebay.com payments',
+            'site:community.ebay.com authenticity guarantee',
+            '"ebay community" seller complaint',
+            '"ebay community" trading cards feedback',
+            '"ebay community" collectibles issue',
+            '"ebay forum" seller problem',
+            '"ebay forum" buyer issue',
+            '"ebay community" fees policy change',
+        ]
+        for q in gn_queries:
+            print(f"    🔍 {q}")
+            posts = _google_news_rss(q)
+            all_posts.extend(posts)
+            time.sleep(1.0)
     
     if not all_posts:
         print("\n❌ No posts scraped from eBay Forums.")
