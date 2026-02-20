@@ -429,7 +429,34 @@ try:
     except:
         pass
 
+    # Adhoc scraped data (persisted from previous ad-hoc scrape requests)
+    adhoc_raw = []
+    try:
+        with open("data/adhoc_scraped_posts.json", "r", encoding="utf-8") as f:
+            adhoc_raw = json.load(f)
+    except:
+        pass
+
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
+
+    # Merge adhoc posts into normalized (lightweight — they have basic enrichment already)
+    for p in adhoc_raw:
+        p.setdefault("ideas", [])
+        p.setdefault("persona", "Unknown")
+        p.setdefault("journey_stage", "Unknown")
+        p.setdefault("brand_sentiment", p.get("brand_sentiment", "Neutral"))
+        p.setdefault("taxonomy", {"type": p.get("type_tag", "Discussion"), "topic": p.get("subtag", "General"), "theme": p.get("subtag", "General")})
+        p.setdefault("type_tag", (p.get("taxonomy") or {}).get("type", "Discussion"))
+        p.setdefault("subtag", (p.get("taxonomy") or {}).get("topic", "General"))
+        p.setdefault("theme", (p.get("taxonomy") or {}).get("theme", "General"))
+        p.setdefault("clarity", "Unknown")
+        p.setdefault("effort", "Unknown")
+        p.setdefault("target_brand", "Unknown")
+        p.setdefault("action_type", "Unclear")
+        p.setdefault("opportunity_tag", "General Insight")
+        p.setdefault("topic_focus_list", [])
+        p.setdefault("signal_strength", 30)
+        normalized.append(p)
 
     total = len(normalized)
     complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint" or i.get("brand_sentiment") == "Negative")
@@ -750,17 +777,64 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                     max_completion_tokens=2800,
                     temperature=0.25,
                 )
+            # Detect thin results — offer ad-hoc scrape
+            _is_thin = len(relevant) < 5
             st.session_state["qa_messages"].append({
                 "role": "assistant",
                 "content": response,
                 "sources": source_refs,
+                "_thin": _is_thin,
+                "_question": question,
+                "_relevant_count": len(relevant),
             })
         except Exception as e:
             st.session_state["qa_messages"].append({"role": "assistant", "content": f"⚠️ Error: {e}"})
 
+    # ── Handle ad-hoc scrape requests ──
+    if st.session_state.get("_adhoc_scrape_pending"):
+        adhoc_topic = st.session_state.pop("_adhoc_scrape_pending")
+        adhoc_question = st.session_state.pop("_adhoc_reask_question", adhoc_topic)
+        with st.spinner(f"🔍 Scraping Google News & Reddit for \"{adhoc_topic}\"..."):
+            try:
+                from utils.adhoc_scrape import run_adhoc_scrape
+                new_posts, summary = run_adhoc_scrape(adhoc_topic)
+                st.session_state["qa_messages"].append({
+                    "role": "assistant",
+                    "content": f"📡 **Ad-hoc scrape complete.** {summary}\n\nRe-analyzing with new data...",
+                })
+                # Merge new posts into normalized for immediate re-query
+                for p in new_posts:
+                    p.setdefault("ideas", [])
+                    p.setdefault("persona", p.get("persona", "Unknown"))
+                    p.setdefault("journey_stage", "Unknown")
+                    p.setdefault("brand_sentiment", p.get("brand_sentiment", "Neutral"))
+                    p.setdefault("taxonomy", {"type": p.get("type_tag", "Discussion"), "topic": p.get("subtag", "General"), "theme": p.get("subtag", "General")})
+                    p.setdefault("type_tag", p["taxonomy"]["type"])
+                    p.setdefault("subtag", p["taxonomy"]["topic"])
+                    normalized.append(p)
+                # Trigger re-ask by setting state
+                st.session_state["_adhoc_reask"] = adhoc_question
+            except Exception as e:
+                st.session_state["qa_messages"].append({
+                    "role": "assistant",
+                    "content": f"⚠️ Ad-hoc scrape failed: {e}",
+                })
+        st.rerun()
+
+    # ── Handle re-ask after ad-hoc scrape ──
+    if st.session_state.get("_adhoc_reask"):
+        reask_q = st.session_state.pop("_adhoc_reask")
+        st.session_state["qa_draft"] = reask_q
+        # Simulate ask click by setting flag
+        st.session_state["_adhoc_auto_ask"] = reask_q
+
+    if st.session_state.pop("_adhoc_auto_ask", None):
+        # This will be picked up on the next rerun cycle
+        pass
+
     if st.session_state["qa_messages"]:
         with st.expander("AI Q&A responses", expanded=True):
-            for msg in st.session_state["qa_messages"]:
+            for msg_idx, msg in enumerate(st.session_state["qa_messages"]):
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
                     # Render source links below assistant responses
@@ -773,6 +847,32 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                             short_title = (title[:90] + "…") if len(title) > 90 else title
                             src_lines.append(f"**[{ref_label}]** [{short_title}]({url}) · {platform}")
                         st.markdown("\n\n".join(src_lines))
+
+                    # Offer ad-hoc scrape when results are thin
+                    if msg.get("_thin") and msg.get("_question"):
+                        rel_count = msg.get("_relevant_count", 0)
+                        st.markdown("---")
+                        st.warning(
+                            f"⚠️ Only **{rel_count} matching signals** found in the current dataset. "
+                            f"Want me to do a live scrape of Google News and Reddit to find more?"
+                        )
+                        scrape_col1, scrape_col2 = st.columns([2, 3])
+                        with scrape_col1:
+                            if st.button("🔍 Scrape & Re-Analyze", key=f"adhoc_btn_{msg_idx}"):
+                                st.session_state["_adhoc_scrape_pending"] = msg["_question"]
+                                st.session_state["_adhoc_reask_question"] = msg["_question"]
+                                st.rerun()
+                        with scrape_col2:
+                            custom_topic = st.text_input(
+                                "Or refine the search topic:",
+                                value=msg["_question"],
+                                key=f"adhoc_topic_{msg_idx}",
+                            )
+                            if st.button("🔍 Scrape Custom Topic", key=f"adhoc_custom_btn_{msg_idx}"):
+                                st.session_state["_adhoc_scrape_pending"] = custom_topic
+                                st.session_state["_adhoc_reask_question"] = msg["_question"]
+                                st.rerun()
+
             if st.button("🗑️ Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
                 st.rerun()
