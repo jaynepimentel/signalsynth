@@ -512,8 +512,10 @@ else:
         scored.sort(key=lambda x: -x[1])
         relevant = [p for p, s in scored if s > 0][:30]
 
+        # Build numbered source references for the AI to cite
         context_lines = []
-        for p in relevant[:20]:
+        source_refs = []  # [(label, title, url, source_platform)]
+        for idx, p in enumerate(relevant[:20], 1):
             title = p.get("title", "")[:120]
             text = p.get("text", "")[:350].replace("\n", " ")
             source = p.get("source", "")
@@ -522,10 +524,14 @@ else:
             sentiment = p.get("brand_sentiment", "")
             score = p.get("score", 0)
             type_tag = _taxonomy_type(p)
+            url = p.get("url", "")
             sub_label = f"r/{sub}" if sub else source
+            ref_label = f"S{idx}"
             context_lines.append(
-                f"- [{type_tag}] [{sentiment}] [{subtag}] (score:{score}, {sub_label}) {title}: {text}"
+                f"- [{ref_label}] [{type_tag}] [{sentiment}] [{subtag}] (score:{score}, {sub_label}) {title}: {text}"
             )
+            if url:
+                source_refs.append((ref_label, title or text[:80], url, sub_label))
 
         total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
         total_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
@@ -550,19 +556,21 @@ else:
 Your response must be boardroom-ready: concise, specific, and grounded only in provided data.
 If evidence is weak, explicitly say so.
 
+Each signal below is tagged with a reference like [S1], [S2], etc. When you quote or reference a signal, include its tag so the reader can trace it back to the source.
+
 Format your answer exactly with these headings:
 1) **Executive answer** (3-5 sentences, direct answer first)
-2) **What the signals show** (3-6 bullets with concrete evidence — cite verbatim user quotes in "italics" to ground each claim)
+2) **What the signals show** (3-6 bullets with concrete evidence — cite verbatim user quotes in "italics" and tag each with its source reference like [S1])
 3) **Implications for eBay** (2-4 bullets)
 4) **Recommended actions (next 30 days)** (3-5 numbered actions with owner + expected impact)
 5) **Confidence & gaps** (1-3 bullets)
 
 Rules:
 - Never invent facts not present in the provided signals.
-- Always cite 2-3 verbatim user quotes from the signals to back up your key points.
+- Always cite 2-4 verbatim user quotes from the signals to back up your key points, with their [S#] reference.
 - Prefer specific product/policy terms over generic language.
 - Mention uncertainty clearly if evidence is limited.
-- Keep total response under ~400 words unless explicitly asked for more.
+- Keep total response under ~450 words unless explicitly asked for more.
 
 DATASET SUMMARY:
 {stats_block}
@@ -577,10 +585,14 @@ RELEVANT SIGNALS:
                     MODEL_MAIN,
                     system_prompt,
                     question,
-                    max_completion_tokens=1500,
+                    max_completion_tokens=1800,
                     temperature=0.3,
                 )
-            st.session_state["qa_messages"].append({"role": "assistant", "content": response})
+            st.session_state["qa_messages"].append({
+                "role": "assistant",
+                "content": response,
+                "sources": source_refs,
+            })
         except Exception as e:
             st.session_state["qa_messages"].append({"role": "assistant", "content": f"⚠️ Error: {e}"})
 
@@ -589,6 +601,16 @@ RELEVANT SIGNALS:
             for msg in st.session_state["qa_messages"]:
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
+                    # Render source links below assistant responses
+                    sources = msg.get("sources")
+                    if sources:
+                        st.markdown("---")
+                        st.markdown("**📎 Sources** — click to view the original post")
+                        src_lines = []
+                        for ref_label, title, url, platform in sources:
+                            short_title = (title[:90] + "…") if len(title) > 90 else title
+                            src_lines.append(f"**[{ref_label}]** [{short_title}]({url}) · {platform}")
+                        st.markdown("\n\n".join(src_lines))
             if st.button("🗑️ Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
                 st.rerun()
