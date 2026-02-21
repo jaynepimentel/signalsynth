@@ -1,0 +1,31 @@
+{
+  "total_posts_loaded": 21955,
+  "total_relevant": 5863,
+  "total_insights": 3974,
+  "unique_sources": 22,
+  "source_distribution": {
+    "eBay Forums": 1889,
+    "Reddit": 1032,
+    "Alt.xyz Blog": 112,
+    "Blowout Forums": 100,
+    "Fanatics Collect": 100,
+    "Bench Trading": 99,
+    "Whatnot": 98,
+    "Podcast": 93,
+    "Twitter/X": 87,
+    "COMC": 80,
+    "Cllct": 74,
+    "Bluesky": 58,
+    "YouTube (comment)": 42,
+    "Net54 Baseball": 28,
+    "News:Cardboard Connection": 20,
+    "News:Beckett News": 10,
+    "News:Dave and Adams": 10,
+    "News:Just Collect Blog": 10,
+    "News:Cardlines": 10,
+    "YouTube": 8,
+    "YouTube (transcript)": 7,
+    "Reddit (Blowout mention)": 7
+  },
+  "generated_at": "2026-02-20T11:32:06.784790"
+}

@@ -460,7 +460,15 @@ try:
 
     total = len(normalized)
     complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint" or i.get("brand_sentiment") == "Negative")
-    total_posts = raw_posts_count + competitor_posts_count
+
+    # Read accurate pipeline stats (written by quick_process.py)
+    _pipeline_meta = {}
+    try:
+        with open("_pipeline_meta.json", "r", encoding="utf-8") as f:
+            _pipeline_meta = json.load(f)
+    except Exception:
+        pass
+    total_posts = _pipeline_meta.get("total_posts_loaded", raw_posts_count + competitor_posts_count)
     hours_saved = round((total_posts * 2) / 60, 1)
 
     dates = [i.get("post_date", "") for i in scraped_insights if i.get("post_date")]
@@ -503,12 +511,12 @@ st.markdown("### 🤖 Ask AI About the Data")
 st.caption("Ask any question about scraped insights and get a polished, data-grounded answer.")
 
 if not OPENAI_KEY_PRESENT:
-    st.warning("OpenAI API key not configured. Add your key to `.env` to enable AI Q&A.")
+    st.warning("OpenAI API key not configured. Contact your admin to enable AI Q&A.")
 else:
     if "qa_messages" not in st.session_state:
         st.session_state["qa_messages"] = []
     if "qa_draft" not in st.session_state:
-        st.session_state["qa_draft"] = "is there any signal about PSA vault issues?"
+        st.session_state["qa_draft"] = ""
 
     c1, c2 = st.columns([5, 1])
     with c1:
@@ -521,7 +529,37 @@ else:
         st.write("")
         ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
 
-    st.caption("Try this prompt: **is there any signal about PSA vault issues?**")
+    import streamlit.components.v1 as _stc
+    _rp_list = [
+        "is there any signal about PSA vault issues?",
+        "how are buyers responding to the new unpaid item policies and no-tolerance thresholds?",
+        "what are sellers saying about authenticity guarantee rejections and delays?",
+        "how does Whatnot threaten eBay in live breaks and younger collectors?",
+        "what shipping complaints are driving the most churn risk right now?",
+    ]
+    _rp_items_js = json.dumps(_rp_list)
+    _rp_html = (
+        '<html><body style="margin:0;padding:0;background:transparent;overflow:hidden">'
+        '<div id="rp" style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
+        'font-size:13px;height:22px;line-height:22px;color:#999;white-space:nowrap;'
+        'overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity 0.4s ease"></div>'
+        '<script>'
+        'var P=' + _rp_items_js + ';'
+        'var el=document.getElementById("rp");'
+        'var i=0;'
+        'function rotate(){'
+        '  el.style.opacity="0";'
+        '  setTimeout(function(){'
+        '    el.innerHTML="&#128161; Try: <b style=\'color:#bbb\'>" + P[i] + "</b>";'
+        '    el.style.opacity="1";'
+        '    i=(i+1)%P.length;'
+        '  }, 400);'
+        '}'
+        'rotate();'
+        'setInterval(rotate, 4000);'
+        '</script></body></html>'
+    )
+    _stc.html(_rp_html, height=30)
 
     # Also trigger on ad-hoc re-ask after scrape
     _auto_reask = st.session_state.pop("_adhoc_auto_ask", None)
@@ -796,7 +834,7 @@ RELEVANT SIGNALS (sorted by relevance to the question):
     if st.session_state.get("_adhoc_scrape_pending"):
         adhoc_topic = st.session_state.pop("_adhoc_scrape_pending")
         adhoc_question = st.session_state.pop("_adhoc_reask_question", adhoc_topic)
-        with st.spinner(f"🔍 Scraping Google News & Reddit for \"{adhoc_topic}\"..."):
+        with st.spinner(f"🔍 Live-scraping 6 sources (Google News, Bing News, Reddit, Twitter/X, YouTube, Bluesky) for \"{adhoc_topic}\"..."):
             try:
                 from utils.adhoc_scrape import run_adhoc_scrape
                 new_posts, summary = run_adhoc_scrape(adhoc_topic)
@@ -853,7 +891,7 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                         st.markdown("---")
                         st.warning(
                             f"⚠️ Only **{rel_count} matching signals** found in the current dataset. "
-                            f"Want me to do a live scrape of Google News and Reddit to find more?"
+                            f"Want me to live-scrape 6 sources (Google News, Bing News, Reddit, Twitter/X, YouTube, Bluesky) to find more?"
                         )
                         scrape_col1, scrape_col2 = st.columns([2, 3])
                         with scrape_col1:
@@ -1260,7 +1298,7 @@ Cite 2-3 verbatim user quotes from the signals to ground your claims. Be extreme
 
             st.info("⚔️ **Want the full picture?** Switch to the **Competitor Intel** tab above for detailed complaints, praise, comparisons, and AI conquest briefs.")
     else:
-        st.info("No competitor data. Run scrapers to collect.")
+        st.info("No competitor data available yet.")
 
     st.markdown("---")
 
@@ -1314,7 +1352,7 @@ with tabs[1]:
     st.markdown("What competitors are doing, what their customers complain about, and where eBay can win.")
 
     if not competitor_posts_raw:
-        st.info("No competitor data. Run `python utils/scrape_competitors.py` to collect competitor signals.")
+        st.info("No competitor data available yet. Check back after the next data refresh.")
     else:
         # Split into competitors vs subsidiaries
         comp_posts = defaultdict(list)
@@ -1752,7 +1790,7 @@ with tabs[2]:
     all_bw.sort(key=lambda x: (x.get("signal_strength", 0), x.get("score", 0)), reverse=True)
 
     if not all_bw:
-        st.info("No actionable platform issues in the current view. Adjust filters or run scrapers.")
+        st.info("No actionable platform issues in the current view. Try adjusting your filters.")
     else:
         bw_m1, bw_m2, bw_m3 = st.columns(3)
         bw_m1.metric("Actionable Issues", total_bw)
@@ -2210,7 +2248,7 @@ with tabs[3]:
     industry_posts = _deduped
 
     if not industry_posts:
-        st.info("No industry data. Run scrapers to collect news, YouTube, and forum data.")
+        st.info("No industry data available yet. Check back after the next data refresh.")
     else:
         # ── Top metrics ──
         from collections import Counter
@@ -2317,7 +2355,7 @@ with tabs[3]:
         )
 
         if not news_podcast_feed:
-            st.info("No industry news or podcast data. Run scrapers to collect this content.")
+            st.info("No industry news or podcast data available yet.")
         else:
             _np_icons = {"News": "📰", "Cllct": "🗞️", "Podcast": "🎙️", "Alt.xyz Blog": "📝", "Blowout Forums": "🗣️", "Net54 Baseball": "⚾"}
             for idx, np_post in enumerate(news_podcast_feed[:15], 1):
@@ -2509,7 +2547,7 @@ with tabs[4]:
         pass
 
     if not releases_data:
-        st.info("No data available. Run scrapers to collect upcoming sealed launches and checklists.")
+        st.info("No release or checklist data available yet. Check back after the next data refresh.")
     else:
         checklists = [r for r in releases_data if r.get("category") == "checklist"]
         releases = [r for r in releases_data if r.get("category") == "release"]
@@ -2624,27 +2662,27 @@ The fastest way to get answers. Type any question and get a strategic, source-ci
 - *"How does Whatnot threaten eBay in live breaks?"*
 - *"What do sellers want most from eBay right now?"*
 
-If your question has thin results, SignalSynth will offer to **live-scrape Google News and Reddit** for that topic, add the results to the dataset, and re-analyze — so the system learns your interests over time.
+If your question has thin results, SignalSynth will offer to **live-search the web** for that topic, pull in fresh signals, and re-analyze — so the system learns your interests over time.
 
 ---
 
 #### 📡 Where the data comes from
-SignalSynth pulls from **10+ sources** across the collectibles ecosystem:
+SignalSynth pulls from **20+ sources** across the collectibles ecosystem:
 
 | Source | What it captures |
 |--------|-----------------|
-| **Reddit** | r/baseballcards, r/sportscards, r/eBay, r/pokemontcg, r/footballcards + 20 more subs |
+| **Reddit** | r/baseballcards, r/sportscards, r/eBay, r/pokemontcg, r/footballcards, r/funkopop, r/coins + 35 more subs |
 | **Twitter / X** | Hobby influencers, eBay mentions, competitor chatter |
-| **YouTube** | Hobby channels, product reviews, break commentary + top comments |
-| **eBay Forums** | Seller and buyer community discussions (via Google News fallback) |
+| **YouTube** | Jabs Family, Sports Card Investor, Stacking Slabs, CardShopLive, Gary Vee, Goldin |
+| **eBay Forums** | Seller & buyer discussions from eBay Community (real-time) |
 | **Bluesky** | Emerging hobby community signals |
-| **Cllct** | Industry news from Cllct.com |
-| **News RSS** | Sports Collectors Daily, PSA Blog, Blowout Buzz, Cardlines, Beckett |
-| **Podcasts** | Sports Cards Nonsense, Sports Card Investor, Stacking Slabs, Hobby News Daily |
-| **Forums & Blogs** | Blowout Forums, Net54, Bench Trading, Alt.xyz |
-| **Competitors** | Whatnot, Fanatics Collect, Heritage, COMC, Alt — scraped for competitive intel |
+| **Cllct** | Industry news from Cllct.com (Sports Cards, Auctions, Autographs, Memorabilia) |
+| **News RSS** | Beckett, Cardlines, Cardboard Connection, Dave and Adams, Sports Collectors Daily, PSA Blog, Blowout Buzz, Just Collect Blog |
+| **Podcasts** | Sports Cards Nonsense, Sports Card Investor, Stacking Slabs, Hobby News Daily, The Pull-Tab Podcast, Collector Nation |
+| **Forums & Blogs** | Blowout Forums, Net54, Bench Trading, Alt.xyz, COMC, Whatnot, Fanatics Collect, TCDB |
+| **Competitors** | Whatnot, Fanatics Collect, Fanatics Live, Heritage Auctions, Alt, Goldin, TCGPlayer, Beckett, PSA Consignment |
 
-Every post is enriched with **sentiment, topic, persona, churn risk, signal strength**, and taxonomy tags.
+Every post is enriched with **sentiment, topic, persona, churn risk, and signal strength** scoring.
 
 ---
 
@@ -2663,7 +2701,6 @@ Every post is enriched with **sentiment, topic, persona, churn risk, signal stre
 - **Filters matter** — use topic, sentiment, and time filters on the Customer Signals tab to focus on what you care about.
 - **AI buttons everywhere** — look for 🧠 buttons to generate executive briefs, competitive analyses, and per-category summaries.
 - **Source links** — every insight links back to the original post so you can verify context.
-- **Data refreshes** — run `python utils/scrape_all.py` → `python quick_process.py` → `python precompute_clusters.py` to pull the latest signals.
         """)
 
     st.markdown("Strategic Themes from user signals. Use the hierarchy Theme → Opportunity Area → Supporting Signals → Top Topics, then generate PRDs, BRDs, PRFAQ docs, and Jira tickets.")

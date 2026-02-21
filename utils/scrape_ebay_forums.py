@@ -1,8 +1,8 @@
 # scrape_ebay_forums.py — eBay Community Forums scraper
-# Direct scraping blocked by Akamai (HTTP 202), so we use Google News RSS
-# as primary source to capture indexed eBay community discussions.
+# Primary strategy: Lithium REST API v2 (LiQL) — bypasses Akamai WAF.
+# Secondary strategy: Google News RSS with site:community.ebay.com queries.
+# Direct HTML scraping is blocked by Akamai (HTTP 202 JS challenge).
 import requests
-from bs4 import BeautifulSoup
 import json
 import os
 import time
@@ -12,199 +12,237 @@ from typing import List, Dict, Any
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
-# eBay Community Forums to scrape
-FORUM_SECTIONS = [
-    # Seller forums
-    {"name": "Seller Central", "url": "https://community.ebay.com/t5/Seller-Central/bd-p/seller-central"},
-    {"name": "Payments", "url": "https://community.ebay.com/t5/Payments/bd-p/payments"},
-    {"name": "Shipping & Returns", "url": "https://community.ebay.com/t5/Shipping-Returns/bd-p/shipping-returns"},
-    {"name": "Selling", "url": "https://community.ebay.com/t5/Selling/bd-p/selling"},
-    # Buyer forums
-    {"name": "Buying", "url": "https://community.ebay.com/t5/Buying/bd-p/buying"},
-    {"name": "Member To Member Support", "url": "https://community.ebay.com/t5/Member-To-Member-Support/bd-p/member-support"},
-    # Category-specific
-    {"name": "Coins & Paper Money", "url": "https://community.ebay.com/t5/Coins-Paper-Money/bd-p/coins"},
-    {"name": "Sports Trading Cards", "url": "https://community.ebay.com/t5/Sports-Trading-Cards/bd-p/tradingcards"},
-    {"name": "Toys & Hobbies", "url": "https://community.ebay.com/t5/Toys-Hobbies/bd-p/toys"},
-    {"name": "Collectibles", "url": "https://community.ebay.com/t5/Collectibles/bd-p/collectibles"},
-]
-
 SAVE_PATH = "data/scraped_ebay_forums.json"
 
+LITHIUM_API = "https://community.ebay.com/api/2.0/search"
+
 HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+}
+
+HTML_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
 }
 
+# Collectibles-relevant keyword searches for targeted LiQL queries
+KEYWORD_SEARCHES = [
+    "trading cards",
+    "sports cards",
+    "collectibles",
+    "grading",
+    "psa",
+    "vault",
+    "authenticity guarantee",
+    "authentication",
+    "shipping damage",
+    "seller fees",
+    "returns",
+    "promoted listings",
+    "price guide",
+    "live breaks",
+    "whatnot",
+    "fanatics",
+    "heritage auctions",
+    "pokemon cards",
+    "baseball cards",
+    "football cards",
+    "basketball cards",
+    "funko",
+    "coins",
+    "seller defect",
+    "payment hold",
+    "final value fee",
+    "standard envelope",
+    "ebay international shipping",
+    "managed payments",
+    "item not as described",
+]
 
-def scrape_forum_section(section: Dict[str, str], max_pages: int = 3) -> List[Dict[str, Any]]:
-    """Scrape posts from an eBay Community forum section."""
-    posts = []
-    section_name = section["name"]
-    base_url = section["url"]
-    
-    for page in range(1, max_pages + 1):
-        url = f"{base_url}/page/{page}" if page > 1 else base_url
-        
-        try:
-            res = requests.get(url, headers=HEADERS, timeout=20)
-            
-            if res.status_code != 200:
-                print(f"    ⚠️ Page {page}: HTTP {res.status_code}")
-                break
-            
-            soup = BeautifulSoup(res.text, "html.parser")
-            
-            # Find discussion threads
-            thread_selectors = [
-                ".MessageList .message-subject a",
-                ".lia-list-row .page-link",
-                "h2.message-subject a",
-                ".lia-message-subject a",
-                "a.page-link[href*='/m-p/']",
-            ]
-            
-            threads = []
-            for selector in thread_selectors:
-                threads = soup.select(selector)
-                if threads:
-                    break
-            
-            if not threads:
-                # Try alternative: look for topic list items
-                topic_items = soup.select(".lia-list-row, .message-row, .topic-item")
-                for item in topic_items:
-                    link = item.select_one("a[href*='/m-p/'], a[href*='/td-p/']")
-                    if link:
-                        threads.append(link)
-            
-            for thread in threads[:15]:  # Limit per page
-                try:
-                    thread_url = thread.get("href", "")
-                    if not thread_url:
-                        continue
-                    
-                    # Make URL absolute
-                    if thread_url.startswith("/"):
-                        thread_url = f"https://community.ebay.com{thread_url}"
-                    elif not thread_url.startswith("http"):
-                        continue
-                    
-                    thread_title = thread.get_text(strip=True)
-                    if not thread_title or len(thread_title) < 10:
-                        continue
-                    
-                    # Fetch thread content
-                    thread_posts = scrape_thread(thread_url, thread_title, section_name)
-                    posts.extend(thread_posts)
-                    
-                    time.sleep(0.5)  # Rate limiting
-                    
-                except Exception as e:
-                    continue
-            
-            time.sleep(1)  # Rate limiting between pages
-            
-        except requests.exceptions.Timeout:
-            print(f"    ⏱️ Page {page}: Timeout")
-        except Exception as e:
-            print(f"    ❌ Page {page}: {e}")
-    
-    return posts
+# Google News RSS queries for supplementary indexed content
+GN_QUERIES = [
+    "site:community.ebay.com",
+    "site:community.ebay.com seller",
+    "site:community.ebay.com trading cards",
+    "site:community.ebay.com collectibles",
+    "site:community.ebay.com vault",
+    "site:community.ebay.com shipping returns",
+    "site:community.ebay.com payments",
+    "site:community.ebay.com authenticity guarantee",
+    "site:community.ebay.com grading",
+    "site:community.ebay.com fees",
+    '"ebay community" seller complaint',
+    '"ebay community" trading cards',
+    '"ebay community" collectibles',
+    '"ebay forum" seller problem',
+]
 
 
-def scrape_thread(url: str, title: str, section: str) -> List[Dict[str, Any]]:
-    """Scrape all posts from a single thread."""
-    posts = []
-    
+# ── Lithium REST API v2 (LiQL) ────────────────────────────────────────
+
+def _strip_html(html_text: str) -> str:
+    """Remove HTML tags and decode entities."""
+    if not html_text:
+        return ""
+    text = re.sub(r"<br\s*/?>", "\n", html_text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"&amp;", "&", text)
+    text = re.sub(r"&lt;", "<", text)
+    text = re.sub(r"&gt;", ">", text)
+    text = re.sub(r"&nbsp;", " ", text)
+    text = re.sub(r"&quot;", '"', text)
+    text = re.sub(r"&#39;", "'", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _parse_lithium_date(date_str: str) -> str:
+    """Parse Lithium ISO timestamp to YYYY-MM-DD."""
+    if not date_str:
+        return datetime.now().strftime("%Y-%m-%d")
     try:
-        res = requests.get(url, headers=HEADERS, timeout=15)
-        
-        if res.status_code != 200:
-            return posts
-        
-        soup = BeautifulSoup(res.text, "html.parser")
-        
-        # Find all message bodies
-        message_selectors = [
-            ".lia-message-body-content",
-            ".message-body",
-            ".lia-message-body",
-            ".post-content",
-        ]
-        
-        messages = []
-        for selector in message_selectors:
-            messages = soup.select(selector)
-            if messages:
-                break
-        
-        # Get the original post (first message)
-        if messages:
-            first_msg = messages[0]
-            text = first_msg.get_text(strip=True)
-            
-            if text and len(text) > 30:
-                # Try to get author
-                author = ""
-                author_elem = soup.select_one(".lia-user-name-link, .author-name, .username")
-                if author_elem:
-                    author = author_elem.get_text(strip=True)
-                
-                # Try to get date
-                post_date = datetime.now().strftime("%Y-%m-%d")
-                date_elem = soup.select_one(".lia-message-posted-on time, .post-date, time[datetime]")
-                if date_elem:
-                    datetime_attr = date_elem.get("datetime", "")
-                    if datetime_attr:
-                        try:
-                            post_date = datetime_attr[:10]
-                        except:
-                            pass
-                
-                posts.append({
-                    "text": f"{title}\n\n{text}",
-                    "title": title,
-                    "source": "eBay Forums",
-                    "forum_section": section,
-                    "username": author or "unknown",
-                    "url": url,
-                    "post_date": post_date,
-                    "_logged_date": datetime.now().isoformat(),
-                    "is_original_post": True,
-                })
-        
-        # Get replies (if substantial)
-        for msg in messages[1:5]:  # Limit to first few replies
-            text = msg.get_text(strip=True)
-            
-            if text and len(text) > 50:
-                posts.append({
-                    "text": text,
-                    "title": f"Re: {title}",
-                    "source": "eBay Forums",
-                    "forum_section": section,
-                    "username": "unknown",
-                    "url": url,
-                    "post_date": datetime.now().strftime("%Y-%m-%d"),
-                    "_logged_date": datetime.now().isoformat(),
-                    "is_original_post": False,
-                })
-                
+        return date_str[:10]
+    except Exception:
+        return datetime.now().strftime("%Y-%m-%d")
+
+
+def _liql_query(query: str) -> List[Dict[str, Any]]:
+    """Execute a LiQL query against the Lithium REST API v2."""
+    try:
+        r = requests.get(LITHIUM_API, params={"q": query}, headers=HEADERS, timeout=15)
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        if data.get("status") != "success":
+            return []
+        return data.get("data", {}).get("items", [])
     except Exception as e:
-        pass
-    
+        print(f"    [WARN] LiQL query failed: {e}")
+        return []
+
+
+def _parse_lithium_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert a Lithium API message item to our standard post format."""
+    subject = item.get("subject", "").strip()
+    body_html = item.get("body", "") or ""
+    body_text = _strip_html(body_html)
+    author = item.get("author", {}).get("login", "unknown")
+    post_time = item.get("post_time", "")
+    board_id = item.get("board", {}).get("id", "unknown")
+    view_href = item.get("view_href", "")
+    views = 0
+    metrics = item.get("metrics", {})
+    if metrics:
+        views = metrics.get("views", 0)
+    depth = item.get("depth", 0)
+
+    # Build full URL
+    url = view_href if view_href.startswith("http") else f"https://community.ebay.com{view_href}" if view_href else ""
+
+    # Combine subject + body
+    text = f"{subject}\n\n{body_text}" if body_text and body_text != subject else subject
+    if len(text) < 20:
+        return None
+
+    # Truncate very long posts
+    if len(text) > 3000:
+        text = text[:3000] + "..."
+
+    post_date = _parse_lithium_date(post_time)
+
+    return {
+        "text": text,
+        "title": subject,
+        "source": "eBay Forums",
+        "forum_section": board_id,
+        "username": author,
+        "url": url,
+        "post_date": post_date,
+        "_logged_date": datetime.now().isoformat(),
+        "is_original_post": depth == 0,
+        "depth": depth,
+        "views": views,
+        "score": views,
+        "post_id": f"ebay_li_{hash(url or subject) % 10**8}",
+    }
+
+
+def _scrape_recent_posts(limit: int = 100) -> List[Dict[str, Any]]:
+    """Scrape the most recent original posts via LiQL."""
+    print(f"  📥 Fetching {limit} most recent forum posts...")
+    query = (
+        f"SELECT subject,body,post_time,author.login,board.id,view_href,metrics.views,depth "
+        f"FROM messages WHERE depth=0 ORDER BY post_time DESC LIMIT {limit}"
+    )
+    items = _liql_query(query)
+    posts = []
+    for item in items:
+        post = _parse_lithium_item(item)
+        if post:
+            posts.append(post)
+    print(f"    Got {len(posts)} recent posts")
     return posts
 
 
-def _google_news_rss(query, source_label="eBay Forums", max_results=100):
+def _scrape_recent_replies(limit: int = 50) -> List[Dict[str, Any]]:
+    """Scrape recent high-value replies (depth > 0) for richer thread context."""
+    print(f"  💬 Fetching {limit} recent replies...")
+    query = (
+        f"SELECT subject,body,post_time,author.login,board.id,view_href,depth "
+        f"FROM messages WHERE depth>0 ORDER BY post_time DESC LIMIT {limit}"
+    )
+    items = _liql_query(query)
+    posts = []
+    for item in items:
+        post = _parse_lithium_item(item)
+        if post and len(post.get("text", "")) > 50:
+            posts.append(post)
+    print(f"    Got {len(posts)} replies")
+    return posts
+
+
+def _scrape_keyword(keyword: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Search for posts matching a keyword via LiQL MATCHES clause."""
+    query = (
+        f"SELECT subject,body,post_time,author.login,board.id,view_href,metrics.views,depth "
+        f"FROM messages WHERE body MATCHES '{keyword}' AND depth=0 "
+        f"ORDER BY post_time DESC LIMIT {limit}"
+    )
+    items = _liql_query(query)
+    posts = []
+    for item in items:
+        post = _parse_lithium_item(item)
+        if post:
+            post["search_term"] = keyword
+            posts.append(post)
+    return posts
+
+
+def _scrape_keywords(keywords: List[str], limit_per: int = 50) -> List[Dict[str, Any]]:
+    """Run keyword searches across collectibles-relevant terms."""
+    print(f"  🔍 Searching {len(keywords)} keywords (limit {limit_per} each)...")
+    all_posts = []
+    for kw in keywords:
+        posts = _scrape_keyword(kw, limit=limit_per)
+        if posts:
+            print(f"    '{kw}' => {len(posts)} posts")
+        all_posts.extend(posts)
+        time.sleep(0.3)
+    print(f"    Total keyword posts: {len(all_posts)}")
+    return all_posts
+
+
+# ── Google News RSS (secondary) ────────────────────────────────────────
+
+def _google_news_rss(query: str, max_results: int = 100) -> List[Dict[str, Any]]:
     """Fetch indexed eBay community content from Google News RSS."""
     posts = []
     try:
         encoded = quote(query)
         rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
-        r = requests.get(rss_url, headers=HEADERS, timeout=15)
+        r = requests.get(rss_url, headers=HTML_HEADERS, timeout=15)
         if r.status_code != 200:
             return posts
         root = ET.fromstring(r.content)
@@ -231,7 +269,7 @@ def _google_news_rss(query, source_label="eBay Forums", max_results=100):
             posts.append({
                 "text": text,
                 "title": title,
-                "source": source_label,
+                "source": "eBay Forums",
                 "url": link,
                 "username": "",
                 "post_date": post_date,
@@ -246,85 +284,103 @@ def _google_news_rss(query, source_label="eBay Forums", max_results=100):
     return posts
 
 
-def run_ebay_forums_scraper() -> List[Dict[str, Any]]:
-    """Main entry point for eBay Forums scraping."""
-    print("🛒 Starting eBay Community Forums scraper...")
-    
+def _scrape_google_news_supplement() -> List[Dict[str, Any]]:
+    """Run Google News RSS queries for supplementary indexed content."""
+    print(f"  � Running {len(GN_QUERIES)} Google News RSS queries...")
     all_posts = []
-    
-    # Try direct scraping first
-    direct_success = False
-    for section in FORUM_SECTIONS:
-        print(f"  📂 {section['name']}...")
-        posts = scrape_forum_section(section, max_pages=2)
-        
+    for q in GN_QUERIES:
+        posts = _google_news_rss(q)
         if posts:
-            print(f"  📥 {section['name']}: {len(posts)} posts")
-            all_posts.extend(posts)
-            direct_success = True
-        else:
-            print(f"  ⚠️ {section['name']}: No posts found")
-        
-        time.sleep(1)
-    
-    # Fallback: Google News RSS for eBay community content
-    if not direct_success:
-        print("\n  📡 Direct scraping blocked — falling back to Google News RSS...")
-        gn_queries = [
-            'site:community.ebay.com',
-            'site:community.ebay.com seller',
-            'site:community.ebay.com trading cards',
-            'site:community.ebay.com collectibles',
-            'site:community.ebay.com vault',
-            'site:community.ebay.com shipping returns',
-            'site:community.ebay.com payments',
-            'site:community.ebay.com authenticity guarantee',
-            '"ebay community" seller complaint',
-            '"ebay community" trading cards feedback',
-            '"ebay community" collectibles issue',
-            '"ebay forum" seller problem',
-            '"ebay forum" buyer issue',
-            '"ebay community" fees policy change',
-        ]
-        for q in gn_queries:
-            print(f"    🔍 {q}")
-            posts = _google_news_rss(q)
-            all_posts.extend(posts)
-            time.sleep(1.0)
-    
+            print(f"    '{q[:50]}' => {len(posts)} items")
+        all_posts.extend(posts)
+        time.sleep(0.5)
+    print(f"    Total Google News posts: {len(all_posts)}")
+    return all_posts
+
+
+# ── Main entry point ─────────────────────────────────────────────────
+
+def run_ebay_forums_scraper() -> List[Dict[str, Any]]:
+    """Main entry point for eBay Forums scraping.
+
+    Strategy:
+    1. Lithium REST API v2 (LiQL) — recent posts + keyword searches
+    2. Google News RSS — supplementary indexed content
+
+    Returns list of post dicts.
+    """
+    print("� Starting eBay Community Forums scraper...")
+    print("  Strategy: Lithium API v2 (LiQL) + Google News RSS")
+
+    all_posts = []
+
+    # ── Primary: Lithium API v2 ──
+    print("\n── Phase 1: Lithium REST API v2 ──")
+
+    # 1a. Recent original posts (broad, latest activity)
+    recent = _scrape_recent_posts(limit=100)
+    all_posts.extend(recent)
+
+    # 1b. Recent replies (thread depth for richer context)
+    replies = _scrape_recent_replies(limit=50)
+    all_posts.extend(replies)
+
+    # 1c. Keyword searches (collectibles-focused)
+    keyword_posts = _scrape_keywords(KEYWORD_SEARCHES, limit_per=50)
+    all_posts.extend(keyword_posts)
+
+    lithium_count = len(all_posts)
+    print(f"\n  Lithium API total (pre-dedup): {lithium_count}")
+
+    # ── Secondary: Google News RSS ──
+    print("\n── Phase 2: Google News RSS (supplementary) ──")
+    gn_posts = _scrape_google_news_supplement()
+    all_posts.extend(gn_posts)
+
+    print(f"\n  Combined total (pre-dedup): {len(all_posts)}")
+
     if not all_posts:
         print("\n❌ No posts scraped from eBay Forums.")
         return []
-    
-    # Deduplicate by URL
-    seen = set()
+
+    # ── Deduplicate ──
+    seen_urls = set()
+    seen_titles = set()
     unique_posts = []
     for post in all_posts:
         url = post.get("url", "")
-        text_hash = post.get("text", "")[:100]
-        key = url or text_hash
-        
-        if key not in seen:
-            seen.add(key)
-            unique_posts.append(post)
-    
-    # Save
+        title_key = post.get("title", "")[:80].lower().strip()
+
+        # Dedup by URL first, then by title similarity
+        if url and url in seen_urls:
+            continue
+        if title_key and title_key in seen_titles:
+            continue
+
+        if url:
+            seen_urls.add(url)
+        if title_key:
+            seen_titles.add(title_key)
+        unique_posts.append(post)
+
+    # ── Save ──
     os.makedirs(os.path.dirname(SAVE_PATH) if os.path.dirname(SAVE_PATH) else ".", exist_ok=True)
     with open(SAVE_PATH, "w", encoding="utf-8") as f:
         json.dump(unique_posts, f, ensure_ascii=False, indent=2)
-    
+
     print(f"\n✅ Scraped {len(unique_posts)} unique posts → {SAVE_PATH}")
-    
+    print(f"   (Lithium API: ~{lithium_count} raw, Google News: ~{len(gn_posts)} raw)")
+
     # Print section breakdown
     section_counts = {}
     for post in unique_posts:
         sec = post.get("forum_section", "unknown")
         section_counts[sec] = section_counts.get(sec, 0) + 1
-    
-    print("\n📊 Posts by section:")
+
+    print("\n📊 Posts by section/board:")
     for sec, count in sorted(section_counts.items(), key=lambda x: -x[1]):
         print(f"  {sec}: {count}")
-    
+
     return unique_posts
 
 

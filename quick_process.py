@@ -786,5 +786,18 @@ def main():
         print(f"  {src}: {cnt} ({pct}%)")
     print(f"  Total unique sources: {len(src_dist)}")
 
+    # Save pipeline metadata for the app to read
+    pipeline_meta = {
+        "total_posts_loaded": len(posts),
+        "total_relevant": len(relevant_posts),
+        "total_insights": len(unique),
+        "unique_sources": len(src_dist),
+        "source_distribution": {src: cnt for src, cnt in src_dist.most_common()},
+        "generated_at": datetime.now().isoformat(),
+    }
+    with open("_pipeline_meta.json", "w", encoding="utf-8") as f:
+        json.dump(pipeline_meta, f, indent=2)
+    print(f"\n📋 Saved pipeline metadata → _pipeline_meta.json")
+
 if __name__ == "__main__":
     main()
