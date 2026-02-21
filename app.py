@@ -1541,7 +1541,7 @@ with tabs[2]:
         # 💡 WHAT CUSTOMERS ARE ASKING FOR
         # ═══════════════════════════════════════════════
         st.markdown("### 💡 What Customers Are Asking For")
-        st.caption("Feature requests and improvement ideas from the community.")
+        st.caption("Grouped by product area — each section shows the problem users face and what they want eBay to build or fix.")
 
         _REQUEST_HINTS = [
             "should", "wish", "need", "please add", "feature", "why can't", "allow", "option to", "improve",
@@ -1555,21 +1555,72 @@ with tabs[2]:
         if not request_posts:
             st.info("No feature requests in current filter view.")
         else:
-            req_topic_counts = defaultdict(int)
+            # Group by topic
+            _req_by_topic = defaultdict(list)
             for i in request_posts:
-                req_topic_counts[_taxonomy_topic(i)] += 1
-            rq1, rq2 = st.columns([1, 3])
-            rq1.metric("Request Signals", len(request_posts))
-            with rq2:
-                st.caption("**Top request topics:** " + " · ".join([f"{k} ({v})" for k, v in sorted(req_topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]]))
+                _t = _taxonomy_topic(i)
+                if _t and _t not in ("General", "Unknown"):
+                    _req_by_topic[_t].append(i)
+            # Sort topics by total engagement
+            _sorted_topics = sorted(
+                _req_by_topic.items(),
+                key=lambda x: sum(p.get("score", 0) for p in x[1]),
+                reverse=True,
+            )
 
-            for idx, post in enumerate(sorted(request_posts, key=lambda x: (x.get("score", 0), x.get("post_date", "")), reverse=True)[:12], 1):
-                text = post.get("text", "")[:200] or post.get("title", "")[:200]
-                score = post.get("score", 0)
-                url = post.get("url", "")
-                link = f" · [Source]({url})" if url else ""
-                st.markdown(f"**{idx}.** 💡 {text}{'...' if len((post.get('text', '') or post.get('title', ''))) > 200 else ''}")
-                st.caption(f"{_taxonomy_topic(post)} · ⬆️ {score} · {post.get('source', '')} · {post.get('post_date', '')}{link}")
+            _rq1, _rq2 = st.columns([1, 3])
+            _rq1.metric("Request Signals", len(request_posts))
+            with _rq2:
+                st.caption(f"Across **{len(_sorted_topics)} product areas** — expand any area to see what users want")
+
+            for _rank, (_topic, _reqs) in enumerate(_sorted_topics[:8], 1):
+                _total_eng = sum(r.get("score", 0) for r in _reqs)
+                _top_reqs = sorted(_reqs, key=lambda x: x.get("score", 0), reverse=True)
+
+                with st.expander(f"**{_rank}. {_topic}** — {len(_reqs)} requests · ⬆️ {_total_eng} engagement"):
+                    # AI synthesis button
+                    _synth_key = f"req_synth_{_topic}"
+                    if st.button("🧠 AI: Synthesize Problem → Solution", key=f"btn_{_synth_key}"):
+                        st.session_state[_synth_key] = "__generating__"
+                        st.rerun()
+                    if st.session_state.get(_synth_key) == "__generating__":
+                        _digest = "\n".join(
+                            f"- [{r.get('source', '')}] (⬆️{r.get('score', 0)}) {r.get('text', '')[:200]}"
+                            for r in _top_reqs[:10]
+                        )
+                        _synth_prompt = f"""Analyze these {len(_reqs)} user requests about "{_topic}" on eBay. Write a structured brief:
+
+**🔴 The Problem:** (2-3 sentences. What specific pain point or gap are users experiencing? Be concrete — name features, flows, or policies.)
+
+**💡 What They Want:** (2-3 bullet points. Each bullet = one specific product change or new feature users are asking for. Start each with a verb: "Add...", "Fix...", "Allow...", "Show...".)
+
+**📊 Evidence:** (2-3 verbatim user quotes that best illustrate the ask)
+
+**🎯 Suggested Jira Epic:** (One-line epic title a PM could use, e.g. "Improve vault withdrawal flow for high-value cards")
+
+Signals:
+{_digest}"""
+                        with st.spinner(f"Synthesizing {_topic} requests..."):
+                            try:
+                                from components.ai_suggester import _chat, MODEL_MAIN
+                                _result = _chat(MODEL_MAIN, "Write specific, actionable product briefs. Always cite user quotes.", _synth_prompt, max_completion_tokens=500, temperature=0.3)
+                            except Exception:
+                                _result = None
+                        st.session_state[_synth_key] = _result or "AI synthesis unavailable."
+                        st.rerun()
+                    if st.session_state.get(_synth_key) and st.session_state[_synth_key] != "__generating__":
+                        with st.container(border=True):
+                            st.markdown(st.session_state[_synth_key])
+
+                    # Top requests as evidence
+                    st.markdown("**Top requests:**")
+                    for _qi, _req in enumerate(_top_reqs[:4], 1):
+                        _txt = (_req.get("text", "") or _req.get("title", ""))[:220]
+                        _sc = _req.get("score", 0)
+                        _url = _req.get("url", "")
+                        _lnk = f" · [Source]({_url})" if _url else ""
+                        st.markdown(f"**{_qi}.** {_txt}{'...' if len(_req.get('text', '') or '') > 220 else ''}")
+                        st.caption(f"⬆️ {_sc} · {_req.get('source', '')} · {_req.get('post_date', '')}{_lnk}")
 
         st.markdown("---")
 
