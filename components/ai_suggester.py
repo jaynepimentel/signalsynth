@@ -58,12 +58,13 @@ def _get_model_setting(key, default):
     v = os.getenv(key)
     return v.strip() if isinstance(v, str) and v.strip() else default
 
+MODEL_PREMIUM = _get_model_setting("OPENAI_MODEL_PREMIUM", "o3-mini")
 MODEL_MAIN = _get_model_setting(
     "OPENAI_MODEL_MAIN",
     _get_model_setting("OPENAI_MODEL_DOCS", _get_model_setting("OPENAI_MODEL_EXEC", "gpt-4.1")),
 )
-MODEL_FALLBACK = _get_model_setting("OPENAI_MODEL_FALLBACK", "gpt-4o")
-MODEL_MINI = _get_model_setting("OPENAI_MODEL_SCREENER", "gpt-4o-mini")
+MODEL_FALLBACK = _get_model_setting("OPENAI_MODEL_FALLBACK", "gpt-4.1")
+MODEL_MINI = _get_model_setting("OPENAI_MODEL_SCREENER", "gpt-4.1-mini")
 CACHE_PATH = "gpt_suggestion_cache.json"
 
 
@@ -167,31 +168,44 @@ def generate_exec_summary():
 # ------------------------------
 # Core chat helper (safe when no API key)
 # ------------------------------
-def _chat(model, system, user, max_completion_tokens=2000, temperature=0.3):
-    """
-    Wrapper around chat.completions.create that uses max_completion_tokens
-    so it works with newer models like gpt-5.1 and newer models.
+# Reasoning models (o-series) don't support temperature — they use reasoning_effort
+_REASONING_MODELS = {"o3-mini", "o3", "o1", "o1-mini", "o1-pro"}
 
+
+def _chat(model, system, user, max_completion_tokens=2000, temperature=0.3, reasoning_effort="high"):
+    """
+    Wrapper around chat.completions.create.
+    Automatically adapts parameters for reasoning models (o-series) vs standard models.
     """
     if client is None:
-        # Offline or no key: return a stub so the pipeline does not break
         return f"[LLM disabled] {system}\n\n{user[:800]}"
+
     def _call(model_name):
-        resp = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            temperature=temperature,
-            max_completion_tokens=max_completion_tokens,
-        )
+        is_reasoning = any(model_name.startswith(r) for r in _REASONING_MODELS)
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+        if is_reasoning:
+            # Reasoning models: no temperature, use reasoning_effort
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_completion_tokens=max_completion_tokens,
+                reasoning_effort=reasoning_effort,
+            )
+        else:
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+                max_completion_tokens=max_completion_tokens,
+            )
         return (resp.choices[0].message.content or "").strip()
 
     try:
         return _call(model)
     except Exception:
-        # Keep remote deployments resilient if a configured model is unavailable.
         if MODEL_FALLBACK and MODEL_FALLBACK != model:
             return _call(MODEL_FALLBACK)
         raise

@@ -799,14 +799,14 @@ RELEVANT SIGNALS (sorted by relevance to the question):
 {context_block}"""
 
         try:
-            from components.ai_suggester import _chat, MODEL_MAIN
+            from components.ai_suggester import _chat, MODEL_PREMIUM
             with st.spinner("Analyzing signals across all sources..."):
                 response = _chat(
-                    MODEL_MAIN,
+                    MODEL_PREMIUM,
                     system_prompt,
                     question,
                     max_completion_tokens=2800,
-                    temperature=0.25,
+                    reasoning_effort="high",
                 )
             # Detect thin results — offer ad-hoc scrape
             _is_thin = len(relevant) < 5

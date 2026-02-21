@@ -344,8 +344,9 @@ signalsynth/
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | **Yes** | Powers all AI features (Ask AI, briefs, document generation) |
-| `OPENAI_MODEL_SCREENER` | No | Model for classification/screening (default: `gpt-4o-mini`) |
-| `OPENAI_MODEL_DOCS` | No | Model for document generation (default: `gpt-4o`) |
+| `OPENAI_MODEL_PREMIUM` | No | Reasoning model for Ask AI (default: `o3-mini`) — best analytical depth |
+| `OPENAI_MODEL_MAIN` | No | Primary model for briefs, PRDs, competitive analysis (default: `gpt-4.1`) |
+| `OPENAI_MODEL_SCREENER` | No | Fast model for classification/screening (default: `gpt-4.1-mini`) |
 | `TWITTER_BEARER_TOKEN` | No | Twitter API access (currently uses Google News fallback) |
 
 ### Streamlit Cloud Deployment
