@@ -529,22 +529,28 @@ else:
         st.write("")
         ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
 
-    # ── Clickable example prompts ──
-    _rp_prompts = [
-        ("🏦 Vault", "is there any signal about PSA vault issues?"),
-        ("⚖️ UPI", "how are buyers responding to the new unpaid item policies and no-tolerance thresholds?"),
-        ("🔒 Auth", "what are sellers saying about authenticity guarantee rejections and delays?"),
-        ("⚔️ Whatnot", "how does Whatnot threaten eBay in live breaks and younger collectors?"),
-        ("📦 Shipping", "what shipping complaints are driving the most churn risk right now?"),
+    # ── Example prompt selector ──
+    _rp_options = [
+        "",
+        "Is there any signal about PSA vault issues?",
+        "How are buyers responding to the new unpaid item policies?",
+        "What are sellers saying about authenticity guarantee rejections?",
+        "How does Whatnot threaten eBay in live breaks?",
+        "What shipping complaints are driving the most churn risk?",
     ]
-    st.caption("💡 Try a prompt:")
-    _rp_cols = st.columns(len(_rp_prompts))
-    for _ri, (_rl, _rq) in enumerate(_rp_prompts):
-        with _rp_cols[_ri]:
-            if st.button(_rl, key=f"rp_btn_{_ri}", use_container_width=True):
-                st.session_state["qa_draft"] = _rq
-                st.session_state["_adhoc_auto_ask"] = _rq
-                st.rerun()
+    def _on_prompt_select():
+        val = st.session_state.get("_rp_select", "")
+        if val:
+            st.session_state["_adhoc_auto_ask"] = val
+            st.session_state["_rp_select"] = ""
+
+    st.selectbox(
+        "💡 Or try an example prompt",
+        _rp_options,
+        format_func=lambda x: "Select an example prompt..." if x == "" else x,
+        key="_rp_select",
+        on_change=_on_prompt_select,
+    )
 
     # Also trigger on ad-hoc re-ask after scrape
     _auto_reask = st.session_state.pop("_adhoc_auto_ask", None)
