@@ -549,8 +549,9 @@ else:
         "What are sellers saying about authenticity guarantee rejections?",
         "How does Whatnot threaten eBay in live breaks?",
         "What shipping complaints are driving the most churn risk?",
-        "What are the signals around instant offers and liquidity in the collectibles market?",
-        "How are platforms like Courtyard and PSA Offers changing buyer/seller behavior?",
+        "What are the signals around instant offers, buybacks, and liquidity in the collectibles market?",
+        "What are customers saying about TCGPlayer and how does it fit within the eBay ecosystem?",
+        "How is Goldin performing as an eBay subsidiary and what are collectors saying?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
