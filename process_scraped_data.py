@@ -11,7 +11,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from components.signal_scorer import enrich_single_insight
-from components.scoring_utils import detect_payments_upi_highasp, detect_competitor_and_partner_mentions
+from components.scoring_utils import detect_payments_upi_highasp, detect_competitor_and_partner_mentions, detect_liquidity_signals
 
 # Input files
 SCRAPED_FILES = [
@@ -79,6 +79,12 @@ def process_insight(post):
             mentions = detect_competitor_and_partner_mentions(text)
             enriched["mentions_competitor"] = mentions.get("competitors", [])
             enriched["mentions_ecosystem_partner"] = mentions.get("partners", [])
+            
+            # Add liquidity/instant offer flags
+            liq_flags = detect_liquidity_signals(text)
+            enriched["_liquidity_signal"] = liq_flags.get("_liquidity_signal", False)
+            enriched["liquidity_signal_types"] = liq_flags.get("liquidity_signal_types", [])
+            enriched["liquidity_platforms"] = liq_flags.get("liquidity_platforms", [])
             
             return enriched
     except Exception as e:

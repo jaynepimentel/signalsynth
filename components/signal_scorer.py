@@ -12,6 +12,7 @@ from components.scoring_utils import (
     infer_clarity, generate_insight_title, tag_topic_focus,
     classify_opportunity_type, classify_action_type, calculate_cluster_ready_score,
     detect_payments_upi_highasp,
+    detect_liquidity_signals,
 )
 
 def _load_embed():
@@ -99,6 +100,26 @@ def _apply_payment_flags(i:dict)->dict:
     i["type_subtag"]=i["type_subtags"][0]
     return i
 
+def _apply_liquidity_flags(i:dict)->dict:
+    text=i.get("text","")
+    flags=detect_liquidity_signals(text)
+    for k,v in flags.items():
+        if i.get(k) is None: i[k]=v
+    topic=list(i.get("topic_focus") or [])
+    sub=list(i.get("type_subtags") or [])
+    if flags.get("_liquidity_signal"):
+        if "Instant Offers / Liquidity" not in topic: topic.append("Instant Offers / Liquidity")
+        sig_types=flags.get("liquidity_signal_types",[])
+        if "instant_offer" in sig_types and "Instant Offers" not in sub: sub.append("Instant Offers")
+        if "liquidity_behavior" in sig_types and "Liquidity" not in sub: sub.append("Liquidity")
+        if "liquidity_platform" in sig_types and "Liquidity Platform" not in sub: sub.append("Liquidity Platform")
+        if not i.get("opportunity_tag") or i["opportunity_tag"]=="General Insight":
+            i["opportunity_tag"]="Liquidity Signal"
+    i["topic_focus"]=topic
+    i["type_subtags"]=sub or ["General"]
+    i["type_subtag"]=i["type_subtags"][0]
+    return i
+
 def enrich_single_insight(i:dict, min_score:float=3):
     text=i.get("text","") or ""
     if len(text.strip())<10: return None
@@ -147,6 +168,7 @@ def enrich_single_insight(i:dict, min_score:float=3):
     i["opportunity_tag"]=i.get("opportunity_tag") or classify_opportunity_type(text)
 
     i=_apply_payment_flags(i)
+    i=_apply_liquidity_flags(i)
 
     i["cluster_ready_score"]=calculate_cluster_ready_score(i["score"], i["frustration"], i["impact"])
     i["fingerprint"]=hashlib.md5(text.lower().encode()).hexdigest()

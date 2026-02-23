@@ -68,6 +68,33 @@ Summary: [One concise sentence summarizing the issue or praise]
         print("[GPT fallback error]", e)
         return {"sentiment":"Neutral","subtags":["General"],"summary":"","frustration":1,"impact":1,"gpt_confidence":0}
 
+# Instant Offers / Liquidity Signals
+RE_INSTANT_OFFER=re.compile(r"(instant offer|immediate offer|quick offer|buy[-\s]?back|buyback|instant sale|sell now|cash out|cash[-\s]?out|instant liquidity|quick cash|fast payout|immediate payout|sell instantly|flip fast|quick flip|liquidat|need cash|need money|free up funds|free up capital|quick money|instant buy)", re.I)
+RE_LIQUIDITY_PLATFORM=re.compile(r"(psa offers|psa\s+offer|courtyard|arena club|arena[-\s]?club|alt\.xyz|starstock|dibbs|otia)", re.I)
+RE_LIQUIDITY_BEHAVIOR=re.compile(r"(want to sell fast|selling to buy|sold to fund|cashed out|liquidating|dumping|fire sale|quick sell|need to move|moving inventory|flipping|reinvest|re[-\s]?invest|fund a break|fund another|buy more supply|buy more wax|buy more boxes|wallet funds|wallet balance|funds in wallet)", re.I)
+
+def detect_liquidity_signals(text:str):
+    t=text or ""; signals=[]
+    if RE_INSTANT_OFFER.search(t): signals.append("instant_offer")
+    if RE_LIQUIDITY_PLATFORM.search(t): signals.append("liquidity_platform")
+    if RE_LIQUIDITY_BEHAVIOR.search(t): signals.append("liquidity_behavior")
+    # Detect specific platforms mentioned
+    lo=t.lower()
+    platforms=[]
+    if "psa offer" in lo: platforms.append("PSA Offers")
+    if "courtyard" in lo: platforms.append("Courtyard")
+    if "arena club" in lo or "arenaclub" in lo: platforms.append("Arena Club")
+    if "alt.xyz" in lo or "alt marketplace" in lo: platforms.append("Alt")
+    if "starstock" in lo: platforms.append("StarStock")
+    if "dibbs" in lo: platforms.append("Dibbs")
+    if "otia" in lo: platforms.append("Otia")
+    return {
+        "_liquidity_signal":bool(signals),
+        "liquidity_signal_types":signals,
+        "liquidity_platforms":platforms,
+        "topic_hint":"Instant Offers / Liquidity" if signals else None
+    }
+
 # Payments/UPI/High-ASP
 RE_HIGH_ASP_AMT=re.compile(r"\$\s?(\d{1,3}(?:[,\s]\d{3})+)|\b(\d{1,2})\s?k\b", re.I)
 RE_PAYMENT_DECLINED=re.compile(r"(payment (?:was )?declined|card (?:was )?declined|payment failed|charge failed|credit card (?:issue|problem|declined)|debit card (?:issue|problem|declined)|transaction (?:failed|declined)|couldn['']?t (?:process|complete) payment)", re.I)
@@ -116,9 +143,9 @@ def infer_clarity(text):
 
 def detect_competitor_and_partner_mentions(text):
     lo=(text or "").lower()
-    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin","beckett","stockx","mercari"]  # pwcc kept as alias — rebranded to Fanatics Collect
-    partners=["psa","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
-    market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold"]
+    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin","beckett","stockx","mercari","courtyard","arena club","arenaclub","starstock","dibbs","otia"]  # pwcc kept as alias — rebranded to Fanatics Collect
+    partners=["psa","psa offers","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
+    market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold","instant offer","buyback","buy back","liquidity","cash out","sell now","quick flip"]
     return {
         "competitors":sorted({c for c in competitors if c in lo}),
         "partners":sorted({p for p in partners if p in lo}),
@@ -139,6 +166,7 @@ def classify_opportunity_type(text):
     if any(x in lo for x in ["policy","terms","blocked","suspended"]): return "Policy Risk"
     if any(x in lo for x in ["conversion","checkout","didn’t buy","abandon","hesitated"]): return "Conversion Blocker"
     if any(x in lo for x in ["leaving","quit","stop using","moved to","switched to"]): return "Retention Risk"
+    if any(x in lo for x in ["instant offer","buyback","buy back","cash out","sell now","instant liquidity","liquidat","quick flip","psa offers","courtyard","arena club"]): return "Liquidity Signal"
     if any(x in lo for x in ["compared to","fanatics","whatnot","alt","loupe","tiktok","beckett"]): return "Competitor Signal"
     if any(x in lo for x in ["trust","scam","fraud"]): return "Trust Erosion"
     if any(x in lo for x in ["love","recommend","amazing","best"]): return "Referral Amplifier"
@@ -167,6 +195,7 @@ def tag_topic_focus(text):
     if any(x in lo for x in ["refund","return","returns","cancel","cancellation"]): tags.append("Returns/Policy")
     if any(x in lo for x in ["consignment","auction house","goldin","heritage","pwcc","elite auction"]): tags.append("Consignment/Auctions")
     if any(x in lo for x in ["bid cancel","bid retracted","cancelled bid","auction pulled","bidder flaked","pulled bid","shill"]): tags.append("Auction Integrity")
+    if any(x in lo for x in ["instant offer","buyback","buy back","cash out","sell now","instant liquidity","liquidat","quick flip","flip fast","psa offers","courtyard","arena club","sell instantly","immediate offer","need cash","free up funds","fund a break","reinvest","re-invest","sell to buy","sold to fund"]): tags.append("Instant Offers / Liquidity")
     if "auction" in lo and "cancel" in lo: tags.append("Trust")
     # Payment Friction
     if any(x in lo for x in ["payment","payment declined","card declined","wire transfer","bank transfer","ach","charge failed","insufficient funds","not enough funds","funds not available","transaction failed","couldn't process","payment hold","funds on hold","payout delayed"]): tags.append("Payments")

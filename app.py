@@ -549,6 +549,8 @@ else:
         "What are sellers saying about authenticity guarantee rejections?",
         "How does Whatnot threaten eBay in live breaks?",
         "What shipping complaints are driving the most churn risk?",
+        "What are the signals around instant offers and liquidity in the collectibles market?",
+        "How are platforms like Courtyard and PSA Offers changing buyer/seller behavior?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
@@ -592,6 +594,11 @@ else:
             "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
             "promoted": ["promoted listing", "promoted standard", "promoted advanced", "pay to play", "ad spend"],
             "app": ["app", "seller hub", "app crash", "app bug", "app glitch"],
+            "instant offer": ["instant offer", "immediate offer", "buyback", "buy back", "sell now", "cash out", "instant liquidity", "quick flip", "psa offers", "courtyard", "arena club", "starstock", "dibbs", "otia"],
+            "liquidity": ["liquidity", "liquidat", "cash out", "free up funds", "free up capital", "sell fast", "quick sell", "fire sale", "need cash", "fund a break", "reinvest", "wallet funds", "wallet balance", "instant offer", "buyback", "psa offers"],
+            "courtyard": ["courtyard", "buyback", "wallet funds", "wallet balance", "instant offer"],
+            "arena club": ["arena club", "arenaclub", "instant offer", "buyback"],
+            "psa offers": ["psa offers", "psa offer", "instant offer", "buyback"],
         }
         expanded_terms = set()
         for w in q_words:
@@ -746,13 +753,46 @@ else:
         # ── Question-type detection for adaptive prompting ──
         # Note: Goldin and TCGPlayer are eBay SUBSIDIARIES, not competitors
         _q_subsidiary = any(t in q_lower for t in ["goldin", "tcgplayer", "tcg player"])
+        _q_liquidity = any(t in q_lower for t in ["instant offer", "liquidity", "liquidat", "buyback", "buy back", "cash out", "sell now", "quick flip", "psa offers", "courtyard", "arena club", "sell fast", "free up funds", "reinvest"])
         _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz"])
         _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
         _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
 
         # Adaptive format instructions
-        if _q_subsidiary:
+        if _q_liquidity:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+CONTEXT: The collectibles market is experiencing a surge in "instant liquidity" features — platforms offering instant offers, buybacks, and wallet-based payouts to let users quickly convert holdings to cash or reinvest. Key players include:
+- PSA Offers (instant buyback on graded cards)
+- Courtyard (wallet-based buyback with instant funds)
+- Arena Club (instant offers on vault cards)
+- eBay (traditional marketplace — slower but larger audience)
+
+Analyze how these instant liquidity trends affect eBay's ecosystem, seller/buyer behavior, and competitive positioning.
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the liquidity signal? How does this trend impact eBay's collectibles business?)
+
+### Liquidity Landscape
+(4-6 sentences analyzing the instant offer/liquidity trend — who's offering it, why users want it, volume/sentiment from signals)
+
+### User Signals
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations showing liquidity-related behavior or sentiment)
+
+### Impact Assessment
+| Factor | Current State | eBay Opportunity | Risk if Ignored |
+|--------|--------------|-----------------|-----------------|
+(Fill with 3-4 rows: e.g., Seller retention, Buyer reinvestment velocity, Wallet/funds ecosystem, Cross-platform leakage)
+
+### Recommended Actions for eBay
+(4-6 NUMBERED actions:
+1. **[Action Name]** — Owner: [Team/PM]. Timeline: [When]. Impact: [How this captures liquidity demand])
+
+### Confidence & Gaps
+- Evidence strength: [Strong/Moderate/Weak] based on [X] signals
+- What's missing: [specific data gaps]"""
+        elif _q_subsidiary:
             # Goldin and TCGPlayer are eBay SUBSIDIARIES - analyze as ecosystem, not competitors
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
@@ -940,6 +980,7 @@ DOMAIN EXPERTISE:
 - eBay SUBSIDIARIES (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
 - eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (price guide integration)
 - TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment)
+- INSTANT LIQUIDITY LANDSCAPE: PSA Offers (instant buyback on graded cards), Courtyard (wallet-based buyback + instant funds), Arena Club (instant offers on vault cards), StarStock, Dibbs, Otia — these platforms offer instant liquidity features that let users convert holdings to cash or reinvest immediately. This is an emerging competitive dynamic for eBay.
 - eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
 - User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
 - Key metrics: GMV, take rate, seller NPS, buyer conversion, authentication volume

@@ -50,7 +50,11 @@ def detect_subtags(text):
         "authentication": "Trust Issue", "refund": "Refund Issue", "tracking": "Tracking Confusion",
         "fees": "Fee Frustration", "grading": "Grading Complaint", "shipping": "Shipping Concern",
         "vault": "Vault Friction", "fake": "Counterfeit Concern", "pop report": "Comps/Valuation",
-        "turnaround": "Speed Issue", "verification": "Trust Issue"
+        "turnaround": "Speed Issue", "verification": "Trust Issue",
+        "instant offer": "Instant Offers", "buyback": "Instant Offers", "buy back": "Instant Offers",
+        "cash out": "Liquidity", "liquidat": "Liquidity", "sell now": "Liquidity",
+        "quick flip": "Liquidity", "psa offers": "Instant Offers", "courtyard": "Liquidity Platform",
+        "arena club": "Liquidity Platform", "free up funds": "Liquidity", "reinvest": "Liquidity",
     }
     VALUATION_PHRASES = ["what is it worth", "what's it worth", "how much is", "how much are",
         "worth anything", "good deal", "got fleeced", "overpaid", "fair price", "market value",
