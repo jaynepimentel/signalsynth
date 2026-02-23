@@ -528,16 +528,18 @@ else:
         # Skip bad responses silently
     st.session_state["qa_messages"] = _cleaned_messages
 
-    c1, c2 = st.columns([5, 1])
-    with c1:
-        user_question = st.text_input(
-            "Ask a question",
-            key="qa_draft",
-            placeholder="e.g., What are the top complaints about Whatnot vs eBay?",
-        )
-    with c2:
-        st.write("")
-        ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
+    # Use a form so Enter key submits the question
+    with st.form(key="ask_ai_form", clear_on_submit=False):
+        c1, c2 = st.columns([5, 1])
+        with c1:
+            user_question = st.text_input(
+                "Ask a question",
+                key="qa_draft",
+                placeholder="e.g., What are the top complaints about Whatnot vs eBay?",
+            )
+        with c2:
+            st.write("")
+            ask_clicked = st.form_submit_button("Ask AI", type="primary")
 
     # ── Example prompt selector ──
     _rp_options = [
@@ -599,18 +601,39 @@ else:
             if trigger in q_lower:
                 expanded_terms.update(expansions)
 
+        # Terms that require exact match (not substring) to avoid false positives
+        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz"}
+        
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
             subtag = (_taxonomy_topic(insight) or "").lower()
             source = (insight.get("source", "") or "").lower()
+            competitor = (insight.get("competitor", "") or "").lower()
             score = 0
+            
             for term in expanded_terms:
-                if len(term) > 2 and term in text:
-                    score += 2
-                if term in subtag:
-                    score += 4
-                if term in source:
-                    score += 2
+                if len(term) <= 2:
+                    continue
+                    
+                # For company names, require more precise matching
+                if term in _EXACT_MATCH_TERMS:
+                    # Must match the exact term, not just substring
+                    # e.g., "tcgplayer" should match "tcgplayer" but "tcg" alone shouldn't match "pokemontcg"
+                    import re
+                    pattern = r'\b' + re.escape(term) + r'\b'
+                    if re.search(pattern, text):
+                        score += 6  # High boost for exact company match
+                    if term in competitor:
+                        score += 8  # Very high boost if it's tagged as this competitor
+                else:
+                    # Standard substring matching for general terms
+                    if term in text:
+                        score += 2
+                    if term in subtag:
+                        score += 4
+                    if term in source:
+                        score += 2
+            
             # Boost high-quality signals
             sig_strength = insight.get("signal_strength", 0)
             if sig_strength > 60:
@@ -946,30 +969,38 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                 
                 with st.spinner(f"Analyzing signals (model: {_ask_ai_model}, {len(relevant)} signals)..."):
                     # Make direct API call
-                    completion = _client.chat.completions.create(
-                        model=_ask_ai_model,
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": question}
-                        ],
-                        max_completion_tokens=4000,
-                        temperature=0.4,
-                    )
-                    response = (completion.choices[0].message.content or "").strip()
+                    try:
+                        completion = _client.chat.completions.create(
+                            model=_ask_ai_model,
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": question}
+                            ],
+                            max_completion_tokens=4000,
+                            temperature=0.4,
+                        )
+                        response = (completion.choices[0].message.content or "").strip()
+                    except Exception as api_err:
+                        st.error(f"API call failed: {type(api_err).__name__}: {api_err}")
+                        response = f"⚠️ API Error: {api_err}"
                 
                 # Handle empty responses - try fallback
                 if not response or len(response.strip()) < 50:
-                    st.warning(f"Primary model returned {len(response)} chars. Trying gpt-4o...")
-                    completion = _client.chat.completions.create(
-                        model="gpt-4o",
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": question}
-                        ],
-                        max_completion_tokens=4000,
-                        temperature=0.4,
-                    )
-                    response = (completion.choices[0].message.content or "").strip()
+                    st.warning(f"Primary model returned {len(response) if response else 0} chars. Trying gpt-4o...")
+                    try:
+                        completion = _client.chat.completions.create(
+                            model="gpt-4o",
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": question}
+                            ],
+                            max_completion_tokens=4000,
+                            temperature=0.4,
+                        )
+                        response = (completion.choices[0].message.content or "").strip()
+                    except Exception as fallback_err:
+                        st.error(f"Fallback API call failed: {fallback_err}")
+                        response = f"⚠️ Fallback API Error: {fallback_err}"
                 
                 # Still empty?
                 if not response or len(response.strip()) < 50:
