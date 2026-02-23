@@ -744,13 +744,47 @@ else:
             pass
 
         # ── Question-type detection for adaptive prompting ──
-        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "goldin", "heritage", "tcgplayer", "versus", " vs ", "compete", "market share", "threat"])
+        # Note: Goldin and TCGPlayer are eBay SUBSIDIARIES, not competitors
+        _q_subsidiary = any(t in q_lower for t in ["goldin", "tcgplayer", "tcg player"])
+        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz"])
         _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
         _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
 
         # Adaptive format instructions
-        if _q_competitive:
+        if _q_subsidiary:
+            # Goldin and TCGPlayer are eBay SUBSIDIARIES - analyze as ecosystem, not competitors
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+IMPORTANT CONTEXT: Goldin and TCGPlayer are eBay SUBSIDIARIES (eBay-owned companies), NOT competitors. 
+Analyze them as part of the eBay Collectibles ecosystem, focusing on:
+- How they complement or extend eBay's marketplace
+- User experience and sentiment with these eBay-owned platforms
+- Integration opportunities or friction points with core eBay
+- How they strengthen eBay's overall collectibles position
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the key insight about this eBay subsidiary? How is it performing within the eBay ecosystem?)
+
+### Ecosystem Assessment
+(4-6 sentences analyzing how this subsidiary fits within eBay Collectibles — user sentiment, market positioning, integration with core eBay)
+
+### User Feedback
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations showing user experience with this eBay subsidiary)
+
+### Ecosystem Synergies & Friction
+| Area | Synergy with eBay | Friction/Gap | Opportunity |
+|------|------------------|--------------|-------------|
+(Fill with 3-4 rows: e.g., Seller overlap, Buyer cross-shopping, Authentication, Inventory flow)
+
+### Recommended Actions
+(4-6 NUMBERED actions to improve this subsidiary's integration or performance within the eBay ecosystem:
+1. **[Action Name]** — Owner: [Team/PM]. Timeline: [When]. Impact: [Expected ecosystem benefit])
+
+### Confidence & Gaps
+- Evidence strength: [Strong/Moderate/Weak] based on [X] signals
+- What's missing: [specific data gaps]"""
+        elif _q_competitive:
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
 ### 🎯 Bottom Line
@@ -903,11 +937,14 @@ else:
         system_prompt = f"""You are SignalSynth AI — a senior strategy analyst embedded in the eBay Collectibles & Trading Cards business unit.
 
 DOMAIN EXPERTISE:
-- eBay owns Goldin (premium auctions), TCGPlayer (TCG marketplace), and has PSA partnerships (vault, consignment, grading)
-- Key competitors: Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment)
-- eBay products: Authenticity Guarantee, Price Guide (Card Ladder integration), Vault, Promoted Listings, Seller Hub
+- eBay SUBSIDIARIES (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
+- eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (price guide integration)
+- TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment)
+- eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
 - User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
 - Key metrics: GMV, take rate, seller NPS, buyer conversion, authentication volume
+
+CRITICAL: When discussing Goldin or TCGPlayer, remember they are PART OF THE EBAY ECOSYSTEM. Analyze them as subsidiaries that extend eBay's reach, not as competitive threats.
 
 YOUR AUDIENCE: VP/GM-level leaders who make investment and prioritization decisions. They need strategic clarity, not just data summaries. Connect evidence to business impact.
 
