@@ -517,6 +517,16 @@ else:
         st.session_state["qa_messages"] = []
     if "qa_draft" not in st.session_state:
         st.session_state["qa_draft"] = ""
+    
+    # Auto-clean bad responses from history on every page load (no user action needed)
+    _cleaned_messages = []
+    for m in st.session_state["qa_messages"]:
+        if m.get("role") == "user":
+            _cleaned_messages.append(m)
+        elif m.get("content") and len(m.get("content", "").strip()) >= 50 and not m.get("content", "").startswith("⚠️"):
+            _cleaned_messages.append(m)
+        # Skip bad responses silently
+    st.session_state["qa_messages"] = _cleaned_messages
 
     c1, c2 = st.columns([5, 1])
     with c1:
@@ -541,7 +551,8 @@ else:
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
         if val:
-            st.session_state["_adhoc_auto_ask"] = val
+            # Populate the text field instead of auto-submitting
+            st.session_state["qa_draft"] = val
             st.session_state["_rp_select"] = ""
 
     st.selectbox(
@@ -717,53 +728,152 @@ else:
 
         # Adaptive format instructions
         if _q_competitive:
-            format_guidance = """Format with these headings:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the ONE key takeaway an exec needs to know? Be direct and specific.)
+
 ### Executive Answer
-(4-6 sentences framing the competitive dynamics)
+(4-6 sentences framing the competitive dynamics — who's winning, who's losing, why it matters for eBay)
+
 ### Competitive Evidence
-(5-8 bullets with verbatim user quotes [S#] showing how users compare platforms)
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations showing how users compare platforms. Example: "I switched to Whatnot because eBay fees are insane" [S3])
+
 ### Threat Assessment
-(3-4 bullets: What specific advantage/disadvantage does eBay have? What's the switching trigger?)
+| Factor | eBay Position | Competitor Advantage | Risk Level |
+|--------|--------------|---------------------|------------|
+(Fill this table with 3-4 rows analyzing specific competitive dynamics)
+
 ### Strategic Response
-(4-6 numbered actions: what eBay Collectibles should do, with owner + timeline + expected impact)
+(4-6 NUMBERED actions with this structure:
+1. **[Action Name]** — Owner: [Team/PM]. Timeline: [When]. Impact: [Expected outcome]. Evidence: [S#])
+
 ### Confidence & Gaps
-(2-3 bullets on evidence quality and what's missing)"""
+- Evidence strength: [Strong/Moderate/Weak] based on [X] signals
+- What's missing: [specific data gaps]"""
         elif _q_strategic:
-            format_guidance = """Format with these headings:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What strategic decision should leadership make based on this evidence?)
+
 ### Strategic Assessment
-(5-8 sentences framing the opportunity/challenge with data backing)
+(5-8 sentences framing the opportunity/challenge — quantify the scale: how many signals, what % negative, which personas affected)
+
 ### Signal Evidence
-(5-8 bullets with verbatim user quotes [S#] — organized by theme)
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations, organized by theme)
+
 ### Market Context
-(3-4 bullets connecting signals to broader collectibles industry trends)
+- **Industry trend**: [How does this connect to broader collectibles market shifts?]
+- **Competitive pressure**: [Are competitors doing better/worse here?]
+- **Timing urgency**: [Is this getting worse? Stable? Improving?]
+
 ### Recommended Strategy
-(5-7 numbered actions organized by time horizon: immediate / 30-day / 90-day, each with owner + expected impact)
+**Immediate (This Week)**:
+1. [Action] — Owner: [Team]. Impact: [Expected outcome]
+
+**30-Day Horizon**:
+2-3. [Actions with owners and impacts]
+
+**90-Day Horizon**:
+4-5. [Strategic investments with expected ROI]
+
 ### Risks & Dependencies
-(2-4 bullets)"""
+- [Risk 1]: Mitigation: [approach]
+- [Risk 2]: Mitigation: [approach]"""
+        elif _q_trend:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the trend? Is it accelerating, stable, or declining? What should leadership do about it?)
+
+### Trend Analysis
+| Timeframe | Signal Volume | Sentiment | Key Drivers |
+|-----------|--------------|-----------|-------------|
+| Recent (7d) | [X signals] | [% neg/pos] | [Main themes] |
+| Last 30d | [X signals] | [% neg/pos] | [Main themes] |
+
+### What's Driving This Trend
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations showing the evolution)
+
+### Trajectory Assessment
+- **Direction**: [Improving / Stable / Worsening]
+- **Velocity**: [Accelerating / Steady / Slowing]
+- **Leading indicators**: [What signals predict where this is heading?]
+
+### Implications
+- **If trend continues**: [What happens in 30/60/90 days?]
+- **Competitive context**: [Are competitors seeing the same?]
+- **Business impact**: [GMV/retention/NPS implications]
+
+### Recommended Response
+1. **[Action]** — Owner: [Team]. Timeline: [When]. Expected Impact: [Outcome]
+2. [Continue with 2-4 more prioritized actions]
+
+### Confidence & Gaps
+- Trend confidence: [High/Medium/Low] based on [X] signals over [Y] timeframe
+- What would help: [Additional data to confirm/refute]"""
         elif _q_product:
-            format_guidance = """Format with these headings:
-### Product Assessment
-(4-6 sentences — what's working, what's broken, user sentiment)
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: Is this product working? What's the #1 thing that needs to change?)
+
+### Product Health Summary
+| Metric | Status | Evidence |
+|--------|--------|----------|
+| User Sentiment | 🟢/🟡/🔴 | X% negative, Y signals |
+| Functional Issues | 🟢/🟡/🔴 | [Key bugs/friction] |
+| Competitive Position | 🟢/🟡/🔴 | [vs. alternatives] |
+
 ### User Evidence
-(5-8 bullets with verbatim quotes [S#] — group by positive/negative/neutral)
+**What's Working** (with [S#] citations):
+- "[verbatim positive quote]" [S#]
+
+**What's Broken** (with [S#] citations):
+- "[verbatim negative quote]" [S#] — Impact: [who's affected, how severely]
+
 ### Impact Analysis
-(3-4 bullets: Who's affected? How severely? Revenue/retention implications?)
-### Recommended Fixes & Improvements
-(4-6 numbered actions with priority, owner, and expected user impact)
+- **Revenue risk**: [$ or GMV impact if estimable]
+- **Retention risk**: [Which persona is most likely to churn?]
+- **Brand risk**: [Reputation/trust implications]
+
+### Recommended Fixes
+| Priority | Fix | Owner | User Impact | Effort |
+|----------|-----|-------|-------------|--------|
+| P0 | [Critical fix] | [Team] | [Impact] | [S/M/L] |
+| P1 | [Important fix] | [Team] | [Impact] | [S/M/L] |
+
 ### Confidence & Gaps
-(2-3 bullets)"""
+- Evidence: [X] signals, [Strong/Moderate/Weak] coverage
+- Missing: [What would strengthen this analysis?]"""
         else:
-            format_guidance = """Format with these headings:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: Answer the question directly. What does leadership need to know RIGHT NOW?)
+
 ### Executive Answer
-(4-6 sentences, direct answer first, then context)
+(4-6 sentences expanding on the bottom line with data backing — cite signal counts, sentiment ratios, key patterns)
+
 ### What the Signals Show
-(5-8 bullets with concrete evidence — cite verbatim user quotes in "italics" with [S#] references)
+(5-8 bullets with VERBATIM user quotes in "italics" with [S#] references. Example:
+- "I've been on eBay for 15 years but the new fee structure is pushing me to Whatnot" [S3] — Power Seller, 89 engagement score)
+
 ### Implications for eBay Collectibles
-(3-5 bullets connecting evidence to business impact)
+- **Revenue impact**: [How does this affect GMV/take rate?]
+- **User impact**: [Which personas? How many affected?]
+- **Competitive impact**: [Does this help/hurt vs. competitors?]
+- **Timeline urgency**: [Is this acute or chronic? Getting worse?]
+
 ### Recommended Actions
-(4-6 numbered actions with owner + timeline + expected impact)
+1. **[Action Name]** — Owner: [Specific team/PM]. Timeline: [When]. Expected Impact: [Quantified if possible]
+2. [Continue with 3-5 more prioritized actions]
+
 ### Confidence & Gaps
-(2-3 bullets on evidence quality)"""
+- Evidence strength: [Strong/Moderate/Weak] — based on [X] signals from [Y] sources
+- Bias check: [Are signals one-sided? Missing perspectives?]
+- What would help: [Additional data that would strengthen conclusions]"""
 
         context_block = "\n".join(context_lines) if context_lines else "(No directly matching posts found.)"
 
@@ -780,14 +890,26 @@ YOUR AUDIENCE: VP/GM-level leaders who make investment and prioritization decisi
 
 {format_guidance}
 
-RULES:
-- Ground every claim in the provided signals — never invent data.
-- Cite 4-8 verbatim user quotes with [S#] tags so readers can verify.
-- Use specific product names, features, and policies — never generic language like "improve the experience."
-- Quantify when possible (e.g., "X of Y signals mention..." or "engagement score of Z").
-- If evidence is thin or one-sided, say so explicitly and flag what data would strengthen the analysis.
-- Connect dots between signals — identify patterns, not just individual complaints.
-- When recommending actions, name the specific PM/team owner and expected business impact.
+CRITICAL RULES — FOLLOW EXACTLY:
+
+⚠️ ANTI-HALLUCINATION RULES (MOST IMPORTANT):
+- You have NO external data. You ONLY know what's in the RELEVANT SIGNALS section below.
+- NEVER invent statistics like "10% improvement" or "7-9% increase" — you have NO survey data, NO metrics, NO percentages unless explicitly stated in a signal.
+- NEVER claim "recent data shows" or "surveys indicate" — you only have community posts and forum discussions.
+- Every number you cite MUST come from the signals: "X of Y signals mention...", "engagement score of Z from [S#]"
+- If you don't have data to answer, say "The signals don't contain direct evidence on this, but based on related discussions..."
+
+RESPONSE RULES:
+1. **ALWAYS produce a substantive response** — never return empty or minimal text. If evidence is thin, say so but still provide analysis.
+2. **Lead with the answer** — executives skim. Put the most important insight in the first 2-3 sentences.
+3. **Ground EVERY claim in [S#] citations** — if you can't cite a signal, don't make the claim.
+4. **Use VERBATIM quotes** — copy exact user language in "italics" with [S#] tags so readers can verify.
+5. **Be specific** — name exact products (Vault, AG, Price Guide), policies, and features. Never say "improve the experience."
+6. **Only quantify what you can count** — "8 of 25 signals mention shipping issues", NOT invented percentages.
+7. **Connect patterns** — synthesize what signals mean together.
+8. **Actionable recommendations** — every recommendation needs: Owner (team/PM), Timeline (when), Expected Impact (what changes).
+9. **Be honest about gaps** — if evidence is thin or one-sided, flag it explicitly. Say "I don't have enough data" when true.
+10. **Write for a VP** — they have 2 minutes. Make every sentence count.
 
 DATASET SUMMARY:
 {stats_block}
@@ -799,27 +921,87 @@ RELEVANT SIGNALS (sorted by relevance to the question):
 {context_block}"""
 
         try:
-            from components.ai_suggester import _chat, MODEL_PREMIUM
-            with st.spinner("Analyzing signals across all sources..."):
-                response = _chat(
-                    MODEL_PREMIUM,
-                    system_prompt,
-                    question,
-                    max_completion_tokens=2800,
-                    reasoning_effort="high",
-                )
+            from openai import OpenAI
+            import os
+            from dotenv import load_dotenv
+            
+            # Load API key fresh each time
+            load_dotenv()
+            load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
+            
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key or "YOUR_" in api_key.upper():
+                # Try Streamlit secrets
+                try:
+                    api_key = st.secrets.get("OPENAI_API_KEY")
+                except:
+                    pass
+            
+            if not api_key or "YOUR_" in str(api_key).upper():
+                response = "⚠️ OpenAI API key not configured. Check your .env file or Streamlit secrets."
+            else:
+                # Create fresh client for each request
+                _client = OpenAI(api_key=api_key)
+                _ask_ai_model = "gpt-4.1"
+                
+                with st.spinner(f"Analyzing signals (model: {_ask_ai_model}, {len(relevant)} signals)..."):
+                    # Make direct API call
+                    completion = _client.chat.completions.create(
+                        model=_ask_ai_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": question}
+                        ],
+                        max_completion_tokens=4000,
+                        temperature=0.4,
+                    )
+                    response = (completion.choices[0].message.content or "").strip()
+                
+                # Handle empty responses - try fallback
+                if not response or len(response.strip()) < 50:
+                    st.warning(f"Primary model returned {len(response)} chars. Trying gpt-4o...")
+                    completion = _client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": question}
+                        ],
+                        max_completion_tokens=4000,
+                        temperature=0.4,
+                    )
+                    response = (completion.choices[0].message.content or "").strip()
+                
+                # Still empty?
+                if not response or len(response.strip()) < 50:
+                    response = f"⚠️ AI returned empty response.\n\n**Debug:**\n- Model: {_ask_ai_model}\n- Signals: {len(relevant)}\n- Prompt length: {len(system_prompt)} chars"
             # Detect thin results — offer ad-hoc scrape
             _is_thin = len(relevant) < 5
-            st.session_state["qa_messages"].append({
-                "role": "assistant",
-                "content": response,
-                "sources": source_refs,
-                "_thin": _is_thin,
-                "_question": question,
-                "_relevant_count": len(relevant),
-            })
+            
+            # Only store if we got a valid response (not empty/error)
+            if response and len(response.strip()) >= 50 and not response.startswith("⚠️"):
+                st.session_state["qa_messages"].append({
+                    "role": "assistant",
+                    "content": response,
+                    "sources": source_refs,
+                    "_thin": _is_thin,
+                    "_question": question,
+                    "_relevant_count": len(relevant),
+                })
+            else:
+                # Don't persist bad responses - show inline error instead
+                st.error(f"AI response failed. {response if response else 'Empty response.'}\n\nTry asking again.")
+                # Remove the user question we just added so it doesn't clutter history
+                if st.session_state["qa_messages"] and st.session_state["qa_messages"][-1].get("role") == "user":
+                    st.session_state["qa_messages"].pop()
         except Exception as e:
-            st.session_state["qa_messages"].append({"role": "assistant", "content": f"⚠️ Error: {e}"})
+            import traceback
+            tb = traceback.format_exc()
+            # Show error inline but don't persist to history
+            st.error(f"⚠️ Error: {e}")
+            st.code(tb, language="python")
+            # Remove the user question we just added
+            if st.session_state["qa_messages"] and st.session_state["qa_messages"][-1].get("role") == "user":
+                st.session_state["qa_messages"].pop()
 
     # ── Handle ad-hoc scrape requests ──
     if st.session_state.get("_adhoc_scrape_pending"):
@@ -868,20 +1050,53 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                     st.markdown(msg["content"])
 
                     if msg["role"] == "assistant" and not msg["content"].startswith("⚠️"):
-                        # Copy to clipboard button
-                        _copy_text = msg["content"].replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
-                        _copy_id = f"copy_{msg_idx}"
-                        _stc_qa.html(
-                            '<button id="' + _copy_id + '" onclick="'
-                            "navigator.clipboard.writeText(document.getElementById('" + _copy_id + "').dataset.text)"
-                            ".then(function(){document.getElementById('" + _copy_id + "').textContent='✅ Copied!';"
-                            "setTimeout(function(){document.getElementById('" + _copy_id + "').textContent='📋 Copy response'},1500)})"
-                            '" data-text="' + _copy_text.replace('"', '&quot;')[:3000] + '"'
-                            ' style="background:none;border:1px solid #555;color:#999;padding:4px 12px;'
-                            'border-radius:6px;cursor:pointer;font-size:12px;margin:4px 0">'
-                            '📋 Copy response</button>',
-                            height=38,
-                        )
+                        # Feedback and copy buttons
+                        fb_col1, fb_col2, fb_col3, fb_col4 = st.columns([1, 1, 1, 4])
+                        with fb_col1:
+                            if st.button("👍", key=f"thumbs_up_{msg_idx}", help="Good response - save for training"):
+                                # Save to training file
+                                import json
+                                from datetime import datetime
+                                training_entry = {
+                                    "timestamp": datetime.now().isoformat(),
+                                    "question": msg.get("_question", ""),
+                                    "response": msg["content"],
+                                    "sources_count": len(msg.get("sources", [])),
+                                    "feedback": "positive"
+                                }
+                                training_file = "ai_training_feedback.json"
+                                try:
+                                    with open(training_file, "r", encoding="utf-8") as f:
+                                        training_data = json.load(f)
+                                except:
+                                    training_data = []
+                                training_data.append(training_entry)
+                                with open(training_file, "w", encoding="utf-8") as f:
+                                    json.dump(training_data, f, indent=2, ensure_ascii=False)
+                                st.toast(f"✅ Saved to {training_file} for future training!")
+                        with fb_col2:
+                            if st.button("👎", key=f"thumbs_down_{msg_idx}", help="Bad response - remove from history"):
+                                # Remove this Q&A pair from history
+                                # Find and remove both the question and this response
+                                if msg_idx > 0:
+                                    st.session_state["qa_messages"].pop(msg_idx)  # Remove response
+                                    if msg_idx - 1 >= 0 and st.session_state["qa_messages"][msg_idx - 1].get("role") == "user":
+                                        st.session_state["qa_messages"].pop(msg_idx - 1)  # Remove question
+                                else:
+                                    st.session_state["qa_messages"].pop(msg_idx)
+                                st.toast("🗑️ Removed bad response from history")
+                                st.rerun()
+                        with fb_col3:
+                            if st.button("📋", key=f"copy_btn_{msg_idx}", help="Copy response"):
+                                st.session_state[f"_copy_content_{msg_idx}"] = msg["content"]
+                                st.toast("📋 Use Ctrl+C to copy from the text area below")
+                        
+                        # Show copy area if requested
+                        if st.session_state.get(f"_copy_content_{msg_idx}"):
+                            st.text_area("Copy this:", value=st.session_state[f"_copy_content_{msg_idx}"], height=100, key=f"copy_area_{msg_idx}")
+                            if st.button("Done", key=f"copy_done_{msg_idx}"):
+                                st.session_state.pop(f"_copy_content_{msg_idx}", None)
+                                st.rerun()
 
                     # Render source links below assistant responses
                     sources = msg.get("sources")

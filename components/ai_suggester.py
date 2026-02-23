@@ -58,7 +58,7 @@ def _get_model_setting(key, default):
     v = os.getenv(key)
     return v.strip() if isinstance(v, str) and v.strip() else default
 
-MODEL_PREMIUM = _get_model_setting("OPENAI_MODEL_PREMIUM", "o3-mini")
+MODEL_PREMIUM = _get_model_setting("OPENAI_MODEL_PREMIUM", "gpt-4.1")
 MODEL_MAIN = _get_model_setting(
     "OPENAI_MODEL_MAIN",
     _get_model_setting("OPENAI_MODEL_DOCS", _get_model_setting("OPENAI_MODEL_EXEC", "gpt-4.1")),
@@ -182,19 +182,32 @@ def _chat(model, system, user, max_completion_tokens=2000, temperature=0.3, reas
 
     def _call(model_name):
         is_reasoning = any(model_name.startswith(r) for r in _REASONING_MODELS)
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ]
         if is_reasoning:
-            # Reasoning models: no temperature, use reasoning_effort
+            # Reasoning models (o-series): combine system+user into single user message
+            # These models don't support system role the same way
+            # IMPORTANT: Reasoning models need much higher token limits because
+            # reasoning tokens count against max_completion_tokens
+            combined_prompt = f"""<instructions>
+{system}
+</instructions>
+
+<user_question>
+{user}
+</user_question>"""
+            messages = [{"role": "user", "content": combined_prompt}]
+            # Use at least 10000 tokens for reasoning models to ensure output space
+            reasoning_tokens = max(max_completion_tokens * 3, 10000)
             resp = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
-                max_completion_tokens=max_completion_tokens,
+                max_completion_tokens=reasoning_tokens,
                 reasoning_effort=reasoning_effort,
             )
         else:
+            messages = [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ]
             resp = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
