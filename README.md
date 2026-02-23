@@ -291,7 +291,7 @@ signalsynth/
 ├── app.py                          # Main Streamlit application (2,400 lines)
 │
 ├── components/                     # UI components and AI integrations
-│   ├── ai_suggester.py             # LLM integration (GPT-4o), document generation
+│   ├── ai_suggester.py             # LLM integration (o3-mini, gpt-4.1), document generation
 │   ├── cluster_view_simple.py      # Strategic theme display + PRD/BRD/PRFAQ/Jira generation
 │   ├── enhanced_insight_view.py    # Individual insight cards with AI analysis
 │   ├── floating_filters.py         # Topic/Type/Time filter UI
