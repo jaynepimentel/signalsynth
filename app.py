@@ -421,6 +421,14 @@ try:
     except:
         pass
 
+    # New sources (Trustpilot, blogs, PSA Forums, app reviews, industry analysis, seller communities)
+    new_sources_raw = []
+    try:
+        with open("data/scraped_new_sources_posts.json", "r", encoding="utf-8") as f:
+            new_sources_raw = json.load(f)
+    except:
+        pass
+
     clusters_count = 0
     try:
         with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
@@ -553,6 +561,10 @@ else:
         "What are customers saying about TCGPlayer and how does it fit within the eBay ecosystem?",
         "How is Goldin performing as an eBay subsidiary and what are collectors saying?",
         "What are collectors saying about Heritage Auctions and how do they compare to eBay?",
+        "What are Trustpilot reviewers saying about eBay vs competitors?",
+        "What feedback are users giving about the eBay app experience?",
+        "How is Card Ladder performing as eBay's price guide partner?",
+        "What is the current grading landscape — PSA vs BGS vs SGC vs CGC?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
@@ -602,6 +614,11 @@ else:
             "courtyard": ["courtyard", "buyback", "wallet funds", "wallet balance", "instant offer"],
             "arena club": ["arena club", "arenaclub", "instant offer", "buyback"],
             "psa offers": ["psa offers", "psa offer", "instant offer", "buyback"],
+            "beckett": ["beckett", "bgs", "beckett grading", "beckett pricing", "beckett acquisition", "beckett fanatics", "beckett marketplace"],
+            "trustpilot": ["trustpilot", "trustpilot review", "review", "rating", "customer review", "app review", "star rating"],
+            "card ladder": ["card ladder", "cardladder", "price guide", "market comps", "price tool", "scan to price", "card value tool"],
+            "psa forums": ["psa forums", "collectors universe", "psa community", "psa discussion"],
+            "seller community": ["seller community", "seller forum", "seller experience", "seller complaint", "seller feedback"],
         }
         expanded_terms = set()
         for w in q_words:
@@ -612,7 +629,7 @@ else:
                 expanded_terms.update(expansions)
 
         # Terms that require exact match (not substring) to avoid false positives
-        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage"}
+        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage", "beckett", "fanatics", "card ladder", "cardladder"}
         
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
@@ -706,7 +723,7 @@ else:
         top_subtags = sorted(subtag_counts.items(), key=lambda x: -x[1])[:12]
 
         stats_block = (
-            f"Dataset: {len(normalized)} insights from Reddit, Twitter, YouTube, eBay Forums, Bluesky, industry news, podcasts\n"
+            f"Dataset: {len(normalized)} insights from 42 sources (Reddit, Twitter, YouTube, eBay Forums, Trustpilot, blogs, PSA Forums, app reviews, seller communities, industry news, podcasts)\n"
             f"Sentiment: {total_neg} negative, {total_pos} positive, {total_churn} churn signals, {total_praise} praise\n"
             f"Types: {', '.join(f'{k} ({v})' for k, v in sorted(type_counts.items(), key=lambda x: -x[1])[:8])}\n"
             f"Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"
@@ -744,7 +761,7 @@ else:
         industry_context = ""
         try:
             news_headlines = []
-            for src_list, src_name in [(cllct_raw, "Cllct"), (news_rss_raw, "News"), (podcast_raw, "Podcast")]:
+            for src_list, src_name in [(cllct_raw, "Cllct"), (news_rss_raw, "News"), (podcast_raw, "Podcast"), (new_sources_raw, "New Sources")]:
                 for p in sorted(src_list, key=lambda x: x.get("post_date", ""), reverse=True)[:3]:
                     hl = (p.get("title", "") or p.get("text", ""))[:120]
                     if hl:
@@ -758,13 +775,41 @@ else:
         # Note: Goldin and TCGPlayer are eBay SUBSIDIARIES, not competitors
         _q_subsidiary = any(t in q_lower for t in ["goldin", "tcgplayer", "tcg player"])
         _q_liquidity = any(t in q_lower for t in ["instant offer", "liquidity", "liquidat", "buyback", "buy back", "cash out", "sell now", "quick flip", "psa offers", "courtyard", "arena club", "sell fast", "free up funds", "reinvest"])
-        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz"])
+        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz", "beckett"])
         _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
         _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
+        _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
 
         # Adaptive format instructions
-        if _q_liquidity:
+        if _q_review and not _q_subsidiary and not _q_competitive:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the overall review sentiment? What's the #1 theme across reviews?)
+
+### Review Sentiment Breakdown
+| Platform | Positive Themes | Negative Themes | Key Quote |
+|----------|----------------|----------------|-----------|
+(Fill with rows for each platform mentioned in signals — eBay, Goldin, TCGPlayer, Whatnot, Heritage as applicable)
+
+### What Reviewers Love
+(3-5 bullets with VERBATIM reviewer quotes in "italics" with [S#] citations — what's working well)
+
+### What Reviewers Hate
+(3-5 bullets with VERBATIM reviewer quotes in "italics" with [S#] citations — pain points and complaints)
+
+### Competitive Review Comparison
+(2-3 sentences: How does eBay's review sentiment compare to competitors? Which platform has the happiest/angriest users?)
+
+### Recommended Actions
+1. **[Action Name]** — Owner: [Team/PM]. Timeline: [When]. Impact: [How this addresses reviewer complaints]
+2-4. [Continue with prioritized actions]
+
+### Confidence & Gaps
+- Evidence strength: [Strong/Moderate/Weak] based on [X] review signals
+- What's missing: [specific gaps in review coverage]"""
+        elif _q_liquidity:
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
 CONTEXT: The collectibles market is experiencing a surge in "instant liquidity" features — platforms offering instant offers, buybacks, and wallet-based payouts to let users quickly convert holdings to cash or reinvest. Key players include:
@@ -983,11 +1028,12 @@ Analyze them as part of the eBay Collectibles ecosystem, focusing on:
 DOMAIN EXPERTISE:
 - eBay SUBSIDIARIES (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
 - eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (price guide integration)
-- TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment)
+- TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment), Beckett (grading + pricing, acquired by Fanatics)
 - INSTANT LIQUIDITY LANDSCAPE: PSA Offers (instant buyback on graded cards), Courtyard (wallet-based buyback + instant funds), Arena Club (instant offers on vault cards), StarStock, Dibbs, Otia — these platforms offer instant liquidity features that let users convert holdings to cash or reinvest immediately. This is an emerging competitive dynamic for eBay.
 - eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
 - User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
 - Key metrics: GMV, take rate, seller NPS, buyer conversion, authentication volume
+- DATA SOURCES: This dataset includes Trustpilot reviews (eBay, Goldin, TCGPlayer, Whatnot, Heritage), app store review discussions, PSA Collectors Universe forums, Goldin Blog, Heritage Blog, Card Ladder blog, seller community forums, and industry analysis reports — in addition to Reddit, Twitter/X, YouTube, eBay Forums, news RSS, and podcasts.
 
 CRITICAL: When discussing Goldin or TCGPlayer, remember they are PART OF THE EBAY ECOSYSTEM. Analyze them as subsidiaries that extend eBay's reach, not as competitive threats.
 
@@ -1962,6 +2008,7 @@ Signals:
             "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
             "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
             "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
+            "Card Ladder": ["card ladder", "cardladder", "price guide", "scan to price", "card value tool"],
             "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
         }
         partner_counts = {}
@@ -2074,6 +2121,12 @@ with tabs[3]:
     # Forums & Blogs
     for p in forums_blogs_raw:
         src = p.get("source", "Forum")
+        p["_industry_source"] = src
+        industry_posts.append(p)
+
+    # New sources (blogs, industry analysis, Trustpilot, PSA Forums, app reviews, seller communities)
+    for p in new_sources_raw:
+        src = p.get("source", "New Source")
         p["_industry_source"] = src
         industry_posts.append(p)
 
@@ -2309,6 +2362,13 @@ with tabs[3]:
                 "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
                 "Alt.xyz Blog": "📝", "COMC": "🃏", "Cllct": "🗞️",
                 "Podcast": "🎙️",
+                "Trustpilot:eBay": "⭐", "Trustpilot:Goldin": "⭐",
+                "Trustpilot:TCGPlayer": "⭐", "Trustpilot:Whatnot": "⭐",
+                "Trustpilot:Heritage": "⭐",
+                "Goldin Blog": "📝", "Heritage Blog": "📝",
+                "Card Ladder": "📊", "PSA Forums": "🔐",
+                "App Reviews": "📱", "Industry Analysis": "📈",
+                "Seller Community": "🛒",
             }
             icon = source_icons.get(source_label, "📄")
             sub_label = f"r/{sub} · " if sub else ""
@@ -2323,7 +2383,8 @@ with tabs[3]:
         st.caption("Latest from Cllct, Beckett, Cardlines, Sports Card Nonsense, and other industry sources — curated for your strategy team.")
 
         # Gather news + podcast posts, sorted by date
-        _news_sources = {"News", "Cllct", "Podcast", "Alt.xyz Blog", "Blowout Forums", "Net54 Baseball"}
+        _news_sources = {"News", "Cllct", "Podcast", "Alt.xyz Blog", "Blowout Forums", "Net54 Baseball",
+                         "Goldin Blog", "Heritage Blog", "Card Ladder", "Industry Analysis"}
         news_podcast_feed = sorted(
             [p for p in industry_posts if p.get("_industry_source") in _news_sources],
             key=lambda x: x.get("post_date", ""),
@@ -2333,7 +2394,8 @@ with tabs[3]:
         if not news_podcast_feed:
             st.info("No industry news or podcast data available yet.")
         else:
-            _np_icons = {"News": "📰", "Cllct": "🗞️", "Podcast": "🎙️", "Alt.xyz Blog": "📝", "Blowout Forums": "🗣️", "Net54 Baseball": "⚾"}
+            _np_icons = {"News": "📰", "Cllct": "🗞️", "Podcast": "🎙️", "Alt.xyz Blog": "📝", "Blowout Forums": "🗣️", "Net54 Baseball": "⚾",
+                         "Goldin Blog": "📝", "Heritage Blog": "📝", "Card Ladder": "📊", "Industry Analysis": "📈"}
             for idx, np_post in enumerate(news_podcast_feed[:15], 1):
                 np_src = np_post.get("_industry_source", "")
                 np_icon = _np_icons.get(np_src, "📄")
@@ -2466,6 +2528,13 @@ with tabs[3]:
                 "Bench Trading": "🔄", "TCDB": "🗂️",
                 "Reddit": "💬", "Twitter": "🐦", "Bluesky": "🦋",
                 "Cllct": "🗞️", "Podcast": "🎙️",
+                "Trustpilot:eBay": "⭐", "Trustpilot:Goldin": "⭐",
+                "Trustpilot:TCGPlayer": "⭐", "Trustpilot:Whatnot": "⭐",
+                "Trustpilot:Heritage": "⭐",
+                "Goldin Blog": "📝", "Heritage Blog": "📝",
+                "Card Ladder": "📊", "PSA Forums": "🔐",
+                "App Reviews": "📱", "Industry Analysis": "📈",
+                "Seller Community": "🛒",
             }
             icon = source_icons.get(source_label, "📄")
 
