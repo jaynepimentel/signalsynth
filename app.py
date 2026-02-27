@@ -552,19 +552,16 @@ else:
     # ── Example prompt selector ──
     _rp_options = [
         "",
-        "Is there any signal about PSA vault issues?",
-        "How are buyers responding to the new unpaid item policies?",
-        "What are sellers saying about authenticity guarantee rejections?",
-        "How does Whatnot threaten eBay in live breaks?",
-        "What shipping complaints are driving the most churn risk?",
-        "What are the signals around instant offers, buybacks, and liquidity in the collectibles market?",
+        "Give me an executive briefing — what are the top 3 issues I should act on this week?",
+        "What seller protection gaps are driving the most churn risk right now?",
+        "How does Whatnot threaten eBay in live breaks and what's our competitive moat?",
+        "What are the signals around instant offers, buybacks, and liquidity — who's winning and why?",
         "What are customers saying about TCGPlayer and how does it fit within the eBay ecosystem?",
         "How is Goldin performing as an eBay subsidiary and what are collectors saying?",
-        "What are collectors saying about Heritage Auctions and how do they compare to eBay?",
-        "What are Trustpilot reviewers saying about eBay vs competitors?",
-        "What feedback are users giving about the eBay app experience?",
-        "How is Card Ladder performing as eBay's price guide partner?",
-        "What is the current grading landscape — PSA vs BGS vs SGC vs CGC?",
+        "What are the biggest fee complaints and are they driving sellers to competitors?",
+        "How is eBay's Price Guide perceived vs Card Ladder and PSA — are we the trusted standard?",
+        "What do Trustpilot reviews reveal about eBay vs Whatnot vs Heritage customer satisfaction?",
+        "What are the top return/INAD abuse signals and what should we fix first?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
@@ -605,7 +602,7 @@ else:
             "tcgplayer": ["tcgplayer", "tcg player", "tcgplayer fees", "tcgplayer seller", "tcgplayer scam", "tcgplayer condition", "tcgplayer refund", "tcgplayer shipping"],
             "heritage": ["heritage auctions", "heritage auction", "ha.com", "heritage buyer premium", "heritage consignment", "heritage fees"],
             "churn": ["churn", "leaving ebay", "switching", "done with ebay", "switched to"],
-            "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value"],
+            "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value", "market comps", "price tool", "ebay comps", "sales data", "transaction data", "pricing data"],
             "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
             "promoted": ["promoted listing", "promoted standard", "promoted advanced", "pay to play", "ad spend"],
             "app": ["app", "seller hub", "app crash", "app bug", "app glitch"],
@@ -616,7 +613,7 @@ else:
             "psa offers": ["psa offers", "psa offer", "instant offer", "buyback"],
             "beckett": ["beckett", "bgs", "beckett grading", "beckett pricing", "beckett acquisition", "beckett fanatics", "beckett marketplace"],
             "trustpilot": ["trustpilot", "trustpilot review", "review", "rating", "customer review", "app review", "star rating"],
-            "card ladder": ["card ladder", "cardladder", "price guide", "market comps", "price tool", "scan to price", "card value tool"],
+            "card ladder": ["card ladder", "cardladder", "card ladder index", "cardladder.com", "card ladder data", "ebay transaction data", "scan to price", "card value tool"],
             "psa forums": ["psa forums", "collectors universe", "psa community", "psa discussion"],
             "seller community": ["seller community", "seller forum", "seller experience", "seller complaint", "seller feedback"],
         }
@@ -1192,7 +1189,8 @@ Analyze them as part of the eBay Collectibles ecosystem, focusing on:
 
 DOMAIN EXPERTISE:
 - eBay SUBSIDIARIES (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
-- eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (price guide integration)
+- eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (receives eBay transaction data to power indexes)
+- PRICE GUIDE STRATEGY: eBay's goal is to be THE premier, most trusted price guide in the collectibles market. eBay provides its transaction/sales data to partners like Card Ladder and PSA to help them build their indexes — but eBay's own Price Guide (powered by eBay sales comps) is the primary product. Card Ladder and PSA are data recipients, not data providers to eBay. When analyzing Price Guide signals, frame eBay as the owner of the most comprehensive transaction dataset in collectibles.
 - TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment), Beckett (grading + pricing, acquired by Fanatics)
 - INSTANT LIQUIDITY LANDSCAPE: PSA Offers (instant buyback on graded cards), Courtyard (wallet-based buyback + instant funds), Arena Club (instant offers on vault cards), StarStock, Dibbs, Otia — these platforms offer instant liquidity features that let users convert holdings to cash or reinvest immediately. This is an emerging competitive dynamic for eBay.
 - eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
@@ -2711,7 +2709,7 @@ with tabs[3]:
 
         # ── eBay Price Guide Spotlight ──
         st.markdown("### 🧭 eBay Price Guide Signals")
-        st.caption("What users like, where they are confused, and what they dislike about eBay's Price Guide (including Card Ladder coverage).")
+        st.caption("User sentiment on eBay's Price Guide — the market's most comprehensive pricing tool, powered by eBay's transaction data. Card Ladder and PSA receive this data to build their indexes.")
 
         def _is_price_guide_signal(item):
             return _is_true_price_guide_signal(item)
