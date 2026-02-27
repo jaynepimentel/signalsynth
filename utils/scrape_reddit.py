@@ -56,6 +56,16 @@ SUBREDDITS = [
     "DigimonCardGame2020",
     "OnePieceTCG",
     "lorcana",
+    # Additional collectibles communities
+    "CardCollecting",
+    "NonSportsCards",
+    "vintagecards",
+    "comicbooks",
+    "CGCComics",
+    "waxsealed",
+    # Marketplace discussion
+    "scamming",
+    "Whatnot",
 ]
 
 # Search queries for cross-subreddit search

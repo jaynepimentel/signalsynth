@@ -169,6 +169,7 @@ SCRAPED_FILES = [
     "data/scraped_news_rss_posts.json",  # RSS news feeds (Beckett, Cardlines, PSA Blog, etc.)
     "data/scraped_podcast_posts.json",  # Podcast episodes (Sports Card Nonsense, etc.)
     "data/scraped_community_posts.json",  # Community discussions
+    "data/scraped_new_sources_posts.json",  # Trustpilot, Goldin Blog, Heritage Blog, Card Ladder, etc.
     "data/scraped_reddit_posts.json",  # Fallback
     "data/scraped_bluesky_posts.json",  # Fallback
 ]
@@ -196,6 +197,11 @@ CURATED_SOURCES = {
     # Subsidiary/competitor tagged posts from competitor scraper
     "Goldin", "TCGPlayer", "Beckett", "PSA Consignment",
     "Fanatics Live", "Alt",
+    # New sources — all curated by their scrapers for collectibles relevance
+    "Trustpilot:eBay", "Trustpilot:Goldin", "Trustpilot:TCGPlayer",
+    "Trustpilot:Whatnot", "Trustpilot:Heritage",
+    "Goldin Blog", "Heritage Blog", "Card Ladder",
+    "PSA Forums", "App Reviews", "Industry Analysis", "Seller Community",
 }
 
 # Competitor/subsidiary entity keywords — posts mentioning these entities

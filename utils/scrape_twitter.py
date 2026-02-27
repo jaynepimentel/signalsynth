@@ -15,15 +15,34 @@ from bs4 import BeautifulSoup
 
 # Search queries — "site:x.com" restricts Google to indexed tweets
 SEARCH_QUERIES = [
+    # eBay core
     "site:x.com ebay collectibles",
     "site:x.com ebay trading cards",
     "site:x.com ebay vault",
     "site:x.com ebay authentication guarantee",
-    "site:x.com psa grading cards",
-    "site:x.com goldin auctions",
-    "site:x.com fanatics collect",
-    "site:x.com sports cards graded",
     "site:x.com ebay seller shipping",
+    "site:x.com ebay fees seller",
+    "site:x.com ebay price guide cards",
+    # Grading
+    "site:x.com psa grading cards",
+    "site:x.com psa vault graded",
+    "site:x.com bgs sgc grading",
+    # Subsidiaries
+    "site:x.com goldin auctions",
+    "site:x.com goldin auction record",
+    "site:x.com tcgplayer marketplace",
+    "site:x.com tcgplayer seller",
+    # Competitors
+    "site:x.com fanatics collect",
+    "site:x.com whatnot live breaks",
+    "site:x.com heritage auctions cards",
+    # Market trends
+    "site:x.com sports cards graded",
+    "site:x.com sports card market 2025",
+    "site:x.com card show convention",
+    # Liquidity / instant offers
+    "site:x.com instant offer cards sell",
+    "site:x.com courtyard cards vault",
 ]
 
 # Known collectibles accounts to pull timelines from
@@ -33,6 +52,12 @@ TWITTER_ACCOUNTS = [
     "GoldinCo",
     "Aborotics",
     "CardPurchaser",
+    "TCGplayer",
+    "HeritageAuction",
+    "Whatnot",
+    "FanaticsCollect",
+    "CardLadderCo",
+    "AltDotXyz",
 ]
 
 SAVE_PATH = "data/scraped_twitter_posts.json"

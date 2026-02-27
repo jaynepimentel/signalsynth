@@ -1,20 +1,32 @@
 {
-  "total_posts_loaded": 24043,
-  "total_relevant": 8837,
-  "total_insights": 4478,
-  "unique_sources": 22,
+  "total_posts_loaded": 26962,
+  "total_relevant": 11726,
+  "total_insights": 7032,
+  "unique_sources": 34,
   "source_distribution": {
     "eBay Forums": 1887,
     "Reddit": 1449,
+    "Industry Analysis": 678,
+    "Seller Community": 456,
+    "App Reviews": 429,
+    "PSA Forums": 216,
     "Twitter/X": 185,
+    "Heritage Blog": 160,
     "Alt.xyz Blog": 114,
+    "Trustpilot:eBay": 106,
     "Blowout Forums": 100,
     "Whatnot": 100,
     "Podcast": 100,
     "Fanatics Collect": 100,
+    "Card Ladder": 99,
     "Bench Trading": 96,
+    "Goldin Blog": 95,
+    "Trustpilot:Heritage": 88,
+    "Trustpilot:Whatnot": 85,
     "Cllct": 77,
     "COMC": 76,
+    "Trustpilot:Goldin": 76,
+    "Trustpilot:TCGPlayer": 66,
     "Bluesky": 48,
     "YouTube (comment)": 44,
     "News:Cardboard Connection": 20,
@@ -27,5 +39,5 @@
     "YouTube (transcript)": 9,
     "Google News (Blowout)": 2
   },
-  "generated_at": "2026-02-26T16:15:39.606966"
+  "generated_at": "2026-02-26T16:25:59.263410"
 }
