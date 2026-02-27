@@ -496,7 +496,7 @@ except Exception as e:
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Posts Scraped", f"{total_posts:,}",
-              help="Total posts collected from Reddit, Twitter/X, YouTube, forums, and news sites")
+              help="Total posts collected from 42 sources: Reddit, Twitter/X, YouTube, eBay Forums, Trustpilot, blogs, PSA Forums, app reviews, seller communities, news RSS, and podcasts")
 with col2:
     st.metric("Actionable Insights", f"{total:,}",
               help=f"Posts filtered for relevance and enriched with topic/sentiment tags. {total} out of {total_posts:,} posts contained actionable signal.")
@@ -508,7 +508,7 @@ with col4:
               help=f"Estimated time to manually read and categorize {total_posts:,} posts at ~2 min each")
 
 filter_pct = round(total / max(total_posts, 1) * 100, 1)
-pipeline_text = f"{total_posts:,} posts → {total:,} insights ({filter_pct}% signal) → {clusters_count} themes"
+pipeline_text = f"{total_posts:,} posts from 42 sources → {total:,} insights ({filter_pct}% signal) → {clusters_count} themes"
 if date_range:
     st.caption(f"{pipeline_text} · Data: {date_range}")
 
@@ -1655,7 +1655,7 @@ with tabs[1]:
                                 st.markdown("---")
 
         else:
-            # Subsidiaries view
+            # Subsidiaries view — structured like Competitor view
             all_subs = sorted(sub_posts_map.keys())
             selected_sub = st.selectbox("Subsidiary", ["All"] + all_subs, key="sub_select")
             show_subs = all_subs if selected_sub == "All" else [selected_sub]
@@ -1664,24 +1664,104 @@ with tabs[1]:
                 posts = sub_posts_map.get(sub_name, [])
                 if not posts:
                     continue
+
+                # Classify posts same as competitors
+                sub_complaints = []
+                sub_praise = []
+                sub_integration = []  # integration/ecosystem signals
+                sub_discussion = []
+                for p in posts:
+                    text_lower = (p.get("text", "") + " " + p.get("title", "")).lower()
+                    if any(w in text_lower for w in [
+                        "problem", "issue", "broken", "terrible", "frustrated", "scam",
+                        "complaint", "disappointed", "awful", "rip off", "warning",
+                        "bad experience", "never again", "poor quality", "hate",
+                    ]):
+                        sub_complaints.append(p)
+                    elif any(w in text_lower for w in [
+                        "love", "amazing", "best", "great experience", "impressed",
+                        "recommend", "better than", "so much better", "glad",
+                    ]):
+                        sub_praise.append(p)
+                    elif any(w in text_lower for w in [
+                        "ebay", "integration", "cross-list", "synergy", "ecosystem",
+                        "combined", "partnership", "linked", "connected",
+                    ]):
+                        sub_integration.append(p)
+                    elif (p.get("score", 0) or 0) >= 5:
+                        sub_discussion.append(p)
+
                 with st.container(border=True):
-                    st.subheader(f"🏪 {sub_name} ({len(posts)} posts)")
-                    sorted_posts = sorted(posts, key=lambda x: x.get("score", 0), reverse=True)
-                    for idx, post in enumerate(sorted_posts[:10], 1):
-                        title = post.get("title", "")[:80] or post.get("text", "")[:80]
-                        score = post.get("score", 0)
-                        post_id = post.get("post_id", f"{sub_name}_sub_{idx}")
-                        with st.expander(f"{idx}. {title}... (⬆️ {score})"):
-                            st.markdown(f"> {post.get('text', '')[:500]}")
-                            st.caption(f"**Date:** {post.get('post_date', '')} | r/{post.get('subreddit', '')} | [Source]({post.get('url', '')})")
-                            brief_key = f"brief_sub_{post_id}"
-                            if st.button("🔧 AI Brief", key=f"btn_{brief_key}"):
-                                st.session_state[brief_key] = True
-                                st.rerun()
-                            if st.session_state.get(brief_key):
-                                with st.spinner("Generating..."):
-                                    result = generate_ai_brief("subsidiary", sub_name, post.get("text", ""), post.get("title", ""))
-                                st.success(result)
+                    st.subheader(f"🏪 {sub_name}")
+                    sc1, sc2, sc3, sc4 = st.columns(4)
+                    sc1.metric("Total Signals", len(posts))
+                    sc2.metric("Complaints", len(sub_complaints), help="Pain points users have with this subsidiary")
+                    sc3.metric("Praise", len(sub_praise), help="What users love — strengths to amplify")
+                    sc4.metric("eBay Mentions", len(sub_integration), help="Posts that mention eBay alongside this subsidiary")
+
+                    # AI Subsidiary Brief
+                    sub_analysis_key = f"sub_analysis_{sub_name}"
+                    if st.button(f"🧠 Generate AI Ecosystem Brief for {sub_name}", key=f"btn_{sub_analysis_key}"):
+                        st.session_state[sub_analysis_key] = "__generating__"
+                        st.rerun()
+                    if st.session_state.get(sub_analysis_key) == "__generating__":
+                        with st.spinner(f"Analyzing {len(posts)} signals for {sub_name}..."):
+                            result = generate_competitor_analysis(
+                                sub_name, sub_complaints, sub_praise,
+                                sub_integration, sub_discussion, len(posts)
+                            )
+                        st.session_state[sub_analysis_key] = result
+                        st.rerun()
+                    if st.session_state.get(sub_analysis_key) and st.session_state[sub_analysis_key] != "__generating__":
+                        with st.container(border=True):
+                            st.markdown(st.session_state[sub_analysis_key])
+
+                    # Complaints
+                    if sub_complaints:
+                        with st.expander(f"🚨 Pain Points ({len(sub_complaints)})", expanded=False):
+                            for idx, post in enumerate(sorted(sub_complaints, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                score = post.get("score", 0)
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | r/{post.get('subreddit', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # Praise
+                    if sub_praise:
+                        with st.expander(f"🟢 What Users Love ({len(sub_praise)})", expanded=False):
+                            for idx, post in enumerate(sorted(sub_praise, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                st.markdown(f"**{idx}.** {title}")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # eBay ecosystem mentions
+                    if sub_integration:
+                        with st.expander(f"🔗 eBay Ecosystem Mentions ({len(sub_integration)})", expanded=False):
+                            for idx, post in enumerate(sorted(sub_integration, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
+                                title = post.get("title", "")[:100] or post.get("text", "")[:100]
+                                score = post.get("score", 0)
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
+                                st.markdown(f"> {post.get('text', '')[:400]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
+
+                    # General discussion
+                    if sub_discussion:
+                        with st.expander(f"💬 Other Discussion ({len(sub_discussion)})", expanded=False):
+                            for idx, post in enumerate(sorted(sub_discussion, key=lambda x: x.get("score", 0), reverse=True)[:6], 1):
+                                title = post.get("title", "")[:80] or post.get("text", "")[:80]
+                                score = post.get("score", 0)
+                                st.markdown(f"**{idx}.** {title} (⬆️ {score})")
+                                st.markdown(f"> {post.get('text', '')[:300]}")
+                                url = post.get("url", "")
+                                st.caption(f"{post.get('post_date', '')} | [Source]({url})" if url else post.get("post_date", ""))
+                                st.markdown("---")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1942,7 +2022,9 @@ with tabs[2]:
                 url = item.get("url", "")
                 link = f" · [Source]({url})" if url else ""
                 st.markdown(f"**{idx}.** {sev} {item['_bw_icon']} {text}{'...' if len(item.get('text', '')) > 250 else ''}")
-                st.caption(f"⬆️ {score} · {item['_bw_cat']} · Owner: {item['_bw_owner']} · {item.get('post_date', '')}{link}")
+                src_label = item.get('source', '')
+                src_part = f" · {src_label}" if src_label else ""
+                st.caption(f"⬆️ {score} · {item['_bw_cat']} · Owner: {item['_bw_owner']}{src_part} · {item.get('post_date', '')}{link}")
 
             # AI Broken Windows Executive Brief
             def _generate_bw_brief_inline(categories, buckets):
@@ -2070,7 +2152,32 @@ with tabs[2]:
         churn_signals = [i for i in filtered if i.get("type_tag") == "Churn Signal"]
         if churn_signals:
             st.markdown("### 🚨 Churn & Retention Risks")
-            st.caption(f"{len(churn_signals)} signals where users mention leaving eBay or switching to competitors.")
+
+            # Destination extraction — where are they going?
+            _CHURN_DESTINATIONS = {
+                "Whatnot": ["whatnot", "moved to whatnot", "switching to whatnot"],
+                "Heritage": ["heritage", "heritage auctions"],
+                "Fanatics": ["fanatics", "fanatics collect"],
+                "TCGPlayer": ["tcgplayer", "tcg player"],
+                "Mercari": ["mercari"],
+                "Facebook": ["facebook marketplace", "facebook groups", "fb marketplace"],
+                "COMC": ["comc"],
+                "Alt": ["alt.xyz", "alt marketplace"],
+                "Courtyard": ["courtyard"],
+                "Arena Club": ["arena club"],
+            }
+            _dest_counts = defaultdict(int)
+            for cs in churn_signals:
+                _cs_text = (cs.get("text", "") + " " + cs.get("title", "")).lower()
+                for _dest, _kws in _CHURN_DESTINATIONS.items():
+                    if any(kw in _cs_text for kw in _kws):
+                        _dest_counts[_dest] += 1
+            _dest_summary = ""
+            if _dest_counts:
+                _sorted_dests = sorted(_dest_counts.items(), key=lambda x: -x[1])[:5]
+                _dest_summary = " · Where they're going: " + ", ".join(f"**{d}** ({c})" for d, c in _sorted_dests)
+
+            st.caption(f"{len(churn_signals)} signals where users mention leaving eBay or switching.{_dest_summary}")
             for idx, post in enumerate(sorted(churn_signals, key=lambda x: x.get("score", 0), reverse=True)[:8], 1):
                 text = post.get("text", "")[:220]
                 score = post.get("score", 0)
@@ -2177,20 +2284,26 @@ Signals:
             "PSA Grading": ["psa grading", "psa grade", "psa turnaround", "psa submission", "psa 10", "psa 9"],
             "PSA Consignment": ["psa consignment", "psa consign", "consignment psa"],
             "PSA Offers": ["psa offer", "psa buyback", "psa buy back", "psa instant"],
-            "Card Ladder": ["card ladder", "cardladder", "price guide", "scan to price", "card value tool"],
+            "Card Ladder": ["card ladder", "cardladder", "scan to price", "card value tool", "cardladder.com"],
             "ComC": ["comc", "check out my cards", "comc consignment", "comc selling"],
         }
         partner_counts = {}
+        partner_sentiment = {}
         for pname, kws in STRATEGIC_PARTNERS.items():
-            cnt = sum(1 for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws))
+            matching = [i for i in filtered if any(kw in (i.get("text", "") + " " + i.get("title", "")).lower() for kw in kws)]
+            cnt = len(matching)
             if cnt > 0:
                 partner_counts[pname] = cnt
+                neg = sum(1 for i in matching if i.get("brand_sentiment") == "Negative")
+                neg_pct = round(neg / max(cnt, 1) * 100)
+                partner_sentiment[pname] = "🔴" if neg_pct > 40 else ("🟡" if neg_pct > 15 else "🟢")
         if partner_counts:
             st.markdown("### 🤝 Partner Health")
-            st.caption("Signal volume for strategic partners and subsidiaries.")
+            st.caption("Signal volume and sentiment for strategic partners. 🟢 = mostly positive, 🟡 = mixed, 🔴 = mostly negative.")
             pcols = st.columns(min(len(partner_counts), 5))
             for idx, (pname, cnt) in enumerate(sorted(partner_counts.items(), key=lambda x: -x[1])):
-                pcols[idx % len(pcols)].metric(pname, cnt)
+                health = partner_sentiment.get(pname, "⚪")
+                pcols[idx % len(pcols)].metric(f"{health} {pname}", cnt)
             st.markdown("---")
 
         # ═══════════════════════════════════════════════
@@ -2293,11 +2406,20 @@ with tabs[3]:
         p["_industry_source"] = src
         industry_posts.append(p)
 
-    # New sources (blogs, industry analysis, Trustpilot, PSA Forums, app reviews, seller communities)
+    # New sources — only industry-level content (blogs, analysis, PSA Forums)
+    # Trustpilot, App Reviews, and Seller Community are customer-level signals
+    _INDUSTRY_LEVEL_SOURCES = {"Goldin Blog", "Heritage Blog", "Card Ladder", "Industry Analysis", "PSA Forums"}
+    _CUSTOMER_REVIEW_SOURCES = {"Trustpilot:eBay", "Trustpilot:Goldin", "Trustpilot:TCGPlayer",
+                                 "Trustpilot:Whatnot", "Trustpilot:Heritage", "App Reviews", "Seller Community"}
+    _customer_review_posts = []
     for p in new_sources_raw:
         src = p.get("source", "New Source")
-        p["_industry_source"] = src
-        industry_posts.append(p)
+        if src in _INDUSTRY_LEVEL_SOURCES:
+            p["_industry_source"] = src
+            industry_posts.append(p)
+        elif src in _CUSTOMER_REVIEW_SOURCES:
+            p["_industry_source"] = src
+            _customer_review_posts.append(p)
 
     # Viral / high-engagement Reddit posts — ONLY industry-relevant ones
     VIRAL_THRESHOLD = 100
@@ -2490,6 +2612,14 @@ with tabs[3]:
                     base_score = 90
                 elif src in ("Blowout Forums", "Net54 Baseball", "Alt.xyz Blog"):
                     base_score = 70
+                elif src in ("Goldin Blog", "Heritage Blog", "Card Ladder", "Industry Analysis"):
+                    base_score = 100
+                elif src in ("PSA Forums", "Seller Community"):
+                    base_score = 60
+                elif src.startswith("Trustpilot"):
+                    base_score = 50
+                elif src == "App Reviews":
+                    base_score = 40
                 else:
                     base_score = 30
 
@@ -2637,6 +2767,41 @@ with tabs[3]:
                 st.caption(f"{src} · {d}{l}")
 
         st.markdown("---")
+
+        # ── Customer Reviews Spotlight ──
+        if _customer_review_posts:
+            st.markdown("### ⭐ Customer Reviews Spotlight")
+            st.caption("Trustpilot reviews, app store feedback, and seller community signals across eBay and competitors.")
+
+            # Group by source and show sentiment
+            from collections import Counter as _CRCounter
+            _cr_by_src = defaultdict(list)
+            for p in _customer_review_posts:
+                _cr_by_src[p.get("source", "Unknown")].append(p)
+            _cr_sorted = sorted(_cr_by_src.items(), key=lambda x: -len(x[1]))
+
+            _cr_cols = st.columns(min(len(_cr_sorted), 4))
+            for ci, (cr_src, cr_posts) in enumerate(_cr_sorted):
+                cr_neg = sum(1 for p in cr_posts if p.get("brand_sentiment") == "Negative")
+                cr_neg_pct = round(cr_neg / max(len(cr_posts), 1) * 100)
+                cr_health = "🔴" if cr_neg_pct > 40 else ("🟡" if cr_neg_pct > 15 else "🟢")
+                _cr_cols[ci % len(_cr_cols)].metric(f"{cr_health} {cr_src}", f"{len(cr_posts)} signals")
+
+            # Show top reviews sorted by engagement
+            _cr_all = sorted(_customer_review_posts, key=lambda x: (x.get("score", 0), x.get("post_date", "")), reverse=True)
+            for ci, cr_post in enumerate(_cr_all[:8], 1):
+                cr_title = cr_post.get("title", "")[:120] or cr_post.get("text", "")[:120]
+                cr_src = cr_post.get("source", "")
+                cr_sent = cr_post.get("brand_sentiment", "Neutral")
+                cr_score = cr_post.get("score", 0)
+                cr_date = cr_post.get("post_date", "")
+                cr_url = cr_post.get("url", "")
+                cr_link = f" · [Link]({cr_url})" if cr_url else ""
+                _sent_icon = "🔴" if cr_sent == "Negative" else ("🟢" if cr_sent == "Positive" else "⚪")
+                st.markdown(f"**{ci}.** {_sent_icon} {cr_title}")
+                st.caption(f"{cr_src} · {cr_sent} · ⬆️ {cr_score} · {cr_date}{cr_link}")
+
+            st.markdown("---")
 
         # ── Full feed with filters ──
         st.markdown("### 📡 Full Industry Feed")
@@ -2882,19 +3047,26 @@ If your question has thin results, SignalSynth will offer to **live-search the w
 ---
 
 #### 📡 Where the data comes from
-SignalSynth pulls from **20+ sources** across the collectibles ecosystem:
+SignalSynth pulls from **42 sources** across the collectibles ecosystem:
 
 | Source | What it captures |
-|--------|-----------------|
+|--------|------------------|
 | **Reddit** | r/baseballcards, r/sportscards, r/eBay, r/pokemontcg, r/footballcards, r/funkopop, r/coins + 35 more subs |
 | **Twitter / X** | Hobby influencers, eBay mentions, competitor chatter |
 | **YouTube** | Jabs Family, Sports Card Investor, Stacking Slabs, CardShopLive, Gary Vee, Goldin |
 | **eBay Forums** | Seller & buyer discussions from eBay Community (real-time) |
 | **Bluesky** | Emerging hobby community signals |
+| **Trustpilot** | Customer reviews for eBay, Goldin, TCGPlayer, Whatnot, Heritage Auctions |
 | **Cllct** | Industry news from Cllct.com (Sports Cards, Auctions, Autographs, Memorabilia) |
 | **News RSS** | Beckett, Cardlines, Cardboard Connection, Dave and Adams, Sports Collectors Daily, PSA Blog, Blowout Buzz, Just Collect Blog |
 | **Podcasts** | Sports Cards Nonsense, Sports Card Investor, Stacking Slabs, Hobby News Daily, The Pull-Tab Podcast, Collector Nation |
 | **Forums & Blogs** | Blowout Forums, Net54, Bench Trading, Alt.xyz, COMC, Whatnot, Fanatics Collect, TCDB |
+| **Goldin Blog & Heritage Blog** | Official blog posts from eBay subsidiaries and key competitors |
+| **Card Ladder** | Price guide partner blog and market analysis |
+| **PSA Forums** | Collectors Universe forums — grading, vault, consignment discussions |
+| **App Reviews** | App store review discussions about eBay and competitor mobile experiences |
+| **Industry Analysis** | Analyst reports and market commentary on the collectibles industry |
+| **Seller Communities** | Seller forums and community discussions about platform experiences |
 | **Competitors** | Whatnot, Fanatics Collect, Fanatics Live, Heritage Auctions, Alt, Goldin, TCGPlayer, Beckett, PSA Consignment |
 
 Every post is enriched with **sentiment, topic, persona, churn risk, and signal strength** scoring.
@@ -2969,6 +3141,18 @@ Every post is enriched with **sentiment, topic, persona, churn risk, and signal 
             _is_yellow = _attn_pct > 15 or _needs_attn >= 10
             _bar = "🔴" if _is_red else ("🟡" if _is_yellow else "🟢")
             st.markdown(f"{_bar} **{_tag}** — {_needs_attn} of {_cnt} signals need attention ({_attn_pct}%)")
+
+    # Source distribution
+    _src_dist = defaultdict(int)
+    for i in normalized:
+        _src_dist[i.get("source", "Unknown")] += 1
+    if _src_dist:
+        _top_srcs = sorted(_src_dist.items(), key=lambda x: -x[1])[:10]
+        st.markdown("#### 📡 Source Distribution (Top 10)")
+        for _sn, _sc in _top_srcs:
+            _pct = round(_sc / max(total, 1) * 100, 1)
+            st.caption(f"**{_sn}** — {_sc:,} signals ({_pct}%)")
+        st.caption(f"Total unique sources: {len(_src_dist)}")
 
     # Competitor quick snapshot
     if competitor_posts_raw:
