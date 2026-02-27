@@ -78,10 +78,14 @@ COMPETITORS = {
         "search_terms": [
             "heritage auctions cards", "heritage auction sports",
             "heritage auctions collectibles", "heritage auctions comics",
-            "heritage auctions coins", "ha.com auction"
+            "heritage auctions coins", "ha.com auction",
+            "heritage auctions experience", "heritage auctions fees",
+            "heritage auctions buyer premium", "heritage auctions review",
+            "heritage auctions vs ebay", "heritage auctions complaint",
+            "selling through heritage auctions", "heritage auctions consignment",
         ],
-        "subreddits": ["coins", "comicbookcollecting", "sportscards"],
-        "required_keywords": ["heritage", "auction", "card", "coin", "comic", "collectible"],
+        "subreddits": ["coins", "comicbookcollecting", "sportscards", "baseballcards", "basketballcards", "footballcards", "hockeycards", "PSAcard", "vintagecards"],
+        "required_keywords": ["heritage", "auction", "card", "coin", "comic", "collectible", "ha.com"],
     },
     "Alt": {
         "type": "competitor",
@@ -110,8 +114,11 @@ COMPETITORS = {
             "goldin vs ebay", "selling on goldin",
             "goldin buyer premium", "goldin consignment",
             "goldin auction complaint", "goldin auction review",
+            "goldin netflix", "king of collectibles goldin",
+            "goldin 100 auction", "ken goldin",
+            "goldin marketplace cards", "goldin elite",
         ],
-        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "pokemontcg"],
+        "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "pokemontcg", "hockeycards", "PSAcard", "PokeInvesting"],
         "required_keywords": ["goldin"],
     },
     "TCGPlayer": {
@@ -119,9 +126,13 @@ COMPETITORS = {
         "search_terms": [
             "tcgplayer marketplace", "tcgplayer selling",
             "tcgplayer pokemon cards", "tcgplayer magic cards",
-            "tcgplayer yugioh", "tcgplayer prices", "tcgplayer vs ebay"
+            "tcgplayer yugioh", "tcgplayer prices", "tcgplayer vs ebay",
+            "tcgplayer fees", "tcgplayer seller experience",
+            "tcgplayer scam", "tcgplayer review",
+            "tcgplayer shipping", "tcgplayer complaint",
+            "tcgplayer condition", "tcgplayer refund",
         ],
-        "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG"],
+        "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG", "PokemonTCG", "DigimonCardGame2020", "Lorcana"],
         "required_keywords": ["tcgplayer", "tcg player", "card", "pokemon", "magic", "yugioh", "marketplace", "price"],
     },
     "Beckett": {
@@ -271,7 +282,7 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
         required_keywords = comp_config.get("required_keywords", [])
         
         # Search by terms
-        for term in comp_config["search_terms"][:5]:  # Limit to top 5 terms
+        for term in comp_config["search_terms"][:8]:  # Limit to top 8 terms
             print(f"  🔍 Searching: '{term}'...")
             posts = search_reddit(term, limit=30)
             added = 0
@@ -294,6 +305,7 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
                 
                 p["competitor"] = comp_name
                 p["competitor_type"] = comp_type
+                p["source"] = comp_name  # Tag with competitor name for curated source recognition
                 if p["post_id"] not in seen_ids:
                     seen_ids.add(p["post_id"])
                     comp_posts.append(p)
@@ -302,7 +314,7 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
             time.sleep(1.5)  # Rate limiting
         
         # Search in specific subreddits
-        for subreddit in comp_config["subreddits"][:3]:  # Limit to top 3 subreddits
+        for subreddit in comp_config["subreddits"][:5]:  # Limit to top 5 subreddits
             print(f"  📂 r/{subreddit}...")
             posts = scrape_subreddit_for_competitor(subreddit, comp_name.split()[0], limit=20)
             added = 0
@@ -325,6 +337,7 @@ def run_competitor_scraper() -> List[Dict[str, Any]]:
                 
                 p["competitor"] = comp_name
                 p["competitor_type"] = comp_type
+                p["source"] = comp_name  # Tag with competitor name
                 if p["post_id"] not in seen_ids:
                     seen_ids.add(p["post_id"])
                     comp_posts.append(p)

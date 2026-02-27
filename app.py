@@ -552,6 +552,7 @@ else:
         "What are the signals around instant offers, buybacks, and liquidity in the collectibles market?",
         "What are customers saying about TCGPlayer and how does it fit within the eBay ecosystem?",
         "How is Goldin performing as an eBay subsidiary and what are collectors saying?",
+        "What are collectors saying about Heritage Auctions and how do they compare to eBay?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
@@ -588,8 +589,9 @@ else:
             "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
             "whatnot": ["whatnot", "live breaks", "live shopping"],
             "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
-            "goldin": ["goldin", "goldin auctions"],
-            "tcgplayer": ["tcgplayer", "tcg player"],
+            "goldin": ["goldin", "goldin auctions", "goldin elite", "ken goldin", "king of collectibles", "goldin buyer premium", "goldin consignment", "goldin 100"],
+            "tcgplayer": ["tcgplayer", "tcg player", "tcgplayer fees", "tcgplayer seller", "tcgplayer scam", "tcgplayer condition", "tcgplayer refund", "tcgplayer shipping"],
+            "heritage": ["heritage auctions", "heritage auction", "ha.com", "heritage buyer premium", "heritage consignment", "heritage fees"],
             "churn": ["churn", "leaving ebay", "switching", "done with ebay", "switched to"],
             "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value"],
             "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
@@ -610,13 +612,14 @@ else:
                 expanded_terms.update(expansions)
 
         # Terms that require exact match (not substring) to avoid false positives
-        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz"}
+        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage"}
         
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
             subtag = (_taxonomy_topic(insight) or "").lower()
             source = (insight.get("source", "") or "").lower()
             competitor = (insight.get("competitor", "") or "").lower()
+            entity_name = (insight.get("entity_name", "") or "").lower()
             score = 0
             
             for term in expanded_terms:
@@ -625,14 +628,14 @@ else:
                     
                 # For company names, require more precise matching
                 if term in _EXACT_MATCH_TERMS:
-                    # Must match the exact term, not just substring
-                    # e.g., "tcgplayer" should match "tcgplayer" but "tcg" alone shouldn't match "pokemontcg"
                     import re
                     pattern = r'\b' + re.escape(term) + r'\b'
                     if re.search(pattern, text):
                         score += 6  # High boost for exact company match
                     if term in competitor:
                         score += 8  # Very high boost if it's tagged as this competitor
+                    if term in entity_name:
+                        score += 8  # Boost for entity-tagged insights
                 else:
                     # Standard substring matching for general terms
                     if term in text:

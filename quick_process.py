@@ -193,7 +193,45 @@ CURATED_SOURCES = {
     "Alt.xyz Blog",
     # Bluesky — small volume, already keyword-filtered by scraper
     "Bluesky",
+    # Subsidiary/competitor tagged posts from competitor scraper
+    "Goldin", "TCGPlayer", "Beckett", "PSA Consignment",
+    "Fanatics Live", "Alt",
 }
+
+# Competitor/subsidiary entity keywords — posts mentioning these entities
+# are valuable intel even without eBay pain signals
+SUBSIDIARY_ENTITIES = ["goldin", "tcgplayer", "tcg player"]
+COMPETITOR_ENTITIES = [
+    "whatnot", "fanatics", "heritage auction", "heritage auctions",
+    "ha.com", "alt.xyz", "alt marketplace", "comc", "myslabs",
+    "stockx", "pwcc",
+]
+
+
+def is_competitor_subsidiary_intel(text):
+    """Check if a post is valuable competitor/subsidiary intel.
+    These posts don't need pain signals — platform discussion itself is the signal."""
+    text_lower = text.lower()
+    if len(text_lower) < 40:
+        return False
+    # Must mention a subsidiary or competitor
+    has_entity = (
+        any(e in text_lower for e in SUBSIDIARY_ENTITIES)
+        or any(e in text_lower for e in COMPETITOR_ENTITIES)
+    )
+    if not has_entity:
+        return False
+    # Must have collectibles context (not random mentions)
+    has_collectibles = bool(RE_COLLECTIBLES.search(text)) or bool(RE_GRADING_SERVICE.search(text))
+    # Or must have marketplace/platform discussion context
+    has_platform_context = any(w in text_lower for w in [
+        "fee", "price", "sell", "buy", "list", "auction", "marketplace",
+        "consign", "premium", "commission", "ship", "experience",
+        "review", "complaint", "issue", "problem", "love", "hate",
+        "better", "worse", "switch", "moved to", "prefer",
+        "versus", " vs ", "compared", "alternative",
+    ])
+    return has_collectibles or has_platform_context
 
 
 def is_relevant(text, subreddit=""):
@@ -568,8 +606,15 @@ def enrich(post):
         # Returns / INAD disputes
         elif any(w in combined for w in ["inad", "item not as described", "open a return", "return request", "partial refund", "forced to take the return", "return all of them"]):
             subtag = "Returns & Refunds"
+        # Subsidiaries (Goldin, TCGPlayer) — more granular than generic 'Subsidiaries'
+        elif any(w in combined for w in ["goldin", "ken goldin", "goldin auction", "goldin elite", "king of collectibles"]):
+            subtag = "Goldin"
+        elif any(w in combined for w in ["tcgplayer", "tcg player"]):
+            subtag = "TCGPlayer"
         # Competitor mentions
-        elif any(w in combined for w in ["fanatics", "whatnot", "heritage auction", "alt.xyz", "myslabs"]):
+        elif any(w in combined for w in ["heritage auction", "heritage auctions", "ha.com"]):
+            subtag = "Heritage Auctions"
+        elif any(w in combined for w in ["fanatics", "whatnot", "alt.xyz", "myslabs", "stockx", "pwcc"]):
             subtag = "Competitor Intel"
         # Live shopping / breaks
         elif any(w in combined for w in ["live selling", "live break", "case break", "box break", "group break", "live stream", "live shopping", "live auction"]):
@@ -598,9 +643,6 @@ def enrich(post):
         # Beckett (grading competitor / acquisition target)
         elif any(w in combined for w in ["beckett", "bgs ", "beckett grading", "beckett acquisition"]):
             subtag = "Beckett"
-        # Subsidiaries (Goldin, TCGPlayer)
-        elif any(w in combined for w in ["goldin", "tcgplayer", "tcg player"]):
-            subtag = "Subsidiaries"
         # Persona-based fallbacks
         elif "seller" in combined or "listing" in combined or "sold" in combined:
             subtag = "Seller Experience"
@@ -679,6 +721,11 @@ def enrich(post):
         "is_urgent": is_urgent,
         "is_churn_signal": has_churn,
         "is_praise_signal": has_praise,
+        "is_subsidiary_signal": subtag in ("Goldin", "TCGPlayer"),
+        "is_competitor_signal": subtag in ("Heritage Auctions", "Competitor Intel", "Beckett"),
+        "entity_name": subtag if subtag in ("Goldin", "TCGPlayer", "Heritage Auctions", "Competitor Intel", "Beckett", "COMC") else "",
+        "competitor": post.get("competitor", ""),
+        "competitor_type": post.get("competitor_type", ""),
         "topic_focus": topics,
         "topic_focus_list": topics,
         "taxonomy": {
@@ -716,6 +763,11 @@ def main():
 
         # Curated sources get a lighter relevance bar
         if source in CURATED_SOURCES and is_relevant_curated(text):
+            relevant_posts.append(post)
+            continue
+
+        # Competitor/subsidiary intel — valuable even without pain signals
+        if is_competitor_subsidiary_intel(text):
             relevant_posts.append(post)
             continue
 
@@ -776,6 +828,17 @@ def main():
     print(f"  🚨 Competitive churn: {churn}")
     print(f"  🌟 Praise signals: {praise}")
     print(f"  📈 Avg signal strength: {avg_strength}/100")
+
+    # Subsidiary & competitor intel
+    goldin_count = sum(1 for i in unique if i.get("subtag") == "Goldin")
+    tcg_count = sum(1 for i in unique if i.get("subtag") == "TCGPlayer")
+    heritage_count = sum(1 for i in unique if i.get("subtag") == "Heritage Auctions")
+    comp_intel = sum(1 for i in unique if i.get("subtag") == "Competitor Intel")
+    print(f"\n🏪 Subsidiary & Competitor Intel:")
+    print(f"  Goldin: {goldin_count}")
+    print(f"  TCGPlayer: {tcg_count}")
+    print(f"  Heritage Auctions: {heritage_count}")
+    print(f"  Other Competitors: {comp_intel}")
 
     # Source distribution
     from collections import Counter
