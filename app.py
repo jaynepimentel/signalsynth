@@ -627,7 +627,12 @@ else:
 
         # Terms that require exact match (not substring) to avoid false positives
         _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage", "beckett", "fanatics", "card ladder", "cardladder"}
-        
+
+        # Question-type flags needed by _relevance_score for context-aware boosts
+        _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
+        _q_persona = any(t in q_lower for t in ["sellers saying", "buyers saying", "seller perspective", "buyer perspective", "seller experience", "buyer experience", "what do sellers", "what do buyers", "seller sentiment", "buyer sentiment", "seller feedback", "buyer feedback", "power seller", "new seller", "casual buyer"])
+        _q_fees = any(t in q_lower for t in ["fee", "fees", "pricing", "take rate", "commission", "final value", "insertion fee", "cost to sell", "seller fee", "buyer premium", "how much does"])
+
         def _relevance_score(insight):
             text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
             subtag = (_taxonomy_topic(insight) or "").lower()
