@@ -674,11 +674,31 @@ else:
                 score += 2
             elif eng >= 10:
                 score += 1
+            # Context-aware source boosts
+            if _q_review and "trustpilot" in source:
+                score += 5
+            if _q_review and source in ("app reviews", "seller community"):
+                score += 3
+            if _q_persona and source in ("seller community", "app reviews"):
+                score += 3
+            if _q_fees and any(w in text for w in ["fee", "commission", "take rate", "final value", "buyer premium"]):
+                score += 3
             return score
 
         scored = [(p, _relevance_score(p)) for p in normalized]
         scored.sort(key=lambda x: -x[1])
-        relevant = [p for p, s in scored if s > 0][:40]
+        _all_relevant = [p for p, s in scored if s > 0]
+        # Source-diverse selection: cap any single source at 60% of slots
+        relevant = []
+        _src_counts = defaultdict(int)
+        _max_per_source = 24  # max 24 of 40 from one source
+        for p in _all_relevant:
+            src = p.get("source", "Unknown")
+            if _src_counts[src] < _max_per_source:
+                relevant.append(p)
+                _src_counts[src] += 1
+            if len(relevant) >= 40:
+                break
 
         # Build numbered source references for the AI to cite
         context_lines = []
@@ -703,6 +723,12 @@ else:
             )
             if url:
                 source_refs.append((ref_label, title or text[:80], url, sub_label))
+
+        # ── Source coverage for context ──
+        _context_sources = defaultdict(int)
+        for p in relevant[:25]:
+            _context_sources[p.get("source", "Unknown")] += 1
+        _source_coverage = ", ".join(f"{src} ({cnt})" for src, cnt in sorted(_context_sources.items(), key=lambda x: -x[1]))
 
         # ── Aggregate intelligence context ──
         total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
@@ -780,6 +806,10 @@ else:
         _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
         _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
+        _q_persona = any(t in q_lower for t in ["sellers saying", "buyers saying", "seller perspective", "buyer perspective", "seller experience", "buyer experience", "what do sellers", "what do buyers", "seller sentiment", "buyer sentiment", "seller feedback", "buyer feedback", "power seller", "new seller", "casual buyer"])
+        _q_comparison = any(t in q_lower for t in [" vs ", "versus", "compared to", "compare", "difference between", "better than", "worse than", "pros and cons", "which is better", "how does .* compare"])
+        _q_fees = any(t in q_lower for t in ["fee", "fees", "pricing", "take rate", "commission", "final value", "insertion fee", "cost to sell", "seller fee", "buyer premium", "how much does"])
+        _q_briefing = any(t in q_lower for t in ["briefing", "brief me", "summary", "summarize", "highlights", "this week", "what should i know", "executive summary", "digest", "top findings", "key takeaway", "overview", "what's new", "what happened"])
 
         # Adaptive format instructions
         if _q_review and not _q_subsidiary and not _q_competitive:
@@ -993,6 +1023,141 @@ Analyze them as part of the eBay Collectibles ecosystem, focusing on:
 ### Confidence & Gaps
 - Evidence: [X] signals, [Strong/Moderate/Weak] coverage
 - Missing: [What would strengthen this analysis?]"""
+        elif _q_briefing:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 📋 Executive Signal Digest
+
+### 🔴 Top 3 Issues Demanding Attention
+1. **[Issue Name]** — [1-2 sentence summary]. Source: [S#]. Severity: 🔴/🟡
+2. **[Issue Name]** — [1-2 sentence summary]. Source: [S#]. Severity: 🔴/🟡
+3. **[Issue Name]** — [1-2 sentence summary]. Source: [S#]. Severity: 🔴/🟡
+
+### 📊 Signal Landscape
+| Category | Volume | Sentiment | Trend |
+|----------|--------|-----------|-------|
+| [e.g., Vault] | X signals | 🔴 Mostly negative | ↗️ Growing |
+| [e.g., Shipping] | X signals | 🟡 Mixed | → Stable |
+(Fill with 4-6 top categories from the data)
+
+### 🏢 Competitor & Subsidiary Watch
+(3-4 bullets on notable competitor moves or subsidiary signals, with [S#] citations)
+
+### 💬 Voices from the Community
+(3-5 VERBATIM user quotes in "italics" with [S#] that best capture the current mood — pick the most vivid, specific, or concerning ones)
+
+### ⚡ Emerging Signals
+(2-3 bullets on patterns that are new or growing — things that weren't prominent before but are gaining traction)
+
+### 🎯 Recommended Focus This Week
+1. **[Action]** — Owner: [Team]. Why now: [urgency]
+2. **[Action]** — Owner: [Team]. Why now: [urgency]
+3. **[Action]** — Owner: [Team]. Why now: [urgency]"""
+        elif _q_fees and not _q_competitive:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the overall fee sentiment? Is it a churn driver or manageable friction?)
+
+### Fee Landscape Comparison
+| Platform | Fee Structure | User Sentiment | Key Complaint |
+|----------|--------------|----------------|---------------|
+| eBay | [Final value fee %, insertion fees, promoted listings] | 🟢/🟡/🔴 | [Top complaint] |
+| Whatnot | [Fee structure if known] | 🟢/🟡/🔴 | [Top complaint] |
+| TCGPlayer | [Fee structure if known] | 🟢/🟡/🔴 | [Top complaint] |
+| Heritage | [Buyer premium, consignment %] | 🟢/🟡/🔴 | [Top complaint] |
+| Goldin | [Buyer premium, consignment %] | 🟢/🟡/🔴 | [Top complaint] |
+(Fill based on available signals — leave blank if no data)
+
+### What Users Are Saying About Fees
+(5-8 bullets with VERBATIM quotes in "italics" with [S#] citations, organized by theme: hidden fees, fee increases, fee comparisons, value-for-money)
+
+### Fee Impact on Behavior
+- **Churn risk**: [Are users leaving over fees? Which persona?]
+- **Listing behavior**: [Are sellers listing fewer items, raising prices, or switching to other platforms?]
+- **Platform comparison shopping**: [Are sellers actively comparing fee structures?]
+
+### Recommended Fee Strategy
+1. **[Action]** — Owner: [Team]. Impact: [Expected outcome]
+2-3. [Continue with prioritized actions]
+
+### Confidence & Gaps
+- Evidence: [X] fee-related signals from [Y] sources
+- What's missing: [fee data gaps]"""
+        elif _q_persona:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: What's the key insight? Which persona is most affected?)
+
+### 🏪 Seller Perspective
+**Sentiment**: 🟢/🟡/🔴
+**Top Concerns** (with [S#] citations):
+1. "[verbatim seller quote]" [S#] — [context: Power Seller / New Seller / etc.]
+2. "[verbatim seller quote]" [S#]
+3. "[verbatim seller quote]" [S#]
+
+**What Sellers Want**: (2-3 bullets summarizing seller asks)
+
+### 🛒 Buyer/Collector Perspective
+**Sentiment**: 🟢/🟡/🔴
+**Top Concerns** (with [S#] citations):
+1. "[verbatim buyer quote]" [S#] — [context: Collector / Investor / Casual Buyer]
+2. "[verbatim buyer quote]" [S#]
+3. "[verbatim buyer quote]" [S#]
+
+**What Buyers Want**: (2-3 bullets summarizing buyer asks)
+
+### Persona Friction Map
+| Persona | Pain Point | Severity | eBay Feature Affected |
+|---------|-----------|----------|----------------------|
+| Power Seller | [specific pain] | 🔴/🟡 | [feature] |
+| Collector | [specific pain] | 🔴/🟡 | [feature] |
+| New Seller | [specific pain] | 🔴/🟡 | [feature] |
+| Investor | [specific pain] | 🔴/🟡 | [feature] |
+(Fill based on available signals)
+
+### Recommended Actions by Persona
+1. **For Sellers**: [Action] — Owner: [Team]. Impact: [outcome]
+2. **For Buyers**: [Action] — Owner: [Team]. Impact: [outcome]
+3. **Cross-persona**: [Action] — Owner: [Team]. Impact: [outcome]
+
+### Confidence & Gaps
+- Evidence: [X] signals. Seller-heavy / Buyer-heavy / Balanced?
+- Missing perspectives: [which persona is underrepresented?]"""
+        elif _q_comparison and not _q_competitive:
+            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(2-3 sentences: Which option comes out ahead based on user signals? What's the deciding factor?)
+
+### Side-by-Side Comparison
+| Factor | [Option A] | [Option B] | Winner |
+|--------|-----------|-----------|--------|
+| User Sentiment | [summary] | [summary] | [A/B/Tie] |
+| Fees/Pricing | [if relevant] | [if relevant] | [A/B/Tie] |
+| Trust & Safety | [summary] | [summary] | [A/B/Tie] |
+| Ease of Use | [summary] | [summary] | [A/B/Tie] |
+| Selection/Inventory | [summary] | [summary] | [A/B/Tie] |
+(Customize factors based on what's being compared. Fill from signals only.)
+
+### What Users Say About [Option A]
+(3-4 bullets with VERBATIM quotes in "italics" with [S#] citations)
+
+### What Users Say About [Option B]
+(3-4 bullets with VERBATIM quotes in "italics" with [S#] citations)
+
+### Users Who've Tried Both
+(2-3 bullets from users who directly compare, with [S#] citations — these are the most valuable signals)
+
+### Implications for eBay
+- **If [A] is eBay**: [What to defend / improve]
+- **If [B] is eBay**: [What to defend / improve]
+- **Ecosystem opportunity**: [How can eBay win regardless?]
+
+### Confidence & Gaps
+- Comparison evidence: [Strong/Moderate/Weak] — [X] signals directly compare these options
+- Caveat: [Any selection bias or missing perspectives?]"""
         else:
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
@@ -1061,12 +1226,16 @@ RESPONSE RULES:
 8. **Actionable recommendations** — every recommendation needs: Owner (team/PM), Timeline (when), Expected Impact (what changes).
 9. **Be honest about gaps** — if evidence is thin or one-sided, flag it explicitly. Say "I don't have enough data" when true.
 10. **Write for a VP** — they have 2 minutes. Make every sentence count.
+11. **Source triangulation** — when multiple independent sources (e.g., Reddit + Trustpilot + eBay Forums) agree on the same point, call it out: "This is corroborated across Reddit, Trustpilot, and eBay Forums." Multi-source agreement = higher confidence.
 
 DATASET SUMMARY:
 {stats_block}
 {cluster_context}
 {competitor_context}
 {industry_context}
+
+SOURCE COVERAGE FOR THIS QUERY: {_source_coverage}
+(Note: signals come from {len(_context_sources)} different source types. When multiple source types agree, confidence is higher.)
 
 RELEVANT SIGNALS (sorted by relevance to the question):
 {context_block}"""
