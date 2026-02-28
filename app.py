@@ -716,6 +716,7 @@ else:
         # Build numbered source references for the AI to cite
         context_lines = []
         source_refs = []  # [(label, title, url, source_platform)]
+        _recent_cutoff = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
         for idx, p in enumerate(relevant[:25], 1):
             title = p.get("title", "")[:140]
             text = p.get("text", "")[:500].replace("\n", " ")
@@ -731,17 +732,34 @@ else:
             url = p.get("url", "")
             sub_label = f"r/{sub}" if sub else source
             ref_label = f"S{idx}"
+            freshness = "RECENT" if date >= _recent_cutoff else "older"
             context_lines.append(
-                f"- [{ref_label}] [{type_tag}] [{sentiment}] [{subtag}] (engagement:{score}, strength:{sig_str}, persona:{persona}, date:{date}, {sub_label}) {title}: {text}"
+                f"- [{ref_label}] [{freshness}] [{type_tag}] [{sentiment}] [{subtag}] (engagement:{score}, strength:{sig_str}, persona:{persona}, date:{date}, {sub_label}) {title}: {text}"
             )
             if url:
                 source_refs.append((ref_label, title or text[:80], url, sub_label))
 
-        # ── Source coverage for context ──
+        # ── Source coverage + cross-source triangulation ──
         _context_sources = defaultdict(int)
+        _context_topics = defaultdict(lambda: defaultdict(int))  # topic → source → count
         for p in relevant[:25]:
-            _context_sources[p.get("source", "Unknown")] += 1
+            src = p.get("source", "Unknown")
+            _context_sources[src] += 1
+            topic = _taxonomy_topic(p)
+            if topic and topic != "General":
+                _context_topics[topic][src] += 1
         _source_coverage = ", ".join(f"{src} ({cnt})" for src, cnt in sorted(_context_sources.items(), key=lambda x: -x[1]))
+
+        # Detect cross-source corroboration (same topic from 2+ independent sources)
+        _triangulated = []
+        for topic, src_map in _context_topics.items():
+            if len(src_map) >= 2:
+                sources_list = ", ".join(src_map.keys())
+                total = sum(src_map.values())
+                _triangulated.append(f"- {topic}: corroborated across {len(src_map)} sources ({sources_list}) — {total} signals")
+        _triangulation_block = ""
+        if _triangulated:
+            _triangulation_block = "\n\nCROSS-SOURCE CORROBORATION (high confidence — multiple independent sources agree):\n" + "\n".join(_triangulated[:8])
 
         # ── Aggregate intelligence context ──
         total_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
@@ -768,19 +786,51 @@ else:
             f"Top topics: {', '.join(f'{k} ({v})' for k, v in top_subtags)}"
         )
 
-        # ── Cluster themes (strategic layer) ──
+        # ── Cluster themes (strategic layer — richer context) ──
         cluster_context = ""
         try:
             with open("precomputed_clusters.json", "r", encoding="utf-8") as _cf:
                 _cdata = json.load(_cf)
             cluster_themes = []
-            for cl in _cdata.get("clusters", [])[:8]:
-                label = cl.get("label", "")
-                size = cl.get("size", 0)
-                summary = cl.get("summary", "")[:200]
-                cluster_themes.append(f"- {label} ({size} signals): {summary}")
+            for card in _cdata.get("cards", [])[:10]:
+                theme = card.get("theme", card.get("title", ""))
+                problem = card.get("problem_statement", "")[:150]
+                count = card.get("insight_count", 0)
+                sentiments = card.get("sentiments", [])
+                top_opp = (card.get("opportunity_tags", []) or ["General"])[0]
+                competitors = ", ".join(card.get("mentions_competitor", [])[:3]) or "none"
+                cluster_themes.append(
+                    f"- {theme} ({count} signals, sentiment: {'/'.join(sentiments)}, opportunity: {top_opp}, competitors: {competitors}): {problem}"
+                )
             if cluster_themes:
-                cluster_context = "\n\nSTRATEGIC THEMES (from clustering analysis):\n" + "\n".join(cluster_themes)
+                cluster_context = "\n\nSTRATEGIC THEMES (AI-clustered from {0} signals):\n".format(
+                    sum(c.get("insight_count", 0) for c in _cdata.get("cards", []))
+                ) + "\n".join(cluster_themes)
+        except Exception:
+            pass
+
+        # ── Trend alerts context (velocity / anomaly intelligence) ──
+        trend_context = ""
+        try:
+            if _trend_alerts and _trend_alerts.get("alerts"):
+                # Filter to alerts relevant to the question
+                _relevant_alerts = []
+                for a in _trend_alerts["alerts"][:20]:
+                    topic = a.get("topic", "").lower()
+                    if any(w in topic for w in q_words if len(w) > 3) or a.get("severity") == "high":
+                        _relevant_alerts.append(a)
+                if _relevant_alerts:
+                    alert_lines = []
+                    for a in _relevant_alerts[:6]:
+                        alert_lines.append(
+                            f"- [{a['severity'].upper()}] {a['alert_type']}: {a['message']} (confidence: {a['confidence']:.0%})"
+                        )
+                    trend_context = "\n\nTREND VELOCITY ALERTS (statistical anomalies detected this period):\n" + "\n".join(alert_lines)
+                # Add absences
+                _absences = _trend_alerts.get("absences", [])
+                if _absences:
+                    absence_lines = [f"- SILENCE: {a['message']}" for a in _absences[:3]]
+                    trend_context += "\n\nTOPICS GONE SILENT (possible resolution or user churn):\n" + "\n".join(absence_lines)
         except Exception:
             pass
 
@@ -1247,16 +1297,21 @@ RESPONSE RULES:
 8. **Actionable recommendations** — every recommendation needs: Owner (team/PM), Timeline (when), Expected Impact (what changes).
 9. **Be honest about gaps** — if evidence is thin or one-sided, flag it explicitly. Say "I don't have enough data" when true.
 10. **Write for a VP** — they have 2 minutes. Make every sentence count.
-11. **Source triangulation** — when multiple independent sources (e.g., Reddit + Trustpilot + eBay Forums) agree on the same point, call it out: "This is corroborated across Reddit, Trustpilot, and eBay Forums." Multi-source agreement = higher confidence.
+11. **Source triangulation** — when multiple independent sources agree, call it out: "Corroborated across Reddit, Trustpilot, and eBay Forums." Use the CROSS-SOURCE CORROBORATION section.
+12. **Trend velocity** — if TREND VELOCITY ALERTS show a topic spiking or shifting, say so: "Vault signals up +47% this period (z=3.2), escalating." This is proactive intelligence, not just a summary.
+13. **Freshness** — signals tagged [RECENT] are from the last 14 days. Weight them more heavily for "what's happening now" questions. Flag when evidence is mostly older.
 
 DATASET SUMMARY:
 {stats_block}
 {cluster_context}
+{trend_context}
 {competitor_context}
 {industry_context}
+{_triangulation_block}
 
 SOURCE COVERAGE FOR THIS QUERY: {_source_coverage}
 (Note: signals come from {len(_context_sources)} different source types. When multiple source types agree, confidence is higher.)
+(Signals marked [RECENT] are from the last 14 days — weight these more heavily for "what's happening now" questions.)
 
 RELEVANT SIGNALS (sorted by relevance to the question):
 {context_block}"""
