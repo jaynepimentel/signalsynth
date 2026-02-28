@@ -813,23 +813,34 @@ else:
         trend_context = ""
         try:
             if _trend_alerts and _trend_alerts.get("alerts"):
-                # Filter to alerts relevant to the question
-                _relevant_alerts = []
-                for a in _trend_alerts["alerts"][:20]:
+                # Split into query-relevant vs general high-severity alerts
+                # Filter out inflated first-load z-scores (z > 50 = data loaded all at once, not real trend)
+                _query_alerts = []
+                _high_alerts = []
+                for a in _trend_alerts["alerts"]:
+                    # Skip first-load artifacts: need meaningful baseline (avg > 2 signals/period)
+                    if a.get("baseline_value", 0) < 2:
+                        continue
                     topic = a.get("topic", "").lower()
-                    if any(w in topic for w in q_words if len(w) > 3) or a.get("severity") == "high":
-                        _relevant_alerts.append(a)
-                if _relevant_alerts:
+                    is_relevant = any(w in topic for w in q_words if len(w) > 3)
+                    if is_relevant:
+                        _query_alerts.append(a)
+                    elif a.get("severity") == "high":
+                        _high_alerts.append(a)
+                # Prioritize query-relevant, then top high-severity
+                _final_alerts = _query_alerts[:3] + _high_alerts[:max(0, 4 - len(_query_alerts[:3]))]
+                if _final_alerts:
                     alert_lines = []
-                    for a in _relevant_alerts[:6]:
+                    for a in _final_alerts:
                         alert_lines.append(
                             f"- [{a['severity'].upper()}] {a['alert_type']}: {a['message']} (confidence: {a['confidence']:.0%})"
                         )
                     trend_context = "\n\nTREND VELOCITY ALERTS (statistical anomalies detected this period):\n" + "\n".join(alert_lines)
-                # Add absences
+                # Add absences (only if relevant to query)
                 _absences = _trend_alerts.get("absences", [])
-                if _absences:
-                    absence_lines = [f"- SILENCE: {a['message']}" for a in _absences[:3]]
+                _relevant_absences = [a for a in _absences if any(w in a.get("topic", "").lower() for w in q_words if len(w) > 3)]
+                if _relevant_absences:
+                    absence_lines = [f"- SILENCE: {a['message']}" for a in _relevant_absences[:2]]
                     trend_context += "\n\nTOPICS GONE SILENT (possible resolution or user churn):\n" + "\n".join(absence_lines)
         except Exception:
             pass

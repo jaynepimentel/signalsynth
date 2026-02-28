@@ -332,6 +332,13 @@ class HybridRetriever:
         is_persona_q = any(t in q_lower for t in ["seller", "buyer", "collector", "investor"])
         is_competitive_q = any(t in q_lower for t in ["whatnot", "fanatics", "heritage", "competitor", "vs "])
 
+        # Date thresholds for recency boosting
+        from datetime import datetime, timedelta
+        _now = datetime.now().strftime("%Y-%m-%d")
+        _30d = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        _90d = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        _1y = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
+
         boosted = []
         for idx, score in scored:
             insight = self.insights[idx]
@@ -350,6 +357,17 @@ class HybridRetriever:
                 boost += 0.015
             elif eng >= 10:
                 boost += 0.005
+
+            # Date recency boost — recent signals are more actionable
+            date = insight.get("post_date", "") or ""
+            if date >= _30d:
+                boost += 0.03   # Last 30 days: strong boost
+            elif date >= _90d:
+                boost += 0.015  # Last 90 days: moderate boost
+            elif date >= _1y:
+                boost += 0.0    # Last year: neutral
+            else:
+                boost -= 0.02   # Older than 1 year: penalty
 
             # Context-aware source boost
             source = (insight.get("source", "") or "").lower()
