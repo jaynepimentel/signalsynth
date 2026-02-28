@@ -447,6 +447,27 @@ try:
 
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
 
+    # Initialize hybrid retriever for Ask AI (graceful fallback to legacy scoring)
+    _hybrid_retriever = None
+    try:
+        from components.hybrid_retrieval import HybridRetriever
+        # Cache key: insight count + first fingerprint (changes when data refreshes)
+        _retriever_key = f"{len(normalized)}_{normalized[0].get('fingerprint','') if normalized else ''}"
+        if "_hybrid_retriever_cache" not in st.session_state or st.session_state.get("_retriever_key") != _retriever_key:
+            st.session_state["_hybrid_retriever_cache"] = HybridRetriever(normalized)
+            st.session_state["_retriever_key"] = _retriever_key
+        _hybrid_retriever = st.session_state["_hybrid_retriever_cache"]
+    except Exception as _retriever_err:
+        pass  # Fall back to legacy retrieval
+
+    # Load trend alerts if available
+    _trend_alerts = {}
+    try:
+        with open("trend_alerts.json", "r", encoding="utf-8") as f:
+            _trend_alerts = json.load(f)
+    except Exception:
+        pass
+
     # Merge adhoc posts into normalized (lightweight — they have basic enrichment already)
     for p in adhoc_raw:
         p.setdefault("ideas", [])
@@ -587,120 +608,110 @@ else:
         q_lower = question.lower()
         q_words = set(q_lower.split())
 
-        # ── Synonym / related-term expansion for smarter retrieval ──
-        _TERM_EXPANSIONS = {
-            "vault": ["vault", "storage", "withdraw", "stuck in vault", "vault sell", "vault payout", "vault card"],
-            "shipping": ["shipping", "tracking", "lost package", "damaged in transit", "standard envelope", "label", "carrier"],
-            "payment": ["payment", "payout", "funds held", "managed payments", "hold my money", "payment hold"],
-            "returns": ["return", "inad", "refund", "item not as described", "money back", "buyer scam"],
-            "fees": ["fee", "final value", "insertion fee", "take rate", "commission", "overcharged"],
-            "authentication": ["authentication", "authenticity guarantee", "ag", "misgrade", "grading"],
-            "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
-            "whatnot": ["whatnot", "live breaks", "live shopping"],
-            "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
-            "goldin": ["goldin", "goldin auctions", "goldin elite", "ken goldin", "king of collectibles", "goldin buyer premium", "goldin consignment", "goldin 100"],
-            "tcgplayer": ["tcgplayer", "tcg player", "tcgplayer fees", "tcgplayer seller", "tcgplayer scam", "tcgplayer condition", "tcgplayer refund", "tcgplayer shipping"],
-            "heritage": ["heritage auctions", "heritage auction", "ha.com", "heritage buyer premium", "heritage consignment", "heritage fees"],
-            "churn": ["churn", "leaving ebay", "switching", "done with ebay", "switched to"],
-            "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value", "market comps", "price tool", "ebay comps", "sales data", "transaction data", "pricing data"],
-            "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
-            "promoted": ["promoted listing", "promoted standard", "promoted advanced", "pay to play", "ad spend"],
-            "app": ["app", "seller hub", "app crash", "app bug", "app glitch"],
-            "instant offer": ["instant offer", "immediate offer", "buyback", "buy back", "sell now", "cash out", "instant liquidity", "quick flip", "psa offers", "courtyard", "arena club", "starstock", "dibbs", "otia"],
-            "liquidity": ["liquidity", "liquidat", "cash out", "free up funds", "free up capital", "sell fast", "quick sell", "fire sale", "need cash", "fund a break", "reinvest", "wallet funds", "wallet balance", "instant offer", "buyback", "psa offers"],
-            "courtyard": ["courtyard", "buyback", "wallet funds", "wallet balance", "instant offer"],
-            "arena club": ["arena club", "arenaclub", "instant offer", "buyback"],
-            "psa offers": ["psa offers", "psa offer", "instant offer", "buyback"],
-            "beckett": ["beckett", "bgs", "beckett grading", "beckett pricing", "beckett acquisition", "beckett fanatics", "beckett marketplace"],
-            "trustpilot": ["trustpilot", "trustpilot review", "review", "rating", "customer review", "app review", "star rating"],
-            "card ladder": ["card ladder", "cardladder", "card ladder index", "cardladder.com", "card ladder data", "ebay transaction data", "scan to price", "card value tool"],
-            "psa forums": ["psa forums", "collectors universe", "psa community", "psa discussion"],
-            "seller community": ["seller community", "seller forum", "seller experience", "seller complaint", "seller feedback"],
-        }
-        expanded_terms = set()
-        for w in q_words:
-            if len(w) > 2:
-                expanded_terms.add(w)
-        for trigger, expansions in _TERM_EXPANSIONS.items():
-            if trigger in q_lower:
-                expanded_terms.update(expansions)
-
-        # Terms that require exact match (not substring) to avoid false positives
-        _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage", "beckett", "fanatics", "card ladder", "cardladder"}
-
-        # Question-type flags needed by _relevance_score for context-aware boosts
-        _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
-        _q_persona = any(t in q_lower for t in ["sellers saying", "buyers saying", "seller perspective", "buyer perspective", "seller experience", "buyer experience", "what do sellers", "what do buyers", "seller sentiment", "buyer sentiment", "seller feedback", "buyer feedback", "power seller", "new seller", "casual buyer"])
-        _q_fees = any(t in q_lower for t in ["fee", "fees", "pricing", "take rate", "commission", "final value", "insertion fee", "cost to sell", "seller fee", "buyer premium", "how much does"])
-
-        def _relevance_score(insight):
-            text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
-            subtag = (_taxonomy_topic(insight) or "").lower()
-            source = (insight.get("source", "") or "").lower()
-            competitor = (insight.get("competitor", "") or "").lower()
-            entity_name = (insight.get("entity_name", "") or "").lower()
-            score = 0
-            
-            for term in expanded_terms:
-                if len(term) <= 2:
-                    continue
-                    
-                # For company names, require more precise matching
-                if term in _EXACT_MATCH_TERMS:
-                    import re
-                    pattern = r'\b' + re.escape(term) + r'\b'
-                    if re.search(pattern, text):
-                        score += 6  # High boost for exact company match
-                    if term in competitor:
-                        score += 8  # Very high boost if it's tagged as this competitor
-                    if term in entity_name:
-                        score += 8  # Boost for entity-tagged insights
-                else:
-                    # Standard substring matching for general terms
-                    if term in text:
-                        score += 2
-                    if term in subtag:
-                        score += 4
-                    if term in source:
-                        score += 2
-            
-            # Boost high-quality signals
-            sig_strength = insight.get("signal_strength", 0)
-            if sig_strength > 60:
-                score += 3
-            elif sig_strength > 30:
-                score += 1
-            # Boost high-engagement posts
-            eng = insight.get("score", 0)
-            if eng >= 50:
-                score += 2
-            elif eng >= 10:
-                score += 1
-            # Context-aware source boosts
-            if _q_review and "trustpilot" in source:
-                score += 5
-            if _q_review and source in ("app reviews", "seller community"):
-                score += 3
-            if _q_persona and source in ("seller community", "app reviews"):
-                score += 3
-            if _q_fees and any(w in text for w in ["fee", "commission", "take rate", "final value", "buyer premium"]):
-                score += 3
-            return score
-
-        scored = [(p, _relevance_score(p)) for p in normalized]
-        scored.sort(key=lambda x: -x[1])
-        _all_relevant = [p for p, s in scored if s > 0]
-        # Source-diverse selection: cap any single source at 60% of slots
-        relevant = []
-        _src_counts = defaultdict(int)
-        _max_per_source = 24  # max 24 of 40 from one source
-        for p in _all_relevant:
-            src = p.get("source", "Unknown")
-            if _src_counts[src] < _max_per_source:
-                relevant.append(p)
-                _src_counts[src] += 1
-            if len(relevant) >= 40:
-                break
+        # ── Hybrid Retrieval (BM25 + embeddings + RRF) ──
+        # Falls back to legacy keyword scoring if hybrid retriever unavailable
+        if _hybrid_retriever is not None:
+            relevant = _hybrid_retriever.retrieve(question, top_k=25, candidate_pool=60, max_per_source=15)
+        else:
+            # Legacy fallback: keyword-based retrieval
+            _TERM_EXPANSIONS = {
+                "vault": ["vault", "storage", "withdraw", "stuck in vault", "vault sell", "vault payout", "vault card"],
+                "shipping": ["shipping", "tracking", "lost package", "damaged in transit", "standard envelope", "label", "carrier"],
+                "payment": ["payment", "payout", "funds held", "managed payments", "hold my money", "payment hold"],
+                "returns": ["return", "inad", "refund", "item not as described", "money back", "buyer scam"],
+                "fees": ["fee", "final value", "insertion fee", "take rate", "commission", "overcharged"],
+                "authentication": ["authentication", "authenticity guarantee", "ag", "misgrade", "grading"],
+                "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
+                "whatnot": ["whatnot", "live breaks", "live shopping"],
+                "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
+                "goldin": ["goldin", "goldin auctions", "goldin elite", "ken goldin", "king of collectibles", "goldin buyer premium", "goldin consignment", "goldin 100"],
+                "tcgplayer": ["tcgplayer", "tcg player", "tcgplayer fees", "tcgplayer seller", "tcgplayer scam", "tcgplayer condition", "tcgplayer refund", "tcgplayer shipping"],
+                "heritage": ["heritage auctions", "heritage auction", "ha.com", "heritage buyer premium", "heritage consignment", "heritage fees"],
+                "churn": ["churn", "leaving ebay", "switching", "done with ebay", "switched to"],
+                "price guide": ["price guide", "card ladder", "cardladder", "scan to price", "card value", "market comps", "price tool", "ebay comps", "sales data", "transaction data", "pricing data"],
+                "search": ["search", "best match", "cassini", "no views", "not showing up", "visibility"],
+                "promoted": ["promoted listing", "promoted standard", "promoted advanced", "pay to play", "ad spend"],
+                "app": ["app", "seller hub", "app crash", "app bug", "app glitch"],
+                "instant offer": ["instant offer", "immediate offer", "buyback", "buy back", "sell now", "cash out", "instant liquidity", "quick flip", "psa offers", "courtyard", "arena club", "starstock", "dibbs", "otia"],
+                "liquidity": ["liquidity", "liquidat", "cash out", "free up funds", "free up capital", "sell fast", "quick sell", "fire sale", "need cash", "fund a break", "reinvest", "wallet funds", "wallet balance", "instant offer", "buyback", "psa offers"],
+                "courtyard": ["courtyard", "buyback", "wallet funds", "wallet balance", "instant offer"],
+                "arena club": ["arena club", "arenaclub", "instant offer", "buyback"],
+                "psa offers": ["psa offers", "psa offer", "instant offer", "buyback"],
+                "beckett": ["beckett", "bgs", "beckett grading", "beckett pricing", "beckett acquisition", "beckett fanatics", "beckett marketplace"],
+                "trustpilot": ["trustpilot", "trustpilot review", "review", "rating", "customer review", "app review", "star rating"],
+                "card ladder": ["card ladder", "cardladder", "card ladder index", "cardladder.com", "card ladder data", "ebay transaction data", "scan to price", "card value tool"],
+                "psa forums": ["psa forums", "collectors universe", "psa community", "psa discussion"],
+                "seller community": ["seller community", "seller forum", "seller experience", "seller complaint", "seller feedback"],
+            }
+            expanded_terms = set()
+            for w in q_words:
+                if len(w) > 2:
+                    expanded_terms.add(w)
+            for trigger, expansions in _TERM_EXPANSIONS.items():
+                if trigger in q_lower:
+                    expanded_terms.update(expansions)
+            _EXACT_MATCH_TERMS = {"tcgplayer", "tcg player", "goldin", "whatnot", "comc", "alt.xyz", "heritage", "beckett", "fanatics", "card ladder", "cardladder"}
+            _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
+            _q_persona = any(t in q_lower for t in ["sellers saying", "buyers saying", "seller perspective", "buyer perspective", "seller experience", "buyer experience", "what do sellers", "what do buyers", "seller sentiment", "buyer sentiment", "seller feedback", "buyer feedback", "power seller", "new seller", "casual buyer"])
+            _q_fees = any(t in q_lower for t in ["fee", "fees", "pricing", "take rate", "commission", "final value", "insertion fee", "cost to sell", "seller fee", "buyer premium", "how much does"])
+            def _relevance_score(insight):
+                text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+                subtag = (_taxonomy_topic(insight) or "").lower()
+                source = (insight.get("source", "") or "").lower()
+                competitor = (insight.get("competitor", "") or "").lower()
+                entity_name = (insight.get("entity_name", "") or "").lower()
+                score = 0
+                for term in expanded_terms:
+                    if len(term) <= 2:
+                        continue
+                    if term in _EXACT_MATCH_TERMS:
+                        import re as _re_inner
+                        pattern = r'\b' + _re_inner.escape(term) + r'\b'
+                        if _re_inner.search(pattern, text):
+                            score += 6
+                        if term in competitor:
+                            score += 8
+                        if term in entity_name:
+                            score += 8
+                    else:
+                        if term in text:
+                            score += 2
+                        if term in subtag:
+                            score += 4
+                        if term in source:
+                            score += 2
+                sig_strength = insight.get("signal_strength", 0)
+                if sig_strength > 60:
+                    score += 3
+                elif sig_strength > 30:
+                    score += 1
+                eng = insight.get("score", 0)
+                if eng >= 50:
+                    score += 2
+                elif eng >= 10:
+                    score += 1
+                if _q_review and "trustpilot" in source:
+                    score += 5
+                if _q_review and source in ("app reviews", "seller community"):
+                    score += 3
+                if _q_persona and source in ("seller community", "app reviews"):
+                    score += 3
+                if _q_fees and any(w in text for w in ["fee", "commission", "take rate", "final value", "buyer premium"]):
+                    score += 3
+                return score
+            scored = [(p, _relevance_score(p)) for p in normalized]
+            scored.sort(key=lambda x: -x[1])
+            _all_relevant = [p for p, s in scored if s > 0]
+            relevant = []
+            _src_counts = defaultdict(int)
+            _max_per_source = 24
+            for p in _all_relevant:
+                src = p.get("source", "Unknown")
+                if _src_counts[src] < _max_per_source:
+                    relevant.append(p)
+                    _src_counts[src] += 1
+                if len(relevant) >= 25:
+                    break
 
         # Build numbered source references for the AI to cite
         context_lines = []
@@ -1218,6 +1229,13 @@ CRITICAL RULES — FOLLOW EXACTLY:
 - Every number you cite MUST come from the signals: "X of Y signals mention...", "engagement score of Z from [S#]"
 - If you don't have data to answer, say "The signals don't contain direct evidence on this, but based on related discussions..."
 
+PER-CLAIM CITATION ENFORCEMENT:
+- For each factual claim you make, you MUST link it to one or more [S#] source references.
+- If a claim cannot be supported by any signal, explicitly label it as "[Inference]" or remove it.
+- When quoting users, copy their EXACT words in "italics" and tag with [S#]. Do NOT paraphrase and pretend it's a quote.
+- At the end of your response, mentally verify: does every substantive claim have a [S#]? If not, either add the citation or flag the claim as inference.
+- Aim for a faithfulness ratio of 80%+ (at least 4 of every 5 substantive claims should have direct signal support).
+
 RESPONSE RULES:
 1. **ALWAYS produce a substantive response** — never return empty or minimal text. If evidence is thin, say so but still provide analysis.
 2. **Lead with the answer** — executives skim. Put the most important insight in the first 2-3 sentences.
@@ -1267,7 +1285,8 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                 _client = OpenAI(api_key=api_key)
                 _ask_ai_model = "gpt-4.1"
                 
-                with st.spinner(f"Analyzing signals (model: {_ask_ai_model}, {len(relevant)} signals)..."):
+                _signals_used = min(len(relevant), 25)
+                with st.spinner(f"Analyzing {_signals_used} relevant signals (model: {_ask_ai_model}, from {len(normalized):,} total)..."):
                     # Make direct API call
                     try:
                         completion = _client.chat.completions.create(
@@ -3124,6 +3143,32 @@ Every post is enriched with **sentiment, topic, persona, churn risk, and signal 
     _ep3.metric("Churn Risks", _pulse_churn, delta_color="inverse" if _pulse_churn else "off")
     _ep4.metric("Feature Asks", _pulse_requests)
     _ep5.metric("Positive", _pulse_pos)
+
+    # ── Trend Alerts (from trend_detector) ──
+    if _trend_alerts and _trend_alerts.get("alerts"):
+        _alerts = _trend_alerts["alerts"]
+        _high_alerts = [a for a in _alerts if a.get("severity") == "high"]
+        _med_alerts = [a for a in _alerts if a.get("severity") == "medium"]
+        _absences = _trend_alerts.get("absences", [])
+
+        with st.expander(f"📈 Trend Alerts ({len(_high_alerts)} high, {len(_med_alerts)} medium)", expanded=bool(_high_alerts)):
+            if _high_alerts:
+                st.markdown("#### 🔴 High-Severity Alerts")
+                for a in _high_alerts[:5]:
+                    _icon = {"volume_spike": "📈", "sentiment_shift": "😤", "emerging": "🆕", "declining": "📉"}.get(a["alert_type"], "⚠️")
+                    st.markdown(f"{_icon} **{a['message']}** (confidence: {a['confidence']:.0%})")
+            if _med_alerts:
+                st.markdown("#### 🟡 Medium-Severity Alerts")
+                for a in _med_alerts[:5]:
+                    _icon = {"volume_spike": "📈", "sentiment_shift": "😤", "emerging": "🆕", "declining": "📉"}.get(a["alert_type"], "⚠️")
+                    st.markdown(f"{_icon} {a['message']}")
+            if _absences:
+                st.markdown("#### 🔇 Topics Gone Silent")
+                for a in _absences[:3]:
+                    st.markdown(f"🔇 {a['message']}")
+                    st.caption(a.get("hypothesis", ""))
+            _meta = _trend_alerts.get("metadata", {})
+            st.caption(f"Analysis: {_meta.get('periods_analyzed', '?')} periods × {_meta.get('window_days', '?')}-day windows, {_meta.get('topics_tracked', '?')} topics tracked")
 
     # Signal health breakdown by topic
     _topic_counts = _PulseCounter(_taxonomy_topic(i) for i in normalized)

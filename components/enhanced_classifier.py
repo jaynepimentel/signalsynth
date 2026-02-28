@@ -22,7 +22,7 @@ else:
 
 def classify_sentiment(text):
     if tokenizer and model:
-        encoded_input = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+        encoded_input = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
         with torch.no_grad():
             output = model(**encoded_input)
             scores = softmax(output.logits[0].numpy())

@@ -95,11 +95,44 @@ STOPWORDS = {
 
 # Only load embedding model if sentence-transformers is available
 model = None
+_MAX_SEQ = 510  # safe default (512 position embeddings - 2 special tokens)
 if SentenceTransformer is not None:
     try:
         model = SentenceTransformer(EMBED_MODEL)
+        # Derive actual position-embedding limit and enforce it everywhere
+        try:
+            _MAX_SEQ = model[0].auto_model.config.max_position_embeddings - 2
+        except Exception:
+            _MAX_SEQ = 510
+        model.max_seq_length = _MAX_SEQ
+        if hasattr(model, 'tokenizer'):
+            model.tokenizer.model_max_length = _MAX_SEQ
+        try:
+            model[0].max_seq_length = _MAX_SEQ
+        except Exception:
+            pass
     except Exception:
         model = None
+
+
+def _truncate_texts(texts: list, max_tokens: int = 0) -> list:
+    """Truncate a list of texts so each fits within the model's token limit."""
+    if not model or not texts:
+        return texts
+    limit = max_tokens if max_tokens > 0 else _MAX_SEQ - 2
+    try:
+        tok = model.tokenizer
+        result = []
+        for t in texts:
+            ids = tok.encode(t or "", add_special_tokens=False, truncation=False)
+            if len(ids) <= limit:
+                result.append(t)
+            else:
+                result.append(tok.decode(ids[:limit], skip_special_tokens=True))
+        return result
+    except Exception:
+        # Fallback: char-level truncation
+        return [t[:limit * 3] if len(t) > limit * 3 else t for t in texts]
 
 
 def _informative_tokens(text: str) -> set:
@@ -137,6 +170,7 @@ def cluster_insights(insights, min_cluster_size: int = MIN_CLUSTER_SIZE, eps: fl
         f"{i.get('text')} | Tags: {i.get('type_tag')}, {i.get('journey_stage')}, {i.get('persona')}"
         for i in insights
     ]
+    texts = _truncate_texts(texts)
     embeddings = model.encode(texts, convert_to_tensor=True, normalize_embeddings=True)
     clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(
         embeddings.cpu().numpy()
@@ -176,7 +210,7 @@ def is_semantically_coherent(cluster, return_score=False, fast_mode=True):
         return (False, 0.0) if return_score else False
     if len(cluster) <= 2:
         return (True, 1.0) if return_score else True
-    texts = [i["text"] for i in cluster]
+    texts = _truncate_texts([i["text"] for i in cluster])
     embeddings = model.encode(texts, convert_to_tensor=True, normalize_embeddings=True)
     sim_matrix = util.cos_sim(embeddings, embeddings).cpu().numpy()
     upper_triangle = sim_matrix[np.triu_indices(len(texts), k=1)]

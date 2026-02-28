@@ -23,12 +23,30 @@ def _load_embed():
         else:
             m=SentenceTransformer(name)
     except Exception:
-        m=SentenceTransformer("all-MiniLM-L6-v2")
-    try: m.max_seq_length=int(os.getenv("SS_MAX_SEQ_LEN","384"))
-    except Exception: pass
+        try:
+            m=SentenceTransformer("models/all-MiniLM-L6-v2")
+        except Exception:
+            m=SentenceTransformer("all-MiniLM-L6-v2")
+    # Derive the true position-embedding limit from the underlying model config.
+    try:
+        pos_limit = m[0].auto_model.config.max_position_embeddings
+    except Exception:
+        pos_limit = 256
+    # Set max_seq_length on ALL levels to ensure tokenizer truncation works.
+    # Leave room for [CLS] + [SEP] special tokens (subtract 2).
+    safe_limit = pos_limit - 2
+    m.max_seq_length = safe_limit
+    if hasattr(m, 'tokenizer'):
+        m.tokenizer.model_max_length = safe_limit
+    try:
+        m[0].max_seq_length = safe_limit
+    except Exception:
+        pass
     return m
 
 model=_load_embed()
+# Cache the token limit for use in _truncate_to_token_limit
+_MODEL_TOKEN_LIMIT = model.max_seq_length
 
 HIGH_SIGNAL_EXAMPLES=[
     "authentication guarantee failed",
@@ -46,12 +64,37 @@ HEURISTIC_KEYWORDS={
     "high bid pulled":10,"counterfeit":10,"authentication error":10,"return fraud":10,
 }
 
+def _truncate_to_token_limit(text:str, max_tokens:int=0)->str:
+    """Truncate text so it tokenizes to at most max_tokens.
+    Uses the model's own tokenizer to count and truncate accurately."""
+    if max_tokens <= 0:
+        max_tokens = _MODEL_TOKEN_LIMIT - 2  # room for special tokens
+    t = (text or "").strip()
+    if not t:
+        return t
+    try:
+        tok = model.tokenizer
+        ids = tok.encode(t, add_special_tokens=False, truncation=False)
+        if len(ids) <= max_tokens:
+            return t
+        # Decode only the first max_tokens token IDs back to text
+        truncated = tok.decode(ids[:max_tokens], skip_special_tokens=True)
+        return truncated
+    except Exception:
+        # Fallback: aggressive char-level truncation (~2 chars per token)
+        return t[:max_tokens * 2]
+
+def _safe_encode(text:str):
+    """Encode text with guaranteed truncation to prevent tensor mismatch."""
+    truncated = _truncate_to_token_limit(text)
+    return model.encode(truncated, convert_to_tensor=True, normalize_embeddings=True)
+
 def score_insight_semantic(text:str)->float:
-    sim=util.cos_sim(
-        model.encode(text, convert_to_tensor=True, normalize_embeddings=True),
-        EXEMPLAR_EMBEDDINGS
-    ).max().item()
-    return round(sim*100,2)
+    try:
+        sim=util.cos_sim(_safe_encode(text), EXEMPLAR_EMBEDDINGS).max().item()
+        return round(sim*100,2)
+    except Exception:
+        return 0.0
 
 def score_insight_heuristic(text:str)->int:
     lowered=text.lower()
@@ -143,8 +186,8 @@ def enrich_single_insight(i:dict, min_score:float=3):
 
     i["persona"]=i.get("persona") or "General"
     try:
-        i["ideas"]=generate_pm_ideas(text=text, brand=i.get("target_brand"))
-    except Exception:
+        i["ideas"]=generate_pm_ideas(text=_truncate_to_token_limit(text, 200), brand=i.get("target_brand"))
+    except (Exception, KeyboardInterrupt) as _pm_err:
         i["ideas"]=[]
     i["effort"]=classify_effort(i["ideas"])
     i["shovel_ready"]=(i["frustration"]>=4) and (i["impact"]>=3)

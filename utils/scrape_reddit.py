@@ -50,7 +50,6 @@ SUBREDDITS = [
     "SneakerMarket",
     # Investing / Finance
     "PokeInvesting",
-    "mtgfinance",
     # Additional TCG
     "magicTCG",
     "DigimonCardGame2020",
@@ -482,6 +481,8 @@ def run_reddit_scraper(include_comments: bool = False, include_search: bool = Tr
         "https://www.reddit.com/r/psagrading/comments/1qtic9j/psa_vault_ebay_auction/",
         "https://www.reddit.com/r/sportscards/comments/1qvvudo/psa_vault_is_officially_broken/",
         "https://www.reddit.com/r/psagrading/comments/1qvpbsg/items_sent_to_vault_instead_of_to_me/",
+        # PSA circumventing eBay vault safeguards — shipping cards out and back instead of vault-to-vault transfer
+        "https://www.reddit.com/r/psagrading/comments/1rf9vtf/ebay_psa_vault_to_psa_vault/",
     ]
     
     print(f"\n💬 Scraping comments from {len(high_value_posts)} high-value posts...")

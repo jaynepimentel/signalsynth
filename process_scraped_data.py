@@ -123,18 +123,27 @@ def main():
         if (i + 1) % 500 == 0:
             print(f"  Processed {i + 1}/{len(posts)}...")
     
-    # Deduplicate by text
-    seen = set()
-    unique = []
-    for insight in insights:
-        text_hash = insight.get("text", "")[:150]
-        if text_hash not in seen:
-            seen.add(text_hash)
-            unique.append(insight)
-    
-    print(f"\n✅ Processed: {processed}")
-    print(f"⏭️ Skipped: {skipped}")
-    print(f"🔄 Deduplicated: {len(insights)} → {len(unique)}")
+    # Deduplicate using SimHash (near-duplicate detection) + exact prefix matching
+    try:
+        from components.deduplicator import deduplicate_insights
+        unique, dedup_stats = deduplicate_insights(insights, similarity_threshold=5)
+        print(f"\n✅ Processed: {processed}")
+        print(f"⏭️ Skipped: {skipped}")
+        print(f"🔄 Deduplicated: {dedup_stats['total']} → {dedup_stats['unique']} "
+              f"(exact dupes: {dedup_stats['exact_dupes']}, near dupes: {dedup_stats['near_dupes']}, "
+              f"rate: {dedup_stats['dedup_rate']:.1%})")
+    except ImportError:
+        # Fallback to simple dedup if deduplicator not available
+        seen = set()
+        unique = []
+        for insight in insights:
+            text_hash = insight.get("text", "")[:150]
+            if text_hash not in seen:
+                seen.add(text_hash)
+                unique.append(insight)
+        print(f"\n✅ Processed: {processed}")
+        print(f"⏭️ Skipped: {skipped}")
+        print(f"🔄 Deduplicated: {len(insights)} → {len(unique)} (basic dedup)")
     
     # Save
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
