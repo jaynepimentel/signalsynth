@@ -143,7 +143,7 @@ def infer_clarity(text):
 
 def detect_competitor_and_partner_mentions(text):
     lo=(text or "").lower()
-    competitors=["fanatics","fanatics live","whatnot","whatnot app","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin","beckett","stockx","mercari","courtyard","arena club","arenaclub","starstock","dibbs","otia"]  # pwcc kept as alias — rebranded to Fanatics Collect
+    competitors=["fanatics","fanatics live","whatnot","whatnot app","vinted","alt","alt marketplace","loupe","tiktok","tiktok shopping","heritage","pwcc","elite auction","goldin","beckett","stockx","mercari","courtyard","arena club","arenaclub","starstock","dibbs","otia"]  # pwcc kept as alias — rebranded to Fanatics Collect
     partners=["psa","psa offers","comc","ebay live","ebay vault","sgc","bgs","pcgs","ngc"]
     market_terms=["consignment","auction house","authentication","population report","vault","grading","case break","repack","live shopping","stream","search","filters","relevancy","refund","return","payout","payment hold","instant offer","buyback","buy back","liquidity","cash out","sell now","quick flip"]
     return {

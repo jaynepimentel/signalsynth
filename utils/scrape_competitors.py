@@ -107,6 +107,19 @@ COMPETITORS = {
         "subreddits": ["sportscards", "baseballcards", "pokemontcg", "basketballcards", "footballcards"],
         "required_keywords": ["whatnot"],
     },
+    "Vinted": {
+        "type": "competitor",
+        "search_terms": [
+            "vinted selling experience", "vinted vs ebay",
+            "vinted fees sellers", "vinted collectibles",
+            "vinted trading cards", "vinted sports cards",
+            "vinted seller review", "vinted shipping issues",
+            "vinted buyer protection", "selling on vinted cards",
+            "vinted app review", "vinted scam",
+        ],
+        "subreddits": ["Flipping", "Ebay", "eBaySellerAdvice", "Mercari", "sportscards", "pokemontcg"],
+        "required_keywords": ["vinted"],
+    },
     "Goldin": {
         "type": "ebay_subsidiary",
         "search_terms": [

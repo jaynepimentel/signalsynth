@@ -623,6 +623,7 @@ else:
                 "authentication": ["authentication", "authenticity guarantee", "ag", "misgrade", "grading"],
                 "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
                 "whatnot": ["whatnot", "live breaks", "live shopping"],
+                "vinted": ["vinted", "vinted app", "vinted seller", "vinted fees", "vinted vs ebay"],
                 "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
                 "goldin": ["goldin", "goldin auctions", "goldin elite", "ken goldin", "king of collectibles", "goldin buyer premium", "goldin consignment", "goldin 100"],
                 "tcgplayer": ["tcgplayer", "tcg player", "tcgplayer fees", "tcgplayer seller", "tcgplayer scam", "tcgplayer condition", "tcgplayer refund", "tcgplayer shipping"],
@@ -875,7 +876,7 @@ else:
         # Note: Goldin and TCGPlayer are eBay SUBSIDIARIES, not competitors
         _q_subsidiary = any(t in q_lower for t in ["goldin", "tcgplayer", "tcg player"])
         _q_liquidity = any(t in q_lower for t in ["instant offer", "liquidity", "liquidat", "buyback", "buy back", "cash out", "sell now", "quick flip", "psa offers", "courtyard", "arena club", "sell fast", "free up funds", "reinvest"])
-        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz", "beckett"])
+        _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz", "beckett", "vinted"])
         _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
         _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
@@ -1268,7 +1269,7 @@ DOMAIN EXPERTISE:
 - eBay SUBSIDIARIES (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
 - eBay PARTNERSHIPS: PSA (vault, consignment, grading), Card Ladder (receives eBay transaction data to power indexes)
 - PRICE GUIDE STRATEGY: eBay's goal is to be THE premier, most trusted price guide in the collectibles market. eBay provides its transaction/sales data to partners like Card Ladder and PSA to help them build their indexes — but eBay's own Price Guide (powered by eBay sales comps) is the primary product. Card Ladder and PSA are data recipients, not data providers to eBay. When analyzing Price Guide signals, frame eBay as the owner of the most comprehensive transaction dataset in collectibles.
-- TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment), Beckett (grading + pricing, acquired by Fanatics)
+- TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment), Beckett (grading + pricing, acquired by Fanatics), Vinted (resale marketplace, growing in collectibles/cards)
 - INSTANT LIQUIDITY LANDSCAPE: PSA Offers (instant buyback on graded cards), Courtyard (wallet-based buyback + instant funds), Arena Club (instant offers on vault cards), StarStock, Dibbs, Otia — these platforms offer instant liquidity features that let users convert holdings to cash or reinvest immediately. This is an emerging competitive dynamic for eBay.
 - eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
 - User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
