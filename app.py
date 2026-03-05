@@ -1295,15 +1295,17 @@ PER-CLAIM CITATION ENFORCEMENT:
 - For each factual claim you make, you MUST link it to one or more [S#] source references.
 - If a claim cannot be supported by any signal, explicitly label it as "[Inference]" or remove it.
 - When quoting users, copy their EXACT words in "italics" and tag with [S#]. Do NOT paraphrase and pretend it's a quote.
-- At the end of your response, mentally verify: does every substantive claim have a [S#]? If not, either add the citation or flag the claim as inference.
-- Aim for a faithfulness ratio of 80%+ (at least 4 of every 5 substantive claims should have direct signal support).
+- TABLE ROWS must include [S#] citations in the cells (e.g., "| Vault | 5 signals | Complaint [S2][S7] | Rising |").
+- RECOMMENDATIONS must cite the signal(s) that justify them (e.g., "based on [S3] and [S8]").
+- EMERGING SIGNALS bullets must each cite at least one [S#].
+- Aim for 80%+ faithfulness (4 of every 5 substantive sentences should have [S#] citations).
 
 RESPONSE RULES:
 1. **ALWAYS produce a substantive response** — never return empty or minimal text. If evidence is thin, say so but still provide analysis.
 2. **Lead with the answer** — executives skim. Put the most important insight in the first 2-3 sentences.
 3. **Ground EVERY claim in [S#] citations** — if you can't cite a signal, don't make the claim.
 4. **Use VERBATIM quotes** — copy exact user language in "italics" with [S#] tags so readers can verify.
-5. **Be specific** — name exact products (Vault, AG, Price Guide), policies, and features. Never say "improve the experience."
+5. **Map to eBay product areas** — Always connect signals to specific eBay products: Vault, Authenticity Guarantee (AG), Price Guide, Promoted Listings, Seller Hub, Search/Best Match, Managed Payments, Standard Envelope, eBay International Shipping, eBay Live. Never say "improve the experience" — say "fix Vault withdrawal flow" or "improve AG turnaround communication."
 6. **Only quantify what you can count** — "8 of 25 signals mention shipping issues", NOT invented percentages.
 7. **Connect patterns** — synthesize what signals mean together.
 8. **Actionable recommendations** — every recommendation needs: Owner (team/PM), Timeline (when), Expected Impact (what changes).
