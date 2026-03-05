@@ -3196,19 +3196,32 @@ Every post is enriched with **sentiment, topic, persona, churn risk, and signal 
             st.caption(f"Last data refresh: {_refresh_ts[:16]}")
 
     from collections import Counter as _PulseCounter
-    _pulse_neg = sum(1 for i in normalized if i.get("brand_sentiment") == "Negative")
-    _pulse_pos = sum(1 for i in normalized if i.get("brand_sentiment") == "Positive")
+    # Split signals into recent (14d) vs older for trend comparison
+    _14d_ago = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
+    _recent = [i for i in normalized if (i.get("post_date", "") or "") >= _14d_ago]
+    _older = [i for i in normalized if (i.get("post_date", "") or "") < _14d_ago]
+
+    _pulse_neg = sum(1 for i in normalized if i.get("brand_sentiment") in ("Negative", "Complaint"))
+    _pulse_pos = sum(1 for i in normalized if i.get("brand_sentiment") in ("Positive", "Praise"))
     _pulse_complaints = sum(1 for i in normalized if _taxonomy_type(i) == "Complaint")
     _pulse_churn = sum(1 for i in normalized if i.get("type_tag") == "Churn Signal")
     _pulse_requests = sum(1 for i in normalized if _taxonomy_type(i) == "Feature Request")
 
-    _ep1, _ep2, _ep3, _ep4, _ep5 = st.columns(5)
+    # Recent-period counts for delta
+    _recent_neg = sum(1 for i in _recent if i.get("brand_sentiment") in ("Negative", "Complaint"))
+    _recent_complaints = sum(1 for i in _recent if _taxonomy_type(i) == "Complaint")
+    _recent_churn = sum(1 for i in _recent if i.get("type_tag") == "Churn Signal")
+    _recent_requests = sum(1 for i in _recent if _taxonomy_type(i) == "Feature Request")
+    _recent_pos = sum(1 for i in _recent if i.get("brand_sentiment") in ("Positive", "Praise"))
+
     _neg_pct = round(_pulse_neg / max(total, 1) * 100)
-    _ep1.metric("Negative", _pulse_neg, delta=f"{_neg_pct}%", delta_color="inverse")
-    _ep2.metric("Complaints", _pulse_complaints)
-    _ep3.metric("Churn Risks", _pulse_churn, delta_color="inverse" if _pulse_churn else "off")
-    _ep4.metric("Feature Asks", _pulse_requests)
-    _ep5.metric("Positive", _pulse_pos)
+
+    _ep1, _ep2, _ep3, _ep4, _ep5 = st.columns(5)
+    _ep1.metric("Negative", _pulse_neg, delta=f"{_recent_neg} in last 14d", delta_color="inverse" if _recent_neg else "off")
+    _ep2.metric("Complaints", _pulse_complaints, delta=f"{_recent_complaints} recent", delta_color="inverse" if _recent_complaints else "off")
+    _ep3.metric("Churn Risks", _pulse_churn, delta=f"{_recent_churn} recent", delta_color="inverse" if _recent_churn else "off")
+    _ep4.metric("Feature Asks", _pulse_requests, delta=f"{_recent_requests} recent", delta_color="off")
+    _ep5.metric("Positive", _pulse_pos, delta=f"{_recent_pos} recent", delta_color="off")
 
     # ── Trend Alerts (from trend_detector) ──
     if _trend_alerts and _trend_alerts.get("alerts"):

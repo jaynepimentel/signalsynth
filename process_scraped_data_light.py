@@ -96,6 +96,15 @@ SCRAPED_FILES = [
     "data/scraped_ebay_forums.json",
     "data/scraped_community_posts.json",
     "data/all_scraped_posts.json",
+    "data/scraped_competitor_posts.json",
+    "data/scraped_twitter_posts.json",
+    "data/scraped_youtube_posts.json",
+    "data/scraped_forums_blogs_posts.json",
+    "data/scraped_news_rss_posts.json",
+    "data/scraped_podcast_posts.json",
+    "data/scraped_cllct_posts.json",
+    "data/scraped_new_sources_posts.json",
+    "data/scraped_blowout_posts.json",
 ]
 OUTPUT_PATH = "precomputed_insights.json"
 
@@ -131,10 +140,81 @@ def score_heuristic(text: str) -> int:
     return sum(v for k, v in HEURISTIC_KEYWORDS.items() if k in lo)
 
 
+# Off-topic content that should never appear in collectibles intelligence
+OFF_TOPIC_KEYWORDS = [
+    # Politics / Government
+    "epstein", "trump tariff", "trump gold card", "biden", "democrat party",
+    "republican party", "maga ", "make america", "presidential election",
+    "congress vote", "senate hearing", "supreme court ruling",
+    "immigration backlog", "green card holder", "immigration official",
+    "border wall", "deportation", "asylum seeker",
+    # Geopolitics
+    "ukraine war", "russia invasion", "israel hamas", "palestine conflict",
+    "nato summit", "china tariff", "trade war sanctions",
+    # Unrelated industries
+    "covid vaccine", "pharmaceutical", "oil prices barrel",
+    "cryptocurrency mining", "bitcoin halving", "ethereum merge",
+    "real estate mortgage", "stock market crash", "federal reserve rate",
+    # Clearly non-collectibles
+    "recipe for", "weight loss", "workout routine", "dating advice",
+    "movie review", "tv show recap", "celebrity gossip",
+]
+
+# Positive signals that confirm collectibles relevance (override off-topic filter)
+COLLECTIBLES_DOMAIN_TERMS = [
+    "card", "cards", "graded", "slab", "psa", "bgs", "sgc", "cgc",
+    "ebay", "auction", "collectible", "collector", "collection",
+    "trading card", "sports card", "pokemon", "baseball", "football",
+    "basketball", "hockey", "funko", "comic", "coin", "stamp",
+    "vault", "authentication", "grading", "whatnot", "goldin",
+    "heritage", "tcgplayer", "fanatics", "shipping", "seller",
+    "buyer", "listing", "bid", "marketplace", "consignment",
+    "wax", "hobby", "break", "pack", "box break", "case break",
+    "topps", "panini", "bowman", "upper deck", "fleer", "donruss",
+    "rookie", "autograph", "memorabilia", "vintage", "mint",
+    "pop report", "price guide", "comps", "sale price",
+]
+
+
+def _is_domain_relevant(text: str, title: str = "", source: str = "") -> bool:
+    """Check if a post is relevant to the collectibles/marketplace domain."""
+    combined = (text + " " + title).lower()
+
+    # Always keep posts from domain-specific sources
+    trusted_sources = {
+        "reddit", "ebay forums", "trustpilot", "psa forums", "tcgplayer",
+        "whatnot", "goldin", "heritage", "seller community", "app reviews",
+        "card ladder", "cllct",
+    }
+    if any(ts in source.lower() for ts in trusted_sources):
+        # Even from trusted sources, reject clearly off-topic
+        for kw in OFF_TOPIC_KEYWORDS:
+            if kw in combined and not any(dt in combined for dt in ["card", "ebay", "collectible", "auction", "grading"]):
+                return False
+        return True
+
+    # For non-trusted sources (Twitter, Industry Analysis, Google News, etc.),
+    # require at least one collectibles domain term
+    has_domain_term = any(dt in combined for dt in COLLECTIBLES_DOMAIN_TERMS)
+    if not has_domain_term:
+        return False
+
+    # Even with domain terms, reject if primary topic is off-topic
+    for kw in OFF_TOPIC_KEYWORDS:
+        if kw in combined:
+            return False
+
+    return True
+
+
 def enrich_light(post: dict) -> dict | None:
     """Full enrichment with zero GPT calls."""
     text = post.get("text", "")
     if not text or len(text.strip()) < 30:
+        return None
+
+    # Domain relevance filter — reject off-topic content
+    if not _is_domain_relevant(text, post.get("title", ""), post.get("source", "")):
         return None
 
     i = {
