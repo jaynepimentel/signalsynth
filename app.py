@@ -1304,7 +1304,7 @@ RESPONSE RULES:
 1. **ALWAYS produce a substantive response** — never return empty or minimal text. If evidence is thin, say so but still provide analysis.
 2. **Lead with the answer** — executives skim. Put the most important insight in the first 2-3 sentences.
 3. **Ground EVERY claim in [S#] citations** — if you can't cite a signal, don't make the claim.
-4. **Use VERBATIM quotes** — copy exact user language in "italics" with [S#] tags so readers can verify.
+4. **Use VERBATIM quotes** — copy exact user language in "italics" with [S#] tags AND persona/engagement context: *"quote here"* [S3] — Power Seller, 228 engagement. This lets readers gauge signal weight.
 5. **Map to eBay product areas** — Always connect signals to specific eBay products: Vault, Authenticity Guarantee (AG), Price Guide, Promoted Listings, Seller Hub, Search/Best Match, Managed Payments, Standard Envelope, eBay International Shipping, eBay Live. Never say "improve the experience" — say "fix Vault withdrawal flow" or "improve AG turnaround communication."
 6. **Only quantify what you can count** — "8 of 25 signals mention shipping issues", NOT invented percentages.
 7. **Connect patterns** — synthesize what signals mean together.
@@ -1314,6 +1314,9 @@ RESPONSE RULES:
 11. **Source triangulation** — when multiple independent sources agree, call it out: "Corroborated across Reddit, Trustpilot, and eBay Forums." Use the CROSS-SOURCE CORROBORATION section.
 12. **Trend velocity** — if TREND VELOCITY ALERTS show a topic spiking or shifting, say so: "Vault signals up +47% this period (z=3.2), escalating." This is proactive intelligence, not just a summary.
 13. **Freshness** — signals tagged [RECENT] are from the last 14 days. Weight them more heavily for "what's happening now" questions. Flag when evidence is mostly older.
+14. **Competitive migration** — when signals show users moving between platforms, call it out explicitly: "Sellers are actively moving high-value card sales to eBay due to TCGPlayer's limitations [S8]." Name the source platform, destination platform, and the reason.
+15. **Risk-of-inaction** — frame consequences: "If not addressed, this risks seller churn and cross-platform leakage to Whatnot." Executives need to know what happens if they do nothing.
+16. **Describe user behaviors, not just sentiment** — don't just say "users are frustrated." Describe what they're doing: "Buyers intentionally wait to bundle purchases for shipping savings, but the new 1-hour payment policy blocks this workflow [S1]." Behavior context makes signals actionable.
 
 DATASET SUMMARY:
 {stats_block}
