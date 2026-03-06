@@ -110,20 +110,62 @@ def _promote_money_risk(i: Dict[str, Any]) -> Dict[str, Any]:
     return i
 
 
-COLLECTIBLES_HINTS = (
-    "card", "trading card", "slab", "psa", "bgs", "sgc", "tcg", "pokemon", "comic",
-    "graded", "pop report", "population report", "vault", "whatnot", "goldin",
-    "heritage", "pwcc", "fanatics", "alt marketplace", "loupe"
+COLLECTIBLES_HINTS_STRONG = (
+    "trading card", "sports card", "baseball card", "football card", "basketball card",
+    "pokemon card", "magic card", "yugioh", "slab", "graded card", "raw card",
+    "psa", "bgs", "sgc", "cgc", "tcg", "topps", "panini", "bowman", "upper deck",
+    "pop report", "population report", "vault", "whatnot", "goldin", "vinted",
+    "heritage auction", "pwcc", "fanatics collect", "alt marketplace", "loupe",
+    "ebay seller", "ebay buyer", "ebay auction", "ebay listing", "ebay shipping",
+    "ebay fee", "ebay return", "ebay refund", "ebay vault", "ebay live",
+    "authenticity guarantee", "price guide", "promoted listing", "seller hub",
+    "collectible", "collector", "hobby box", "wax box", "case break", "box break",
+    "card show", "card shop", "lcs ", "rookie card", "autograph card",
+    "funko", "comic book", "coin collect",
+)
+
+COLLECTIBLES_HINTS_WEAK = (
+    "card", "graded", "comic", "coin",
+)
+
+# Exclude posts that are clearly not about collectibles/marketplace platform feedback
+CLUSTER_EXCLUDE = (
+    "hard drive", "ssd", "hdd", "terabyte", "gigabyte", "storage device",
+    "boyfriend sold", "girlfriend sold", "my ex ", "relationship",
+    "union busting", "unionize", "boycott tcgplayer",
+    "recipe", "cooking", "workout", "weight loss",
+    "gpu", "cpu", "ram ", "laptop", "smartphone",
+    "election", "democrat", "republican", "trump", "biden",
+    "epstein", "immigration", "green card holder",
 )
 
 
 def _is_collectibles(i: Dict[str, Any]) -> bool:
     """
     Domain gate: keep only collectibles and high-value money-risk posts.
+    Tightened to prevent off-topic content from polluting clusters.
     """
     t = (i.get("text") or "").lower()
+
+    # Hard exclude: never cluster these
+    if any(ex in t for ex in CLUSTER_EXCLUDE):
+        return False
+
+    # Strong match: definitely collectibles
+    if any(h in t for h in COLLECTIBLES_HINTS_STRONG):
+        return True
+
+    # Money-risk signals are always relevant
     money = bool(i.get("_payment_issue") or i.get("_upi_flag") or i.get("_high_end_flag"))
-    return any(h in t for h in COLLECTIBLES_HINTS) or money
+    if money:
+        return True
+
+    # Weak match: "card" alone needs platform context to qualify
+    if any(h in t for h in COLLECTIBLES_HINTS_WEAK):
+        platform_context = any(p in t for p in ("ebay", "seller", "buyer", "auction", "listing", "shipping", "grading", "marketplace"))
+        return platform_context
+
+    return False
 
 
 def _passes_filters(
@@ -349,6 +391,30 @@ def main():
         }
         clusters.append(cluster_record)
         cards.append(card)
+
+    # ── Post-process: deduplicate cluster theme names ──
+    # When GPT gives multiple clusters the same generic name (e.g. "User Experience"),
+    # append the dominant topic to make each unique and exec-readable.
+    from collections import Counter as _NameCounter
+    theme_counts = _NameCounter(c.get("theme", c.get("title", "")) for c in cards)
+    duped_themes = {t for t, cnt in theme_counts.items() if cnt > 1}
+    if duped_themes:
+        for card, cluster_rec in zip(cards, clusters):
+            theme = card.get("theme", card.get("title", ""))
+            if theme in duped_themes:
+                # Find dominant topic from cluster insights
+                items = cluster_rec.get("insights", [])
+                topic_counts = _NameCounter()
+                for item in items:
+                    tax = item.get("taxonomy") if isinstance(item.get("taxonomy"), dict) else {}
+                    t = tax.get("topic") or item.get("subtag") or ""
+                    if t and t not in ("General", "Unknown", ""):
+                        topic_counts[t] += 1
+                dominant = topic_counts.most_common(1)[0][0] if topic_counts else ""
+                if dominant:
+                    new_theme = f"{theme}: {dominant}"
+                    card["theme"] = new_theme
+                    card["title"] = card.get("title", theme) + f" ({dominant})"
 
     # Metadata block for traceability
     metadata = {
