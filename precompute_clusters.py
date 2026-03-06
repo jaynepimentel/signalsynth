@@ -128,15 +128,34 @@ COLLECTIBLES_HINTS_WEAK = (
     "card", "graded", "comic", "coin",
 )
 
+# False-positive 'card' compounds — these contain 'card' but are NOT collectibles
+FALSE_CARD_COMPOUNDS = (
+    "credit card", "debit card", "gift card", "business card", "green card",
+    "boarding card", "loyalty card", "sim card", "graphics card", "memory card",
+    "sd card", "id card", "key card", "report card", "score card",
+    "card game rules", "playing card",  # generic card games, not TCG
+)
+
 # Exclude posts that are clearly not about collectibles/marketplace platform feedback
 CLUSTER_EXCLUDE = (
+    # Tech/hardware
     "hard drive", "ssd", "hdd", "terabyte", "gigabyte", "storage device",
-    "boyfriend sold", "girlfriend sold", "my ex ", "relationship",
+    "gpu", "cpu", "ram ", "laptop", "smartphone", "iphone", "android",
+    # Personal/relationship
+    "boyfriend sold", "girlfriend sold", "my ex ",
+    # Labor/activism
     "union busting", "unionize", "boycott tcgplayer",
+    # Politics/government
+    "election", "democrat", "republican", "trump tariff", "biden",
+    "epstein", "immigration backlog", "green card holder",
+    # Travel/airline
+    "airline", "deplaning", "boarding pass", "layover", "turbulence",
+    "flight cancel", "delta air", "united air", "american air", "southwest air",
+    # Lifestyle/other industries
     "recipe", "cooking", "workout", "weight loss",
-    "gpu", "cpu", "ram ", "laptop", "smartphone",
-    "election", "democrat", "republican", "trump", "biden",
-    "epstein", "immigration", "green card holder",
+    "mortgage", "student loan", "tuition",
+    "netflix", "hulu", "disney+", "streaming service",
+    "car insurance", "auto loan",
 )
 
 
@@ -160,8 +179,13 @@ def _is_collectibles(i: Dict[str, Any]) -> bool:
     if money:
         return True
 
-    # Weak match: "card" alone needs platform context to qualify
+    # Weak match: "card" alone needs platform context AND must not be a false-positive compound
     if any(h in t for h in COLLECTIBLES_HINTS_WEAK):
+        # Reject if the "card" mention is actually credit card, gift card, etc.
+        if any(fc in t for fc in FALSE_CARD_COMPOUNDS):
+            # Only keep if there's ALSO a strong collectibles signal alongside the false compound
+            if not any(h in t for h in COLLECTIBLES_HINTS_STRONG):
+                return False
         platform_context = any(p in t for p in ("ebay", "seller", "buyer", "auction", "listing", "shipping", "grading", "marketplace"))
         return platform_context
 

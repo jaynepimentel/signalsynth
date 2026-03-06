@@ -155,24 +155,30 @@ OFF_TOPIC_KEYWORDS = [
     "covid vaccine", "pharmaceutical", "oil prices barrel",
     "cryptocurrency mining", "bitcoin halving", "ethereum merge",
     "real estate mortgage", "stock market crash", "federal reserve rate",
+    # Travel / Airlines
+    "airline", "deplaning", "boarding pass", "layover", "turbulence",
+    "flight cancel", "delta air", "united air", "southwest air",
+    "get off a flight", "voluntary deplaning",
     # Clearly non-collectibles
     "recipe for", "weight loss", "workout routine", "dating advice",
     "movie review", "tv show recap", "celebrity gossip",
+    "mortgage rate", "student loan", "car insurance",
 ]
 
 # Positive signals that confirm collectibles relevance (override off-topic filter)
+# NOTE: bare 'card'/'cards' removed — too many false positives (credit card, gift card, boarding card)
 COLLECTIBLES_DOMAIN_TERMS = [
-    "card", "cards", "graded", "slab", "psa", "bgs", "sgc", "cgc",
-    "ebay", "auction", "collectible", "collector", "collection",
-    "trading card", "sports card", "pokemon", "baseball", "football",
-    "basketball", "hockey", "funko", "comic", "coin", "stamp",
+    "trading card", "sports card", "baseball card", "football card",
+    "basketball card", "pokemon card", "magic card", "graded card",
+    "graded", "slab", "psa", "bgs", "sgc", "cgc",
+    "ebay", "auction", "collectible", "collector",
+    "pokemon", "funko", "comic book", "coin collect",
     "vault", "authentication", "grading", "whatnot", "goldin",
-    "heritage", "tcgplayer", "fanatics", "shipping", "seller",
-    "buyer", "listing", "bid", "marketplace", "consignment",
-    "wax", "hobby", "break", "pack", "box break", "case break",
+    "heritage", "tcgplayer", "fanatics", "vinted",
+    "wax", "hobby box", "box break", "case break",
     "topps", "panini", "bowman", "upper deck", "fleer", "donruss",
-    "rookie", "autograph", "memorabilia", "vintage", "mint",
-    "pop report", "price guide", "comps", "sale price",
+    "rookie", "autograph", "memorabilia",
+    "pop report", "price guide", "card show", "card shop", "lcs ",
 ]
 
 
@@ -189,7 +195,7 @@ def _is_domain_relevant(text: str, title: str = "", source: str = "") -> bool:
     if any(ts in source.lower() for ts in trusted_sources):
         # Even from trusted sources, reject clearly off-topic
         for kw in OFF_TOPIC_KEYWORDS:
-            if kw in combined and not any(dt in combined for dt in ["card", "ebay", "collectible", "auction", "grading"]):
+            if kw in combined and not any(dt in combined for dt in ["trading card", "ebay", "collectible", "auction", "grading", "psa", "slab"]):
                 return False
         return True
 
