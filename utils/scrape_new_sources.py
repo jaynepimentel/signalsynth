@@ -178,6 +178,7 @@ TRUSTPILOT_TARGETS = [
     {"company": "tcgplayer.com", "source": "Trustpilot:TCGPlayer"},
     {"company": "whatnot.com", "source": "Trustpilot:Whatnot"},
     {"company": "ha.com", "source": "Trustpilot:Heritage"},
+    {"company": "vinted.com", "source": "Trustpilot:Vinted"},
 ]
 
 
