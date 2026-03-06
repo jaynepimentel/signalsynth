@@ -403,6 +403,12 @@ def main():
         card["was_reclustered"] = meta.get("was_reclustered", False)
         card["avg_similarity"] = f"{meta.get('avg_similarity', 0.0):.2f}"
 
+        # Override GPT theme with the workstream category name
+        workstream = meta.get("category", "")
+        if workstream and workstream != "General Platform Feedback":
+            card["theme"] = workstream
+            card["title"] = workstream
+
         cid = card.get("cluster_id", idx)
 
         cluster_record = {

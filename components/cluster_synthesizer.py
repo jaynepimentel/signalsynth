@@ -348,54 +348,107 @@ def synthesize_cluster(cluster):
 
 
 def _get_signal_category(insight):
-    """Determine the primary signal category for an insight based on flags."""
-    # Check signal flags in priority order
-    if insight.get("is_vault_signal"):
-        return "Vault"
-    if insight.get("is_psa_turnaround"):
-        return "Grading"
-    if insight.get("is_ag_signal"):
-        return "Authentication"
-    if insight.get("is_shipping_issue"):
-        return "Shipping"
-    if insight.get("_payment_issue"):
-        return "Payments"
-    if insight.get("is_refund_issue"):
-        return "Refunds"
-    if insight.get("is_fees_concern"):
-        return "Fees"
-    if insight.get("_upi_flag"):
-        return "UPI"
-    if insight.get("is_price_guide_signal"):
-        return "Pricing"
+    """Map each insight to an exec-actionable workstream.
     
-    # Fall back to subtag or text-based detection
-    subtag = insight.get("type_subtag") or insight.get("subtag") or ""
-    if subtag and subtag != "General":
-        return subtag
-    
-    # Text-based topic detection
+    These are designed as workstreams an eBay Collectibles VP would assign
+    to a PM or team lead — each one is a deliverable initiative, not a
+    generic topic bucket.
+    """
     text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
-    if "vault" in text:
-        return "Vault"
-    if "grading" in text or "psa" in text or "turnaround" in text:
-        return "Grading"
-    if "shipping" in text or "delivery" in text or "tracking" in text:
-        return "Shipping"
-    if "payment" in text or "payout" in text or "paid" in text:
-        return "Payments"
-    if "refund" in text or "return" in text:
-        return "Refunds"
-    if "fee" in text or "commission" in text:
-        return "Fees"
-    if "authentication" in text or "authenticity" in text:
-        return "Authentication"
-    if "competitor" in text or "fanatics" in text or "alt" in text or "whatnot" in text:
-        return "Competitors"
-    if "goldin" in text or "tcgplayer" in text:
-        return "Subsidiaries"
-    
-    return "General Feedback"
+    subtag = (insight.get("type_subtag") or insight.get("subtag") or "").lower()
+    topics = [t.lower() for t in (insight.get("topic_focus") or insight.get("topic_focus_list") or [])]
+    competitors = [c.lower() for c in (insight.get("mentions_competitor") or [])]
+    partners = [p.lower() for p in (insight.get("mentions_ecosystem_partner") or [])]
+
+    # ── 1. Vault & Storage Trust ──
+    # Owner: Vault PM. Covers: PSA Vault, eBay Vault, withdrawal, transfer, vaulting UX
+    if (insight.get("is_vault_signal") or "vault" in text or
+        any(t in topics for t in ["vault", "vault friction"])):
+        return "Vault & Storage Trust"
+
+    # ── 2. Authentication & Grading Confidence ──
+    # Owner: AG PM. Covers: Authenticity Guarantee, grading disputes, PSA/BGS turnaround, counterfeit
+    if (insight.get("is_ag_signal") or insight.get("is_psa_turnaround") or
+        "authenticity guarantee" in text or "authentication" in text or
+        ("grading" in text and any(g in text for g in ["psa", "bgs", "sgc", "cgc"])) or
+        "counterfeit" in text or "fake card" in text or
+        any(t in topics for t in ["trust issue", "counterfeit concern", "grading complaint"])):
+        return "Authentication & Grading Confidence"
+
+    # ── 3. Competitive Positioning ──
+    # Owner: Strategy. Covers: Whatnot, Fanatics, Heritage, Vinted, Beckett, competitive churn
+    if (competitors or
+        any(c in text for c in ["whatnot", "fanatics", "heritage auction", "vinted", "beckett", "stockx"]) or
+        any(t in topics for t in ["competitive churn"]) or
+        "switched to" in text or "leaving ebay" in text or "moving to" in text):
+        return "Competitive Positioning"
+
+    # ── 4. Seller Economics & Fees ──
+    # Owner: Seller Experience PM. Covers: fees, take rate, promoted listings cost, payout delays, payment holds
+    if (insight.get("is_fees_concern") or insight.get("_payment_issue") or insight.get("_upi_flag") or
+        any(t in topics for t in ["fees/pricing", "fee frustration", "payments", "payouts/holds", "upi"]) or
+        any(w in text for w in ["final value fee", "seller fee", "take rate", "promoted listing cost",
+                                 "payout delay", "payment hold", "funds held", "unpaid item"])):
+        return "Seller Economics & Fees"
+
+    # ── 5. Shipping & Fulfillment ──
+    # Owner: Shipping PM. Covers: shipping damage, tracking, standard envelope, international shipping, returns logistics
+    if (insight.get("is_shipping_issue") or insight.get("is_refund_issue") or
+        any(t in topics for t in ["shipping concern", "tracking confusion", "returns/policy"]) or
+        any(w in text for w in ["shipping", "tracking", "lost package", "damaged in transit",
+                                 "standard envelope", "return", "refund", "inad"])):
+        return "Shipping & Fulfillment"
+
+    # ── 6. Pricing & Valuation Tools ──
+    # Owner: Price Guide PM. Covers: Price Guide, Card Ladder, scan to price, comps, market value
+    if (insight.get("is_price_guide_signal") or
+        any(t in topics for t in ["price guide"]) or
+        any(w in text for w in ["price guide", "card ladder", "scan to price", "market value",
+                                 "what is it worth", "comps", "card value"])):
+        return "Pricing & Valuation Tools"
+
+    # ── 7. Live Commerce & Breaks ──
+    # Owner: eBay Live PM. Covers: live breaks, case breaks, streaming, eBay Live
+    if (any(t in topics for t in ["live shopping", "case break / repack"]) or
+        any(w in text for w in ["live break", "case break", "box break", "live shopping",
+                                 "ebay live", "live stream", "card break"])):
+        return "Live Commerce & Breaks"
+
+    # ── 8. Instant Liquidity & Buyback ──
+    # Owner: Marketplace Innovation PM. Covers: instant offers, buyback, PSA Offers, Courtyard, cash out
+    if (insight.get("_liquidity_signal") or
+        any(t in topics for t in ["instant offers / liquidity", "instant offers"]) or
+        any(w in text for w in ["instant offer", "buyback", "cash out", "sell now",
+                                 "psa offers", "courtyard", "arena club"])):
+        return "Instant Liquidity & Buyback"
+
+    # ── 9. Subsidiary Ecosystem (Goldin & TCGPlayer) ──
+    # Owner: Subsidiary Integration PM. Covers: Goldin, TCGPlayer, cross-platform synergy
+    if (any(w in text for w in ["goldin", "tcgplayer", "tcg player"]) or
+        any(t in topics for t in ["consignment/auctions"]) and any(w in text for w in ["goldin", "heritage"])):
+        return "Subsidiary Ecosystem"
+
+    # ── 10. Trust & Safety ──
+    # Owner: Trust & Safety. Covers: scams, fraud, seller protection, buyer abuse, INAD abuse
+    if (any(t in topics for t in ["fraud concern"]) or
+        any(w in text for w in ["scam", "fraud", "buyer abuse", "seller protection",
+                                 "chargeback", "fake buyer", "stolen"])):
+        return "Trust & Safety"
+
+    # ── 11. Search & Discovery ──
+    # Owner: Search PM. Covers: search relevancy, Best Match, visibility, promoted listings effectiveness
+    if (any(t in topics for t in ["search/relevancy"]) or
+        any(w in text for w in ["search", "best match", "cassini", "no views", "visibility",
+                                 "not showing up", "promoted listing"])):
+        return "Search & Discovery"
+
+    # ── 12. Seller Tools & App Experience ──
+    # Owner: Seller Hub PM. Covers: Seller Hub, app bugs, listing tools, mobile experience
+    if (any(w in text for w in ["seller hub", "app crash", "app bug", "listing tool",
+                                 "mobile app", "app update", "app glitch"])):
+        return "Seller Tools & App Experience"
+
+    return "General Platform Feedback"
 
 
 def cluster_by_subtag_fast(insights, min_cluster_size=MIN_CLUSTER_SIZE):
