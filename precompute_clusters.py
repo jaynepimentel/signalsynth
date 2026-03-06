@@ -397,8 +397,9 @@ def main():
         # cluster_items is a list of insight dicts
         stats = _cluster_stats(cluster_items)
 
-        # synthesize summary card using existing logic
-        card = synthesize_cluster(cluster_items)
+        # synthesize summary card — pass workstream name so GPT generates relevant problem statements
+        workstream = meta.get("category", "")
+        card = synthesize_cluster(cluster_items, workstream_name=workstream)
         card["coherent"] = meta.get("coherent", True)
         card["was_reclustered"] = meta.get("was_reclustered", False)
         card["avg_similarity"] = f"{meta.get('avg_similarity', 0.0):.2f}"

@@ -244,10 +244,29 @@ def _cluster_id(cluster):
     ).hexdigest()
 
 
-def generate_cluster_metadata(cluster):
+def _best_samples(cluster, n=8):
+    """Pick the most representative, highest-engagement posts for GPT summarization.
+    Prioritizes complaints and feature requests with high engagement scores."""
+    # Separate complaints/feature requests (most actionable) from neutral/praise
+    actionable = [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative") or
+                  (i.get("taxonomy", {}) or {}).get("type") == "Feature Request"]
+    rest = [i for i in cluster if i not in actionable]
+    
+    # Sort each by engagement score descending
+    actionable.sort(key=lambda x: x.get("score", 0), reverse=True)
+    rest.sort(key=lambda x: x.get("score", 0), reverse=True)
+    
+    # Take mostly actionable, fill with rest
+    samples = actionable[:min(n - 2, len(actionable))] + rest[:2]
+    if len(samples) < n:
+        samples += rest[2:n - len(samples) + 2]
+    return samples[:n]
+
+
+def generate_cluster_metadata(cluster, workstream_name=""):
     """
     Uses GPT to summarize a cluster into Title / Theme / Problem.
-    Fixed to use max_completion_tokens instead of max_tokens.
+    Samples highest-engagement actionable posts, not first 6.
     """
     if client is None:
         return {
@@ -256,10 +275,20 @@ def generate_cluster_metadata(cluster):
             "problem": "OpenAI client not configured.",
         }
 
-    combined = "\n".join(i["text"] for i in cluster[:6])
+    samples = _best_samples(cluster, n=8)
+    combined = "\n---\n".join(i.get("text", "")[:300] for i in samples)
+    
+    workstream_ctx = ""
+    if workstream_name:
+        workstream_ctx = f"\nWORKSTREAM CATEGORY: {workstream_name}\nThe problem statement MUST be relevant to this workstream. Focus on the specific pain points, friction, or opportunities related to {workstream_name}.\n"
+    
     prompt = (
-        "You are a senior product manager reviewing a cluster of user feedback. For the following grouped posts, "
-        "generate:\n1. A concise title (max 10 words)\n2. A theme tag\n3. A clear problem statement that could go in a PRD\n"
+        f"You are a senior product manager at eBay Collectibles reviewing user feedback grouped under a strategic workstream.\n"
+        f"{workstream_ctx}"
+        f"For the following grouped posts, generate:\n"
+        f"1. A concise title (max 10 words) describing the core problem\n"
+        f"2. A theme tag\n"
+        f"3. A clear, specific problem statement (2-3 sentences) that could go in a PRD. Focus on user pain points, not emotional stories.\n"
         f"\nPosts:\n{combined}\n\nFormat your response as:\nTitle: ...\nTheme: ...\nProblem: ..."
     )
     try:
@@ -294,11 +323,30 @@ def generate_cluster_metadata(cluster):
         }
 
 
-def synthesize_cluster(cluster):
-    meta = generate_cluster_metadata(cluster)
+def synthesize_cluster(cluster, workstream_name=""):
+    meta = generate_cluster_metadata(cluster, workstream_name=workstream_name)
     brand = cluster[0].get("target_brand") or "Unknown"
     type_tag = cluster[0].get("type_tag") or "Insight"
-    quotes = [f"- _{i.get('text', '')[:220]}_" for i in cluster[:3]]
+    
+    # Pick representative quotes from highest-engagement complaint/actionable posts
+    quote_candidates = sorted(
+        [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative")],
+        key=lambda x: x.get("score", 0), reverse=True
+    )
+    if len(quote_candidates) < 3:
+        # Fill with highest-engagement posts of any sentiment
+        quote_candidates += sorted(cluster, key=lambda x: x.get("score", 0), reverse=True)
+    # Deduplicate
+    seen_fps = set()
+    unique_quotes = []
+    for i in quote_candidates:
+        fp = i.get("fingerprint", i.get("text", "")[:50])
+        if fp not in seen_fps:
+            seen_fps.add(fp)
+            unique_quotes.append(i)
+        if len(unique_quotes) >= 3:
+            break
+    quotes = [f"- _{i.get('text', '')[:220]}_" for i in unique_quotes[:3]]
 
     idea_counter = defaultdict(int)
     for i in cluster:
@@ -447,6 +495,25 @@ def _get_signal_category(insight):
     if (any(w in text for w in ["seller hub", "app crash", "app bug", "listing tool",
                                  "mobile app", "app update", "app glitch"])):
         return "Seller Tools & App Experience"
+
+    # ── Route remaining subtag-tagged posts to appropriate workstreams ──
+    if subtag in ("grading complaint", "speed issue", "trust issue", "counterfeit concern"):
+        return "Authentication & Grading Confidence"
+    if subtag in ("delays", "tracking confusion"):
+        return "Shipping & Fulfillment"
+    if subtag in ("fee frustration",):
+        return "Seller Economics & Fees"
+
+    # ── 13. Collector Community & Hobby ──
+    # NOT a workstream to "fix" — this is organic community content (pulls, collections, trades).
+    # Kept separate from General so execs can see community health and engagement.
+    community_terms = ["pull", "pulled", "just got", "collection", "my collection", "lcs",
+                       "card show", "hobby", "mail day", "haul", "rip", "opening",
+                       "what do you think", "worth grading", "first time",
+                       "inheritance", "inherited", "found these", "my dad",
+                       "my grandfather", "my grandma", "started collecting"]
+    if any(ct in text for ct in community_terms):
+        return "Collector Community & Hobby"
 
     return "General Platform Feedback"
 
