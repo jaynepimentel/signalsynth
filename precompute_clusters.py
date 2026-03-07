@@ -10,8 +10,10 @@
 import os
 import json
 import argparse
+import time
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from components.cluster_synthesizer import (
     cluster_by_subtag_then_embed,
@@ -306,6 +308,7 @@ def main():
     parser.add_argument("--max-items", type=int, default=None, help="Cap number of insights before clustering")
     parser.add_argument("--input", type=str, default=PRECOMPUTED_INSIGHTS_PATH, help="Path to precomputed insights JSON")
     parser.add_argument("--output", type=str, default=CLUSTER_OUTPUT_PATH, help="Where to save the cluster cache JSON")
+    parser.add_argument("--skip-gpt", action="store_true", help="Skip GPT API calls for fast clustering (no problem statements or quotes)")
     args = parser.parse_args()
 
     in_path = args.input
@@ -392,36 +395,92 @@ def main():
 
     clusters: List[Dict[str, Any]] = []
     cards: List[Dict[str, Any]] = []
+    skip_gpt = getattr(args, "skip_gpt", False)
+    t_start = time.time()
 
-    for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
-        # cluster_items is a list of insight dicts
+    def _build_card(idx, cluster_items, meta):
+        """Build one cluster card (may call GPT)."""
         stats = _cluster_stats(cluster_items)
-
-        # synthesize summary card — pass workstream name so GPT generates relevant problem statements
         workstream = meta.get("category", "")
         card = synthesize_cluster(cluster_items, workstream_name=workstream)
         card["coherent"] = meta.get("coherent", True)
         card["was_reclustered"] = meta.get("was_reclustered", False)
         card["avg_similarity"] = f"{meta.get('avg_similarity', 0.0):.2f}"
-
-        # Override GPT theme with the workstream category name
-        workstream = meta.get("category", "")
         if workstream and workstream != "General Platform Feedback":
             card["theme"] = workstream
             card["title"] = workstream
+        return idx, card, stats, cluster_items, meta
 
-        cid = card.get("cluster_id", idx)
+    if skip_gpt:
+        # Fast path: skip GPT, use workstream name directly
+        for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
+            workstream = meta.get("category", "")
+            stats = _cluster_stats(cluster_items)
+            # Build card without GPT
+            from components.cluster_synthesizer import _cluster_id, is_semantically_coherent
+            import numpy as np
+            coherent, avg_sim = is_semantically_coherent(cluster_items, return_score=True, fast_mode=True)
+            scores = [i.get("score", 0) for i in cluster_items]
+            sentiments = list({i.get("brand_sentiment", "Neutral") for i in cluster_items})
+            topics = sorted({t for i in cluster_items for t in (i.get("topic_focus") or [])})
+            competitors = sorted({c for i in cluster_items for c in (i.get("mentions_competitor") or [])})
+            card = {
+                "title": workstream or "General Platform Feedback",
+                "theme": workstream or "General Platform Feedback",
+                "problem_statement": f"Signals grouped under {workstream or 'General Platform Feedback'}. Run without --skip-gpt for AI-generated problem statements.",
+                "brand": cluster_items[0].get("target_brand") or "Unknown",
+                "type": cluster_items[0].get("type_tag") or "Insight",
+                "personas": list({i.get("persona", "Unknown") for i in cluster_items}),
+                "effort_levels": list({i.get("effort", "Unknown") for i in cluster_items}),
+                "sentiments": sentiments,
+                "opportunity_tags": list({i.get("opportunity_tag", "General Insight") for i in cluster_items}),
+                "quotes": [],
+                "top_ideas": [],
+                "score_range": f"{round(min(scores), 2)}–{round(max(scores), 2)}",
+                "insight_count": len(cluster_items),
+                "avg_cluster_ready": float(np.mean([i.get("cluster_ready_score", 0) for i in cluster_items])),
+                "topic_focus_tags": topics,
+                "mentions_competitor": competitors,
+                "cluster_id": _cluster_id(cluster_items),
+                "avg_similarity": f"{avg_sim:.2f}",
+                "coherent": coherent,
+                "was_reclustered": False,
+            }
+            cid = card["cluster_id"]
+            cluster_record = {
+                "cluster_id": cid, "insights": cluster_items, "stats": stats,
+                "coherent": card["coherent"], "was_reclustered": False, "avg_similarity": card["avg_similarity"],
+            }
+            clusters.append(cluster_record)
+            cards.append(card)
+            print(f"  [{idx+1}/{len(raw_cluster_tuples)}] {workstream or 'General'}: {len(cluster_items)} signals (skip-gpt)")
+    else:
+        # Normal path: GPT calls in parallel with ThreadPoolExecutor
+        results = [None] * len(raw_cluster_tuples)
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {}
+            for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
+                workstream = meta.get("category", "")
+                print(f"  [{idx+1}/{len(raw_cluster_tuples)}] Submitting {workstream or 'General'} ({len(cluster_items)} signals)...")
+                fut = executor.submit(_build_card, idx, cluster_items, meta)
+                futures[fut] = idx
 
-        cluster_record = {
-            "cluster_id": cid,
-            "insights": cluster_items,
-            "stats": stats,
-            "coherent": card["coherent"],
-            "was_reclustered": card["was_reclustered"],
-            "avg_similarity": card["avg_similarity"],
-        }
-        clusters.append(cluster_record)
-        cards.append(card)
+            for fut in as_completed(futures):
+                idx, card, stats, cluster_items, meta = fut.result()
+                cid = card.get("cluster_id", idx)
+                cluster_record = {
+                    "cluster_id": cid, "insights": cluster_items, "stats": stats,
+                    "coherent": card["coherent"], "was_reclustered": card["was_reclustered"],
+                    "avg_similarity": card["avg_similarity"],
+                }
+                results[idx] = (cluster_record, card)
+                elapsed = time.time() - t_start
+                workstream = meta.get("category", "")
+                print(f"  ✓ [{idx+1}/{len(raw_cluster_tuples)}] {workstream or 'General'} done ({elapsed:.1f}s)")
+
+        for cluster_record, card in results:
+            clusters.append(cluster_record)
+            cards.append(card)
 
     # ── Post-process: deduplicate cluster theme names ──
     # When GPT gives multiple clusters the same generic name (e.g. "User Experience"),

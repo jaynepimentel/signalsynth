@@ -8,19 +8,12 @@ import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Embeddings / clustering
-from sklearn.cluster import DBSCAN
-
-# sentence-transformers is optional - only used for local clustering
-# Dashboard uses precomputed clusters so this is not needed at runtime
+# Heavy imports (sklearn, sentence_transformers, torch) are lazy-loaded
+# to keep fast-mode clustering instant (<2s vs 60+s).
+# They are only imported inside _ensure_embedding_model() when slow mode is used.
+DBSCAN = None
 SentenceTransformer = None
 util = None
-try:
-    from sentence_transformers import SentenceTransformer as ST, util as st_util
-    SentenceTransformer = ST
-    util = st_util
-except ImportError:
-    pass  # Expected on Streamlit Cloud - we use precomputed clusters
 
 load_dotenv()
 load_dotenv(os.path.expanduser(os.path.join("~", "signalsynth", ".env")), override=True)
@@ -93,10 +86,32 @@ STOPWORDS = {
     "does"
 }
 
-# Only load embedding model if sentence-transformers is available
+# Embedding model is loaded lazily so fast-mode clustering starts instantly.
 model = None
 _MAX_SEQ = 510  # safe default (512 position embeddings - 2 special tokens)
-if SentenceTransformer is not None:
+
+
+def _ensure_embedding_model():
+    """Lazy-load the sentence-transformers model and sklearn only when needed."""
+    global model, _MAX_SEQ, SentenceTransformer, util, DBSCAN
+    if model is not None:
+        return model
+    if str(os.getenv("SS_CLUSTER_FAST_ONLY", "")).lower() in ("1", "true", "yes"):
+        return None
+    # Lazy-import heavy libraries (torch, transformers, sklearn)
+    if SentenceTransformer is None:
+        try:
+            from sentence_transformers import SentenceTransformer as ST, util as st_util
+            SentenceTransformer = ST
+            util = st_util
+        except ImportError:
+            return None
+    if DBSCAN is None:
+        try:
+            from sklearn.cluster import DBSCAN as _DBSCAN
+            DBSCAN = _DBSCAN
+        except ImportError:
+            pass
     try:
         model = SentenceTransformer(EMBED_MODEL)
         # Derive actual position-embedding limit and enforce it everywhere
@@ -105,7 +120,7 @@ if SentenceTransformer is not None:
         except Exception:
             _MAX_SEQ = 510
         model.max_seq_length = _MAX_SEQ
-        if hasattr(model, 'tokenizer'):
+        if hasattr(model, "tokenizer"):
             model.tokenizer.model_max_length = _MAX_SEQ
         try:
             model[0].max_seq_length = _MAX_SEQ
@@ -113,10 +128,12 @@ if SentenceTransformer is not None:
             pass
     except Exception:
         model = None
+    return model
 
 
 def _truncate_texts(texts: list, max_tokens: int = 0) -> list:
     """Truncate a list of texts so each fits within the model's token limit."""
+    _ensure_embedding_model()
     if not model or not texts:
         return texts
     limit = max_tokens if max_tokens > 0 else _MAX_SEQ - 2
@@ -164,7 +181,10 @@ def _word_overlap_penalty(cluster_texts: list[str]) -> float:
 
 
 def cluster_insights(insights, min_cluster_size: int = MIN_CLUSTER_SIZE, eps: float = DBSCAN_EPS):
-    if not model or not insights:
+    if not insights:
+        return []
+    _ensure_embedding_model()
+    if not model:
         return []
     texts = [
         f"{i.get('text')} | Tags: {i.get('type_tag')}, {i.get('journey_stage')}, {i.get('persona')}"
@@ -206,6 +226,7 @@ def is_semantically_coherent(cluster, return_score=False, fast_mode=True):
         return (True, score) if return_score else True
     
     # Slow mode with embeddings (original behavior)
+    _ensure_embedding_model()
     if not model:
         return (False, 0.0) if return_score else False
     if len(cluster) <= 2:
@@ -244,22 +265,36 @@ def _cluster_id(cluster):
     ).hexdigest()
 
 
-def _best_samples(cluster, n=8):
+def _best_samples(cluster, n=8, workstream_name=""):
     """Pick the most representative, highest-engagement posts for GPT summarization.
-    Prioritizes complaints and feature requests with high engagement scores."""
-    # Separate complaints/feature requests (most actionable) from neutral/praise
-    actionable = [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative") or
-                  (i.get("taxonomy", {}) or {}).get("type") == "Feature Request"]
-    rest = [i for i in cluster if i not in actionable]
+    Prioritizes topical complaints and feature requests with high engagement scores."""
+    def _is_topical(item):
+        return _is_topical_for_workstream(item, workstream_name)
     
-    # Sort each by engagement score descending
-    actionable.sort(key=lambda x: x.get("score", 0), reverse=True)
-    rest.sort(key=lambda x: x.get("score", 0), reverse=True)
+    # Separate topical complaints/feature requests from rest
+    topical_actionable = [i for i in cluster if _is_topical(i) and (
+        i.get("brand_sentiment") in ("Complaint", "Negative") or
+        (i.get("taxonomy", {}) or {}).get("type") == "Feature Request")]
+    topical_rest = [i for i in cluster if _is_topical(i) and i not in topical_actionable]
+    all_actionable = [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative")]
     
-    # Take mostly actionable, fill with rest
-    samples = actionable[:min(n - 2, len(actionable))] + rest[:2]
+    # Sort each by engagement
+    topical_actionable.sort(key=lambda x: x.get("score", 0), reverse=True)
+    topical_rest.sort(key=lambda x: x.get("score", 0), reverse=True)
+    all_actionable.sort(key=lambda x: x.get("score", 0), reverse=True)
+    
+    # Priority: topical actionable > topical any > all actionable
+    samples = topical_actionable[:min(n - 2, len(topical_actionable))]
+    samples += topical_rest[:max(0, n - len(samples) - 1)]
     if len(samples) < n:
-        samples += rest[2:n - len(samples) + 2]
+        # Fill with any actionable as fallback
+        seen = set(id(s) for s in samples)
+        for i in all_actionable:
+            if id(i) not in seen:
+                samples.append(i)
+                seen.add(id(i))
+            if len(samples) >= n:
+                break
     return samples[:n]
 
 
@@ -275,7 +310,7 @@ def generate_cluster_metadata(cluster, workstream_name=""):
             "problem": "OpenAI client not configured.",
         }
 
-    samples = _best_samples(cluster, n=8)
+    samples = _best_samples(cluster, n=8, workstream_name=workstream_name)
     combined = "\n---\n".join(i.get("text", "")[:300] for i in samples)
     
     workstream_ctx = ""
@@ -300,6 +335,7 @@ def generate_cluster_metadata(cluster, workstream_name=""):
             ],
             temperature=0.2,
             max_completion_tokens=250,
+            timeout=30,
         )
         content = (response.choices[0].message.content or "").strip()
         lines = content.split("\n")
@@ -323,30 +359,169 @@ def generate_cluster_metadata(cluster, workstream_name=""):
         }
 
 
+_WORKSTREAM_KEYWORDS = {
+    "Vault & Storage Trust": ["vault", "vaulted", "withdraw", "vaulting", "storage", "in-gate", "psa vault"],
+    "Authentication & Grading Confidence": ["grading", "graded", "authentication", "authenticity", "counterfeit", "fake", "psa", "bgs", "sgc", "cgc", "misgrade"],
+    "Competitive Positioning": ["whatnot", "fanatics", "heritage", "vinted", "beckett", "competitor", "switched to", "leaving ebay"],
+    "Seller Economics & Fees": ["fee", "fees", "final value", "fvf", "take rate", "payout", "payouts", "payment hold", "funds held", "managed payments", "unpaid item", "commission"],
+    "Shipping & Fulfillment": ["shipping", "delivery", "tracking", "lost package", "damaged", "return", "returns", "refund", "inad", "standard envelope", "usps", "ups", "fedex"],
+    "Pricing & Valuation Tools": ["price guide", "card ladder", "scan to price", "market value", "worth", "value", "comps"],
+    "Live Commerce & Breaks": ["live break", "case break", "box break", "live stream", "ebay live", "whatnot live"],
+    "Instant Liquidity & Buyback": ["instant offer", "buyback", "buy back", "cash out", "sell now", "psa offers", "courtyard", "arena club"],
+    "Subsidiary Ecosystem": ["goldin", "tcgplayer", "tcg player", "tcg"],
+    "Trust & Safety": ["scam", "fraud", "stolen", "chargeback", "buyer abuse", "seller protection"],
+    "Search & Discovery": ["search", "best match", "visibility", "promoted listing", "no views", "not showing up", "filter", "recommend"],
+    "Seller Tools & App Experience": ["seller hub", "app crash", "app bug", "listing tool", "bulk listing", "mobile app"],
+    "Collector Community & Hobby": ["collection", "pulled", "pull", "mail day", "haul", "hobby", "lcs", "card show"],
+}
+
+_WORKSTREAM_TOPIC_TAGS = {
+    "Vault & Storage Trust": ["vault", "vault friction"],
+    "Authentication & Grading Confidence": ["trust issue", "counterfeit concern", "grading complaint"],
+    "Competitive Positioning": ["competitive churn"],
+    "Seller Economics & Fees": ["fees/pricing", "fee frustration", "payments", "payouts/holds", "upi"],
+    "Shipping & Fulfillment": ["shipping concern", "tracking confusion", "returns/policy"],
+    "Pricing & Valuation Tools": ["price guide"],
+    "Live Commerce & Breaks": ["live shopping", "case break / repack"],
+    "Instant Liquidity & Buyback": ["instant offers / liquidity", "instant offers"],
+    "Search & Discovery": ["search/relevancy"],
+    "Trust & Safety": ["fraud concern"],
+    "Subsidiary Ecosystem": ["consignment/auctions"],
+}
+
+_WORKSTREAM_FLAG_FIELDS = {
+    "Vault & Storage Trust": ["is_vault_signal"],
+    "Authentication & Grading Confidence": ["is_ag_signal", "is_psa_turnaround"],
+    "Seller Economics & Fees": ["is_fees_concern", "_payment_issue", "_upi_flag"],
+    "Shipping & Fulfillment": ["is_shipping_issue", "is_refund_issue"],
+    "Pricing & Valuation Tools": ["is_price_guide_signal"],
+    "Instant Liquidity & Buyback": ["_liquidity_signal"],
+}
+
+
+def _keyword_in_text(text, keyword):
+    """Match keywords as whole words where possible to avoid false positives (e.g., 'fee' in 'feedback')."""
+    if not keyword:
+        return False
+    if any(ch in keyword for ch in ["/", "-"]):
+        return keyword in text
+    if " " in keyword:
+        return re.search(r"\b" + re.escape(keyword) + r"\b", text) is not None
+    return re.search(r"\b" + re.escape(keyword) + r"\b", text) is not None
+
+
+def _is_topical_for_workstream(item, workstream_name):
+    ws_keywords = _WORKSTREAM_KEYWORDS.get(workstream_name, [])
+    ws_topics = _WORKSTREAM_TOPIC_TAGS.get(workstream_name, [])
+    ws_flags = _WORKSTREAM_FLAG_FIELDS.get(workstream_name, [])
+
+    text = (item.get("text", "") + " " + item.get("title", "")).lower()
+    if ws_keywords and any(_keyword_in_text(text, kw) for kw in ws_keywords):
+        if workstream_name == "Vault & Storage Trust":
+            if not any(ctx in text for ctx in ["psa", "ebay", "card", "graded", "grading", "storage", "consignment"]):
+                return False
+        return True
+
+    if ws_topics:
+        item_topics = [t.lower() for t in (item.get("topic_focus") or item.get("topic_focus_list") or [])]
+        if any(t in item_topics for t in ws_topics):
+            return True
+
+    if ws_flags and any(item.get(flag) for flag in ws_flags):
+        return True
+
+    if workstream_name == "Competitive Positioning" and item.get("mentions_competitor"):
+        return True
+
+    if workstream_name == "Subsidiary Ecosystem":
+        comps = [c.lower() for c in (item.get("mentions_competitor") or [])]
+        if any(c in ("tcgplayer", "goldin") for c in comps):
+            return True
+        source = (item.get("source", "") or "").lower()
+        if "tcgplayer" in source or "goldin" in source:
+            return True
+
+    if not (ws_keywords or ws_topics or ws_flags):
+        return True
+
+    return False
+
+
 def synthesize_cluster(cluster, workstream_name=""):
     meta = generate_cluster_metadata(cluster, workstream_name=workstream_name)
     brand = cluster[0].get("target_brand") or "Unknown"
     type_tag = cluster[0].get("type_tag") or "Insight"
     
-    # Pick representative quotes from highest-engagement complaint/actionable posts
-    quote_candidates = sorted(
-        [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative")],
+    # Pick representative quotes that are RELEVANT to the workstream topic
+    ws_keywords = _WORKSTREAM_KEYWORDS.get(workstream_name, [])
+
+    def _is_keyword_topical(item):
+        if not ws_keywords:
+            return True
+        text = (item.get("text", "") + " " + item.get("title", "")).lower()
+        return any(_keyword_in_text(text, kw) for kw in ws_keywords)
+
+    def _extract_snippet(item, max_len=220):
+        """Extract a preview snippet centered on the first workstream keyword.
+        Falls back to the start of the text if no keyword is present.
+        """
+        title = (item.get("title", "") or "").strip()
+        body = (item.get("text", "") or "").strip()
+        text = (title + ". " + body).strip(". ") if title else body
+        if not text:
+            return ""
+        if not ws_keywords:
+            return text[:max_len]
+
+        text_lower = text.lower()
+        for kw in ws_keywords:
+            idx = text_lower.find(kw)
+            if idx != -1:
+                start = max(0, idx - 90)
+                end = min(len(text), idx + 130)
+                snippet = text[start:end].strip()
+                if start > 0:
+                    snippet = "…" + snippet
+                if end < len(text):
+                    snippet = snippet + "…"
+                return snippet[:max_len]
+        return text[:max_len]
+
+    def _is_topical(item):
+        return _is_topical_for_workstream(item, workstream_name)
+    
+    # First: keyword-topical complaints sorted by engagement
+    topical_complaints = sorted(
+        [i for i in cluster if i.get("brand_sentiment") in ("Complaint", "Negative") and _is_keyword_topical(i)],
         key=lambda x: x.get("score", 0), reverse=True
     )
-    if len(quote_candidates) < 3:
-        # Fill with highest-engagement posts of any sentiment
-        quote_candidates += sorted(cluster, key=lambda x: x.get("score", 0), reverse=True)
-    # Deduplicate
+    # Second: keyword-topical posts of any sentiment
+    topical_any = sorted(
+        [i for i in cluster if _is_keyword_topical(i)],
+        key=lambda x: x.get("score", 0), reverse=True
+    )
+    # Third fallback: highest engagement regardless
+    all_by_engagement = sorted(cluster, key=lambda x: x.get("score", 0), reverse=True)
+    
+    # Merge in priority order, deduplicate (only fall back to non-topical if none exist)
+    candidates = topical_complaints + topical_any
+    if not candidates:
+        # Fallback to broader topicality (tags/flags/competitor) before non-topical
+        broader = sorted(
+            [i for i in cluster if _is_topical(i)],
+            key=lambda x: x.get("score", 0), reverse=True
+        )
+        candidates = broader or all_by_engagement
     seen_fps = set()
     unique_quotes = []
-    for i in quote_candidates:
+    for i in candidates:
         fp = i.get("fingerprint", i.get("text", "")[:50])
         if fp not in seen_fps:
             seen_fps.add(fp)
             unique_quotes.append(i)
         if len(unique_quotes) >= 3:
             break
-    quotes = [f"- _{i.get('text', '')[:220]}_" for i in unique_quotes[:3]]
+    quotes = [f"- _{_extract_snippet(i)}_" for i in unique_quotes[:3]]
 
     idea_counter = defaultdict(int)
     for i in cluster:
