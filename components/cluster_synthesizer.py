@@ -315,7 +315,14 @@ def generate_cluster_metadata(cluster, workstream_name=""):
     
     workstream_ctx = ""
     if workstream_name:
-        workstream_ctx = f"\nWORKSTREAM CATEGORY: {workstream_name}\nThe problem statement MUST be relevant to this workstream. Focus on the specific pain points, friction, or opportunities related to {workstream_name}.\n"
+        ws_kws = _WORKSTREAM_KEYWORDS.get(workstream_name, [])
+        kw_examples = ", ".join(ws_kws[:6]) if ws_kws else workstream_name
+        workstream_ctx = (
+            f"\nWORKSTREAM CATEGORY: {workstream_name}\n"
+            f"The problem statement MUST specifically address {workstream_name}.\n"
+            f"Use domain-specific terms like: {kw_examples}.\n"
+            f"Do NOT write generic complaints. Focus on the specific {workstream_name} pain points.\n"
+        )
     
     prompt = (
         f"You are a senior product manager at eBay Collectibles reviewing user feedback grouped under a strategic workstream.\n"
@@ -323,7 +330,8 @@ def generate_cluster_metadata(cluster, workstream_name=""):
         f"For the following grouped posts, generate:\n"
         f"1. A concise title (max 10 words) describing the core problem\n"
         f"2. A theme tag\n"
-        f"3. A clear, specific problem statement (2-3 sentences) that could go in a PRD. Focus on user pain points, not emotional stories.\n"
+        f"3. A clear, specific problem statement (2-3 sentences) that could go in a PRD. "
+        f"The problem statement MUST use terminology specific to {workstream_name or 'the workstream'}. Focus on user pain points, not emotional stories.\n"
         f"\nPosts:\n{combined}\n\nFormat your response as:\nTitle: ...\nTheme: ...\nProblem: ..."
     )
     try:
@@ -608,11 +616,28 @@ def _get_signal_category(insight):
 
     # ── 4. Seller Economics & Fees ──
     # Owner: Seller Experience PM. Covers: fees, take rate, promoted listings cost, payout delays, payment holds
-    if (insight.get("is_fees_concern") or insight.get("_payment_issue") or insight.get("_upi_flag") or
-        any(t in topics for t in ["fees/pricing", "fee frustration", "payments", "payouts/holds", "upi"]) or
-        any(w in text for w in ["final value fee", "seller fee", "take rate", "promoted listing cost",
-                                 "payout delay", "payment hold", "funds held", "unpaid item"])):
+    # Guard: posts flagged as "Payments" but actually about scams/fraud go to Trust & Safety instead
+    _fee_economics_keywords = ["fee", "fees", "final value", "fvf", "take rate", "payout", "payouts",
+                                "payment hold", "funds held", "managed payments", "commission",
+                                "promoted listing cost", "unpaid item", "seller fee"]
+    _fraud_scam_keywords = ["scam", "fraud", "fake", "counterfeit", "stolen", "chargeback"]
+    _has_fee_text = any(w in text for w in _fee_economics_keywords)
+    _has_fraud_text = any(w in text for w in _fraud_scam_keywords)
+    
+    if insight.get("is_fees_concern") or insight.get("_upi_flag") or _has_fee_text:
+        # Genuinely about fees/economics — route here
         return "Seller Economics & Fees"
+    if (insight.get("_payment_issue") or any(t in topics for t in ["payments", "payouts/holds"])):
+        if _has_fraud_text and not _has_fee_text:
+            # Actually about fraud, not fees — let it fall through to Trust & Safety
+            pass
+        elif any(t in topics for t in ["fees/pricing", "fee frustration", "upi"]):
+            return "Seller Economics & Fees"
+        elif _has_fee_text:
+            return "Seller Economics & Fees"
+        else:
+            # Generic payment issue without fee context — route to General, not here
+            pass
 
     # ── 5. Shipping & Fulfillment ──
     # Owner: Shipping PM. Covers: shipping damage, tracking, standard envelope, international shipping, returns logistics
@@ -674,10 +699,14 @@ def _get_signal_category(insight):
     # ── Route remaining subtag-tagged posts to appropriate workstreams ──
     if subtag in ("grading complaint", "speed issue", "trust issue", "counterfeit concern"):
         return "Authentication & Grading Confidence"
-    if subtag in ("delays", "tracking confusion"):
+    if subtag in ("delays", "tracking confusion", "refund issue", "shipping concern"):
         return "Shipping & Fulfillment"
     if subtag in ("fee frustration",):
         return "Seller Economics & Fees"
+    if subtag in ("fraud concern",):
+        return "Trust & Safety"
+    if subtag in ("payments",) and any(w in text for w in ["scam", "fraud", "fake", "stolen"]):
+        return "Trust & Safety"
 
     # ── 13. Collector Community & Hobby ──
     # NOT a workstream to "fix" — this is organic community content (pulls, collections, trades).
