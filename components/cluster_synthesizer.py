@@ -595,10 +595,29 @@ def _get_signal_category(insight):
     competitors = [c.lower() for c in (insight.get("mentions_competitor") or [])]
     partners = [p.lower() for p in (insight.get("mentions_ecosystem_partner") or [])]
 
+    # ── Pre-compute cross-cutting concern flags ──
+    # These override domain routing when they are the PRIMARY complaint
+    _payment_primary = any(w in text for w in [
+        "checkout", "payment method", "payment failed", "failed payment",
+        "can't pay", "won't accept", "wire transfer", "managed payments",
+        "payout delay", "funds held", "payment hold", "checkout error",
+        "payment issue", "unpaid item", "buyer didn't pay", "payment problem",
+        "payment not going", "payment processing", "can't complete purchase"])
+    _cs_primary = any(w in text for w in [
+        "customer service", "customer support", "support team", "chat bot",
+        "ai bot", "can't reach", "no response", "call center", "help desk",
+        "live agent", "talk to a human", "automated response", "support ticket",
+        "ebay support", "contact ebay", "get ahold of", "get a hold of"])
+
     # ── 1. Vault & Storage Trust ──
     # Owner: Vault PM. Covers: PSA Vault, eBay Vault, withdrawal, transfer, vaulting UX
     if (insight.get("is_vault_signal") or "vault" in text or
         any(t in topics for t in ["vault", "vault friction"])):
+        # Override: if the primary complaint is about checkout/payment friction WITH vault
+        if _payment_primary:
+            return "Payment & Checkout Friction"
+        if _cs_primary:
+            return "Customer Service & Support"
         return "Vault & Storage Trust"
 
     # ── 2. Authentication & Grading Confidence ──
@@ -608,6 +627,9 @@ def _get_signal_category(insight):
         ("grading" in text and any(g in text for g in ["psa", "bgs", "sgc", "cgc"])) or
         "counterfeit" in text or "fake card" in text or
         any(t in topics for t in ["trust issue", "counterfeit concern", "grading complaint"])):
+        # Override: if the primary complaint is about customer service around grading
+        if _cs_primary:
+            return "Customer Service & Support"
         return "Authentication & Grading Confidence"
 
     # ── 3. Competitive Positioning ──
@@ -616,6 +638,11 @@ def _get_signal_category(insight):
         any(c in text for c in ["whatnot", "fanatics", "heritage auction", "vinted", "beckett", "stockx"]) or
         any(t in topics for t in ["competitive churn"]) or
         "switched to" in text or "leaving ebay" in text or "moving to" in text):
+        # Override: if primary complaint is payment friction or customer service on a competitor
+        if _payment_primary:
+            return "Payment & Checkout Friction"
+        if _cs_primary:
+            return "Customer Service & Support"
         return "Competitive Positioning"
 
     # ── 4. Seller Economics & Fees ──
@@ -625,6 +652,8 @@ def _get_signal_category(insight):
     if (insight.get("is_fees_concern") or insight.get("_upi_flag") or
         any(t in topics for t in ["fees/pricing", "fee frustration", "upi"]) or
         any(w in text for w in _fee_keywords)):
+        if _cs_primary:
+            return "Customer Service & Support"
         return "Seller Economics & Fees"
 
     # ── 4b. Payment & Checkout Friction ──
@@ -654,6 +683,8 @@ def _get_signal_category(insight):
         any(t in topics for t in ["shipping concern", "tracking confusion", "returns/policy"]) or
         any(w in text for w in ["shipping", "tracking", "lost package", "damaged in transit",
                                  "standard envelope", "return", "refund", "inad"])):
+        if _cs_primary:
+            return "Customer Service & Support"
         return "Shipping & Fulfillment"
 
     # ── 6. Pricing & Valuation Tools ──
