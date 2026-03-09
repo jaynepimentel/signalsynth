@@ -371,7 +371,9 @@ _WORKSTREAM_KEYWORDS = {
     "Vault & Storage Trust": ["vault", "vaulted", "withdraw", "vaulting", "storage", "in-gate", "psa vault"],
     "Authentication & Grading Confidence": ["grading", "graded", "authentication", "authenticity", "counterfeit", "fake", "psa", "bgs", "sgc", "cgc", "misgrade"],
     "Competitive Positioning": ["whatnot", "fanatics", "heritage", "vinted", "beckett", "competitor", "switched to", "leaving ebay"],
-    "Seller Economics & Fees": ["fee", "fees", "final value", "fvf", "take rate", "payout", "payouts", "payment hold", "funds held", "managed payments", "unpaid item", "commission"],
+    "Seller Economics & Fees": ["fee", "fees", "final value", "fvf", "take rate", "commission", "seller fee", "insertion fee", "promoted listing cost"],
+    "Payment & Checkout Friction": ["checkout", "payment method", "payment failed", "wire transfer", "managed payments", "payout", "payouts", "funds held", "payment hold", "can't pay", "unpaid item", "payment processing"],
+    "Customer Service & Support": ["customer service", "customer support", "support team", "chat bot", "ai bot", "can't reach", "call center", "live agent", "support ticket", "ebay support"],
     "Shipping & Fulfillment": ["shipping", "delivery", "tracking", "lost package", "damaged", "return", "returns", "refund", "inad", "standard envelope", "usps", "ups", "fedex"],
     "Pricing & Valuation Tools": ["price guide", "card ladder", "scan to price", "market value", "worth", "value", "comps"],
     "Live Commerce & Breaks": ["live break", "case break", "box break", "live stream", "ebay live", "whatnot live"],
@@ -387,7 +389,8 @@ _WORKSTREAM_TOPIC_TAGS = {
     "Vault & Storage Trust": ["vault", "vault friction"],
     "Authentication & Grading Confidence": ["trust issue", "counterfeit concern", "grading complaint"],
     "Competitive Positioning": ["competitive churn"],
-    "Seller Economics & Fees": ["fees/pricing", "fee frustration", "payments", "payouts/holds", "upi"],
+    "Seller Economics & Fees": ["fees/pricing", "fee frustration", "upi"],
+    "Payment & Checkout Friction": ["payments", "payouts/holds"],
     "Shipping & Fulfillment": ["shipping concern", "tracking confusion", "returns/policy"],
     "Pricing & Valuation Tools": ["price guide"],
     "Live Commerce & Breaks": ["live shopping", "case break / repack"],
@@ -400,7 +403,8 @@ _WORKSTREAM_TOPIC_TAGS = {
 _WORKSTREAM_FLAG_FIELDS = {
     "Vault & Storage Trust": ["is_vault_signal"],
     "Authentication & Grading Confidence": ["is_ag_signal", "is_psa_turnaround"],
-    "Seller Economics & Fees": ["is_fees_concern", "_payment_issue", "_upi_flag"],
+    "Seller Economics & Fees": ["is_fees_concern", "_upi_flag"],
+    "Payment & Checkout Friction": ["_payment_issue"],
     "Shipping & Fulfillment": ["is_shipping_issue", "is_refund_issue"],
     "Pricing & Valuation Tools": ["is_price_guide_signal"],
     "Instant Liquidity & Buyback": ["_liquidity_signal"],
@@ -615,29 +619,34 @@ def _get_signal_category(insight):
         return "Competitive Positioning"
 
     # ── 4. Seller Economics & Fees ──
-    # Owner: Seller Experience PM. Covers: fees, take rate, promoted listings cost, payout delays, payment holds
-    # Guard: posts flagged as "Payments" but actually about scams/fraud go to Trust & Safety instead
-    _fee_economics_keywords = ["fee", "fees", "final value", "fvf", "take rate", "payout", "payouts",
-                                "payment hold", "funds held", "managed payments", "commission",
-                                "promoted listing cost", "unpaid item", "seller fee"]
+    # Owner: Seller Experience PM. Covers: fees, take rate, promoted listings cost, commission structures
+    _fee_keywords = ["fee", "fees", "final value", "fvf", "take rate", "commission",
+                     "promoted listing cost", "seller fee", "insertion fee"]
+    if (insight.get("is_fees_concern") or insight.get("_upi_flag") or
+        any(t in topics for t in ["fees/pricing", "fee frustration", "upi"]) or
+        any(w in text for w in _fee_keywords)):
+        return "Seller Economics & Fees"
+
+    # ── 4b. Payment & Checkout Friction ──
+    # Owner: Payments PM. Covers: checkout errors, payment method issues, wire transfer,
+    # managed payments setup, payout delays, funds held, buyer can't pay, seller can't get paid
+    _payment_friction_keywords = ["checkout", "payment method", "payment failed", "failed payment",
+                                   "can't pay", "won't accept", "wire transfer", "managed payments",
+                                   "payout", "payouts", "payout delay", "funds held", "payment hold",
+                                   "payment not going", "checkout error", "payment issue",
+                                   "unpaid item", "buyer didn't pay", "didn't pay",
+                                   "payment processing", "payment problem"]
     _fraud_scam_keywords = ["scam", "fraud", "fake", "counterfeit", "stolen", "chargeback"]
-    _has_fee_text = any(w in text for w in _fee_economics_keywords)
+    _has_payment_text = any(w in text for w in _payment_friction_keywords)
     _has_fraud_text = any(w in text for w in _fraud_scam_keywords)
     
-    if insight.get("is_fees_concern") or insight.get("_upi_flag") or _has_fee_text:
-        # Genuinely about fees/economics — route here
-        return "Seller Economics & Fees"
+    if _has_payment_text and not _has_fraud_text:
+        return "Payment & Checkout Friction"
     if (insight.get("_payment_issue") or any(t in topics for t in ["payments", "payouts/holds"])):
-        if _has_fraud_text and not _has_fee_text:
-            # Actually about fraud, not fees — let it fall through to Trust & Safety
-            pass
-        elif any(t in topics for t in ["fees/pricing", "fee frustration", "upi"]):
-            return "Seller Economics & Fees"
-        elif _has_fee_text:
-            return "Seller Economics & Fees"
+        if _has_fraud_text:
+            pass  # Let fall through to Trust & Safety
         else:
-            # Generic payment issue without fee context — route to General, not here
-            pass
+            return "Payment & Checkout Friction"
 
     # ── 5. Shipping & Fulfillment ──
     # Owner: Shipping PM. Covers: shipping damage, tracking, standard envelope, international shipping, returns logistics
@@ -683,14 +692,22 @@ def _get_signal_category(insight):
                                  "chargeback", "fake buyer", "stolen"])):
         return "Trust & Safety"
 
-    # ── 11. Search & Discovery ──
+    # ── 11. Customer Service & Support ──
+    # Owner: CX PM. Covers: AI bot complaints, can't reach human, chat support, phone support
+    if any(w in text for w in ["customer service", "customer support", "support team",
+                                "chat bot", "ai bot", "can't reach", "no response",
+                                "call center", "help desk", "live agent", "talk to a human",
+                                "automated response", "support ticket", "ebay support"]):
+        return "Customer Service & Support"
+
+    # ── 12. Search & Discovery ──
     # Owner: Search PM. Covers: search relevancy, Best Match, visibility, promoted listings effectiveness
     if (any(t in topics for t in ["search/relevancy"]) or
         any(w in text for w in ["search", "best match", "cassini", "no views", "visibility",
                                  "not showing up", "promoted listing"])):
         return "Search & Discovery"
 
-    # ── 12. Seller Tools & App Experience ──
+    # ── 13. Seller Tools & App Experience ──
     # Owner: Seller Hub PM. Covers: Seller Hub, app bugs, listing tools, mobile experience
     if (any(w in text for w in ["seller hub", "app crash", "app bug", "listing tool",
                                  "mobile app", "app update", "app glitch"])):
@@ -708,7 +725,7 @@ def _get_signal_category(insight):
     if subtag in ("payments",) and any(w in text for w in ["scam", "fraud", "fake", "stolen"]):
         return "Trust & Safety"
 
-    # ── 13. Collector Community & Hobby ──
+    # ── 14. Collector Community & Hobby ──
     # NOT a workstream to "fix" — this is organic community content (pulls, collections, trades).
     # Kept separate from General so execs can see community health and engagement.
     community_terms = ["pull", "pulled", "just got", "collection", "my collection", "lcs",
