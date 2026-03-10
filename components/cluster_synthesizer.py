@@ -382,7 +382,6 @@ _WORKSTREAM_KEYWORDS = {
     "Trust & Safety": ["scam", "fraud", "stolen", "chargeback", "buyer abuse", "seller protection"],
     "Search & Discovery": ["search", "best match", "visibility", "promoted listing", "no views", "not showing up", "filter", "recommend"],
     "Seller Tools & App Experience": ["seller hub", "app crash", "app bug", "listing tool", "bulk listing", "mobile app"],
-    "Collector Community & Hobby": ["collection", "pulled", "pull", "mail day", "haul", "hobby", "lcs", "card show"],
 }
 
 _WORKSTREAM_TOPIC_TAGS = {
@@ -755,17 +754,6 @@ def _get_signal_category(insight):
         return "Trust & Safety"
     if subtag in ("payments",) and any(w in text for w in ["scam", "fraud", "fake", "stolen"]):
         return "Trust & Safety"
-
-    # ── 14. Collector Community & Hobby ──
-    # NOT a workstream to "fix" — this is organic community content (pulls, collections, trades).
-    # Kept separate from General so execs can see community health and engagement.
-    community_terms = ["pull", "pulled", "just got", "collection", "my collection", "lcs",
-                       "card show", "hobby", "mail day", "haul", "rip", "opening",
-                       "what do you think", "worth grading", "first time",
-                       "inheritance", "inherited", "found these", "my dad",
-                       "my grandfather", "my grandma", "started collecting"]
-    if any(ct in text for ct in community_terms):
-        return "Collector Community & Hobby"
 
     return "General Platform Feedback"
 
