@@ -573,16 +573,27 @@ else:
     # ── Example prompt selector ──
     _rp_options = [
         "",
-        "Give me an executive briefing — what are the top 3 issues I should act on this week?",
-        "What seller protection gaps are driving the most churn risk right now?",
-        "How does Whatnot threaten eBay in live breaks and what's our competitive moat?",
-        "What are the signals around instant offers, buybacks, and liquidity — who's winning and why?",
-        "What are customers saying about TCGPlayer and how does it fit within the eBay ecosystem?",
-        "How is Goldin performing as an eBay subsidiary and what are collectors saying?",
-        "What are the biggest fee complaints and are they driving sellers to competitors?",
-        "How is eBay's Price Guide perceived vs Card Ladder and PSA — are we the trusted standard?",
-        "What do Trustpilot reviews reveal about eBay vs Whatnot vs Heritage customer satisfaction?",
-        "What are the top return/INAD abuse signals and what should we fix first?",
+        # ── Strategy & Executive ──
+        "Give me a weekly executive briefing — top 3 issues to act on, with signal counts and risk-of-inaction.",
+        "Which workstreams have the most negative sentiment momentum in the last 14 days?",
+        # ── Payment & Checkout Friction ──
+        "What are the top checkout and payment friction issues preventing buyers from completing purchases?",
+        "What are sellers saying about payout delays, funds held, and managed payments problems?",
+        # ── Competitive Positioning ──
+        "How does Whatnot threaten eBay in live breaks and card sales — what are sellers switching for?",
+        "What are Vinted sellers saying vs eBay sellers about fees, shipping, and buyer protection?",
+        # ── Authentication & Grading ──
+        "What are the top grading complaints about PSA, BGS, and SGC — and how do they affect eBay trust?",
+        # ── Vault & Services ──
+        "What are the biggest pain points with PSA Vault and eBay Vault — withdrawals, trust, and UX?",
+        # ── Customer Service ──
+        "What are customers saying about eBay's customer support — AI bots, response times, and resolution quality?",
+        # ── Subsidiary Ecosystem ──
+        "How is TCGPlayer performing and what are the top seller complaints about the platform?",
+        # ── Trust & Safety ──
+        "What scam and fraud patterns are emerging in collectibles and how are they affecting buyer confidence?",
+        # ── Seller Economics ──
+        "Are eBay fee increases driving sellers to competitors? Show me the evidence with quotes.",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
