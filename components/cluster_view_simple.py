@@ -194,6 +194,7 @@ def _load_clusters() -> List[Dict[str, Any]]:
                 "product_opportunity": card.get("theme", ""),
                 "cluster_id": cid,
                 "insights": insights_by_id.get(cid, []),
+                "_card_quotes": card.get("quotes", []),
                 "signal_counts": {
                     "total": card.get("insight_count", 0),
                     "complaints": stats_by_id.get(cid, {}).get("complaints", 0),
@@ -373,12 +374,23 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
             # Compact breakdown line
             st.caption(f"\U0001f534 {negative} negative \u00b7 \U0001f7e2 {positive} positive \u00b7 \u26aa {size - negative - positive} neutral")
             
-            # Sample quote for context
-            if cluster_insights:
-                sample = cluster_insights[0]
+            # Sample quote for context — use precomputed keyword-filtered quotes from card
+            _card_quotes = cluster.get("_card_quotes", [])
+            if _card_quotes:
+                # Strip markdown formatting from precomputed quotes
+                q = _card_quotes[0].replace("- _", "").replace("_", "").strip()
+                if q:
+                    st.markdown(f'📝 *"{q[:200]}..."*')
+            elif cluster_insights:
+                # Fallback: pick highest-engagement complaint
+                _complaint_insights = sorted(
+                    [i for i in cluster_insights if i.get("brand_sentiment") in ("Complaint", "Negative")],
+                    key=lambda x: x.get("score", 0), reverse=True
+                )
+                sample = _complaint_insights[0] if _complaint_insights else cluster_insights[0]
                 sample_text = (sample.get("text", "") or sample.get("title", ""))[:200]
                 if sample_text:
-                    st.markdown(f"📝 *\"{sample_text}...\"*")
+                    st.markdown(f'📝 *"{sample_text}..."*')
             
             # Top topics from supporting signals
             themes = _extract_top_themes(cluster_insights)
