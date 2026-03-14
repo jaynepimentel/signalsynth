@@ -498,7 +498,6 @@ try:
     except Exception:
         pass
     total_posts = _pipeline_meta.get("total_posts_loaded", raw_posts_count + competitor_posts_count)
-    hours_saved = round((total_posts * 2) / 60, 1)
 
     dates = [i.get("post_date", "") for i in scraped_insights if i.get("post_date")]
     date_range = ""
@@ -514,30 +513,42 @@ except Exception as e:
 # ─────────────────────────────────────────────
 # KPI banner with context
 # ─────────────────────────────────────────────
+_complaint_pct = round(complaints / max(total, 1) * 100, 1)
+_refresh_ts_header = _pipeline_meta.get("generated_at", "")
+_freshness_label = "—"
+if _refresh_ts_header:
+    try:
+        _rdt = datetime.fromisoformat(_refresh_ts_header)
+        _ago_s = (datetime.now() - _rdt).total_seconds()
+        if _ago_s < 3600:
+            _freshness_label = f"{round(_ago_s / 60)}m ago"
+        elif _ago_s < 86400:
+            _freshness_label = f"{round(_ago_s / 3600)}h ago"
+        else:
+            _freshness_label = f"{round(_ago_s / 86400)}d ago"
+    except Exception:
+        _freshness_label = _refresh_ts_header[:10]
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric("Posts Scraped", f"{total_posts:,}",
-              help="Total posts collected from 42 sources: Reddit, Twitter/X, YouTube, eBay Forums, Trustpilot, blogs, PSA Forums, app reviews, seller communities, news RSS, and podcasts")
+    st.metric("Signals", f"{total:,}",
+              help=f"Enriched insights from {total_posts:,} posts across 42 sources")
 with col2:
-    st.metric("Actionable Insights", f"{total:,}",
-              help=f"Posts filtered for relevance and enriched with topic/sentiment tags. {total} out of {total_posts:,} posts contained actionable signal.")
+    st.metric("Complaints", f"{complaints:,}",
+              delta=f"{_complaint_pct}% of signals", delta_color="inverse",
+              help="Posts classified as complaints or negative sentiment")
 with col3:
     st.metric("Themes", clusters_count,
-              help="AI-grouped clusters of related insights. Each theme represents a strategic area like 'Vault Trust' or 'Shipping Friction' — find them in the Strategy tab.")
+              help="AI-grouped strategic workstreams — see Dashboard tab")
 with col4:
-    st.metric("Est. Hours Saved", f"~{hours_saved}",
-              help=f"Estimated time to manually read and categorize {total_posts:,} posts at ~2 min each")
-
-filter_pct = round(total / max(total_posts, 1) * 100, 1)
-pipeline_text = f"{total_posts:,} posts from 42 sources → {total:,} insights ({filter_pct}% signal) → {clusters_count} themes"
-if date_range:
-    st.caption(f"{pipeline_text} · Data: {date_range}")
+    st.metric("Last Refresh", _freshness_label,
+              help=f"Data: {date_range}" if date_range else "Data freshness")
 
 # ─────────────────────────────────────────────
 # Ask AI (always visible above tabs)
 # ─────────────────────────────────────────────
-st.markdown("### 🤖 Ask AI About the Data")
-st.caption("Ask any question about scraped insights and get a polished, data-grounded answer.")
+st.markdown("#### 🤖 Ask AI")
+st.caption("Ask any question — get a strategic, source-cited answer grounded in real signals.")
 
 if not OPENAI_KEY_PRESENT:
     st.warning("OpenAI API key not configured. Contact your admin to enable AI Q&A.")
@@ -1476,7 +1487,8 @@ RELEVANT SIGNALS (sorted by relevance to the question):
 
     if st.session_state["qa_messages"]:
         import streamlit.components.v1 as _stc_qa
-        with st.expander("AI Q&A responses", expanded=True):
+        _qa_count = len(st.session_state["qa_messages"])
+        with st.expander(f"💬 AI Responses ({_qa_count // 2} conversations)" if _qa_count else "💬 AI Responses", expanded=_qa_count <= 2):
             _qa_reversed = list(reversed(list(enumerate(st.session_state["qa_messages"]))))
             for msg_idx, msg in _qa_reversed:
                 with st.chat_message(msg["role"]):
@@ -1574,19 +1586,17 @@ RELEVANT SIGNALS (sorted by relevance to the question):
 # 5 Tabs
 # ─────────────────────────────────────────────
 tabs = st.tabs([
-    "📋 Strategy & Overview",
-    "⚔️ Competitor Intel",
-    "🎯 Customer Signals",
-    "📰 Industry & Trends",
-    "📦 Releases & Checklists",
+    "📊 Dashboard",
+    "🎯 Signals",
+    "⚔️ Competitive",
+    "📰 Market & Trends",
+    "📦 Releases",
 ])
 
-# (Charts tab removed — content merged into Strategy & Overview)
-# CHARTS_BLOCK_DELETED
-# TAB 2: COMPETITOR INTEL
+# TAB 3: COMPETITIVE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[1]:
-    st.markdown("What competitors are doing, what their customers complain about, and where eBay can win.")
+with tabs[2]:
+    st.markdown("Competitor moves, conquest opportunities, and subsidiary health — what they're doing and where eBay can win.")
 
     if not competitor_posts_raw:
         st.info("No competitor data available yet. Check back after the next data refresh.")
@@ -1870,10 +1880,10 @@ with tabs[1]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: CUSTOMER SIGNALS — executive briefing
+# TAB 2: SIGNALS — executive briefing
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[2]:
-    st.markdown("One-page executive view — scroll top-to-bottom for health, top issues, customer asks, and deep-dive explorer.")
+with tabs[1]:
+    st.markdown("What customers are saying — top issues, churn risks, feature requests, and deep-dive explorer.")
 
     # ── Filters ──
     filter_fields = {"Topic": "taxonomy.topic", "Type": "taxonomy.type", "Sentiment": "brand_sentiment"}
@@ -1886,42 +1896,20 @@ with tabs[2]:
     if selected_topics and "All" not in selected_topics and "Price Guide" in selected_topics:
         filtered = [i for i in filtered if _is_true_price_guide_signal(i)]
 
+    # ── Compact signal count + top topics ──
+    topic_counts = defaultdict(int)
+    for i in filtered:
+        t = _taxonomy_topic(i)
+        if t and t not in ("General", "Unknown"):
+            topic_counts[t] += 1
+    if topic_counts:
+        top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+        st.caption(f"**{len(filtered):,} signals** · Top topics: " + " · ".join([f"{k} ({v})" for k, v in top_topics]))
 
-    # ── Customer Signals Sub-tabs ──
-    cs_tabs = st.tabs(["🔥 Issues & Health", "💡 Asks & Churn", "🤝 Partners & Explorer"])
+    # ── Signals Sub-views ──
+    cs_tabs = st.tabs(["🔥 Top Issues", "🚨 Churn & Asks", "🔍 Explorer"])
 
     with cs_tabs[0]:
-        # ═══════════════════════════════════════════════
-        # HEALTH SNAPSHOT
-        # ═══════════════════════════════════════════════
-        f_neg = sum(1 for i in filtered if i.get("brand_sentiment") == "Negative")
-        f_pos = sum(1 for i in filtered if i.get("brand_sentiment") == "Positive")
-        f_complaints = sum(1 for i in filtered if _taxonomy_type(i) == "Complaint")
-        f_requests = sum(1 for i in filtered if _taxonomy_type(i) == "Feature Request")
-        f_churn = sum(1 for i in filtered if i.get("type_tag") == "Churn Signal")
-        strengths = [i.get("signal_strength", 0) for i in filtered if i.get("signal_strength")]
-        avg_strength = round(sum(strengths) / max(len(strengths), 1), 1) if strengths else 0
-
-        h1, h2, h3, h4, h5, h6 = st.columns(6)
-        h1.metric("Signals", len(filtered), help=f"of {total} total")
-        neg_pct = round(f_neg / max(len(filtered), 1) * 100)
-        h2.metric("Negative", f_neg, delta=f"{neg_pct}%", delta_color="inverse")
-        h3.metric("Complaints", f_complaints)
-        h4.metric("Churn Risks", f_churn, delta_color="inverse" if f_churn else "off")
-        h5.metric("Feature Asks", f_requests)
-        h6.metric("Avg Strength", f"{avg_strength}/100")
-
-        topic_counts = defaultdict(int)
-        for i in filtered:
-            t = _taxonomy_topic(i)
-            if t and t not in ("General", "Unknown"):
-                topic_counts[t] += 1
-        if topic_counts:
-            top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:10]
-            st.caption("**Top topics:** " + " · ".join([f"{k} ({v})" for k, v in top_topics]))
-
-        st.markdown("---")
-
         # ═══════════════════════════════════════════════
         # 🔥 TOP ISSUES TO FIX
         # ═══════════════════════════════════════════════
@@ -2422,10 +2410,10 @@ Signals:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 4: INDUSTRY & TRENDS
+# TAB 4: MARKET & TRENDS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[3]:
-    st.markdown("Top news, viral posts, YouTube commentary, podcasts, forum discussions, and product launches across the collectibles industry.")
+    st.markdown("Industry news, viral posts, YouTube, podcasts, Price Guide signals, and customer reviews across the collectibles ecosystem.")
 
     # ── Combine all industry sources ──
     industry_posts = []
@@ -3018,7 +3006,7 @@ with tabs[3]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 5: CHECKLISTS & SEALED LAUNCHES — Checklists & Upcoming Sealed Product Launches
+# TAB 5: RELEASES
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[4]:
     st.markdown("Upcoming sealed product launches and checklists from Panini, Topps, Leaf, Upper Deck, Bowman, and more.")
@@ -3131,92 +3119,26 @@ with tabs[4]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 1: STRATEGY & OVERVIEW
+# TAB 1: DASHBOARD
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[0]:
-    # ── Onboarding (collapsed by default for returning users) ──
-    with st.expander("💡 New here? How to use SignalSynth", expanded=False):
-        st.markdown("""
-**SignalSynth** is an AI-powered intelligence engine built for eBay Collectibles & Trading Cards leadership. It continuously scrapes, enriches, and synthesizes community signals into executive-ready insights — so you don't have to manually read thousands of posts to know what's happening.
 
----
+    # ── Strategic Themes (most valuable content — show FIRST) ──
+    st.markdown("### 🧠 Strategic Themes")
+    st.caption("AI-clustered workstreams from community signals. Drill into any theme → opportunity area → supporting signals, then generate PRDs, BRDs, PRFAQs, or Jira tickets.")
+    try:
+        display_clustered_insight_cards(normalized)
+    except Exception as e:
+        st.error(f"Cluster view error: {e}")
 
-#### 🤖 Start with Ask AI (above the tabs)
-The fastest way to get answers. Type any question and get a strategic, source-cited response grounded in real data. Examples:
-- *"What are the top complaints about the PSA Vault?"*
-- *"How does Whatnot threaten eBay in live breaks?"*
-- *"What do sellers want most from eBay right now?"*
+    st.markdown("---")
 
-If your question has thin results, SignalSynth will offer to **live-search the web** for that topic, pull in fresh signals, and re-analyze — so the system learns your interests over time.
-
----
-
-#### 📡 Where the data comes from
-SignalSynth pulls from **42 sources** across the collectibles ecosystem:
-
-| Source | What it captures |
-|--------|------------------|
-| **Reddit** | r/baseballcards, r/sportscards, r/eBay, r/pokemontcg, r/footballcards, r/funkopop, r/coins + 35 more subs |
-| **Twitter / X** | Hobby influencers, eBay mentions, competitor chatter |
-| **YouTube** | Jabs Family, Sports Card Investor, Stacking Slabs, CardShopLive, Gary Vee, Goldin |
-| **eBay Forums** | Seller & buyer discussions from eBay Community (real-time) |
-| **Bluesky** | Emerging hobby community signals |
-| **Trustpilot** | Customer reviews for eBay, Goldin, TCGPlayer, Whatnot, Heritage Auctions |
-| **Cllct** | Industry news from Cllct.com (Sports Cards, Auctions, Autographs, Memorabilia) |
-| **News RSS** | Beckett, Cardlines, Cardboard Connection, Dave and Adams, Sports Collectors Daily, PSA Blog, Blowout Buzz, Just Collect Blog |
-| **Podcasts** | Sports Cards Nonsense, Sports Card Investor, Stacking Slabs, Hobby News Daily, The Pull-Tab Podcast, Collector Nation |
-| **Forums & Blogs** | Blowout Forums, Net54, Bench Trading, Alt.xyz, COMC, Whatnot, Fanatics Collect, TCDB |
-| **Goldin Blog & Heritage Blog** | Official blog posts from eBay subsidiaries and key competitors |
-| **Card Ladder** | Price guide partner blog and market analysis |
-| **PSA Forums** | Collectors Universe forums — grading, vault, consignment discussions |
-| **App Reviews** | App store review discussions about eBay and competitor mobile experiences |
-| **Industry Analysis** | Analyst reports and market commentary on the collectibles industry |
-| **Seller Communities** | Seller forums and community discussions about platform experiences |
-| **Competitors** | Whatnot, Fanatics Collect, Fanatics Live, Heritage Auctions, Alt, Goldin, TCGPlayer, Beckett, PSA Consignment |
-
-Every post is enriched with **sentiment, topic, persona, churn risk, and signal strength** scoring.
-
----
-
-#### 🗂️ Tab guide
-- **📋 Strategy & Overview** (you're here) — Executive pulse, signal health, and AI-clustered strategic themes. Drill into any theme, then generate **PRDs, BRDs, PRFAQs, or Jira tickets** with one click.
-- **⚔️ Competitor Intel** — What Whatnot, Fanatics, Heritage, and others are doing. Complaints (conquest opportunities), praise (competitive threats), policy changes, and platform comparisons.
-- **🎯 Customer Signals** — Deep-dive: health snapshot → top issues → problem breakdown → churn risks → customer asks → partner health → signal explorer.
-- **📰 Industry & Trends** — Top industry news, podcast episodes, viral posts, YouTube commentary, Price Guide signals, and a full filterable feed.
-- **📦 Releases & Checklists** — Upcoming product releases and published checklists from Topps, Panini, Bowman, Upper Deck, and more.
-
----
-
-#### 💡 Tips
-- **Filters matter** — use topic, sentiment, and time filters on the Customer Signals tab to focus on what you care about.
-- **AI buttons everywhere** — look for 🧠 buttons to generate executive briefs, competitive analyses, and per-category summaries.
-- **Source links** — every insight links back to the original post so you can verify context.
-        """)
-
-    # ── Executive Pulse ──
+    # ── Executive Pulse (compact — detailed metrics available in Signals tab) ──
     st.markdown("### 📊 Executive Pulse")
-    # Freshness timestamp
-    _refresh_ts = _pipeline_meta.get("generated_at", "")
-    if _refresh_ts:
-        try:
-            _refresh_dt = datetime.fromisoformat(_refresh_ts)
-            _ago = datetime.now() - _refresh_dt
-            _hours_ago = round(_ago.total_seconds() / 3600, 1)
-            if _hours_ago < 1:
-                _freshness = f"{round(_ago.total_seconds() / 60)}m ago"
-            elif _hours_ago < 24:
-                _freshness = f"{_hours_ago:.0f}h ago"
-            else:
-                _freshness = f"{_hours_ago / 24:.0f}d ago"
-            st.caption(f"Last data refresh: **{_freshness}** · {_refresh_dt.strftime('%b %d, %Y %I:%M %p')}")
-        except Exception:
-            st.caption(f"Last data refresh: {_refresh_ts[:16]}")
 
     from collections import Counter as _PulseCounter
-    # Split signals into recent (14d) vs older for trend comparison
     _14d_ago = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
     _recent = [i for i in normalized if (i.get("post_date", "") or "") >= _14d_ago]
-    _older = [i for i in normalized if (i.get("post_date", "") or "") < _14d_ago]
 
     _pulse_neg = sum(1 for i in normalized if i.get("brand_sentiment") in ("Negative", "Complaint"))
     _pulse_pos = sum(1 for i in normalized if i.get("brand_sentiment") in ("Positive", "Praise"))
@@ -3224,17 +3146,14 @@ Every post is enriched with **sentiment, topic, persona, churn risk, and signal 
     _pulse_churn = sum(1 for i in normalized if i.get("type_tag") == "Churn Signal")
     _pulse_requests = sum(1 for i in normalized if _taxonomy_type(i) == "Feature Request")
 
-    # Recent-period counts for delta
     _recent_neg = sum(1 for i in _recent if i.get("brand_sentiment") in ("Negative", "Complaint"))
     _recent_complaints = sum(1 for i in _recent if _taxonomy_type(i) == "Complaint")
     _recent_churn = sum(1 for i in _recent if i.get("type_tag") == "Churn Signal")
     _recent_requests = sum(1 for i in _recent if _taxonomy_type(i) == "Feature Request")
     _recent_pos = sum(1 for i in _recent if i.get("brand_sentiment") in ("Positive", "Praise"))
 
-    _neg_pct = round(_pulse_neg / max(total, 1) * 100)
-
     _ep1, _ep2, _ep3, _ep4, _ep5 = st.columns(5)
-    _ep1.metric("Negative", _pulse_neg, delta=f"{_recent_neg} in last 14d", delta_color="inverse" if _recent_neg else "off")
+    _ep1.metric("Negative", _pulse_neg, delta=f"{_recent_neg} in 14d", delta_color="inverse" if _recent_neg else "off")
     _ep2.metric("Complaints", _pulse_complaints, delta=f"{_recent_complaints} recent", delta_color="inverse" if _recent_complaints else "off")
     _ep3.metric("Churn Risks", _pulse_churn, delta=f"{_recent_churn} recent", delta_color="inverse" if _recent_churn else "off")
     _ep4.metric("Feature Asks", _pulse_requests, delta=f"{_recent_requests} recent", delta_color="off")
@@ -3266,59 +3185,19 @@ Every post is enriched with **sentiment, topic, persona, churn risk, and signal 
             _meta = _trend_alerts.get("metadata", {})
             st.caption(f"Analysis: {_meta.get('periods_analyzed', '?')} periods × {_meta.get('window_days', '?')}-day windows, {_meta.get('topics_tracked', '?')} topics tracked")
 
-    # Signal health breakdown by topic
-    _topic_counts = _PulseCounter(_taxonomy_topic(i) for i in normalized)
-    _topic_counts.pop("General", None)
-    _topic_counts.pop("Unknown", None)
-    if _topic_counts:
-        st.markdown("#### Signal Health by Topic")
-        _top_topics = _topic_counts.most_common(8)
-        for _tag, _cnt in _top_topics:
-            _tag_posts = [i for i in normalized if _taxonomy_topic(i) == _tag]
-            _needs_attn = len([
-                p for p in _tag_posts
-                if p.get("brand_sentiment") == "Negative"
-                or _taxonomy_type(p) in ("Complaint", "Bug Report")
-            ])
-            _attn_pct = round(_needs_attn / max(_cnt, 1) * 100)
-            _is_red = _attn_pct > 40 or _needs_attn >= 20
-            _is_yellow = _attn_pct > 15 or _needs_attn >= 10
-            _bar = "🔴" if _is_red else ("🟡" if _is_yellow else "🟢")
-            st.markdown(f"{_bar} **{_tag}** — {_needs_attn} of {_cnt} signals need attention ({_attn_pct}%)")
+    # ── Compact onboarding (collapsed) ──
+    with st.expander("💡 How to use SignalSynth", expanded=False):
+        st.markdown("""
+**SignalSynth** continuously scrapes 42 sources (Reddit, YouTube, Trustpilot, eBay Forums, podcasts, news, competitors, and more), enriches each signal with sentiment/topic/persona scoring, and clusters them into strategic workstreams.
 
-    # Source distribution
-    _src_dist = defaultdict(int)
-    for i in normalized:
-        _src_dist[i.get("source", "Unknown")] += 1
-    if _src_dist:
-        _top_srcs = sorted(_src_dist.items(), key=lambda x: -x[1])[:10]
-        st.markdown("#### 📡 Source Distribution (Top 10)")
-        for _sn, _sc in _top_srcs:
-            _pct = round(_sc / max(total, 1) * 100, 1)
-            st.caption(f"**{_sn}** — {_sc:,} signals ({_pct}%)")
-        st.caption(f"Total unique sources: {len(_src_dist)}")
+**Quick start:**
+- **🤖 Ask AI** (above tabs) — type any question for a source-cited strategic answer
+- **📊 Dashboard** (you're here) — strategic themes + executive pulse + trend alerts
+- **🎯 Signals** — top issues, churn risks, feature requests, deep-dive explorer
+- **⚔️ Competitive** — competitor & subsidiary analysis with conquest playbooks
+- **📰 Market & Trends** — industry news, podcasts, viral posts, Price Guide signals
 
-    # Competitor quick snapshot
-    if competitor_posts_raw:
-        _comp_counts = _PulseCounter(
-            p.get("competitor", "?") for p in competitor_posts_raw
-            if p.get("competitor_type") != "ebay_subsidiary"
-        )
-        if _comp_counts:
-            st.markdown("#### ⚔️ Competitor Snapshot")
-            _comp_parts = []
-            for _cn, _cc in _comp_counts.most_common(5):
-                _comp_parts.append(f"**{_cn}** ({_cc})")
-            st.caption(" · ".join(_comp_parts) + " — see **Competitor Intel** tab for full analysis")
-
-    st.markdown("---")
-
-    # ── Strategic Themes ──
-    st.markdown("### 🧠 Strategic Themes")
-    st.caption("AI-clustered themes from user signals. Drill into any theme → opportunity area → supporting signals, then generate PRDs, BRDs, PRFAQs, or Jira tickets.")
-    try:
-        display_clustered_insight_cards(normalized)
-    except Exception as e:
-        st.error(f"Cluster view error: {e}")
+**Tips:** Look for 🧠 buttons to generate AI briefs. Every signal links to its source. Use filters on the Signals tab to focus your view.
+        """)
 
 
