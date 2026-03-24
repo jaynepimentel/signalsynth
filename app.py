@@ -1543,7 +1543,7 @@ RELEVANT SIGNALS (sorted by relevance to the question):
             else:
                 # Create fresh client for each request
                 _client = OpenAI(api_key=api_key)
-                _ask_ai_model = "gpt-4o-mini"  # Primary: cost-effective, fast
+                _ask_ai_model = "gpt-4.1"  # Best quality for executive responses
                 
                 _signals_used = min(len(relevant), 25)
                 with st.spinner(f"Analyzing {_signals_used} relevant signals (model: {_ask_ai_model}, from {len(normalized):,} total)..."):
