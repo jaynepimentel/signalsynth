@@ -1,0 +1,543 @@
+# precompute_clusters.py — Cluster cache generator for SignalSynth
+#
+# - Reads from precomputed_insights.json
+# - Re-promotes money-risk flags (Payments / UPI / High-ASP)
+# - Collectibles-first gate
+# - CLI filters: brand, persona, topic, since, min-score, max-items
+# - Uses cluster_by_subtag_then_embed + synthesize_cluster from cluster_synthesizer
+# - Saves clusters as dicts with stats and metadata, plus summary cards
+
+import os
+import json
+import argparse
+import time
+from datetime import datetime, date
+from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from components.cluster_synthesizer import (
+    cluster_by_subtag_then_embed,
+    synthesize_cluster,
+)
+from components.scoring_utils import detect_payments_upi_highasp
+
+# Default IO paths
+PRECOMPUTED_INSIGHTS_PATH = "precomputed_insights.json"
+CLUSTER_OUTPUT_PATH = "precomputed_clusters.json"
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
+
+def _parse_date(d: Optional[str]) -> Optional[date]:
+    if not d:
+        return None
+    try:
+        return datetime.fromisoformat(str(d)).date()
+    except Exception:
+        return None
+
+
+def _ensure_lists(i: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize common list fields so downstream code can rely on them
+    being lists instead of sometimes strings / None.
+    """
+    for k in ("topic_focus", "type_subtags", "mentions_competitor", "mentions_ecosystem_partner"):
+        v = i.get(k)
+        if v is None:
+            i[k] = []
+        elif isinstance(v, str):
+            i[k] = [v] if v.strip() else []
+        elif isinstance(v, list):
+            # keep as-is
+            pass
+        else:
+            i[k] = [str(v)]
+
+    # Legacy compatibility: many components still expect a single "type_subtag"
+    if "type_subtag" not in i:
+        i["type_subtag"] = i["type_subtags"][0] if i["type_subtags"] else "General"
+
+    taxonomy = i.get("taxonomy") if isinstance(i.get("taxonomy"), dict) else {}
+    canonical_type = taxonomy.get("type") or i.get("type_tag") or i.get("insight_type") or "Unclassified"
+    canonical_topic = taxonomy.get("topic") or i.get("subtag") or i.get("type_subtag") or "General"
+    canonical_theme = taxonomy.get("theme") or i.get("theme") or canonical_topic
+    i["taxonomy"] = {
+        "type": canonical_type,
+        "topic": canonical_topic,
+        "theme": canonical_theme,
+    }
+    # Keep legacy flat fields aligned for compatibility.
+    i["type_tag"] = i.get("type_tag") or canonical_type
+    i["subtag"] = i.get("subtag") or canonical_topic
+    i["theme"] = i.get("theme") or canonical_theme
+
+    return i
+
+
+def _taxonomy_type(i: Dict[str, Any]) -> str:
+    taxonomy = i.get("taxonomy") if isinstance(i.get("taxonomy"), dict) else {}
+    return taxonomy.get("type") or i.get("type_tag") or "Unclassified"
+
+
+def _promote_money_risk(i: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Promote payment / UPI / high-ASP flags into normalized fields.
+    If missing, derive from raw text via detect_payments_upi_highasp.
+    """
+    flags = detect_payments_upi_highasp(i.get("text", "") or "")
+
+    if i.get("_payment_issue") is None:
+        i["_payment_issue"] = flags.get("_payment_issue", False)
+    if i.get("payment_issue_types") is None:
+        i["payment_issue_types"] = flags.get("payment_issue_types", [])
+    if i.get("_upi_flag") is None:
+        i["_upi_flag"] = flags.get("_upi_flag", False)
+    if i.get("_high_end_flag") is None:
+        i["_high_end_flag"] = flags.get("_high_end_flag", False)
+
+    if i.get("topic_hint") is None and flags.get("topic_hint"):
+        i["topic_hint"] = flags["topic_hint"]
+
+    # Ensure topic_focus carries money-risk tags for easier filtering
+    tf = list(i.get("topic_focus", []) or [])
+    if i["_payment_issue"] and "Payments" not in tf:
+        tf.append("Payments")
+    if i["_upi_flag"] and "UPI" not in tf:
+        tf.append("UPI")
+    i["topic_focus"] = tf
+
+    return i
+
+
+COLLECTIBLES_HINTS_STRONG = (
+    "trading card", "sports card", "baseball card", "football card", "basketball card",
+    "pokemon card", "magic card", "yugioh", "slab", "graded card", "raw card",
+    "psa", "bgs", "sgc", "cgc", "tcg", "topps", "panini", "bowman", "upper deck",
+    "pop report", "population report", "vault", "whatnot", "goldin", "vinted",
+    "heritage auction", "pwcc", "fanatics collect", "alt marketplace", "loupe",
+    "ebay seller", "ebay buyer", "ebay auction", "ebay listing", "ebay shipping",
+    "ebay fee", "ebay return", "ebay refund", "ebay vault", "ebay live",
+    "authenticity guarantee", "price guide", "promoted listing", "seller hub",
+    "collectible", "collector", "hobby box", "wax box", "case break", "box break",
+    "card show", "card shop", "lcs ", "rookie card", "autograph card",
+    "funko", "comic book", "coin collect",
+)
+
+COLLECTIBLES_HINTS_WEAK = (
+    "card", "graded", "comic", "coin",
+)
+
+# False-positive 'card' compounds — these contain 'card' but are NOT collectibles
+FALSE_CARD_COMPOUNDS = (
+    "credit card", "debit card", "gift card", "business card", "green card",
+    "boarding card", "loyalty card", "sim card", "graphics card", "memory card",
+    "sd card", "id card", "key card", "report card", "score card",
+    "card game rules", "playing card",  # generic card games, not TCG
+)
+
+# Exclude posts that are clearly not about collectibles/marketplace platform feedback
+CLUSTER_EXCLUDE = (
+    # Tech/hardware
+    "hard drive", "ssd", "hdd", "terabyte", "gigabyte", "storage device",
+    "gpu", "cpu", "ram ", "laptop", "smartphone", "iphone", "android",
+    # Personal/relationship
+    "boyfriend sold", "girlfriend sold", "my ex ",
+    # Labor/activism
+    "union busting", "unionize", "boycott tcgplayer",
+    # Politics/government
+    "election", "democrat", "republican", "trump tariff", "biden",
+    "epstein", "immigration backlog", "green card holder",
+    # Travel/airline
+    "airline", "deplaning", "boarding pass", "layover", "turbulence",
+    "flight cancel", "delta air", "united air", "american air", "southwest air",
+    # Lifestyle/other industries
+    "recipe", "cooking", "workout", "weight loss",
+    "mortgage", "student loan", "tuition",
+    "netflix", "hulu", "disney+", "streaming service",
+    "car insurance", "auto loan",
+)
+
+
+def _is_collectibles(i: Dict[str, Any]) -> bool:
+    """
+    Domain gate: keep only collectibles and high-value money-risk posts.
+    Tightened to prevent off-topic content from polluting clusters.
+    """
+    t = (i.get("text") or "").lower()
+
+    # Hard exclude: never cluster these
+    if any(ex in t for ex in CLUSTER_EXCLUDE):
+        return False
+
+    # Strong match: definitely collectibles
+    if any(h in t for h in COLLECTIBLES_HINTS_STRONG):
+        return True
+
+    # Money-risk signals are always relevant
+    money = bool(i.get("_payment_issue") or i.get("_upi_flag") or i.get("_high_end_flag"))
+    if money:
+        return True
+
+    # Weak match: "card" alone needs platform context AND must not be a false-positive compound
+    if any(h in t for h in COLLECTIBLES_HINTS_WEAK):
+        # Reject if the "card" mention is actually credit card, gift card, etc.
+        if any(fc in t for fc in FALSE_CARD_COMPOUNDS):
+            # Only keep if there's ALSO a strong collectibles signal alongside the false compound
+            if not any(h in t for h in COLLECTIBLES_HINTS_STRONG):
+                return False
+        platform_context = any(p in t for p in ("ebay", "seller", "buyer", "auction", "listing", "shipping", "grading", "marketplace"))
+        return platform_context
+
+    return False
+
+
+def _passes_filters(
+    i: Dict[str, Any],
+    brand: Optional[str],
+    persona: Optional[str],
+    topic: Optional[str],
+    since: Optional[str],
+    min_score: Optional[float],
+) -> bool:
+    """
+    Apply optional CLI filters on top of the collectibles-first set.
+    """
+    if brand:
+        if str(i.get("target_brand", "")).lower() != brand.lower():
+            return False
+
+    if persona:
+        if str(i.get("persona", "")).lower() != persona.lower():
+            return False
+
+    if topic:
+        tf = i.get("topic_focus", [])
+        if isinstance(tf, str):
+            tf = [tf]
+        if topic not in tf:
+            return False
+
+    if since:
+        cutoff = _parse_date(since)
+        if cutoff:
+            d = (
+                _parse_date(i.get("last_seen"))
+                or _parse_date(i.get("_logged_date"))
+                or _parse_date(i.get("post_date"))
+            )
+            if not d or d < cutoff:
+                return False
+
+    if min_score is not None:
+        try:
+            if float(i.get("score", 0.0)) < float(min_score):
+                return False
+        except Exception:
+            return False
+
+    return True
+
+
+def _cluster_stats(cluster_items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Compute useful cluster-level metrics for downstream UI / prioritization.
+    """
+    n = len(cluster_items)
+    if n == 0:
+        return {
+            "size": 0,
+            "complaints": 0,
+            "feature_requests": 0,
+            "negative": 0,
+            "positive": 0,
+            "payments_flags": 0,
+            "upi_flags": 0,
+            "high_asp_flags": 0,
+            "avg_score": 0.0,
+        }
+
+    # Count complaints - check both "Complaint" and "Negative" sentiment values
+    complaints = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Complaint", "Negative"))
+    
+    # Count feature requests - check type_tag or text content
+    feature_requests = sum(1 for x in cluster_items if 
+        _taxonomy_type(x) == "Feature Request" or 
+        "feature" in (x.get("text", "") + x.get("title", "")).lower() or
+        "wish" in (x.get("text", "") + x.get("title", "")).lower() or
+        "should" in (x.get("text", "") + x.get("title", "")).lower()
+    )
+    
+    # Count sentiment
+    negative = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Complaint", "Negative"))
+    positive = sum(1 for x in cluster_items if x.get("brand_sentiment") in ("Praise", "Positive"))
+    
+    payments_flags = sum(1 for x in cluster_items if x.get("_payment_issue"))
+    upi_flags = sum(1 for x in cluster_items if x.get("_upi_flag"))
+    high_asp_flags = sum(1 for x in cluster_items if x.get("_high_end_flag"))
+    avg_score = sum(float(x.get("score", 0.0) or 0.0) for x in cluster_items) / float(n)
+
+    return {
+        "size": n,
+        "complaints": complaints,
+        "feature_requests": feature_requests,
+        "negative": negative,
+        "positive": positive,
+        "payments_flags": payments_flags,
+        "upi_flags": upi_flags,
+        "high_asp_flags": high_asp_flags,
+        "avg_score": round(avg_score, 2),
+    }
+
+
+# -----------------------------
+# Main
+# -----------------------------
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Precompute cluster cache from precomputed_insights.json"
+    )
+    parser.add_argument("--brand", type=str, help="Filter by target brand (exact match)")
+    parser.add_argument("--persona", type=str, help="Filter by persona (exact match)")
+    parser.add_argument("--topic", type=str, help="Require topic_focus to contain this tag (e.g. Payments)")
+    parser.add_argument("--since", type=str, help="Only include insights on/after this date (YYYY-MM-DD)")
+    parser.add_argument("--min-score", type=float, default=None, help="Minimum score filter")
+    parser.add_argument("--max-items", type=int, default=None, help="Cap number of insights before clustering")
+    parser.add_argument("--input", type=str, default=PRECOMPUTED_INSIGHTS_PATH, help="Path to precomputed insights JSON")
+    parser.add_argument("--output", type=str, default=CLUSTER_OUTPUT_PATH, help="Where to save the cluster cache JSON")
+    parser.add_argument("--skip-gpt", action="store_true", help="Skip GPT API calls for fast clustering (no problem statements or quotes)")
+    args = parser.parse_args()
+
+    in_path = args.input
+    out_path = args.output
+
+    if not os.path.exists(in_path):
+        print(f"[ERROR] File not found: {in_path}")
+        return
+
+    with open(in_path, "r", encoding="utf-8") as f:
+        insights: List[Dict[str, Any]] = json.load(f)
+
+    print(f"[INFO] Loaded {len(insights)} insights from {in_path}")
+
+    # Hygiene + money-risk + domain filter
+    hydrated: List[Dict[str, Any]] = []
+    for i in insights:
+        i = _ensure_lists(i)
+        i = _promote_money_risk(i)
+        if _is_collectibles(i):
+            hydrated.append(i)
+
+    # Non-destructive user filters
+    filtered = [
+        i
+        for i in hydrated
+        if _passes_filters(
+            i,
+            brand=args.brand,
+            persona=args.persona,
+            topic=args.topic,
+            since=args.since,
+            min_score=args.min_score,
+        )
+    ]
+
+    if args.max_items and len(filtered) > args.max_items:
+        filtered = filtered[: args.max_items]
+
+    print(
+        "[INFO] Filtered set: "
+        f"{len(filtered)} insights "
+        f"(brand={args.brand or '*'}, persona={args.persona or '*'}, "
+        f"topic={args.topic or '*'}, since={args.since or '*'}, "
+        f"min_score={args.min_score if args.min_score is not None else '*'})"
+    )
+
+    if not filtered:
+        print("[WARN] No insights after filters; aborting cluster generation.")
+        return
+
+    # Cluster + synthesized cards using cluster_by_subtag_then_embed
+    print("[INFO] Generating cluster groups…")
+    raw_cluster_tuples = cluster_by_subtag_then_embed(filtered)
+    if not raw_cluster_tuples:
+        print("[WARN] cluster_by_subtag_then_embed returned no clusters.")
+        data = {
+            "metadata": {
+                "generated_at": datetime.utcnow().isoformat() + "Z",
+                "filters": {
+                    "brand": args.brand,
+                    "persona": args.persona,
+                    "topic": args.topic,
+                    "since": args.since,
+                    "min_score": args.min_score,
+                    "max_items": args.max_items,
+                    "input_path": in_path,
+                },
+                "counts": {
+                    "input_insights": len(insights),
+                    "hydrated_collectibles": len(hydrated),
+                    "filtered_for_clustering": len(filtered),
+                    "cluster_count": 0,
+                },
+            },
+            "clusters": [],
+            "cards": [],
+        }
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"[✅ DONE] Saved empty clusters to {out_path}")
+        return
+
+    clusters: List[Dict[str, Any]] = []
+    cards: List[Dict[str, Any]] = []
+    skip_gpt = getattr(args, "skip_gpt", False)
+    t_start = time.time()
+
+    def _build_card(idx, cluster_items, meta):
+        """Build one cluster card (may call GPT)."""
+        stats = _cluster_stats(cluster_items)
+        workstream = meta.get("category", "")
+        card = synthesize_cluster(cluster_items, workstream_name=workstream)
+        card["coherent"] = meta.get("coherent", True)
+        card["was_reclustered"] = meta.get("was_reclustered", False)
+        card["avg_similarity"] = f"{meta.get('avg_similarity', 0.0):.2f}"
+        if workstream and workstream != "General Platform Feedback":
+            card["theme"] = workstream
+            card["title"] = workstream
+        return idx, card, stats, cluster_items, meta
+
+    if skip_gpt:
+        # Fast path: skip GPT, use workstream name directly
+        for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
+            workstream = meta.get("category", "")
+            stats = _cluster_stats(cluster_items)
+            # Build card without GPT
+            from components.cluster_synthesizer import _cluster_id, is_semantically_coherent
+            import numpy as np
+            coherent, avg_sim = is_semantically_coherent(cluster_items, return_score=True, fast_mode=True)
+            scores = [i.get("score", 0) for i in cluster_items]
+            sentiments = list({i.get("brand_sentiment", "Neutral") for i in cluster_items})
+            topics = sorted({t for i in cluster_items for t in (i.get("topic_focus") or [])})
+            competitors = sorted({c for i in cluster_items for c in (i.get("mentions_competitor") or [])})
+            card = {
+                "title": workstream or "General Platform Feedback",
+                "theme": workstream or "General Platform Feedback",
+                "problem_statement": f"Signals grouped under {workstream or 'General Platform Feedback'}. Run without --skip-gpt for AI-generated problem statements.",
+                "brand": cluster_items[0].get("target_brand") or "Unknown",
+                "type": cluster_items[0].get("type_tag") or "Insight",
+                "personas": list({i.get("persona", "Unknown") for i in cluster_items}),
+                "effort_levels": list({i.get("effort", "Unknown") for i in cluster_items}),
+                "sentiments": sentiments,
+                "opportunity_tags": list({i.get("opportunity_tag", "General Insight") for i in cluster_items}),
+                "quotes": [],
+                "top_ideas": [],
+                "score_range": f"{round(min(scores), 2)}–{round(max(scores), 2)}",
+                "insight_count": len(cluster_items),
+                "avg_cluster_ready": float(np.mean([i.get("cluster_ready_score", 0) for i in cluster_items])),
+                "topic_focus_tags": topics,
+                "mentions_competitor": competitors,
+                "cluster_id": _cluster_id(cluster_items),
+                "avg_similarity": f"{avg_sim:.2f}",
+                "coherent": coherent,
+                "was_reclustered": False,
+            }
+            cid = card["cluster_id"]
+            cluster_record = {
+                "cluster_id": cid, "insights": cluster_items, "stats": stats,
+                "coherent": card["coherent"], "was_reclustered": False, "avg_similarity": card["avg_similarity"],
+            }
+            clusters.append(cluster_record)
+            cards.append(card)
+            print(f"  [{idx+1}/{len(raw_cluster_tuples)}] {workstream or 'General'}: {len(cluster_items)} signals (skip-gpt)")
+    else:
+        # Normal path: GPT calls in parallel with ThreadPoolExecutor
+        results = [None] * len(raw_cluster_tuples)
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {}
+            for idx, (cluster_items, meta) in enumerate(raw_cluster_tuples):
+                workstream = meta.get("category", "")
+                print(f"  [{idx+1}/{len(raw_cluster_tuples)}] Submitting {workstream or 'General'} ({len(cluster_items)} signals)...")
+                fut = executor.submit(_build_card, idx, cluster_items, meta)
+                futures[fut] = idx
+
+            for fut in as_completed(futures):
+                idx, card, stats, cluster_items, meta = fut.result()
+                cid = card.get("cluster_id", idx)
+                cluster_record = {
+                    "cluster_id": cid, "insights": cluster_items, "stats": stats,
+                    "coherent": card["coherent"], "was_reclustered": card["was_reclustered"],
+                    "avg_similarity": card["avg_similarity"],
+                }
+                results[idx] = (cluster_record, card)
+                elapsed = time.time() - t_start
+                workstream = meta.get("category", "")
+                print(f"  ✓ [{idx+1}/{len(raw_cluster_tuples)}] {workstream or 'General'} done ({elapsed:.1f}s)")
+
+        for cluster_record, card in results:
+            clusters.append(cluster_record)
+            cards.append(card)
+
+    # ── Post-process: deduplicate cluster theme names ──
+    # When GPT gives multiple clusters the same generic name (e.g. "User Experience"),
+    # append the dominant topic to make each unique and exec-readable.
+    from collections import Counter as _NameCounter
+    theme_counts = _NameCounter(c.get("theme", c.get("title", "")) for c in cards)
+    duped_themes = {t for t, cnt in theme_counts.items() if cnt > 1}
+    if duped_themes:
+        for card, cluster_rec in zip(cards, clusters):
+            theme = card.get("theme", card.get("title", ""))
+            if theme in duped_themes:
+                # Find dominant topic from cluster insights
+                items = cluster_rec.get("insights", [])
+                topic_counts = _NameCounter()
+                for item in items:
+                    tax = item.get("taxonomy") if isinstance(item.get("taxonomy"), dict) else {}
+                    t = tax.get("topic") or item.get("subtag") or ""
+                    if t and t not in ("General", "Unknown", ""):
+                        topic_counts[t] += 1
+                dominant = topic_counts.most_common(1)[0][0] if topic_counts else ""
+                if dominant:
+                    new_theme = f"{theme}: {dominant}"
+                    card["theme"] = new_theme
+                    card["title"] = card.get("title", theme) + f" ({dominant})"
+
+    # Metadata block for traceability
+    metadata = {
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "filters": {
+            "brand": args.brand,
+            "persona": args.persona,
+            "topic": args.topic,
+            "since": args.since,
+            "min_score": args.min_score,
+            "max_items": args.max_items,
+            "input_path": in_path,
+        },
+        "counts": {
+            "input_insights": len(insights),
+            "hydrated_collectibles": len(hydrated),
+            "filtered_for_clustering": len(filtered),
+            "cluster_count": len(clusters),
+        },
+    }
+
+    data = {
+        "metadata": metadata,
+        "clusters": clusters,
+        "cards": cards,
+    }
+
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    print(f"[✅ DONE] Saved {len(clusters)} clusters to {out_path}")
+
+
+if __name__ == "__main__":
+    main()

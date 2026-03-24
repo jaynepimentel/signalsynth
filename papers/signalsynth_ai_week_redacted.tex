@@ -1,0 +1,254 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{authblk}
+\usepackage{float}
+
+\titlespacing*{\section}{0pt}{1.0em}{0.3em}
+\titlespacing*{\subsection}{0pt}{0.6em}{0.2em}
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{SignalSynth: How AI Replaced a Team's\\Entire Market Intelligence Workflow---\\From Discovery to Executive Action in Minutes}}
+
+\author{[Author Name Redacted]}
+\affil{[Company Redacted], [Business Unit Redacted]}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Every week, a product team at a major e-commerce marketplace was flying partially blind. Customer complaints, competitive threats, and market shifts were scattered across 42 platforms---Reddit, Trustpilot, YouTube, industry podcasts, specialized forums---and no human could read them all. The result: decisions based on whichever 2--3 sources a PM happened to check, critical signals missed, and days spent synthesizing findings into recommendations that were already stale. \textbf{SignalSynth} is an end-to-end AI system that eliminated this entire workflow. It scrapes 33,000+ posts from 42 sources, filters them to 7,600+ actionable insights using NLP enrichment, then lets anyone on the team ask a natural-language question and receive an executive-ready, source-cited strategic briefing in under 60 seconds---complete with threat assessments, churn analysis, and recommended actions. One-click document generation produces PRDs and business cases grounded in real customer evidence. The system didn't just save time; it changed \textit{how the team thinks}. Sprint planning now starts with signal data. Business cases cite verbatim customer quotes. Competitive blind spots that persisted for months were surfaced in the first week. This paper describes how SignalSynth was built, how it works, and---most importantly---how it transformed the daily workflows and collaboration patterns of a product organization.
+\end{abstract}
+
+% ============================================================
+\section{Introduction: The Monday Morning Problem}
+
+Picture a Monday morning on a marketplace product team. A PM opens their laptop to prepare for sprint planning. They need to answer: \textit{What are customers most frustrated about right now? What did our competitors do last week? Are sellers actually leaving, and if so, where are they going?}
+
+To answer these questions, the PM would browse relevant Reddit communities, skim the marketplace's community forums, check Twitter for competitor mentions, and maybe read a specialty forum thread. On a good week, this covered 3 sources. The vertical's ecosystem has 42.
+
+The math was brutal: 33,000+ posts existed across these platforms at any given time. At 2 minutes per post to read, evaluate, and categorize, comprehensive coverage would require \textbf{1,100 analyst-hours}---28 full-time weeks of work. In practice, teams covered roughly 7\% of the ecosystem and hoped the important signals were in that 7\%.
+
+\textbf{But the problem didn't stop at discovery.} Even after a PM found relevant signals, \textit{synthesis} consumed another 2--3 days. Building a competitive brief meant manually organizing dozens of posts by theme. Preparing an executive update meant re-reading everything and drafting a summary from scratch. Writing a PRD meant hunting for customer quotes to justify the business case. Each artifact was a one-time effort---the next week, it started over.
+
+\textbf{The stakes are high.} The vertical is in the middle of a competitive disruption. The marketplace operates two subsidiaries---a premium auction platform (\textit{Subsidiary~A}) and a category-specific marketplace (\textit{Subsidiary~B})---that require ecosystem-level monitoring. Multiple competitors are actively capturing market share: a live-commerce platform, a licensed marketplace backed by a major brand, and a legacy high-end consignment house. New instant-liquidity platforms are changing buyer expectations. Missing a week of signals from any of these players means delayed response to competitive threats.
+
+SignalSynth was built to solve both problems at once: \textbf{make discovery automatic and make synthesis instant.}
+
+% ============================================================
+\section{Approach: Mapping the Ecosystem, Then Eliminating the Busywork}
+
+\subsection{Finding Every Voice in the Room}
+We started by mapping every platform where enthusiasts, sellers, investors, and industry observers discuss the market. The result was 42 distinct sources across 11 categories (Table~\ref{tab:sources}).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Category} & \textbf{What We Capture} & \textbf{Volume} \\
+\midrule
+Reddit & 40+ subreddits across the vertical & 7,647 \\
+Marketplace Forums & Seller \& buyer discussions (real-time) & 1,982 \\
+Twitter/X & Influencers, mentions, competitor chatter & 2,412 \\
+Competitor Intel & 5+ tracked competitors and subsidiaries & 834 \\
+Review Sites & Trustpilot reviews across 5 platforms & 2,928 \\
+YouTube & Industry channels + quality comments & 310 \\
+Forums \& Blogs & Specialty forums, industry blogs & 614 \\
+News \& Podcasts & Industry news feeds, 6 podcasts & 257 \\
+Other & Emerging platforms, communities, analysis & 384 \\
+\midrule
+\textbf{Total} & \textbf{42 sources} & \textbf{33,716 posts} \\
+\bottomrule
+\end{tabular}
+\caption{Source coverage. Before SignalSynth, the team monitored 2--3 of these.}
+\label{tab:sources}
+\end{table}
+
+\subsection{The Insight Funnel}
+Early prototyping revealed a critical finding: \textbf{77\% of posts are noise.} Hobbyist content, sales listings, bot messages, and off-topic material dominate every source. The real signal---customer pain points, competitive intelligence, product feedback---lives in the remaining 23\%. Building an effective filter was as important as building the scrapers.
+
+We also studied how stakeholders actually consume intelligence. Through internal usage patterns, we discovered that PMs, executives, and cross-functional partners ask fundamentally different types of questions, and each type demands a different analytical output. An executive asking ``what should I worry about this week?'' needs a different format than a PM asking ``what are sellers saying about authentication rejections?'' This insight shaped the adaptive AI layer described in Section~\ref{sec:ai}.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{2em}\textit{[Figure 1: SignalSynth system architecture---42 sources $\rightarrow$ scraping layer $\rightarrow$ two-tier relevance filter $\rightarrow$ enrichment pipeline $\rightarrow$ clustering $\rightarrow$ AI analysis layer $\rightarrow$ dashboard]}\vspace{2em}}}
+\caption{End-to-end architecture. Each scraper is independently deployable; if one source goes down, the other 41 continue.}
+\label{fig:arch}
+\end{figure}
+
+% ============================================================
+\section{Methods}
+
+\subsection{Relevance Filtering: Separating Signal from Noise}
+Raw posts pass through a two-tier relevance filter designed to maximize precision without losing valuable competitive intelligence:
+
+\textbf{Tier 1 (Curated sources):} Posts from pre-vetted sources---marketplace forums, industry news, podcasts, review sites---receive a lightweight filter. These were already topic-filtered by their scrapers; we only exclude spam, bot messages, and off-topic categories.
+
+\textbf{Tier 2 (Open sources):} Reddit and open-web posts must pass a stricter gate: (a) a pain-point indicator \textit{or} marketplace mention, (b) vertical-specific context via regex-based category detection, (c) absence of noise patterns (sales posts, hobbyist content, bot messages). A critical design decision: a \textbf{bypass path} allows competitor/subsidiary intelligence through even without pain signals---because a Reddit thread discussing a competitor's fee structure is valuable intelligence even if no one is ``complaining'' about the marketplace.
+
+Result: \textbf{22.7\% pass rate}---7,644 actionable insights from 33,716 raw posts.
+
+\subsection{Enrichment: Making Every Signal Self-Describing}
+Each surviving post is enriched with structured metadata that makes it queryable, sortable, and AI-ready:
+
+\begin{itemize}[nosep]
+    \item \textbf{Three-level taxonomy:} \textit{Type} (Complaint, Feature Request, Churn Signal, Praise), \textit{Topic} (product area), \textit{Theme} (strategic grouping)
+    \item \textbf{Brand sentiment:} GPT-classified as Positive, Negative, or Neutral
+    \item \textbf{Persona inference:} Power Seller, Enthusiast, Investor, New Seller, or Casual Buyer
+    \item \textbf{Churn risk:} Regex detection of explicit switching language
+    \item \textbf{Signal strength:} 0--100 composite score from semantic similarity to known high-signal exemplars (via \texttt{e5-base-v2} sentence embeddings), keyword heuristics, engagement metrics, and recency
+    \item \textbf{Entity detection:} Competitor, subsidiary, and partner tags with granular subtags
+    \item \textbf{Specialty flags:} Payment flow issues, product-specific problems, competitive signals
+\end{itemize}
+
+This enrichment is what makes the AI analysis layer possible: when a user asks about product complaints, the system doesn't search raw text---it queries the structured taxonomy, pulls posts tagged with the right topic and negative sentiment, and presents them with persona and churn-risk context already attached.
+
+\subsection{Strategic Theme Clustering}
+Insights are automatically grouped into strategic themes via two stages: (1) initial grouping by taxonomy topic, then (2) DBSCAN sub-clustering using sentence embeddings (coherence threshold 0.78). Each cluster receives an AI-generated summary card with signal count, complaint ratio, and representative quotes. The current dataset produces \textbf{12 strategic themes}---each one a potential product initiative or executive talking point.
+
+\subsection{AI-Driven Decision Support}
+\label{sec:ai}
+
+This is where the workflow transformation happens. Three capabilities turn passive data into active decision support:
+
+\textbf{Ask AI with question-type detection.} Users type any question in natural language. The system classifies it into one of 10 archetypes (Table~\ref{tab:qtypes}), retrieves the 25 most relevant insights using multi-factor scoring (term expansion, exact-match boosting, question-aware source prioritization, source diversity enforcement), and generates a structured response using an archetype-specific template.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llp{4.2cm}@{}}
+\toprule
+\textbf{Question Type} & \textbf{Example} & \textbf{What the User Gets} \\
+\midrule
+Executive Briefing & ``What should I act on this week?'' & Top 3 issues, signal landscape table, owner-assigned actions \\
+Competitive & ``How does [Competitor] threaten us?'' & Threat matrix, conquest opportunities, defensive priorities \\
+Subsidiary & ``How is [Subsidiary] performing?'' & Ecosystem health, integration signals, user sentiment \\
+Fees & ``Are fees driving sellers away?'' & Cross-platform fee comparison, churn correlation \\
+Persona & ``What are sellers saying?'' & Seller vs buyer perspective split with quotes \\
+Comparison & ``Platform A vs B on trust'' & Side-by-side table with winner per factor \\
+Review & ``What do reviews show?'' & Platform-by-platform sentiment breakdown \\
+\bottomrule
+\end{tabular}
+\caption{Question archetypes. Each produces a different structured output optimized for its use case.}
+\label{tab:qtypes}
+\end{table}
+
+The key insight: \textbf{format matters as much as content.} An executive briefing that arrives as a wall of text gets skimmed. The same information structured as a threat matrix with severity indicators and owner-assigned actions gets acted on. Every response includes source citations, confidence assessments, and explicit acknowledgment of evidence gaps.
+
+\textbf{Domain-encoded intelligence.} The LLM operates with encoded domain knowledge that prevents costly analytical errors: subsidiary vs competitor distinctions, partnership data-flow relationships, and responses calibrated for VP/GM-level audiences who make investment decisions.
+
+\textbf{One-click document generation.} From any strategic theme, users generate PRDs, BRDs, or PRFAQs with a single click. Each document is populated with real customer quotes and structured analysis---grounding business cases in evidence rather than assumptions.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{2em}\textit{[Figure 2: Screenshot---Ask AI interface showing an executive briefing response with source citations, threat matrix, and recommended actions]}\vspace{2em}}}
+\caption{A PM asks ``What should I act on this week?'' and receives a structured executive briefing in under 60 seconds, with every claim citing specific signals.}
+\label{fig:askai}
+\end{figure}
+
+% ============================================================
+\section{Results: What Changed}
+
+\subsection{By the Numbers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Metric} & \textbf{Before SignalSynth} & \textbf{After SignalSynth} \\
+\midrule
+Sources monitored & 2--3 & 42 \\
+Posts processed per cycle & $\sim$200 (manual) & 33,716 (automated) \\
+Actionable insights surfaced & $\sim$30 & 7,644 \\
+Strategic themes identified & Ad-hoc & 12 (auto-clustered) \\
+Competitive analysis & 8--12 hours & 2--3 minutes \\
+Executive briefing & Full day & $<$60 seconds \\
+PRD with customer evidence & 1--2 days & 1 click + 30 min review \\
+Total analyst hours per cycle & 20--40 hrs & $<$1 hr \\
+Ecosystem coverage & $\sim$7\% & 100\% \\
+\bottomrule
+\end{tabular}
+\caption{The shift from manual to AI-powered intelligence.}
+\label{tab:results}
+\end{table}
+
+The enrichment pipeline surfaced structured breakdowns that simply didn't exist before: hundreds of product-specific signals tagged with sentiment, persona, and severity; dozens of explicit churn signals with destination extraction; and 500+ entity-specific signals isolated across subsidiaries and competitors, enabling competitive analysis that would have taken a dedicated analyst days to compile.
+
+\subsection{Case Study: Catching What Humans Missed}
+\label{sec:case}
+
+In the first full operating cycle, SignalSynth surfaced a pattern that no one on the team had detected through manual monitoring: a \textbf{cluster of churn signals} where sellers explicitly named which competitor they were leaving for. The system's churn destination extraction revealed that a live-commerce competitor was the \#1 destination---but a high-end consignment house was gaining ground in premium segments the marketplace had assumed were secure.
+
+This wasn't just an interesting data point. The churn cluster showed up as an auto-generated strategic theme. A PM clicked into it, saw verbatim quotes from users explaining why they moved high-value transactions to a competitor, and generated a one-click BRD that framed the competitive gap with real evidence. That document became the basis for a cross-functional discussion about the fee structure.
+
+The signal had been hiding in plain sight across Reddit, Trustpilot, and the marketplace's own forums for weeks. No single source had enough volume to trigger attention. \textbf{SignalSynth caught it because it was reading all 42 sources simultaneously and clustering related signals across them.}
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{2em}\textit{[Figure 3: Screenshot---Churn \& Retention Risks section showing destination extraction: ``Where they're going: [Competitor A] (12), [Competitor B] (8), [Competitor C] (5)'']}\vspace{2em}}}
+\caption{SignalSynth doesn't just detect churn---it tells you \textit{where} users are going, enabling targeted competitive response.}
+\label{fig:churn}
+\end{figure}
+
+\subsection{Case Study: From Question to PRD in 15 Minutes}
+
+A PM preparing for a quarterly review needed to build a case for improving the marketplace's pricing tool. Previously, this would have meant 2 days of research: reading Reddit threads, checking review sites for complaints, scanning industry blogs for competitive tools, and manually compiling quotes into a document.
+
+With SignalSynth, the PM typed a comparison question about the marketplace's pricing tool vs two competitor alternatives. The system retrieved 25 relevant insights from 8 different sources, generated a side-by-side analysis with a sentiment breakdown, verbatim user quotes, and competitive positioning assessment---in 47 seconds. The PM then navigated to the relevant strategic theme, clicked ``Generate PRD,'' and had a draft product requirements document grounded in real signals within 15 minutes total.
+
+% ============================================================
+\section{Impact: How the Team Works Differently Now}
+
+The metrics in Table~\ref{tab:results} tell the efficiency story. But the more important story is the \textbf{behavioral change}---how the team's ways of working have fundamentally shifted.
+
+\subsection{Monday Mornings Changed}
+Before SignalSynth, Monday sprint planning started with: \textit{``Did anyone see anything interesting over the weekend?''} Answers were anecdotal, biased toward whichever source each person happened to check.
+
+Now, the meeting starts with a PM pulling up SignalSynth's executive briefing---signal counts, sentiment trends, churn velocity compared to last week, and the top 3 recommended actions with owners. The conversation shifts immediately from ``what's happening?'' to ``what are we doing about it?''
+
+\subsection{Business Cases Got Stronger}
+PRDs and BRDs used to rely on PM intuition supported by a handful of manually-found customer quotes. Now they cite signal counts, sentiment ratios, and persona breakdowns---with every claim traceable to a specific post. An engineering lead noted: \textit{``I used to push back on PRDs because the evidence felt thin. Now I can click through to the actual customer signals and see the volume myself.''}
+
+\subsection{Competitive Blind Spots Disappeared}
+The team had been monitoring primary competitors manually but had almost no visibility into the instant-liquidity landscape, what review-site users were saying about the marketplace vs competitors, or how subsidiary sentiment was trending. SignalSynth's 42-source coverage made these blind spots visible for the first time---and several of them turned out to be more urgent than the competitors the team was already tracking.
+
+\subsection{Cross-Functional Alignment Accelerated}
+The shared dashboard became a common reference point. Design, engineering, data science, and business teams could independently query SignalSynth and arrive at consistent conclusions because they were working from the same enriched dataset with the same taxonomy. The time from ``we should investigate X'' to ``here's the evidence-based recommendation'' compressed from weeks to hours.
+
+\subsection{Future Expansion}
+\begin{itemize}[nosep]
+    \item \textbf{Ticket management integration:} Auto-generate tickets from strategic themes with pre-populated acceptance criteria
+    \item \textbf{Proactive alerting:} Automated notifications when signal volume or sentiment shifts significantly
+    \item \textbf{Internal data fusion:} Triangulate external signals with revenue, conversion, and NPS data
+    \item \textbf{Multi-vertical expansion:} Extend the framework to other marketplace verticals
+\end{itemize}
+
+% ============================================================
+\section*{Acknowledgements}
+
+This work was developed within a specialty vertical product organization at a major e-commerce marketplace. The author thanks the PM, Engineering, Data Science, and Design teams for feedback on signal quality, analytical output, and workflow integration. Special thanks to cross-functional partners who adopted SignalSynth early, pressure-tested its recommendations, and provided the real-world usage patterns that shaped the adaptive AI layer.
+
+\section*{References}
+\begin{enumerate}[nosep, label={[\arabic*]}]
+    \item OpenAI (2023). GPT-4 Technical Report. \textit{arXiv:2303.08774}.
+    \item Reimers, N., \& Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. \textit{EMNLP}.
+    \item Wang, L., et al. (2024). Text Embeddings by Weakly-Supervised Contrastive Pre-training. \textit{ACL}.
+    \item Ester, M., et al. (1996). A Density-Based Algorithm for Discovering Clusters. \textit{KDD}.
+    \item Lewis, P., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. \textit{NeurIPS}.
+\end{enumerate}
+
+\vfill
+\noindent\rule{\linewidth}{0.4pt}
+\small
+\textbf{Author Bio:} [Author Name] is a Product Manager at a major e-commerce marketplace. Frustrated by the team's inability to systematically hear what 33,000+ customers, competitors, and industry voices were saying across the vertical's ecosystem, [Author] designed and built SignalSynth---an AI system that replaced the team's entire manual intelligence workflow and changed how cross-functional teams discover, analyze, and act on market signals.
+
+\end{document}

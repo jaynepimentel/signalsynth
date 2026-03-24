@@ -1,0 +1,27 @@
+# Core Frameworks
+streamlit
+python-dotenv
+requests
+pandas
+beautifulsoup4
+
+# Data Processing
+scikit-learn
+numpy
+rank-bm25
+
+# AI & Utilities
+openai
+fuzzywuzzy
+python-Levenshtein
+python-docx
+python-slugify
+
+# YouTube
+youtube-transcript-api
+
+# Visualization
+seaborn
+matplotlib
+altair
+networkx
