@@ -371,6 +371,10 @@ def scrape_app_reviews():
         # General marketplace app comparisons
         "best app selling trading cards 2025",
         "best card scanning app",
+        # Price guide tools (user interest)
+        "mantel card pricing app review",
+        "card ladder app price guide",
+        "ebay price guide card value app",
     ]
 
     for query in queries:
@@ -412,6 +416,21 @@ def scrape_industry_analysis():
         # Authentication & trust
         "counterfeit cards collectibles detection 2025",
         "card authentication technology 2025",
+        # Instant offers & liquidity (user interest)
+        "instant offer cards sell marketplace",
+        "courtyard cards instant buy vault",
+        "arena club sell cards instantly",
+        "psa offers instant buyback cards",
+        "collectibles liquidity instant sale 2025",
+        # Unpaid item policies
+        "ebay unpaid item policy change 2025",
+        "ebay automatic payment enforcement buyers",
+        # AI customer support
+        "ebay ai chatbot customer support 2025",
+        "ebay customer service bot vs human",
+        # Seller switching
+        "sellers leaving ebay whatnot fanatics 2025",
+        "ebay seller churn marketplace competition",
     ]
 
     for query in queries:
@@ -445,6 +464,16 @@ def scrape_seller_communities():
         "ebay seller community 2025 frustration",
         "ebay seller fees increase 2025",
         "ebay promoted listings cost worth it",
+        # Unpaid items & combined shipping (user interest)
+        "site:community.ebay.com unpaid item",
+        "site:community.ebay.com combined shipping",
+        "site:community.ebay.com automatic payment",
+        # AI support experience
+        "site:community.ebay.com chatbot",
+        "site:community.ebay.com customer support bot",
+        # Seller switching
+        "ebay sellers switching whatnot fanatics 2025",
+        "why sellers leaving ebay 2025",
     ]
 
     for query in queries:

@@ -120,6 +120,11 @@ COMPETITORS = {
             "whatnot unpaid items", "whatnot collections policy",
             "whatnot trust safety", "whatnot seller rules",
             "whatnot prohibited items", "whatnot enforcement",
+            # Seller switching (user interest)
+            "switching to whatnot from ebay", "whatnot better than ebay",
+            "why sellers leaving ebay whatnot",
+            # Whatnot customer support
+            "whatnot customer support", "whatnot dispute resolution",
         ],
         "subreddits": ["sportscards", "baseballcards", "pokemontcg", "basketballcards", "footballcards"],
         "required_keywords": ["whatnot"],
@@ -156,6 +161,9 @@ COMPETITORS = {
             "goldin netflix", "king of collectibles goldin",
             "goldin 100 auction", "ken goldin",
             "goldin marketplace cards", "goldin elite",
+            # Instant liquidity (user interest)
+            "goldin instant offer", "goldin instant sale",
+            "goldin buy now", "goldin ebay integration",
         ],
         "subreddits": ["sportscards", "baseballcards", "basketballcards", "footballcards", "pokemontcg", "hockeycards", "PSAcard", "PokeInvesting"],
         "required_keywords": ["goldin"],
@@ -170,6 +178,10 @@ COMPETITORS = {
             "tcgplayer scam", "tcgplayer review",
             "tcgplayer shipping", "tcgplayer complaint",
             "tcgplayer condition", "tcgplayer refund",
+            # Trust & integration (user interest)
+            "tcgplayer trust issues", "tcgplayer ebay integration",
+            "tcgplayer refund abuse", "tcgplayer buyer scam",
+            "tcgplayer customer support",
         ],
         "subreddits": ["pokemontcg", "mtgfinance", "yugioh", "magicTCG", "PokemonTCG", "DigimonCardGame2020", "Lorcana"],
         "required_keywords": ["tcgplayer", "tcg player", "card", "pokemon", "magic", "yugioh", "marketplace", "price"],

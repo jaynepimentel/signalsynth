@@ -121,6 +121,43 @@ SEARCH_QUERIES = [
     "beckett pricing cards",
     "beckett vs psa",
     "beckett card grading review",
+    # Instant offers & liquidity (emerging user interest)
+    "instant offer cards",
+    "instant buyback cards",
+    "courtyard cards vault",
+    "arena club sell cards",
+    "psa offers instant",
+    "sell cards instantly",
+    "card liquidity marketplace",
+    # Unpaid item policies (high user interest)
+    "ebay unpaid item",
+    "ebay unpaid buyer",
+    "ebay automatic payment",
+    "ebay unpaid item policy change",
+    "ebay combined shipping payment",
+    # Seller switching / platform churn
+    "switching from ebay",
+    "leaving ebay for whatnot",
+    "ebay vs whatnot selling",
+    "ebay vs fanatics selling",
+    "best platform sell cards 2025",
+    "seller leaving ebay",
+    # AI customer support
+    "ebay customer support bot",
+    "ebay ai chatbot",
+    "ebay support human agent",
+    "ebay customer service terrible",
+    "ebay resolution center",
+    # Mystery repacks & trust enforcement
+    "mystery repack scam",
+    "whatnot mystery repack",
+    "repack card fraud",
+    # Price guide tools & competitors
+    "mantel card prices",
+    "card ladder pricing",
+    "card ladder vs ebay",
+    "mantel collectibles",
+    "alt card value",
 ]
 
 SAVE_PATH = "data/scraped_reddit_posts.json"

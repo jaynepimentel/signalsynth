@@ -59,6 +59,28 @@ KEYWORD_SEARCHES = [
     "ebay international shipping",
     "managed payments",
     "item not as described",
+    # Unpaid item policies (high user interest)
+    "unpaid item",
+    "unpaid buyer",
+    "automatic payment",
+    "combined shipping",
+    # Instant offers & liquidity
+    "instant offer",
+    "buyback",
+    "sell instantly",
+    # AI customer support
+    "chatbot",
+    "ai support",
+    "virtual assistant",
+    "can't reach human",
+    "resolution center",
+    # Seller switching
+    "leaving ebay",
+    "switching platform",
+    "better than ebay",
+    # Mystery repacks
+    "mystery repack",
+    "repack fraud",
 ]
 
 # Google News RSS queries for supplementary indexed content
