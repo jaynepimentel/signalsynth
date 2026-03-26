@@ -646,29 +646,14 @@ else:
             st.write("")
             ask_clicked = st.form_submit_button("Ask AI", type="primary")
 
-    # ── Example prompt selector ──
+    # ── Example prompt selector (top 5, informed by positive Ask AI feedback) ──
     _rp_options = [
         "",
-        # ── Executive Briefing ──
         "Build a weekly exec briefing: top 5 signals I need to act on this week across all workstreams. Include signal counts, source citations, and recommended next steps.",
-        # ── Competitive Policy Intelligence ──
-        "What policy or terms of service changes has Whatnot made recently around mystery repacks, unpaid items, or trust enforcement? How are collectors reacting?",
+        "How are buyers responding to the new unpaid item policies?",
+        "What are customers saying about TCGPlayer lately?",
+        "What are the signals around instant offers and liquidity in the collectibles market?",
         "Which platform is winning sports card sellers right now — eBay, Whatnot, or Fanatics? Show me the top 3 reasons sellers are switching with direct quotes.",
-        # ── Vault & Authentication ──
-        "Compare PSA Vault withdrawal complaints with eBay Vault issues. Which has worse trust problems and what specific patterns keep coming up?",
-        "What are the most common reasons eBay's Authenticity Guarantee fails or frustrates buyers? Cite specific posts and subreddits.",
-        # ── Pricing & Industry Tools ──
-        "What pricing and valuation tools are competitors like Mantel and Card Ladder shipping that eBay should pay attention to? How do collectors rate them vs eBay's Price Guide?",
-        # ── Subsidiary Health ──
-        "How healthy is the Goldin + TCGPlayer ecosystem? Summarize the top complaints, praise, and integration gaps with eBay.",
-        # ── Payment Friction ──
-        "What checkout and payment failures are costing eBay transactions right now? Show me the worst friction points with seller and buyer quotes.",
-        # ── Trust & Safety ──
-        "What scam patterns are emerging across Whatnot, eBay, and Goldin? Which platform handles trust & safety best according to collectors?",
-        # ── Seller Economics ──
-        "Are eBay fees driving sellers to Whatnot or Vinted? Compare fee sentiment across platforms with evidence and quotes.",
-        # ── Customer Experience ──
-        "What are collectors saying about eBay's AI customer support bot vs reaching a human agent? How does resolution quality compare to competitors?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
