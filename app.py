@@ -650,10 +650,11 @@ else:
     _rp_options = [
         "",
         "Build a weekly exec briefing: top 5 signals I need to act on this week across all workstreams. Include signal counts, source citations, and recommended next steps.",
-        "How are buyers responding to the new unpaid item policies?",
+        "What are the common themes and questions across all our data? What AI prompts could we build into the eBay platform experience?",
         "What are customers saying about TCGPlayer lately?",
         "What are the signals around instant offers and liquidity in the collectibles market?",
         "Which platform is winning sports card sellers right now — eBay, Whatnot, or Fanatics? Show me the top 3 reasons sellers are switching with direct quotes.",
+        "What seller protection gaps are driving the most churn risk right now?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")
@@ -1657,18 +1658,36 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                 # Create fresh client for each request
                 _client = OpenAI(api_key=api_key)
                 _ask_ai_model = "gpt-4.1"  # Best quality for executive responses
+                _max_tokens = 8000 if _q_broad else 4000
                 
-                _signals_used = min(len(relevant), 25)
+                _signals_used = min(len(relevant), 40 if _q_broad else 25)
                 with st.spinner(f"Analyzing {_signals_used} relevant signals (model: {_ask_ai_model}, from {len(normalized):,} total)..."):
+                    # Build messages with conversation memory (last 2 exchanges for context)
+                    _llm_messages = [{"role": "system", "content": system_prompt}]
+                    _prev = st.session_state.get("qa_messages", [])
+                    # Include last 2 Q&A pairs for multi-turn context
+                    _history_pairs = []
+                    for _m in _prev:
+                        if _m.get("role") == "user":
+                            _history_pairs.append({"role": "user", "content": _m["content"]})
+                        elif _m.get("role") == "assistant" and not _m.get("content", "").startswith("⚠️"):
+                            # Truncate prior responses to save tokens
+                            _truncated = _m["content"][:1500]
+                            if len(_m["content"]) > 1500:
+                                _truncated += "\n[...previous response truncated...]"
+                            _history_pairs.append({"role": "assistant", "content": _truncated})
+                    # Keep only last 4 messages (2 exchanges) to stay within token budget
+                    if len(_history_pairs) > 4:
+                        _history_pairs = _history_pairs[-4:]
+                    _llm_messages.extend(_history_pairs)
+                    _llm_messages.append({"role": "user", "content": question})
+
                     # Make direct API call
                     try:
                         completion = _client.chat.completions.create(
                             model=_ask_ai_model,
-                            messages=[
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": question}
-                            ],
-                            max_completion_tokens=4000,
+                            messages=_llm_messages,
+                            max_completion_tokens=_max_tokens,
                             temperature=0.4,
                         )
                         response = (completion.choices[0].message.content or "").strip()
@@ -1742,6 +1761,24 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                     
             # Detect thin results — offer ad-hoc scrape
             _is_thin = len(relevant) < 5
+
+            # Generate follow-up question suggestions
+            _followups = []
+            if response and len(response.strip()) >= 50 and not response.startswith("⚠️"):
+                try:
+                    _fu_completion = _client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": "You are a strategic analyst. Given the user's question and the AI's response about eBay Collectibles market intelligence, suggest exactly 3 natural follow-up questions that would help the user dig deeper. Each question should explore a DIFFERENT angle (e.g., a specific persona, a competitor, a product area, or a deeper cut on something mentioned). Return ONLY 3 questions, one per line, no numbering or bullets."},
+                            {"role": "user", "content": f"Original question: {question}\n\nResponse summary (first 800 chars): {response[:800]}"}
+                        ],
+                        max_completion_tokens=200,
+                        temperature=0.7,
+                    )
+                    _fu_text = (_fu_completion.choices[0].message.content or "").strip()
+                    _followups = [q.strip().lstrip("0123456789.-) ") for q in _fu_text.split("\n") if q.strip() and len(q.strip()) > 10][:3]
+                except Exception:
+                    _followups = []
             
             # Only store if we got a valid response (not empty/error)
             if response and len(response.strip()) >= 50 and not response.startswith("⚠️"):
@@ -1752,6 +1789,7 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                     "_thin": _is_thin,
                     "_question": question,
                     "_relevant_count": len(relevant),
+                    "_followups": _followups,
                 })
             else:
                 # Don't persist bad responses - show inline error instead
@@ -1895,6 +1933,17 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                             short_title = (title[:90] + "…") if len(title) > 90 else title
                             src_lines.append(f"**[{ref_label}]** [{short_title}]({url}) · {platform}")
                         st.markdown("\n\n".join(src_lines))
+
+                    # Follow-up question suggestions
+                    _fu = msg.get("_followups", [])
+                    if _fu:
+                        st.markdown("---")
+                        st.markdown("**🔮 Dig deeper** — follow-up questions:")
+                        for _fi, _fq in enumerate(_fu):
+                            if st.button(f"→ {_fq}", key=f"followup_{msg_idx}_{_fi}"):
+                                st.session_state["qa_draft"] = _fq
+                                st.session_state["_adhoc_auto_ask"] = _fq
+                                st.rerun()
 
                     # Offer ad-hoc scrape when results are thin
                     if msg.get("_thin") and msg.get("_question"):
