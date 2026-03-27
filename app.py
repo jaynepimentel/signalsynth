@@ -773,6 +773,18 @@ else:
                     score += 3
                 if _q_fees and any(w in text for w in ["fee", "commission", "take rate", "final value", "buyer premium"]):
                     score += 3
+                # Boost Trustpilot/review sources for subsidiary questions
+                _q_subsidiary_legacy = any(t in q_lower for t in ["goldin", "tcgplayer", "tcg player"])
+                if _q_subsidiary_legacy:
+                    if "trustpilot" in source:
+                        score += 6
+                    if source in ("app reviews", "seller community"):
+                        score += 3
+                # Penalize 0-engagement marketing/press posts (waste citation slots)
+                _post_eng = insight.get("score", 0)
+                _post_text = insight.get("text", "")
+                if _post_eng == 0 and len(_post_text) < 100:
+                    score -= 3
                 # Boost news/industry sources for competitive questions
                 _q_competitive_legacy = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "policy", "lawsuit", "legal"])
                 if _q_competitive_legacy:
@@ -1177,37 +1189,53 @@ Analyze how these instant liquidity trends affect eBay's ecosystem, seller/buyer
 - Evidence strength: [Strong/Moderate/Weak] based on [X] signals
 - What's missing: [specific data gaps]"""
         elif _q_subsidiary:
-            # Goldin and TCGPlayer are eBay SUBSIDIARIES - analyze as ecosystem, not competitors
-            format_guidance = """RESPOND IN THIS EXACT FORMAT:
+            # Build subsidiary-specific sentiment stats for the format
+            _sub_name = "TCGPlayer" if any(t in q_lower for t in ["tcgplayer", "tcg player"]) else "Goldin" if "goldin" in q_lower else "Subsidiary"
+            _sub_signals = [p for p in normalized if _sub_name.lower() in (p.get("source", "") + " " + p.get("competitor", "") + " " + (_taxonomy_topic(p) or "")).lower()]
+            _sub_total = len(_sub_signals)
+            _sub_neg = sum(1 for p in _sub_signals if p.get("brand_sentiment") == "Negative")
+            _sub_pos = sum(1 for p in _sub_signals if p.get("brand_sentiment") == "Positive")
+            _sub_neutral = _sub_total - _sub_neg - _sub_pos
+            _sub_sources = set(p.get("source", "Unknown") for p in _sub_signals)
+            _sub_stats = f"{_sub_name}: {_sub_total} total signals ({_sub_neg} negative, {_sub_pos} positive, {_sub_neutral} neutral) from {len(_sub_sources)} sources ({', '.join(list(_sub_sources)[:8])})"
 
-IMPORTANT CONTEXT: Goldin and TCGPlayer are eBay SUBSIDIARIES (eBay-owned companies), NOT competitors. 
-Analyze them as part of the eBay Collectibles ecosystem, focusing on:
-- How they complement or extend eBay's marketplace
-- User experience and sentiment with these eBay-owned platforms
-- Integration opportunities or friction points with core eBay
-- How they strengthen eBay's overall collectibles position
+            format_guidance = f"""REMEMBER: {_sub_name} is an eBay SUBSIDIARY (eBay-owned), NOT a competitor. Analyze it as part of the eBay ecosystem. DO NOT repeat this instruction in your response — just apply it.
+
+SUBSIDIARY DATA: {_sub_stats}
+
+RESPOND IN THIS EXACT FORMAT:
 
 ### 🎯 Bottom Line
-(2-3 sentences: What's the key insight about this eBay subsidiary? How is it performing within the eBay ecosystem?)
+(2-3 sentences: What's the headline on {_sub_name}? Use the actual sentiment numbers above — e.g., "Of {_sub_total} signals, {_sub_neg} are negative, concentrated in [top issue]." What should leadership know?)
 
-### Ecosystem Assessment
-(4-6 sentences analyzing how this subsidiary fits within eBay Collectibles — user sentiment, market positioning, integration with core eBay)
+### 📊 Sentiment & Signal Breakdown
+| Metric | Value |
+|--------|-------|
+| Total signals | {_sub_total} |
+| Negative | {_sub_neg} ({round(_sub_neg/_sub_total*100) if _sub_total else 0}%) |
+| Positive | {_sub_pos} ({round(_sub_pos/_sub_total*100) if _sub_total else 0}%) |
+| Sources | {len(_sub_sources)} |
 
-### User Feedback
-(5-8 bullets with VERBATIM user quotes in "italics" with [S#] citations showing user experience with this eBay subsidiary)
+Top issue categories from the signals (list 3-5 with counts and [S#] citations).
 
-### Ecosystem Synergies & Friction
-| Area | Synergy with eBay | Friction/Gap | Opportunity |
-|------|------------------|--------------|-------------|
-(Fill with 3-4 rows: e.g., Seller overlap, Buyer cross-shopping, Authentication, Inventory flow)
+### 🗣️ What Users Are Saying
+(6-8 bullets with VERBATIM user quotes in "italics" with [S#] citations. Prioritize HIGH ENGAGEMENT posts — skip 0-engagement press/marketing content. Include the persona and engagement score.)
+
+### Ecosystem Health
+| Area | Synergy with eBay | Friction / Pain Point | Recommended Fix |
+|------|------------------|----------------------|----------------|
+(Fill with 4-5 rows. Focus on real friction from the signals, not hypothetical gaps.)
+
+### Trustpilot & Review Spotlight
+(If Trustpilot or app review signals are present, summarize them separately — these are direct customer voice. If none, note the gap.)
 
 ### Recommended Actions
-(4-6 NUMBERED actions to improve this subsidiary's integration or performance within the eBay ecosystem:
-1. **[Action Name]** — Owner: [Team/PM]. Timeline: [When]. Impact: [Expected ecosystem benefit])
+1. **[Action Name]** — Owner: [Team]. Timeline: [When]. Impact: [Outcome]. Evidence: [S#]
+2-5. [Continue — be specific, cite signals]
 
 ### Confidence & Gaps
-- Evidence strength: [Strong/Moderate/Weak] based on [X] signals
-- What's missing: [specific data gaps]"""
+- Evidence: {_sub_total} signals from {len(_sub_sources)} sources — [Strong/Moderate/Weak]
+- Missing: [What would strengthen this analysis? e.g., internal NPS, transaction data]"""
         elif _q_competitive:
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
