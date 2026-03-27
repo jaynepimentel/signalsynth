@@ -986,9 +986,137 @@ else:
         _q_comparison = any(t in q_lower for t in [" vs ", "versus", "compared to", "compare", "difference between", "better than", "worse than", "pros and cons", "which is better", "how does .* compare"])
         _q_fees = any(t in q_lower for t in ["fee", "fees", "pricing", "take rate", "commission", "final value", "insertion fee", "cost to sell", "seller fee", "buyer premium", "how much does"])
         _q_briefing = any(t in q_lower for t in ["briefing", "brief me", "summary", "summarize", "highlights", "this week", "what should i know", "executive summary", "digest", "top findings", "key takeaway", "overview", "what's new", "what happened"])
+        _q_broad = any(t in q_lower for t in ["common themes", "common questions", "what are people asking", "what do people ask", "all the data", "across all", "full dataset", "everything we know", "big picture", "landscape", "comprehensive", "all signals", "all sources", "what patterns", "what topics", "main themes", "key themes", "top themes", "most common", "frequently asked", "faq", "what questions", "what concerns", "what issues", "overall picture", "holistic", "bird's eye", "30,000 foot", "macro view", "ai prompts", "prompt ideas", "on platform", "in-product"])
+
+        # ── Broad question: stratified sampling override ──
+        # For broad/exploratory questions, keyword retrieval fails because there's no
+        # specific topic to match. Instead, sample representative posts across ALL topics
+        # and personas to give the LLM full-dataset breadth.
+        if _q_broad:
+            _stratified = []
+            _persona_counts = defaultdict(int)
+            _topic_samples = defaultdict(list)
+            _persona_samples = defaultdict(list)
+            # Build per-topic and per-persona pools
+            for p in normalized:
+                topic = _taxonomy_topic(p) or "General"
+                persona = p.get("persona", "Unknown")
+                _topic_samples[topic].append(p)
+                _persona_samples[persona].append(p)
+                _persona_counts[persona] += 1
+            # Sample 1-2 posts from each top topic (sorted by volume)
+            _seen_ids = set()
+            _top_topics = sorted(subtag_counts.items(), key=lambda x: -x[1])[:20]
+            for topic_name, _ in _top_topics:
+                pool = _topic_samples.get(topic_name, [])
+                # Pick highest signal-strength posts from this topic
+                pool_sorted = sorted(pool, key=lambda x: -(x.get("signal_strength", 0) + x.get("score", 0)))
+                for p in pool_sorted[:2]:
+                    pid = id(p)
+                    if pid not in _seen_ids:
+                        _stratified.append(p)
+                        _seen_ids.add(pid)
+                    if len(_stratified) >= 40:
+                        break
+            # Ensure persona diversity — add top post per persona if missing
+            for persona_name in ["Power Seller", "Collector", "Investor", "New Seller", "Casual Buyer"]:
+                pool = _persona_samples.get(persona_name, [])
+                if pool:
+                    p = sorted(pool, key=lambda x: -x.get("signal_strength", 0))[0]
+                    pid = id(p)
+                    if pid not in _seen_ids:
+                        _stratified.append(p)
+                        _seen_ids.add(pid)
+            relevant = _stratified[:40]
+
+            # Build enriched aggregate context for broad questions
+            _persona_breakdown = ", ".join(f"{k} ({v})" for k, v in sorted(_persona_counts.items(), key=lambda x: -x[1]) if v > 5)
+            _all_topics = sorted(subtag_counts.items(), key=lambda x: -x[1])[:25]
+            _full_topic_list = "\n".join(f"  - {k}: {v} signals" for k, v in _all_topics)
+
+            # Override stats_block with richer version for broad questions
+            stats_block = (
+                f"FULL DATASET OVERVIEW: {len(normalized)} insights from {len(set(p.get('source','') for p in normalized))} unique sources\n"
+                f"Sentiment: {total_neg} negative, {total_pos} positive, {total_churn} churn signals, {total_praise} praise\n"
+                f"Types: {', '.join(f'{k} ({v})' for k, v in sorted(type_counts.items(), key=lambda x: -x[1])[:10])}\n"
+                f"Personas: {_persona_breakdown}\n"
+                f"ALL TOPICS BY VOLUME:\n{_full_topic_list}\n"
+                f"\nNOTE: The signals below are a STRATIFIED SAMPLE — 1-2 representative posts from each of the top 20 topics. "
+                f"Use the topic volume counts above to understand relative importance. The sample posts provide texture and verbatim language."
+            )
+
+            # Rebuild context lines from stratified sample
+            context_lines = []
+            source_refs = []
+            _recent_cutoff = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
+            for idx, p in enumerate(relevant[:40], 1):
+                title = p.get("title", "")[:140]
+                text = p.get("text", "")[:500].replace("\n", " ")
+                source = p.get("source", "")
+                sub = p.get("subreddit", "")
+                subtag = _taxonomy_topic(p)
+                sentiment = p.get("brand_sentiment", "")
+                score = p.get("score", 0)
+                type_tag = _taxonomy_type(p)
+                persona = p.get("persona", "")
+                sig_str = p.get("signal_strength", 0)
+                date = p.get("post_date", "")
+                url = p.get("url", "")
+                sub_label = f"r/{sub}" if sub else source
+                ref_label = f"S{idx}"
+                freshness = "RECENT" if date >= _recent_cutoff else "older"
+                context_lines.append(
+                    f"- [{ref_label}] [{freshness}] [{type_tag}] [{sentiment}] [{subtag}] (engagement:{score}, strength:{sig_str}, persona:{persona}, date:{date}, {sub_label}) {title}: {text}"
+                )
+                if url:
+                    source_refs.append((ref_label, title or text[:80], url, sub_label))
+            context_block = "\n".join(context_lines)
 
         # Adaptive format instructions
-        if _q_review and not _q_subsidiary and not _q_competitive:
+        if _q_broad:
+            format_guidance = """You are analyzing the FULL breadth of the dataset to identify patterns, common themes, and the questions/concerns that collectors, sellers, and buyers most frequently express.
+
+RESPOND IN THIS EXACT FORMAT:
+
+### 🎯 Bottom Line
+(3-4 sentences: What are the dominant themes across ALL the data? What do users care most about? What would be the highest-impact areas for AI-powered experiences on platform?)
+
+### 📊 Top Themes by Volume
+| Rank | Theme | Signal Count | Primary Persona | Sentiment | Example Question Users Ask |
+|------|-------|-------------|-----------------|-----------|---------------------------|
+| 1 | [Theme] | [X signals] | [Seller/Collector/etc.] | 🔴/🟡/🟢 | "[Verbatim question from signal]" [S#] |
+(Fill with top 10-15 themes from the topic volume data. The "Example Question" column should use REAL user language from the signals.)
+
+### 🗣️ What Each Persona Cares About
+**Power Sellers** — Top concerns: [list 3-5 with signal counts and [S#] citations]
+**Collectors** — Top concerns: [list 3-5 with signal counts and [S#] citations]
+**Investors** — Top concerns: [list 3-5 with signal counts and [S#] citations]
+**New Sellers** — Top concerns: [list 3-5 with signal counts and [S#] citations]
+**Casual Buyers** — Top concerns: [list 3-5 with signal counts and [S#] citations]
+
+### 💡 AI Prompt Opportunities for On-Platform Experience
+Based on the patterns above, here are the highest-value AI prompts/features that could be built into the eBay platform experience:
+
+**For Sellers:**
+1. [Prompt/feature idea] — Addresses: [which theme]. Evidence: [S#]
+2-5. [Continue]
+
+**For Buyers/Collectors:**
+1. [Prompt/feature idea] — Addresses: [which theme]. Evidence: [S#]
+2-5. [Continue]
+
+**For the Marketplace (internal tools):**
+1. [Prompt/feature idea] — Addresses: [which theme]. Evidence: [S#]
+2-3. [Continue]
+
+### 🔍 Underserved Gaps
+(3-5 bullets on topics with high signal volume but NO existing platform feature or AI opportunity addressing them — these are the whitespace)
+
+### Confidence
+- Based on [X] total insights from [Y] sources, stratified sample of [Z] representative posts
+- Strongest evidence: [which themes have the most cross-source corroboration]
+- Gaps: [which personas or topics are underrepresented in the data]"""
+        elif _q_review and not _q_subsidiary and not _q_competitive:
             format_guidance = """RESPOND IN THIS EXACT FORMAT:
 
 ### 🎯 Bottom Line
