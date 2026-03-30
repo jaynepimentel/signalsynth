@@ -14,6 +14,14 @@ from slugify import slugify
 # 🔧 MUST BE FIRST STREAMLIT CALL
 st.set_page_config(page_title="SignalSynth", layout="wide")
 
+# Keep-alive: auto-refresh every 10 minutes to maintain WebSocket connection
+# This prevents Streamlit Cloud from sleeping the app
+try:
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=10 * 60 * 1000, limit=None, key="keep_alive")
+except ImportError:
+    pass
+
 # Health check endpoint for UptimeRobot (keeps free tier awake)
 query_params = st.query_params
 if "health" in query_params:

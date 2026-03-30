@@ -20,6 +20,9 @@ python-slugify
 # YouTube
 youtube-transcript-api
 
+# Keep-alive
+streamlit-autorefresh
+
 # Visualization
 seaborn
 matplotlib

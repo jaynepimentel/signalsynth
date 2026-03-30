@@ -1,2 +1,6 @@
 [server]
 fileWatcherType = "none"
+enableStaticServing = true
+
+[browser]
+gatherUsageStats = false
