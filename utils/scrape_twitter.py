@@ -43,6 +43,11 @@ SEARCH_QUERIES = [
     # Liquidity / instant offers
     "site:x.com instant offer cards sell",
     "site:x.com courtyard cards vault",
+    # eBay Live (live selling / live commerce)
+    "site:x.com ebay live selling",
+    "site:x.com ebay live cards",
+    "site:x.com ebay live stream",
+    "site:x.com ebay live commerce",
 ]
 
 # Known collectibles accounts to pull timelines from

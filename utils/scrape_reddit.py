@@ -158,6 +158,19 @@ SEARCH_QUERIES = [
     "card ladder vs ebay",
     "mantel collectibles",
     "alt card value",
+    # eBay Live (live selling / live commerce)
+    "ebay live selling",
+    "ebay live stream cards",
+    "ebay live auction",
+    "ebay live commerce",
+    "ebay live shopping",
+    "selling live on ebay",
+    "ebay live vs whatnot",
+    "ebay live experience",
+    "live selling cards ebay",
+    "live breaks ebay",
+    "ebay live complaints",
+    "ebay live review",
 ]
 
 SAVE_PATH = "data/scraped_reddit_posts.json"

@@ -705,6 +705,7 @@ else:
                 "authentication": ["authentication", "authenticity guarantee", "ag", "misgrade", "grading"],
                 "grading": ["grading", "psa", "bgs", "cgc", "turnaround", "grade", "slab"],
                 "whatnot": ["whatnot", "live breaks", "live shopping"],
+                "ebay live": ["ebay live", "live selling", "live commerce", "live stream", "live shopping ebay", "go live ebay", "ebay live event", "live auction ebay", "live breaks ebay", "selling live", "live seller"],
                 "vinted": ["vinted", "vinted app", "vinted seller", "vinted fees", "vinted vs ebay"],
                 "fanatics": ["fanatics", "fanatics collect", "fanatics live"],
                 "goldin": ["goldin", "goldin auctions", "goldin elite", "ken goldin", "king of collectibles", "goldin buyer premium", "goldin consignment", "goldin 100"],
@@ -1000,7 +1001,7 @@ else:
         _q_liquidity = any(t in q_lower for t in ["instant offer", "liquidity", "liquidat", "buyback", "buy back", "cash out", "sell now", "quick flip", "psa offers", "courtyard", "arena club", "sell fast", "free up funds", "reinvest"])
         _q_competitive = any(t in q_lower for t in ["competitor", "whatnot", "fanatics", "heritage", "versus", " vs ", "compete", "market share", "threat", "comc", "alt.xyz", "beckett", "vinted"])
         _q_strategic = any(t in q_lower for t in ["strategy", "strategic", "roadmap", "prioritize", "invest", "opportunity", "moat", "differentiate", "retention"])
-        _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app"])
+        _q_product = any(t in q_lower for t in ["vault", "price guide", "authentication", "ag ", "promoted", "shipping", "search", "seller hub", "app", "ebay live", "live selling", "live commerce", "live stream", "go live"])
         _q_trend = any(t in q_lower for t in ["trend", "growing", "declining", "increasing", "changing", "over time", "momentum"])
         _q_review = any(t in q_lower for t in ["trustpilot", "review", "app review", "rating", "star rating", "app store", "play store", "customer review"])
         _q_persona = any(t in q_lower for t in ["sellers saying", "buyers saying", "seller perspective", "buyer perspective", "seller experience", "buyer experience", "what do sellers", "what do buyers", "seller sentiment", "buyer sentiment", "seller feedback", "buyer feedback", "power seller", "new seller", "casual buyer"])
@@ -1608,7 +1609,8 @@ DOMAIN EXPERTISE:
 - PRICE GUIDE STRATEGY: eBay's goal is to be THE premier, most trusted price guide in the collectibles market. eBay provides its transaction/sales data to partners like Card Ladder and PSA to help them build their indexes — but eBay's own Price Guide (powered by eBay sales comps) is the primary product. Card Ladder and PSA are data recipients, not data providers to eBay. When analyzing Price Guide signals, frame eBay as the owner of the most comprehensive transaction dataset in collectibles.
 - TRUE COMPETITORS (external threats): Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini licenses), Heritage Auctions (high-end), Alt (fractional), COMC (consignment), Beckett (grading + pricing, acquired by Fanatics), Vinted (resale marketplace, growing in collectibles/cards)
 - INSTANT LIQUIDITY LANDSCAPE: PSA Offers (instant buyback on graded cards), Courtyard (wallet-based buyback + instant funds), Arena Club (instant offers on vault cards), StarStock, Dibbs, Otia — these platforms offer instant liquidity features that let users convert holdings to cash or reinvest immediately. This is an emerging competitive dynamic for eBay.
-- eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub
+- eBay products: Authenticity Guarantee, Price Guide, Vault, Promoted Listings, Seller Hub, eBay Live (live selling/commerce feature competing with Whatnot's live breaks)
+- eBay LIVE: eBay's live selling/commerce platform enabling sellers to stream and sell in real-time. Competes directly with Whatnot (live breaks), Fanatics Live, and other live commerce platforms. Key friction areas include: seller onboarding, discovery/visibility, viewer engagement, payment flow during live events, trust/moderation, mobile experience, and feature parity with Whatnot.
 - User personas: Power Sellers, Collectors, Investors, New Sellers, Casual Buyers
 - Key metrics: GMV, take rate, seller NPS, buyer conversion, authentication volume
 - DATA SOURCES: This dataset includes Trustpilot reviews (eBay, Goldin, TCGPlayer, Whatnot, Heritage), ConsumerAffairs, SiteJabber, app store review discussions, PSA Collectors Universe forums, Goldin Blog, Heritage Blog, Card Ladder blog, eBay Inc. corporate blog, seller community forums, Sports Card Forum, industry analysis reports, SGC grading discussions, Courtyard.io vault/fractional ownership signals, Gradient robotics/consignment intel, Ludex/CollX/Card Boss scanning app coverage, Lelands and SCP Auctions high-end auction intel, PriceCharting and 130point analytics — in addition to Reddit, Twitter/X, YouTube, eBay Forums, news RSS, and podcasts.

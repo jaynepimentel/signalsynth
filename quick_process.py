@@ -145,7 +145,7 @@ RE_PAIN = re.compile(r"\b(problem|issue|broken|damaged|lost|missing|wrong|frustr
 RE_COLLECTIBLES = re.compile(r"\b(trading card|sports card|baseball card|basketball card|football card|hockey card|pokemon|pokémon|tcg|psa|bgs|sgc|cgc|csg|beckett|graded|grading|slab|slabbed|raw card|gem mint|pop report|population|registry|crossover|regrade|vault|authentication|authenticity guarantee|ag |price guide|scan to price|comps|comp sales|wax|hobby box|blaster|case break|whatnot|goldin|pwcc|comc|alt marketplace|fanatics|topps|panini|upper deck|fleer|bowman|prizm|select|optic|mosaic|chrome|refractor|auto|autograph|patch|relic|rookie|rc |1st edition|charizard|pikachu|holo|holographic|insert|parallel|numbered|/99|/10|one of one|1/1|coin|bullion|silver|gold|numismatic|comic|cgc comic|funko|pop vinyl|collectible|memorabilia)\b", re.I)
 
 # eBay Collectibles product features
-RE_EBAY_COLLECTIBLES_FEATURES = re.compile(r"\b(vault|authenticity guarantee|ag |price guide|scan.?to.?price|managed payments|unpaid item|upi|buyer protection|seller protection|item not received|inr|item not as described|inad|final value fee|fvf|promoted listings)\b", re.I)
+RE_EBAY_COLLECTIBLES_FEATURES = re.compile(r"\b(vault|authenticity guarantee|ag |price guide|scan.?to.?price|managed payments|unpaid item|upi|buyer protection|seller protection|item not received|inr|item not as described|inad|final value fee|fvf|promoted listings|ebay live|live selling|live commerce)\b", re.I)
 
 # Exclude non-collectibles categories
 NON_COLLECTIBLES = [
@@ -627,7 +627,10 @@ def enrich(post):
             subtag = "Heritage Auctions"
         elif any(w in combined for w in ["fanatics", "whatnot", "alt.xyz", "myslabs", "stockx", "pwcc"]):
             subtag = "Competitor Intel"
-        # Live shopping / breaks
+        # eBay Live (eBay's own live selling/commerce feature — distinct from Whatnot live)
+        elif ("ebay" in combined and any(w in combined for w in ["live", "live selling", "live stream", "live shopping", "live auction", "live commerce", "live event", "go live", "going live"])) or any(w in combined for w in ["ebay live"]):
+            subtag = "eBay Live"
+        # Live shopping / breaks (general — includes Whatnot, Fanatics Live, etc.)
         elif any(w in combined for w in ["live selling", "live break", "case break", "box break", "group break", "live stream", "live shopping", "live auction"]):
             subtag = "Live Commerce"
         # Market / investing / trends

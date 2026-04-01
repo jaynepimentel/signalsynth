@@ -50,6 +50,10 @@ SEARCH_QUERIES = [
     "beckett grading cards",
     "beckett acquisition fanatics",
     "beckett ebay cards",
+    "ebay live selling cards",
+    "ebay live commerce",
+    "ebay live vs whatnot",
+    "selling live on ebay",
 ]
 
 # Always-attempt videos. Can be extended via YOUTUBE_WATCHLIST_URLS env var
