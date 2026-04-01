@@ -628,7 +628,15 @@ def enrich(post):
         elif any(w in combined for w in ["fanatics", "whatnot", "alt.xyz", "myslabs", "stockx", "pwcc"]):
             subtag = "Competitor Intel"
         # eBay Live (eBay's own live selling/commerce feature — distinct from Whatnot live)
-        elif ("ebay" in combined and any(w in combined for w in ["live", "live selling", "live stream", "live shopping", "live auction", "live commerce", "live event", "go live", "going live"])) or any(w in combined for w in ["ebay live"]):
+        # Require specific multi-word phrases to avoid false positives like "live in Colorado", "talk to a live person"
+        elif any(w in combined for w in [
+            "ebay live", "ebay's live", "ebay live selling", "live selling on ebay",
+            "ebay livestream", "ebay live stream", "selling live on ebay",
+            "ebay live shopping", "ebay live commerce", "ebay live auction",
+            "live breaks on ebay", "live on ebay", "go live on ebay", "going live on ebay",
+            "ebay live event", "ebay live homepage", "live homepage takeover",
+            "live selling banner", "live selling feature", "live selling tab",
+        ]):
             subtag = "eBay Live"
         # Live shopping / breaks (general — includes Whatnot, Fanatics Live, etc.)
         elif any(w in combined for w in ["live selling", "live break", "case break", "box break", "group break", "live stream", "live shopping", "live auction"]):
