@@ -25,19 +25,19 @@ description: Tips to save Windsurf credits while using advanced LLMs
 5. **Be specific**: "fix the cluster count bug in app.py line 440" vs "something's broken"
 6. **Self-serve simple tasks**: git push, pip install, streamlit restart — do these yourself
 
+### When to use Opus vs cheaper models
+- **Opus/Claude 3.5**: New features, complex debugging, architecture changes, Ask AI prompt tuning
+- **Sonnet/GPT-4o**: Data refreshes, simple fixes, adding search queries, updating keyword lists
+- **Any model**: Reading the .windsurfrules gives full project context — no need for Opus just for context
+
 ### Quick commands you can run yourself
 ```powershell
-# Set this once per terminal session:
-$env:KMP_DUPLICATE_LIB_OK="TRUE"
-
 # Scrape + enrich + cluster (full refresh, ~20 min):
 python utils/scrape_all.py; python quick_process.py; python precompute_clusters.py
 
-# GPT enrich (~60 min, uses YOUR OpenAI key):
-python quick_process.py --gpt-enrich
-
 # Push to GitHub:
-git add precomputed_insights.json precomputed_clusters.json _pipeline_meta.json; git commit -m "refresh"; git push
+git add -A; git commit -m "data refresh"; git push
 
-# Reboot Streamlit: do from Streamlit Cloud dashboard
+# Just reprocess (no scraping, ~1 min):
+python quick_process.py; python precompute_clusters.py
 ```

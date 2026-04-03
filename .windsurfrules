@@ -1,0 +1,80 @@
+# SignalSynth — Project Rules for Cascade
+
+## What This Project Is
+SignalSynth is an AI-powered market intelligence system for eBay's Collectibles & Trading Cards business. It scrapes 42+ sources, enriches posts into actionable insights, clusters them into strategic themes, and provides an AI-driven "Ask AI" analysis layer with adaptive response formatting.
+
+## Architecture
+```
+Scrapers (utils/scrape_*.py)
+  → Raw posts (data/*.json)
+    → Enrichment pipeline (quick_process.py)
+      → precomputed_insights.json (9,000+ insights)
+        → Clustering (precompute_clusters.py)
+          → precomputed_clusters.json (21 themes)
+            → Streamlit dashboard (app.py)
+              → Ask AI (GPT-4.1 with adaptive formatting)
+              → Strategy tab (cluster cards + doc generation)
+              → Competitor/Customer/Industry tabs
+```
+
+## Key Files
+- **app.py** — Main Streamlit app. Contains Ask AI logic, KPI banner, all tabs, retrieval scoring, adaptive format templates, system prompt. ~3700 lines.
+- **quick_process.py** — Enrichment pipeline. Loads all scraped data, applies relevance filters, enriches with taxonomy/sentiment/persona/churn/signal-strength, saves precomputed_insights.json. Also does delta detection (snapshot comparison).
+- **precompute_clusters.py** — Clusters insights into strategic themes using DBSCAN + GPT summarization. Saves precomputed_clusters.json.
+- **components/cluster_synthesizer.py** — Core clustering logic: workstream assignment, keyword matching, quote selection, GPT metadata generation.
+- **components/cluster_view_simple.py** — Streamlit UI for cluster cards in Strategy tab. Has document generation (PRD/BRD/PRFAQ/Jira).
+- **components/hybrid_retrieval.py** — BM25 + dense embedding retrieval with RRF merge for Ask AI.
+- **components/signal_scorer.py** — Semantic + heuristic signal strength scoring using e5-base-v2 embeddings.
+- **utils/scrape_all.py** — Master scraper orchestrator. Calls all individual scrapers.
+- **utils/scrape_reddit.py** — Reddit scraper (public JSON API, 47 subreddits, 88 search queries).
+- **utils/scrape_competitors.py** — Competitor & subsidiary scraper (Whatnot, Heritage, Fanatics, Goldin, TCGPlayer, etc.).
+- **ai_training_feedback.json** — Thumbs up/down feedback from Ask AI responses.
+
+## Domain Knowledge (CRITICAL)
+- **eBay SUBSIDIARIES** (owned by eBay, NOT competitors): Goldin (premium auctions), TCGPlayer (TCG marketplace)
+- **eBay PARTNERSHIPS**: PSA (vault, consignment, grading), Card Ladder (receives eBay transaction data for indexes)
+- **TRUE COMPETITORS**: Whatnot (live breaks), Fanatics Collect (marketplace + Topps/Panini), Heritage Auctions (high-end), Beckett (grading, acquired by Fanatics), Vinted (resale), Alt (fractional), COMC (consignment)
+- **eBay Products**: Vault, Authenticity Guarantee (AG), Price Guide, eBay Live, Promoted Listings, Seller Hub, Managed Payments
+- **Price Guide Strategy**: eBay provides transaction data TO Card Ladder/PSA (not the reverse). eBay's goal is to be THE premier price guide.
+- **User Personas**: Power Seller, Collector, Investor, New Seller, Casual Buyer
+
+## OpenAI API Key
+The real key is in `C:\Users\jayne\signalsynth\.env` (NOT the repo `.env` which has a placeholder). All files use `load_dotenv()` then `load_dotenv(~/signalsynth/.env, override=True)`.
+
+## Coding Standards
+- Never add comments or documentation unless asked
+- Preserve existing code style (Python, 4-space indent)
+- All imports at top of file
+- Use existing patterns — check how similar features are implemented before writing new code
+- Always use `encoding="utf-8"` when opening JSON files
+- PowerShell on Windows — use `;` not `&&` to chain commands
+- Git: `git add -A; git commit -m "message"; git push`
+
+## Data Pipeline Commands
+```
+# Full refresh (scrape + process + cluster + push):
+python utils/scrape_all.py
+python quick_process.py
+python precompute_clusters.py
+git add -A; git commit -m "data refresh"; git push
+
+# Quick reprocess (no scraping, just re-enrich and recluster):
+python quick_process.py
+python precompute_clusters.py
+```
+
+## Ask AI Architecture
+- 11 question-type detectors: briefing, competitive, subsidiary, product, fees, persona, comparison, review, trend, liquidity, broad
+- Each type has an adaptive format template with specific sections/tables
+- Retrieval: hybrid (BM25 + embeddings) with source diversity cap
+- Context includes: retrieved signals, aggregate stats, cluster themes, trend alerts, delta detection, competitor landscape, industry news, triangulation
+- Follow-up question suggestions generated via gpt-4o-mini after each response
+- Multi-turn conversation memory (last 2 exchanges)
+
+## Common Issues
+- "whatnot" matches the English word — use "whatnot app", "whatnot live", etc. in keyword lists
+- "PSA" matches "public service announcement" on Reddit — require grading context
+- NOISE_SUBREDDITS blocklist in quick_process.py filters gaming/sports/relationship subs
+- Streamlit Cloud sleeps free-tier apps — GitHub Actions cron (.github/workflows/keep-alive.yml) pings every 25 min
+- Cluster quotes can be irrelevant if fallback is too loose — synthesize_cluster() in cluster_synthesizer.py has dedup + topicality checks
+- Promotional content filter in app.py normalize_insight() marks _is_promotional posts

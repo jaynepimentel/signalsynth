@@ -4,49 +4,36 @@ description: Full data refresh - scrape, enrich, cluster, push
 
 ## Full Data Refresh Pipeline
 
-Run these commands in order. You can run them yourself to save Windsurf credits, or ask Cascade to run them.
+Run these steps in order. Each step marked `// turbo` can auto-run.
 
-### 1. Scrape all sources (~15-20 min)
+### 1. Scrape all sources (~15-20 min, hits rate limits)
 // turbo
 ```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; python utils/scrape_all.py
+python utils/scrape_all.py
 ```
+Wait for completion. Monitor for rate limit messages — these are normal and resolve automatically.
 
-### 2. Scrape new forums (~2 min)
+### 2. Run enrichment pipeline (~30 sec)
 // turbo
 ```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; python utils/scrape_new_forums.py
+python quick_process.py
 ```
+This also runs delta detection. Check output for "DELTA DETECTION" section to see what changed.
 
-### 3. Run enrichment pipeline (~30 sec)
+### 3. Regenerate clusters (~25 sec)
 // turbo
 ```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; python quick_process.py
+python precompute_clusters.py
 ```
 
-### 4. Optional: GPT enrichment (~45-60 min, costs ~$3-4 on your OpenAI key)
-```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; python quick_process.py --gpt-enrich
-```
-
-### 5. Regenerate clusters (~25 sec)
+### 4. Push everything and deploy
 // turbo
 ```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; python precompute_clusters.py
+git add -A; git commit -m "data refresh: $(Get-Date -Format 'yyyy-MM-dd')"; git push
 ```
+Streamlit Cloud auto-deploys from main in ~2 minutes.
 
-### 6. Regenerate embeddings (~5 min, requires Anaconda env)
-```powershell
-$env:KMP_DUPLICATE_LIB_OK="TRUE"; conda run -n base python -c "import json, sys; sys.path.insert(0, '.'); from components.hybrid_retrieval import precompute_embeddings; insights = json.load(open('precomputed_insights.json', 'r', encoding='utf-8')); precompute_embeddings(insights, model_name='all-MiniLM-L6-v2')"
-```
-
-### 7. Push to GitHub
-// turbo
-```powershell
-git add precomputed_insights.json precomputed_clusters.json precomputed_embeddings.npy precomputed_embeddings_meta.json _pipeline_meta.json
-git commit -m "Data refresh $(Get-Date -Format 'yyyy-MM-dd')"
-git push origin main
-```
-
-### 8. Reboot Streamlit
-Reboot from Streamlit Cloud dashboard.
+### Notes
+- Delta detection compares current run vs `_pipeline_snapshot.json` from previous run
+- If insights count changes significantly, check NOISE_SUBREDDITS in quick_process.py
+- If cluster quotes look irrelevant, check `_WORKSTREAM_KEYWORDS` in components/cluster_synthesizer.py
