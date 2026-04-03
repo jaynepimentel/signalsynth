@@ -1,0 +1,52 @@
+{
+  "total_insights": 9079,
+  "total_negative": 1351,
+  "total_positive": 1444,
+  "churn": 48,
+  "praise": 8,
+  "signals": {
+    "payment": 283,
+    "upi": 157,
+    "psa_turnaround": 115,
+    "authentication": 256,
+    "price_guide": 160,
+    "vault": 271,
+    "shipping": 105,
+    "refund": 54,
+    "fees": 29
+  },
+  "entities": {
+    "Goldin": 137,
+    "TCGPlayer": 166,
+    "Heritage Auctions": 155,
+    "Competitors": 704
+  },
+  "top_subtags": {
+    "General": 1871,
+    "Trust": 1193,
+    "Seller Experience": 731,
+    "Competitor Intel": 704,
+    "Grading": 678,
+    "High-Value": 591,
+    "Collecting": 463,
+    "Payments": 353,
+    "Shipping": 333,
+    "Buyer Experience": 304,
+    "Vault": 186,
+    "Authenticity Guarantee": 186,
+    "App & UX": 185,
+    "TCGPlayer": 166,
+    "Heritage Auctions": 155,
+    "Price Guide": 139,
+    "Goldin": 137,
+    "Market & Investing": 110,
+    "Grading Turnaround": 104,
+    "Returns & Refunds": 86,
+    "Customer Service": 76,
+    "Listing Strategy": 68,
+    "Beckett": 61,
+    "COMC": 54,
+    "Competitive Churn": 48
+  },
+  "generated_at": "2026-04-03T09:50:12.680459"
+}

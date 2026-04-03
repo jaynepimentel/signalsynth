@@ -871,6 +871,111 @@ def main():
         print(f"  {src}: {cnt} ({pct}%)")
     print(f"  Total unique sources: {len(src_dist)}")
 
+    # ── Delta detection: compare with previous snapshot ──
+    # Build current snapshot of key metrics
+    subtag_dist = Counter(i.get("subtag", "General") for i in unique)
+    sentiment_dist = Counter(i.get("brand_sentiment", "Neutral") for i in unique)
+    current_snapshot = {
+        "total_insights": len(unique),
+        "total_negative": sentiment_dist.get("Negative", 0),
+        "total_positive": sentiment_dist.get("Positive", 0),
+        "churn": churn,
+        "praise": praise,
+        "signals": {
+            "payment": payment, "upi": upi, "psa_turnaround": psa,
+            "authentication": ag, "price_guide": pg, "vault": vault,
+            "shipping": shipping, "refund": refund, "fees": fees,
+        },
+        "entities": {
+            "Goldin": goldin_count, "TCGPlayer": tcg_count,
+            "Heritage Auctions": heritage_count, "Competitors": comp_intel,
+        },
+        "top_subtags": {k: v for k, v in subtag_dist.most_common(25)},
+        "generated_at": datetime.now().isoformat(),
+    }
+
+    # Load previous snapshot and compute deltas
+    _prev_snapshot = {}
+    _snapshot_path = "_pipeline_snapshot.json"
+    _deltas_path = "_pipeline_deltas.json"
+    try:
+        if os.path.exists(_snapshot_path):
+            with open(_snapshot_path, "r", encoding="utf-8") as f:
+                _prev_snapshot = json.load(f)
+    except Exception:
+        pass
+
+    deltas = []
+    if _prev_snapshot:
+        prev_gen = _prev_snapshot.get("generated_at", "unknown")
+        # Total insights delta
+        prev_total = _prev_snapshot.get("total_insights", 0)
+        if prev_total > 0:
+            diff = len(unique) - prev_total
+            if abs(diff) > 10:
+                direction = "↗️" if diff > 0 else "↘️"
+                deltas.append({"metric": "Total insights", "prev": prev_total, "current": len(unique), "delta": diff, "direction": direction, "severity": "info"})
+
+        # Signal-level deltas
+        prev_signals = _prev_snapshot.get("signals", {})
+        for sig_name, sig_val in current_snapshot["signals"].items():
+            prev_val = prev_signals.get(sig_name, 0)
+            if prev_val > 0:
+                diff = sig_val - prev_val
+                pct = round((diff / prev_val) * 100)
+                if abs(pct) >= 15 and abs(diff) >= 3:
+                    direction = "↗️" if diff > 0 else "↘️"
+                    severity = "high" if abs(pct) >= 30 else "medium"
+                    deltas.append({"metric": sig_name, "prev": prev_val, "current": sig_val, "delta": diff, "pct_change": pct, "direction": direction, "severity": severity})
+
+        # Churn delta (always important)
+        prev_churn = _prev_snapshot.get("churn", 0)
+        if prev_churn > 0:
+            churn_diff = churn - prev_churn
+            if abs(churn_diff) >= 2:
+                direction = "🔴" if churn_diff > 0 else "🟢"
+                deltas.append({"metric": "churn_signals", "prev": prev_churn, "current": churn, "delta": churn_diff, "direction": direction, "severity": "high" if churn_diff > 0 else "low"})
+
+        # New subtags that didn't exist before
+        prev_subtags = set(_prev_snapshot.get("top_subtags", {}).keys())
+        curr_subtags = set(current_snapshot["top_subtags"].keys())
+        new_subtags = curr_subtags - prev_subtags
+        for ns in new_subtags:
+            cnt = current_snapshot["top_subtags"][ns]
+            if cnt >= 3:
+                deltas.append({"metric": "new_topic", "topic": ns, "count": cnt, "direction": "🆕", "severity": "medium"})
+
+        # Entity deltas
+        prev_entities = _prev_snapshot.get("entities", {})
+        for ent_name, ent_val in current_snapshot["entities"].items():
+            prev_val = prev_entities.get(ent_name, 0)
+            if prev_val > 0:
+                diff = ent_val - prev_val
+                pct = round((diff / prev_val) * 100)
+                if abs(pct) >= 20 and abs(diff) >= 3:
+                    direction = "↗️" if diff > 0 else "↘️"
+                    deltas.append({"metric": f"entity:{ent_name}", "prev": prev_val, "current": ent_val, "delta": diff, "pct_change": pct, "direction": direction, "severity": "medium"})
+
+        if deltas:
+            print(f"\n📊 DELTA DETECTION (vs previous run at {prev_gen[:16]}):")
+            for d in sorted(deltas, key=lambda x: {"high": 0, "medium": 1, "low": 2, "info": 3}.get(x.get("severity", "info"), 3)):
+                if "pct_change" in d:
+                    print(f"  {d['direction']} {d['metric']}: {d['prev']} → {d['current']} ({d['pct_change']:+d}%)")
+                elif "topic" in d:
+                    print(f"  {d['direction']} New topic: {d['topic']} ({d['count']} signals)")
+                else:
+                    print(f"  {d['direction']} {d['metric']}: {d['prev']} → {d['current']} ({d['delta']:+d})")
+        else:
+            print(f"\n📊 DELTA DETECTION: No significant changes vs previous run.")
+
+    # Save deltas for the app
+    with open(_deltas_path, "w", encoding="utf-8") as f:
+        json.dump({"deltas": deltas, "previous_run": _prev_snapshot.get("generated_at", ""), "current_run": current_snapshot["generated_at"]}, f, indent=2)
+
+    # Save current snapshot for next comparison
+    with open(_snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(current_snapshot, f, indent=2)
+
     # Save pipeline metadata for the app to read
     pipeline_meta = {
         "total_posts_loaded": len(posts),

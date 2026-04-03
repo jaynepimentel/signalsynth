@@ -602,6 +602,15 @@ if _refresh_ts_header:
     except Exception:
         _freshness_label = _refresh_ts_header[:10]
 
+# Load pipeline deltas (what changed since last run)
+_pipeline_deltas = {}
+try:
+    with open("_pipeline_deltas.json", "r", encoding="utf-8") as f:
+        _pipeline_deltas = json.load(f)
+except Exception:
+    pass
+_delta_alerts = _pipeline_deltas.get("deltas", [])
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Signals", f"{total:,}",
@@ -616,6 +625,21 @@ with col3:
 with col4:
     st.metric("Last Refresh", _freshness_label,
               help=f"Data: {date_range}" if date_range else "Data freshness")
+
+# Delta alerts banner
+if _delta_alerts:
+    _high_deltas = [d for d in _delta_alerts if d.get("severity") in ("high", "medium")]
+    if _high_deltas:
+        _delta_lines = []
+        for d in sorted(_high_deltas, key=lambda x: 0 if x.get("severity") == "high" else 1)[:5]:
+            if "pct_change" in d:
+                _delta_lines.append(f"**{d['direction']} {d['metric']}**: {d['prev']} → {d['current']} ({d['pct_change']:+d}%)")
+            elif "topic" in d:
+                _delta_lines.append(f"**{d['direction']} New topic**: {d['topic']} ({d['count']} signals)")
+            else:
+                _delta_lines.append(f"**{d['direction']} {d['metric']}**: {d['prev']} → {d['current']} ({d['delta']:+d})")
+        with st.expander(f"📊 What Changed ({len(_high_deltas)} shifts detected)", expanded=False):
+            st.markdown(" · ".join(_delta_lines))
 
 # ─────────────────────────────────────────────
 # Ask AI (always visible above tabs)
@@ -995,6 +1019,21 @@ else:
                 industry_context = "\n\nRECENT INDUSTRY NEWS:\n" + "\n".join(news_headlines[:8])
         except Exception:
             pass
+
+        # ── Delta detection context (what changed since last run) ──
+        _delta_context = ""
+        if _delta_alerts:
+            _delta_lines_ai = []
+            for d in sorted(_delta_alerts, key=lambda x: 0 if x.get("severity") == "high" else 1)[:6]:
+                if "pct_change" in d:
+                    _delta_lines_ai.append(f"- {d['direction']} {d['metric']}: {d['prev']} → {d['current']} ({d['pct_change']:+d}% change)")
+                elif "topic" in d:
+                    _delta_lines_ai.append(f"- {d['direction']} NEW TOPIC appeared: {d['topic']} ({d['count']} signals)")
+                else:
+                    _delta_lines_ai.append(f"- {d['direction']} {d['metric']}: {d['prev']} → {d['current']} ({d['delta']:+d})")
+            if _delta_lines_ai:
+                _prev_run = _pipeline_deltas.get("previous_run", "")[:16]
+                _delta_context = f"\n\nWHAT CHANGED (vs previous data run{' at ' + _prev_run if _prev_run else ''}):\n" + "\n".join(_delta_lines_ai) + "\nIMPORTANT: When answering briefing or trend questions, reference these shifts. Say 'since last cycle' when citing deltas."
 
         # ── Question-type detection for adaptive prompting ──
         # Note: Goldin and TCGPlayer are eBay SUBSIDIARIES, not competitors
@@ -1666,6 +1705,7 @@ DATASET SUMMARY:
 {competitor_context}
 {industry_context}
 {_triangulation_block}
+{_delta_context}
 
 SOURCE COVERAGE FOR THIS QUERY: {_source_coverage}
 (Note: signals come from {len(_context_sources)} different source types. When multiple source types agree, confidence is higher.)

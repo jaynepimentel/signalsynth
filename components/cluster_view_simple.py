@@ -397,13 +397,21 @@ def display_clustered_insight_cards(insights: List[Dict[str, Any]]) -> None:
             if themes:
                 st.markdown("**🏷️ Top Topics:** " + " • ".join([f"`{t}`" for t in themes]))
             
-            # Two-column action layout
-            action_col1, action_col2 = st.columns([1, 2])
+            # Three-column action layout
+            action_col0, action_col1, action_col2 = st.columns([1, 1, 2])
             
-            # Left column: AI Summary button
+            # Ask AI about this cluster
+            with action_col0:
+                if st.button("💬 Ask AI About This", key=f"ask_{cluster_id}", use_container_width=True):
+                    _ask_q = f"Deep dive on {theme_name} — what are the specific friction points, which personas are most affected, what's the churn risk, and what should we prioritize fixing?"
+                    st.session_state["qa_draft"] = _ask_q
+                    st.session_state["_adhoc_auto_ask"] = _ask_q
+                    st.rerun()
+            
+            # AI Summary button
             summary_key = f"show_summary_{cluster_id}"
             with action_col1:
-                if st.button("🤖 Generate Executive Summary", key=f"gen_{cluster_id}", use_container_width=True):
+                if st.button("🤖 Executive Summary", key=f"gen_{cluster_id}", use_container_width=True):
                     st.session_state[summary_key] = True
                     st.rerun()
             
