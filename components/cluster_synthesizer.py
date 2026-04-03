@@ -370,7 +370,7 @@ def generate_cluster_metadata(cluster, workstream_name=""):
 _WORKSTREAM_KEYWORDS = {
     "Vault & Storage Trust": ["ebay vault", "psa vault", "vault withdraw", "vault transfer", "vaulted", "vaulting", "vault storage", "vault fee", "vault program"],
     "Authentication & Grading Confidence": ["grading", "graded", "authentication", "authenticity", "counterfeit", "fake", "psa", "bgs", "sgc", "cgc", "misgrade"],
-    "Competitive Positioning": ["whatnot", "fanatics", "heritage", "vinted", "beckett", "competitor", "switched to", "leaving ebay"],
+    "Competitive Positioning": ["whatnot app", "whatnot live", "whatnot seller", "whatnot vs", "selling on whatnot", "fanatics", "heritage auction", "heritage auctions", "vinted", "beckett", "competitor", "switched to", "leaving ebay", "moving to whatnot", "whatnot breaks"],
     "Seller Economics & Fees": ["fee", "fees", "final value", "fvf", "take rate", "commission", "seller fee", "insertion fee", "promoted listing cost"],
     "Payment & Checkout Friction": ["checkout", "payment method", "payment failed", "wire transfer", "managed payments", "payout", "payouts", "funds held", "payment hold", "can't pay", "unpaid item", "payment processing"],
     "Customer Service & Support": ["customer service", "customer support", "support team", "chat bot", "ai bot", "can't reach", "call center", "live agent", "support ticket", "ebay support"],
@@ -430,6 +430,10 @@ def _is_topical_for_workstream(item, workstream_name):
     if ws_keywords and any(_keyword_in_text(text, kw) for kw in ws_keywords):
         if workstream_name == "Vault & Storage Trust":
             if not any(ctx in text for ctx in ["psa", "ebay", "card", "graded", "grading", "storage", "consignment"]):
+                return False
+        if workstream_name == "Competitive Positioning":
+            # Require marketplace/collectibles context to filter out casual uses of competitor names
+            if not any(ctx in text for ctx in ["ebay", "sell", "buy", "card", "collectible", "auction", "marketplace", "platform", "fee", "shipping", "grading", "listing", "seller", "buyer"]):
                 return False
         return True
 
