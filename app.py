@@ -657,12 +657,13 @@ else:
     # ── Example prompt selector (top 5, informed by positive Ask AI feedback) ──
     _rp_options = [
         "",
-        "Build a weekly exec briefing: top 5 signals I need to act on this week across all workstreams. Include signal counts, source citations, and recommended next steps.",
+        "Build a weekly exec briefing: top 5 signals I need to act on this week across all workstreams.",
         "What are the common themes and questions across all our data? What AI prompts could we build into the eBay platform experience?",
-        "What are customers saying about TCGPlayer lately?",
-        "What are the signals around instant offers and liquidity in the collectibles market?",
-        "Which platform is winning sports card sellers right now — eBay, Whatnot, or Fanatics? Show me the top 3 reasons sellers are switching with direct quotes.",
-        "What seller protection gaps are driving the most churn risk right now?",
+        "What are the signals around eBay Live — what's working, what's broken, and how does it compare to Whatnot's live experience?",
+        "Which platform is winning sports card sellers right now — eBay, Whatnot, or Fanatics? Show me the top 3 reasons sellers are switching.",
+        "What are customers saying about TCGPlayer lately — and what integration opportunities exist with core eBay?",
+        "What are the biggest authentication and grading pain points, and how do they affect buyer trust?",
+        "What are the signals around instant offers and liquidity — who's winning and why?",
     ]
     def _on_prompt_select():
         val = st.session_state.get("_rp_select", "")

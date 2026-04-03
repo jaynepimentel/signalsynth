@@ -514,25 +514,42 @@ def synthesize_cluster(cluster, workstream_name=""):
     # Third fallback: highest engagement regardless
     all_by_engagement = sorted(cluster, key=lambda x: x.get("score", 0), reverse=True)
     
-    # Merge in priority order, deduplicate (only fall back to non-topical if none exist)
+    # Merge in priority order, deduplicate (only fall back to broader topicality, never to random posts)
     candidates = topical_complaints + topical_any
     if not candidates:
-        # Fallback to broader topicality (tags/flags/competitor) before non-topical
+        # Fallback to broader topicality (tags/flags/competitor) — but NOT random high-engagement posts
         broader = sorted(
             [i for i in cluster if _is_topical(i)],
             key=lambda x: x.get("score", 0), reverse=True
         )
-        candidates = broader or all_by_engagement
+        candidates = broader  # Do NOT fall back to all_by_engagement — that produces irrelevant quotes
     seen_fps = set()
+    seen_texts = set()  # Text-level dedup to prevent identical quotes
+    seen_snippets = set()  # Snippet-level dedup to catch identical extracted quotes
     unique_quotes = []
     for i in candidates:
         fp = i.get("fingerprint", i.get("text", "")[:50])
-        if fp not in seen_fps:
-            seen_fps.add(fp)
-            unique_quotes.append(i)
+        # Text dedup: normalize and check first 200 chars
+        text_key = (i.get("text", "") or "")[:200].strip().lower()
+        if fp in seen_fps or text_key in seen_texts:
+            continue
+        # Snippet dedup: check if the extracted snippet would be identical
+        snippet = _extract_snippet(i)[:150].strip().lower()
+        if snippet in seen_snippets:
+            continue
+        # Skip very short or stub posts
+        if len(i.get("text", "")) < 40:
+            continue
+        seen_fps.add(fp)
+        seen_texts.add(text_key)
+        seen_snippets.add(snippet)
+        unique_quotes.append(i)
         if len(unique_quotes) >= 3:
             break
-    quotes = [f"- _{_extract_snippet(i)}_" for i in unique_quotes[:3]]
+    if unique_quotes:
+        quotes = [f"- _{_extract_snippet(i)}_" for i in unique_quotes[:3]]
+    else:
+        quotes = ["- _No representative quotes available for this theme._"]
 
     idea_counter = defaultdict(int)
     for i in cluster:
