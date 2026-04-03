@@ -1,5 +1,14 @@
 {
-  "deltas": [],
-  "previous_run": "2026-04-03T09:50:12.680459",
-  "current_run": "2026-04-03T11:06:08.534835"
+  "deltas": [
+    {
+      "metric": "Total insights",
+      "prev": 9079,
+      "current": 9052,
+      "delta": -27,
+      "direction": "\u2198\ufe0f",
+      "severity": "info"
+    }
+  ],
+  "previous_run": "2026-04-03T11:06:08.534835",
+  "current_run": "2026-04-03T11:14:46.909456"
 }

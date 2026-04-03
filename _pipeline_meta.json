@@ -1,11 +1,11 @@
 {
   "total_posts_loaded": 39041,
-  "total_relevant": 18248,
-  "total_insights": 9079,
+  "total_relevant": 18194,
+  "total_insights": 9052,
   "unique_sources": 47,
   "source_distribution": {
     "eBay Forums": 2165,
-    "Reddit": 1520,
+    "Reddit": 1493,
     "Industry Analysis": 983,
     "Seller Community": 720,
     "App Reviews": 488,
@@ -52,5 +52,5 @@
     "Gold Card Auctions": 2,
     "Sports Card Investor": 1
   },
-  "generated_at": "2026-04-03T11:06:08.548302"
+  "generated_at": "2026-04-03T11:14:46.914831"
 }

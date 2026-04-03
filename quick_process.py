@@ -245,6 +245,31 @@ def is_competitor_subsidiary_intel(text):
     return has_collectibles or has_platform_context
 
 
+# Subreddits that consistently produce noise — gaming, sports scores, relationships, memes.
+# Posts from these subs should NEVER pass the relevance filter.
+NOISE_SUBREDDITS = {
+    # Gaming ("PSA" = public service announcement, "card" = game card, "vault" = game mechanic)
+    "helldivers", "borderlands", "borderlands4", "destinythegame", "fallout",
+    "skyrim", "eldenring", "darksouls", "overwatch", "valorant", "fortnite",
+    "2007scape", "runescape", "leagueoflegends", "dota2", "apexlegends",
+    "genshinimpact", "minecraft", "rocketleague", "deadbydaylight",
+    "superstonk", "wallstreetbets",
+    # Entertainment / fandom (not marketplace feedback)
+    "starwars", "marvel", "dccomics", "movies", "television",
+    "powerrangers", "transformers", "anime", "manga",
+    # Sports game threads (not collectibles marketplace)
+    "nfl", "nba", "mlb", "nhl", "soccer", "cfb", "collegebasketball",
+    "miamihurricanes", "lakers", "chicagobulls", "warriors", "bostonceltics",
+    # Relationship / life advice
+    "bestofredditorupdates", "relationship_advice", "amitheasshole",
+    "tifu", "askreddit", "nostupidquestions", "explainlikeimfive",
+    "mildlyinfuriating", "mildlyinteresting", "overheard",
+    # Finance (not collectibles)
+    "personalfinance", "investing", "stocks", "cryptocurrency",
+    # Other noise
+    "corporatefacepalm", "antiwork", "latestagecapitalism",
+}
+
 def is_relevant(text, subreddit=""):
     """
     Balanced filter: eBay marketplace issues relevant to collectibles PM.
@@ -252,6 +277,10 @@ def is_relevant(text, subreddit=""):
     """
     text_lower = text.lower()
     subreddit_lower = subreddit.lower()
+    
+    # Block entire noisy subreddits
+    if subreddit_lower in NOISE_SUBREDDITS:
+        return False
     
     # Exclude trading/sales posts (not user feedback)
     sales_patterns = [
