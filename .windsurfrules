@@ -41,10 +41,29 @@ Scrapers (utils/scrape_*.py)
 ## OpenAI API Key
 The real key is in `C:\Users\jayne\signalsynth\.env` (NOT the repo `.env` which has a placeholder). All files use `load_dotenv()` then `load_dotenv(~/signalsynth/.env, override=True)`.
 
+## Deployment & Performance (CRITICAL)
+The app is deployed on **Streamlit Cloud free tier** (jaynebrain.streamlit.app). Cold boots install pip deps + start the app. Every extra package adds 5-30s to boot time.
+
+### Two requirements files — NEVER merge them
+- **`requirements.txt`** — ONLY what `app.py` needs at runtime on Streamlit Cloud. Currently: streamlit, python-dotenv, requests, numpy, rank-bm25, openai, python-docx, python-slugify. **Do NOT add scikit-learn, pandas, matplotlib, seaborn, networkx, beautifulsoup4, fuzzywuzzy, sentence-transformers, or any other heavy package here.**
+- **`requirements-pipeline.txt`** — Full deps for local dev & pipeline scripts (scraping, enrichment, clustering). Includes `-r requirements.txt` plus all heavy packages. Install locally with `pip install -r requirements-pipeline.txt`.
+
+### Rules for app.py imports
+- Heavy libraries (scikit-learn, pandas, matplotlib, sentence-transformers) must NEVER be imported by app.py or any component it imports at startup
+- Use lazy imports (inside functions) for anything not needed on every page load
+- `@st.cache_data` for JSON loading, `@st.cache_resource` for expensive objects (e.g., HybridRetriever)
+- Never load large raw data files (data/*.json) just for counts — use `_pipeline_meta.json` instead
+- The `data/` directory is gitignored and does NOT exist on Streamlit Cloud — all data loads from `data/` must be wrapped in try/except with empty defaults
+
+### If you need to add a new pip package
+1. Ask: "Does app.py need this at runtime?" If NO → add to `requirements-pipeline.txt` only
+2. If YES → add to `requirements.txt` and keep it as small as possible
+3. Prefer lazy imports in components if the package is only used in one code path
+
 ## Coding Standards
 - Never add comments or documentation unless asked
 - Preserve existing code style (Python, 4-space indent)
-- All imports at top of file
+- All imports at top of file (but use lazy imports inside functions for heavy/optional deps in components loaded by app.py)
 - Use existing patterns — check how similar features are implemented before writing new code
 - Always use `encoding="utf-8"` when opening JSON files
 - PowerShell on Windows — use `;` not `&&` to chain commands

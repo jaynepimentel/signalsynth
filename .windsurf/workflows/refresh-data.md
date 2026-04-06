@@ -37,3 +37,9 @@ Streamlit Cloud auto-deploys from main in ~2 minutes.
 - Delta detection compares current run vs `_pipeline_snapshot.json` from previous run
 - If insights count changes significantly, check NOISE_SUBREDDITS in quick_process.py
 - If cluster quotes look irrelevant, check `_WORKSTREAM_KEYWORDS` in components/cluster_synthesizer.py
+
+### Deployment guardrails
+- Streamlit Cloud auto-deploys from main. Cold boot installs all packages in `requirements.txt`.
+- **NEVER add pipeline-only packages** (scikit-learn, pandas, matplotlib, seaborn, networkx, beautifulsoup4, fuzzywuzzy, sentence-transformers) to `requirements.txt`. These go in `requirements-pipeline.txt` only.
+- If the app takes >60s to load after a push, check `requirements.txt` for heavy packages that snuck in.
+- The `data/` directory is gitignored — only `precomputed_insights.json`, `precomputed_clusters.json`, and `_pipeline_meta.json` are deployed.

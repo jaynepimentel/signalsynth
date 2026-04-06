@@ -34,7 +34,13 @@ python quick_process.py
 python precompute_clusters.py
 ```
 
-### 5. Push
+### 5. Check dependencies
+If the new scraper needs a pip package:
+- **Pipeline-only** (scraping, parsing, ML) → add to `requirements-pipeline.txt` only
+- **Needed by app.py at runtime** → add to `requirements.txt` (rare — avoid if possible)
+- NEVER add scikit-learn, pandas, matplotlib, seaborn, networkx, beautifulsoup4, fuzzywuzzy, or sentence-transformers to `requirements.txt` — these bloat Streamlit Cloud cold boot by 30-60s
+
+### 6. Push
 // turbo
 ```powershell
 git add -A; git commit -m "Add new source: [name]"; git push origin main
