@@ -29,7 +29,12 @@ Scan the source list for irrelevant posts:
 - "PSA:" meaning "public service announcement" → tighten PSA regex in quick_process.py
 - Promotional content → add patterns to _PROMO_PATTERNS in app.py normalize_insight()
 
-### 4. Common fixes
+### 4. Check KPI banner freshness
+- **"Last Refresh" wrong?** → check `_pipeline_meta.json` `generated_at` timestamp vs `datetime.now()` comparison in app.py KPI section
+- **Stale date strings?** → grep for hardcoded date strings like `"2026-"` or `"2025-"` in app.py. All date cutoffs must use `datetime.now() - timedelta(days=N)`, never hardcoded strings
+- **🆕 indicator missing?** → check `_recent_cutoff` logic and threshold in the KPI banner section
+
+### 5. Common fixes
 - **Low citations** → check retrieval scoring in app.py _relevance_score() or components/hybrid_retrieval.py
 - **Wrong format** → check question-type detection (_q_briefing, _q_competitive, etc.) and format_guidance templates in app.py
 - **Hallucinated stats** → strengthen anti-hallucination rules in system prompt (app.py ~line 1650)
