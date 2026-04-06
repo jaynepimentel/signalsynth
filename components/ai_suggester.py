@@ -3,7 +3,9 @@
 import os, json, hashlib, tempfile
 from dotenv import load_dotenv
 from openai import OpenAI
-from docx import Document
+def _get_Document():
+    from docx import Document
+    return Document
 from slugify import slugify
 
 load_dotenv()
@@ -108,7 +110,7 @@ def safe_file_path(base_name, prefix="insight"):
 
 
 def write_docx(content, heading):
-    doc = Document()
+    doc = _get_Document()()
     doc.add_heading(heading, level=1)
     for line in (content or "").split("\n"):
         if line.strip().endswith(":"):

@@ -387,12 +387,22 @@ st.markdown("""
 st.title("📡 SignalSynth")
 st.caption("AI-powered collectibles insight engine — community signals → actionable intelligence")
 
+@st.cache_data(ttl=600, show_spinner=False)
+def _load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def _load_json_safe(path, default=None):
+    try:
+        return _load_json(path)
+    except Exception:
+        return default if default is not None else []
+
 # ─────────────────────────────────────────────
 # Data load
 # ─────────────────────────────────────────────
 try:
-    with open("precomputed_insights.json", "r", encoding="utf-8") as f:
-        scraped_insights = json.load(f)
+    scraped_insights = _load_json("precomputed_insights.json")
     # Validate insights structure
     if not isinstance(scraped_insights, list):
         st.error("Insights data corrupted - not a list")
@@ -400,103 +410,31 @@ try:
     if len(scraped_insights) == 0:
         st.warning("No insights data available")
         scraped_insights = []
-    try:
-        with open("gpt_suggestion_cache.json", "r", encoding="utf-8") as f:
-            cache = json.load(f)
-    except Exception:
-        cache = {}
+    cache = _load_json_safe("gpt_suggestion_cache.json", default={})
 
-    raw_posts_count = 0
-    try:
-        with open("data/all_scraped_posts.json", "r", encoding="utf-8") as f:
-            raw_posts_count = len(json.load(f))
-    except:
-        pass
+    competitor_posts_raw = _load_json_safe("data/scraped_competitor_posts.json")
 
-    competitor_posts_count = 0
-    competitor_posts_raw = []
-    try:
-        with open("data/scraped_competitor_posts.json", "r", encoding="utf-8") as f:
-            competitor_posts_raw = json.load(f)
-            competitor_posts_count = len(competitor_posts_raw)
-    except:
-        pass
+    forums_blogs_raw = _load_json_safe("data/scraped_forums_blogs_posts.json")
 
-    # Forums & blogs data (Bench Trading, Alt.xyz, Blowout, Net54, COMC, Whatnot, etc.)
-    forums_blogs_raw = []
-    try:
-        with open("data/scraped_forums_blogs_posts.json", "r", encoding="utf-8") as f:
-            forums_blogs_raw = json.load(f)
-    except:
-        pass
+    youtube_raw = _load_json_safe("data/scraped_youtube_posts.json")
 
-    # YouTube data
-    youtube_raw = []
-    try:
-        with open("data/scraped_youtube_posts.json", "r", encoding="utf-8") as f:
-            youtube_raw = json.load(f)
-    except:
-        pass
+    news_rss_raw = _load_json_safe("data/scraped_news_rss_posts.json")
 
-    # News RSS data
-    news_rss_raw = []
-    try:
-        with open("data/scraped_news_rss_posts.json", "r", encoding="utf-8") as f:
-            news_rss_raw = json.load(f)
-    except:
-        pass
+    cllct_raw = _load_json_safe("data/scraped_cllct_posts.json")
 
-    # Cllct news data
-    cllct_raw = []
-    try:
-        with open("data/scraped_cllct_posts.json", "r", encoding="utf-8") as f:
-            cllct_raw = json.load(f)
-    except:
-        pass
+    podcast_raw = _load_json_safe("data/scraped_podcast_posts.json")
 
-    # Podcast episodes
-    podcast_raw = []
-    try:
-        with open("data/scraped_podcast_posts.json", "r", encoding="utf-8") as f:
-            podcast_raw = json.load(f)
-    except:
-        pass
-
-    # New sources (Trustpilot, blogs, PSA Forums, app reviews, industry analysis, seller communities)
-    new_sources_raw = []
-    try:
-        with open("data/scraped_new_sources_posts.json", "r", encoding="utf-8") as f:
-            new_sources_raw = json.load(f)
-    except:
-        pass
+    new_sources_raw = _load_json_safe("data/scraped_new_sources_posts.json")
 
     clusters_count = 0
-    try:
-        with open("precomputed_clusters.json", "r", encoding="utf-8") as f:
-            clusters_data = json.load(f)
-        
-        # Validate clusters structure
-        if not isinstance(clusters_data, dict):
-            st.error("Clusters data corrupted - not a dict")
-            clusters_data = {"clusters": []}
-        elif "clusters" not in clusters_data:
-            st.error("Clusters missing 'clusters' key")
-            clusters_data = {"clusters": []}
-        
-        # Handle new cluster file structure
-        if isinstance(clusters_data, dict) and "clusters" in clusters_data:
-            clusters_count = len(clusters_data["clusters"])
-        else:
-            clusters_count = len(clusters_data)
-        
-    except Exception as e:
-        clusters_count = 0
-    adhoc_raw = []
-    try:
-        with open("data/adhoc_scraped_posts.json", "r", encoding="utf-8") as f:
-            adhoc_raw = json.load(f)
-    except:
-        pass
+    clusters_data = _load_json_safe("precomputed_clusters.json", default={"clusters": []})
+    if not isinstance(clusters_data, dict):
+        clusters_data = {"clusters": []}
+    elif "clusters" not in clusters_data:
+        clusters_data = {"clusters": []}
+    clusters_count = len(clusters_data.get("clusters", []))
+
+    adhoc_raw = _load_json_safe("data/adhoc_scraped_posts.json")
 
     normalized = [normalize_insight(i, cache) for i in scraped_insights]
 
@@ -551,7 +489,7 @@ try:
     except Exception:
         pass
 
-    total_posts = _pipeline_meta.get("total_posts_loaded", raw_posts_count + competitor_posts_count)
+    total_posts = _pipeline_meta.get("total_posts_loaded", len(scraped_insights))
 
     dates = [i.get("post_date", "") for i in scraped_insights if i.get("post_date")]
     date_range = ""
@@ -994,7 +932,7 @@ else:
                 comp_counts[p.get("competitor_name", p.get("source", "Unknown"))] += 1
             if comp_counts:
                 comp_lines = [f"- {name}: {cnt} signals" for name, cnt in sorted(comp_counts.items(), key=lambda x: -x[1])[:8]]
-                competitor_context = f"\n\nCOMPETITOR LANDSCAPE ({competitor_posts_count} total signals):\n" + "\n".join(comp_lines)
+                competitor_context = f"\n\nCOMPETITOR LANDSCAPE ({len(competitor_posts_raw)} total signals):\n" + "\n".join(comp_lines)
         except Exception:
             pass
 

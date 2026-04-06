@@ -1,0 +1,21 @@
+# Full dependencies for local dev & pipeline scripts (scraping, enrichment, clustering)
+# Install with: pip install -r requirements-pipeline.txt
+
+# Everything from requirements.txt (Streamlit Cloud)
+-r requirements.txt
+
+# Data Processing (pipeline only)
+scikit-learn
+pandas
+beautifulsoup4
+fuzzywuzzy
+python-Levenshtein
+
+# YouTube scraping
+youtube-transcript-api
+
+# Visualization (pipeline only)
+seaborn
+matplotlib
+altair
+networkx
