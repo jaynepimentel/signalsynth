@@ -69,7 +69,7 @@ The app is deployed on **Streamlit Cloud free tier** (jaynebrain.streamlit.app).
 - PowerShell on Windows — use `;` not `&&` to chain commands
 - Git: `git add -A; git commit -m "message"; git push`
 - **NEVER hardcode dates or date strings** (e.g., `"2026-03-17"`). Always compute dynamically with `datetime.now() - timedelta(days=N)`. Hardcoded dates go stale silently and break KPI displays.
-- All timestamps stored in JSON should use `datetime.now().isoformat()` (local time). When comparing timestamps, use `datetime.now()` consistently — never mix `utcnow()` with `now()`.
+- All timestamps stored in JSON must use **UTC**: `datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")`. When comparing, use `datetime.utcnow()`. The app runs on Streamlit Cloud (UTC) but the pipeline runs locally (PDT) — UTC is the only safe common ground.
 
 ## Data Pipeline Commands
 ```
