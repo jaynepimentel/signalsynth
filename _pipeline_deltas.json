@@ -2,13 +2,46 @@
   "deltas": [
     {
       "metric": "Total insights",
-      "prev": 9079,
-      "current": 9052,
-      "delta": -27,
-      "direction": "\u2198\ufe0f",
+      "prev": 9052,
+      "current": 9449,
+      "delta": 397,
+      "direction": "\u2197\ufe0f",
       "severity": "info"
+    },
+    {
+      "metric": "churn_signals",
+      "prev": 47,
+      "current": 49,
+      "delta": 2,
+      "direction": "\ud83d\udd34",
+      "severity": "high"
+    },
+    {
+      "metric": "new_topic",
+      "topic": "Live Commerce",
+      "count": 56,
+      "direction": "\ud83c\udd95",
+      "severity": "medium"
+    },
+    {
+      "metric": "entity:Goldin",
+      "prev": 137,
+      "current": 167,
+      "delta": 30,
+      "pct_change": 22,
+      "direction": "\u2197\ufe0f",
+      "severity": "medium"
+    },
+    {
+      "metric": "entity:TCGPlayer",
+      "prev": 166,
+      "current": 260,
+      "delta": 94,
+      "pct_change": 57,
+      "direction": "\u2197\ufe0f",
+      "severity": "medium"
     }
   ],
-  "previous_run": "2026-04-03T11:06:08.534835",
-  "current_run": "2026-04-03T11:14:46.909456"
+  "previous_run": "2026-04-03T11:14:46.909456",
+  "current_run": "2026-04-06T11:21:23.110775"
 }
