@@ -7,7 +7,7 @@ import json
 import re
 import streamlit as st
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from slugify import slugify
 
@@ -496,11 +496,9 @@ try:
     if dates:
         valid_dates = sorted([d for d in dates if d and len(d) >= 10])
         if valid_dates:
-            # Count recent posts (last 3 days)
-            recent_cutoff = "2026-03-17"
-            recent_count = sum(1 for d in dates if d >= recent_cutoff)
+            _recent_3d = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+            recent_count = sum(1 for d in dates if d >= _recent_3d)
             
-            # Show both full range and recent data highlight
             date_range = f"{valid_dates[0]} to {valid_dates[-1]} ({recent_count:,} posts in last 3 days)"
 
 except Exception as e:
@@ -516,18 +514,21 @@ _freshness_label = "—"
 if _refresh_ts_header:
     try:
         _rdt = datetime.fromisoformat(_refresh_ts_header)
-        _ago_s = (datetime.now() - _rdt).total_seconds()
+        _now_local = datetime.now()
+        _ago_s = (_now_local - _rdt).total_seconds()
+        if _ago_s < 0:
+            _ago_s = 0
         if _ago_s < 3600:
-            _freshness_label = f"{round(_ago_s / 60)}m ago"
+            _freshness_label = f"{max(1, round(_ago_s / 60))}m ago"
         elif _ago_s < 86400:
             _freshness_label = f"{round(_ago_s / 3600)}h ago"
         else:
             _freshness_label = f"{round(_ago_s / 86400)}d ago"
         
-        # Add recent data indicator
+        _recent_cutoff = (_now_local - timedelta(days=3)).strftime("%Y-%m-%d")
         if dates:
-            recent_posts = sum(1 for d in dates if d >= "2026-03-17")
-            if recent_posts > 500:
+            recent_posts = sum(1 for d in dates if d >= _recent_cutoff)
+            if recent_posts > 100:
                 _freshness_label += " 🆕"
     except Exception:
         _freshness_label = _refresh_ts_header[:10]
@@ -777,7 +778,7 @@ else:
         # Build numbered source references for the AI to cite
         context_lines = []
         source_refs = []  # [(label, title, url, source_platform)]
-        _recent_cutoff = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
+        _recent_cutoff = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
         for idx, p in enumerate(relevant[:25], 1):
             title = p.get("title", "")[:140]
             text = p.get("text", "")[:500].replace("\n", " ")
@@ -1040,7 +1041,7 @@ else:
             # Rebuild context lines from stratified sample
             context_lines = []
             source_refs = []
-            _recent_cutoff = (datetime.now() - __import__('datetime').timedelta(days=14)).strftime("%Y-%m-%d")
+            _recent_cutoff = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
             for idx, p in enumerate(relevant[:40], 1):
                 title = p.get("title", "")[:140]
                 text = p.get("text", "")[:500].replace("\n", " ")
