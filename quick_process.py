@@ -4,7 +4,7 @@ import json
 import os
 import re
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def normalize_text(text):
@@ -920,7 +920,7 @@ def main():
             "Heritage Auctions": heritage_count, "Competitors": comp_intel,
         },
         "top_subtags": {k: v for k, v in subtag_dist.most_common(25)},
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
     # Load previous snapshot and compute deltas
@@ -1012,7 +1012,7 @@ def main():
         "total_insights": len(unique),
         "unique_sources": len(src_dist),
         "source_distribution": {src: cnt for src, cnt in src_dist.most_common()},
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     with open("_pipeline_meta.json", "w", encoding="utf-8") as f:
         json.dump(pipeline_meta, f, indent=2)

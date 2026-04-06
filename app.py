@@ -513,9 +513,10 @@ _refresh_ts_header = _pipeline_meta.get("generated_at", "")
 _freshness_label = "—"
 if _refresh_ts_header:
     try:
-        _rdt = datetime.fromisoformat(_refresh_ts_header)
-        _now_local = datetime.now()
-        _ago_s = (_now_local - _rdt).total_seconds()
+        _ts_clean = _refresh_ts_header.replace("Z", "")
+        _rdt = datetime.fromisoformat(_ts_clean)
+        _now_utc = datetime.utcnow()
+        _ago_s = (_now_utc - _rdt).total_seconds()
         if _ago_s < 0:
             _ago_s = 0
         if _ago_s < 3600:
@@ -525,7 +526,7 @@ if _refresh_ts_header:
         else:
             _freshness_label = f"{round(_ago_s / 86400)}d ago"
         
-        _recent_cutoff = (_now_local - timedelta(days=3)).strftime("%Y-%m-%d")
+        _recent_cutoff = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
         if dates:
             recent_posts = sum(1 for d in dates if d >= _recent_cutoff)
             if recent_posts > 100:
