@@ -1675,8 +1675,8 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                 with st.spinner(f"Analyzing {_signals_used} relevant signals (model: {_ask_ai_model}, from {len(normalized):,} total)..."):
                     # Build messages with conversation memory (last 2 exchanges for context)
                     _llm_messages = [{"role": "system", "content": system_prompt}]
-                    _prev = st.session_state.get("qa_messages", [])
-                    # Include last 2 Q&A pairs for multi-turn context
+                    _prev = st.session_state.get("qa_messages", [])[:-1]
+                    # Include last 2 Q&A pairs for multi-turn context (exclude current question, added at line 643)
                     _history_pairs = []
                     for _m in _prev:
                         if _m.get("role") == "user":
@@ -1802,6 +1802,7 @@ RELEVANT SIGNALS (sorted by relevance to the question):
                     "_relevant_count": len(relevant),
                     "_followups": _followups,
                 })
+                st.rerun()
             else:
                 # Don't persist bad responses - show inline error instead
                 st.error(f"AI response failed. {response if response else 'Empty response.'}\n\nTry asking again.")
