@@ -209,6 +209,7 @@ class HybridRetriever:
         # Load precomputed embeddings if available
         self.embeddings: Optional[np.ndarray] = None
         self._embed_model = None
+        self._embed_model_name: Optional[str] = None
         self._load_embeddings(embeddings_path, embeddings_meta_path)
 
     def _build_bm25_index(self):
@@ -240,12 +241,16 @@ class HybridRetriever:
 
         try:
             self.embeddings = np.load(path)
-            # Verify alignment
+            if os.path.exists(meta_path):
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    _meta_top = json.load(f)
+                self._embed_model_name = _meta_top.get("model")
             if self.embeddings.shape[0] != self.n:
                 # Try to align by fingerprint
                 if os.path.exists(meta_path):
                     with open(meta_path, "r", encoding="utf-8") as f:
                         meta = json.load(f)
+                    self._embed_model_name = meta.get("model")
                     embed_fps = meta.get("fingerprints", [])
                     insight_fps = [
                         i.get("fingerprint", hashlib.md5(i.get("text", "").encode()).hexdigest())
@@ -305,7 +310,7 @@ class HybridRetriever:
 
         if HAS_ST:
             try:
-                model_name = os.getenv("SS_EMBED_MODEL", "intfloat/e5-base-v2")
+                model_name = os.getenv("SS_EMBED_MODEL", self._embed_model_name or "intfloat/e5-base-v2")
                 self._embed_model = SentenceTransformer(model_name)
                 return self._embed_model.encode(query, normalize_embeddings=True)
             except Exception:
